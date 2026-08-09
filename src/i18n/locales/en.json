@@ -41,6 +41,12 @@
     "top": "Top view",
     "note": "2D top view now; 3D (Three.js) in a later phase."
   },
+  "show": {
+    "templates": "Templates",
+    "save": "Save",
+    "load": "Load",
+    "invalid": "That file isn't a valid DMXSimulatoR show."
+  },
   "common": {
     "language": "Language",
     "reset": "Reset show"

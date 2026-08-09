@@ -5,6 +5,7 @@ import { CONSOLES, consoleById } from '../console/registry'
 import { PatchView } from './patch/PatchView'
 import { DmxMonitor } from './patch/DmxMonitor'
 import { Visualizer2D } from './visualizer/Visualizer2D'
+import { ShowMenu } from './ShowMenu'
 import './ui.css'
 
 const MODES = ['patch', 'program', 'run'] as const
@@ -15,7 +16,6 @@ export function AppShell() {
   const setMode = useShowStore((s) => s.setMode)
   const consoleId = useShowStore((s) => s.consoleId)
   const setConsole = useShowStore((s) => s.setConsole)
-  const resetShow = useShowStore((s) => s.resetShow)
 
   const Surface = consoleById(consoleId).Surface
   const leftPanel = mode === 'patch' ? <PatchView /> : <Surface />
@@ -54,6 +54,8 @@ export function AppShell() {
           </select>
         </label>
 
+        <ShowMenu />
+
         <select
           value={i18n.language}
           onChange={(e) => setLanguage(e.target.value)}
@@ -63,7 +65,6 @@ export function AppShell() {
           <option value="es">ES</option>
           <option value="eu">EU</option>
         </select>
-        <button onClick={resetShow}>{t('common.reset')}</button>
       </div>
 
       <div className="body">

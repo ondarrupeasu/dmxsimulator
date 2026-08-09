@@ -7,6 +7,7 @@ import { persist } from 'zustand/middleware'
 import type { FixtureDefinition, PatchedFixture, Show } from '../model/types'
 import { fixtureFootprint } from '../model/types'
 import { BUILTIN_FIXTURES } from '../model/library'
+import { templateById } from '../model/templates'
 import type { ProgrammerValues } from '../engine/dmx'
 import { UNIVERSE_SIZE } from '../engine/dmx'
 
@@ -46,6 +47,14 @@ interface ShowState {
 
   // Library
   addDefinitions: (defs: FixtureDefinition[]) => void
+
+  // Show file / templates
+  loadTemplate: (templateId: string) => void
+  setShow: (show: Show, programmer?: ProgrammerValues) => void
+  /** Serialize the current show to a JSON string for download. */
+  exportShow: () => string
+  /** Load a show from a parsed JSON object; returns true on success. */
+  importShow: (data: unknown) => boolean
 
   resetShow: () => void
 }
@@ -227,6 +236,35 @@ export const useShowStore = create<ShowState>()(
 
       addDefinitions: (defs) =>
         set((s) => ({ definitions: { ...s.definitions, ...defsRecord(defs) } })),
+
+      loadTemplate: (templateId) => {
+        const tpl = templateById(templateId)
+        if (!tpl) return
+        const { show, programmer } = tpl.build(get().definitions)
+        set({ show, programmer, selection: [] })
+      },
+
+      setShow: (show, programmer = {}) => set({ show, programmer, selection: [] }),
+
+      exportShow: () => {
+        const { show, programmer } = get()
+        return JSON.stringify({ app: 'DMXSimulatoR', version: 1, show, programmer }, null, 2)
+      },
+
+      importShow: (data) => {
+        if (typeof data !== 'object' || data === null) return false
+        const d = data as { show?: Show; programmer?: ProgrammerValues }
+        if (!d.show || !Array.isArray(d.show.fixtures)) return false
+        // Drop fixtures whose definition isn't in the library (unknown import).
+        const defs = get().definitions
+        const fixtures = d.show.fixtures.filter((f) => defs[f.definitionId])
+        set({
+          show: { ...d.show, fixtures },
+          programmer: d.programmer ?? {},
+          selection: [],
+        })
+        return true
+      },
 
       resetShow: () =>
         set((s) => ({

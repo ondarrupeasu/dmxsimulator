@@ -41,6 +41,12 @@
     "top": "Vista cenital",
     "note": "Vista cenital 2D ahora; 3D (Three.js) en una fase posterior."
   },
+  "show": {
+    "templates": "Plantillas",
+    "save": "Guardar",
+    "load": "Cargar",
+    "invalid": "Ese archivo no es un show válido de DMXSimulatoR."
+  },
   "common": {
     "language": "Idioma",
     "reset": "Reiniciar show"

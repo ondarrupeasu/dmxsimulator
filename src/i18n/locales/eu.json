@@ -41,6 +41,12 @@
     "top": "Goiko ikuspegia",
     "note": "2D goiko ikuspegia orain; 3D (Three.js) geroagoko fase batean."
   },
+  "show": {
+    "templates": "Txantiloiak",
+    "save": "Gorde",
+    "load": "Kargatu",
+    "invalid": "Fitxategi hori ez da baliozko DMXSimulatoR show bat."
+  },
   "common": {
     "language": "Hizkuntza",
     "reset": "Berrezarri show-a"

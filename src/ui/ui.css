@@ -242,6 +242,13 @@
   flex: 0 0 auto;
 }
 
+/* ---- Show menu (topbar) ---- */
+.show-menu {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
 /* ---- Console picker (topbar) ---- */
 .console-picker {
   display: flex;
