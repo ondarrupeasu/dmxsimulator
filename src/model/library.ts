@@ -8,7 +8,91 @@
  */
 import type { FixtureDefinition } from './types'
 
+// Colour-wheel slots shared by both Phantom modes (from the MKII manual).
+const PHANTOM_COLOR_CAPS = [
+  { rangeStart: 0, rangeEnd: 6, label: 'Open / White' },
+  { rangeStart: 7, rangeEnd: 13, label: 'Yellow' },
+  { rangeStart: 14, rangeEnd: 20, label: 'Purple' },
+  { rangeStart: 21, rangeEnd: 27, label: 'Green' },
+  { rangeStart: 28, rangeEnd: 34, label: 'Red' },
+  { rangeStart: 35, rangeEnd: 41, label: 'Cyan' },
+  { rangeStart: 42, rangeEnd: 48, label: 'Light Green' },
+  { rangeStart: 49, rangeEnd: 55, label: 'Orange' },
+  { rangeStart: 56, rangeEnd: 64, label: 'Dark Blue' },
+  { rangeStart: 128, rangeEnd: 191, label: 'Rainbow CW slow→fast' },
+  { rangeStart: 192, rangeEnd: 255, label: 'Rainbow CCW slow→fast' },
+]
+
+const PHANTOM_GOBO_CAPS = [
+  { rangeStart: 0, rangeEnd: 7, label: 'Open / White' },
+  { rangeStart: 8, rangeEnd: 15, label: 'Gobo 1' },
+  { rangeStart: 16, rangeEnd: 23, label: 'Gobo 2' },
+  { rangeStart: 24, rangeEnd: 31, label: 'Gobo 3' },
+  { rangeStart: 32, rangeEnd: 39, label: 'Gobo 4' },
+  { rangeStart: 40, rangeEnd: 47, label: 'Gobo 5' },
+  { rangeStart: 48, rangeEnd: 55, label: 'Gobo 6' },
+  { rangeStart: 56, rangeEnd: 63, label: 'Gobo 7' },
+  { rangeStart: 64, rangeEnd: 119, label: 'Gobo shake slow→fast' },
+  { rangeStart: 120, rangeEnd: 127, label: 'Open / White' },
+  { rangeStart: 128, rangeEnd: 191, label: 'Rotation CW slow→fast' },
+  { rangeStart: 192, rangeEnd: 255, label: 'Rotation CCW slow→fast' },
+]
+
+const PHANTOM_SHUTTER_CAPS = [
+  { rangeStart: 0, rangeEnd: 3, label: 'Closed' },
+  { rangeStart: 4, rangeEnd: 7, label: 'Open' },
+  { rangeStart: 8, rangeEnd: 215, label: 'Strobe slow→fast' },
+  { rangeStart: 216, rangeEnd: 255, label: 'Open' },
+]
+
+const PHANTOM_PRISM_CAPS = [
+  { rangeStart: 0, rangeEnd: 15, label: 'Open' },
+  { rangeStart: 16, rangeEnd: 255, label: '3-facet prism' },
+]
+
 export const BUILTIN_FIXTURES: FixtureDefinition[] = [
+  {
+    // Alex's main rig fixture at Tartanga. Chart from the Phantom 50 LED Spot
+    // MKII manual (Highlite ordercode 40200). 13-channel is the console mode.
+    id: 'showtec-phantom-50-led-spot-mkii',
+    manufacturer: 'Showtec',
+    model: 'Phantom 50 LED Spot MKII',
+    category: 'movingHead',
+    source: 'builtin',
+    modes: [
+      {
+        name: '13-channel',
+        channels: [
+          { name: 'Pan', function: 'pan', defaultValue: 128, highlightValue: 128 },
+          { name: 'Tilt', function: 'tilt', defaultValue: 128, highlightValue: 128 },
+          { name: 'Pan Fine', function: 'panFine', defaultValue: 0, fine: true },
+          { name: 'Tilt Fine', function: 'tiltFine', defaultValue: 0, fine: true },
+          { name: 'Pan/Tilt Speed', function: 'control', defaultValue: 0 },
+          { name: 'Color Wheel', function: 'colorWheel', defaultValue: 0, capabilities: PHANTOM_COLOR_CAPS },
+          { name: 'Shutter/Strobe', function: 'shutter', defaultValue: 255, highlightValue: 255, capabilities: PHANTOM_SHUTTER_CAPS },
+          { name: 'Dimmer', function: 'dimmer', defaultValue: 0, highlightValue: 255 },
+          { name: 'Gobo Wheel', function: 'gobo', defaultValue: 0, capabilities: PHANTOM_GOBO_CAPS },
+          { name: 'Gobo Rotation', function: 'goboRotation', defaultValue: 0 },
+          { name: 'Prism', function: 'prism', defaultValue: 0, capabilities: PHANTOM_PRISM_CAPS },
+          { name: 'Function', function: 'control', defaultValue: 0 },
+          { name: 'Programs', function: 'control', defaultValue: 0 },
+        ],
+      },
+      {
+        name: '8-channel',
+        channels: [
+          { name: 'Pan', function: 'pan', defaultValue: 128, highlightValue: 128 },
+          { name: 'Tilt', function: 'tilt', defaultValue: 128, highlightValue: 128 },
+          { name: 'Color Wheel', function: 'colorWheel', defaultValue: 0, capabilities: PHANTOM_COLOR_CAPS },
+          { name: 'Shutter/Strobe', function: 'shutter', defaultValue: 255, highlightValue: 255, capabilities: PHANTOM_SHUTTER_CAPS },
+          { name: 'Dimmer', function: 'dimmer', defaultValue: 0, highlightValue: 255 },
+          { name: 'Gobo Wheel', function: 'gobo', defaultValue: 0, capabilities: PHANTOM_GOBO_CAPS },
+          { name: 'Gobo Rotation', function: 'goboRotation', defaultValue: 0 },
+          { name: 'Prism', function: 'prism', defaultValue: 0, capabilities: PHANTOM_PRISM_CAPS },
+        ],
+      },
+    ],
+  },
   {
     id: 'generic-dimmer-1ch',
     manufacturer: 'Generic',

@@ -57,7 +57,11 @@ export function computeVisualState(
 
   const dimmer = get('dimmer')
   const colorMax = Math.max(cr, cg, cb)
-  const intensity = dimmer !== undefined ? dimmer / 255 : colorMax / 255
+  let intensity = dimmer !== undefined ? dimmer / 255 : colorMax / 255
+
+  // A closed mechanical shutter blacks the fixture out regardless of dimmer.
+  const shutterVal = get('shutter') ?? get('strobe')
+  if (shutterVal !== undefined && shutterVal < 4) intensity = 0
 
   // 16-bit pan/tilt when a fine channel exists, else 8-bit.
   let pan: number | undefined

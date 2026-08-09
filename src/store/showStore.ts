@@ -75,12 +75,13 @@ function makeDemoShow(defs: Record<string, FixtureDefinition>): Show {
     })
     address += fixtureFootprint(def, modeIndex)
   }
-  add('generic-rgbw-par', 0, 'PAR 1', -0.6)
-  add('generic-rgbw-par', 0, 'PAR 2', -0.2)
-  add('generic-rgbw-par', 0, 'PAR 3', 0.2)
-  add('generic-rgbw-par', 0, 'PAR 4', 0.6)
-  add('generic-moving-wash', 0, 'Wash 1', -0.35)
-  add('generic-moving-wash', 0, 'Wash 2', 0.35)
+  // Tartanga-style rig: mostly Showtec Phantom 50 spots, a couple of PAR fills.
+  add('showtec-phantom-50-led-spot-mkii', 0, 'Phantom 1', -0.6)
+  add('showtec-phantom-50-led-spot-mkii', 0, 'Phantom 2', -0.2)
+  add('showtec-phantom-50-led-spot-mkii', 0, 'Phantom 3', 0.2)
+  add('showtec-phantom-50-led-spot-mkii', 0, 'Phantom 4', 0.6)
+  add('generic-rgbw-par', 0, 'PAR 1', -0.4)
+  add('generic-rgbw-par', 0, 'PAR 2', 0.4)
   return { name: 'Untitled show', universeCount: 1, fixtures }
 }
 
