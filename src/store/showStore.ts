@@ -18,10 +18,13 @@ interface ShowState {
   definitions: Record<string, FixtureDefinition>
   programmer: ProgrammerValues
   mode: AppMode
+  /** Selected control surface (which console the student is practising on). */
+  consoleId: string
   /** Instance ids currently selected in the programmer. */
   selection: string[]
 
   setMode: (mode: AppMode) => void
+  setConsole: (consoleId: string) => void
 
   // Patch
   addFixture: (definitionId: string, opts?: { modeIndex?: number; address?: number }) => void
@@ -94,9 +97,11 @@ export const useShowStore = create<ShowState>()(
       definitions: initialDefs,
       programmer: {},
       mode: 'patch',
+      consoleId: 'avolites-quartz',
       selection: [],
 
       setMode: (mode) => set({ mode }),
+      setConsole: (consoleId) => set({ consoleId }),
 
       findFreeAddress: (footprint, universe) => {
         const occupied = new Uint8Array(UNIVERSE_SIZE + 1) // 1-based
@@ -232,8 +237,8 @@ export const useShowStore = create<ShowState>()(
     }),
     {
       name: 'dmxsimulator-show',
-      // Persist the work, not transient UI state.
-      partialize: (s) => ({ show: s.show, programmer: s.programmer }),
+      // Persist the work + chosen console, not transient UI state.
+      partialize: (s) => ({ show: s.show, programmer: s.programmer, consoleId: s.consoleId }),
     },
   ),
 )

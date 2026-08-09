@@ -2,24 +2,7 @@ import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useShowStore } from '../../store/showStore'
 import { computeVisualState } from '../../engine/render'
-
-/** Read the resolved value of a channel function on the first selected fixture. */
-function useSelectedValue(fn: string): number {
-  const selection = useShowStore((s) => s.selection)
-  const show = useShowStore((s) => s.show)
-  const definitions = useShowStore((s) => s.definitions)
-  const programmer = useShowStore((s) => s.programmer)
-  return useMemo(() => {
-    const id = selection[0]
-    if (!id) return 0
-    const pf = show.fixtures.find((f) => f.id === id)
-    if (!pf) return 0
-    const channels = definitions[pf.definitionId]?.modes[pf.modeIndex]?.channels ?? []
-    const idx = channels.findIndex((c) => c.function === fn)
-    if (idx < 0) return 0
-    return programmer[id]?.[idx] ?? channels[idx].defaultValue
-  }, [fn, selection, show, definitions, programmer])
-}
+import { useSelectedValue } from './useSelectedValue'
 
 function Fader({ label, fn }: { label: string; fn: string }) {
   const value = useSelectedValue(fn)
@@ -39,7 +22,8 @@ function Fader({ label, fn }: { label: string; fn: string }) {
   )
 }
 
-export function ProgrammerView() {
+/** Brand-neutral surface: the clean, universal concepts view. */
+export function UniversalSurface() {
   const { t } = useTranslation()
   const selection = useShowStore((s) => s.selection)
   const show = useShowStore((s) => s.show)
@@ -48,7 +32,6 @@ export function ProgrammerView() {
   const locateSelected = useShowStore((s) => s.locateSelected)
   const clearProgrammer = useShowStore((s) => s.clearProgrammer)
 
-  // Colour swatch of the first selected fixture.
   const swatch = useMemo(() => {
     const id = selection[0]
     const pf = show.fixtures.find((f) => f.id === id)
@@ -64,9 +47,7 @@ export function ProgrammerView() {
     const id = selection[0]
     const pf = show.fixtures.find((f) => f.id === id)
     const channels = pf && definitions[pf.definitionId]?.modes[pf.modeIndex]?.channels
-    return !!channels?.some((c) =>
-      ['red', 'green', 'blue', 'white'].includes(c.function),
-    )
+    return !!channels?.some((c) => ['red', 'green', 'blue', 'white'].includes(c.function))
   }, [selection, show, definitions])
 
   return (
