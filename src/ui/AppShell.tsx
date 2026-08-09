@@ -22,8 +22,30 @@ export function AppShell() {
   const [viewer, setViewer] = useState<'2d' | '3d'>('3d')
 
   const Surface = consoleById(consoleId).Surface
+  // The faithful Quartz desk docks wide at the bottom (like a real console under
+  // the stage); other surfaces sit in the side panel.
+  const quartzDocked = consoleId === 'avolites-quartz' && mode !== 'patch'
   const leftPanel =
     mode === 'patch' ? <PatchView /> : mode === 'run' ? <RunView /> : <Surface />
+
+  const visualizerPanel = (
+    <div className="panel">
+      <header>
+        <h2>{t('visualizer.title')}</h2>
+        <div className="view-toggle">
+          <button className={viewer === '3d' ? 'active' : ''} onClick={() => setViewer('3d')}>
+            3D
+          </button>
+          <button className={viewer === '2d' ? 'active' : ''} onClick={() => setViewer('2d')}>
+            2D
+          </button>
+        </div>
+      </header>
+      <div className="scroll" style={{ padding: viewer === '3d' ? 0 : 8, flex: 1, overflow: 'hidden' }}>
+        {viewer === '3d' ? <Visualizer3D /> : <Visualizer2D />}
+      </div>
+    </div>
+  )
 
   return (
     <div className="shell">
@@ -72,31 +94,25 @@ export function AppShell() {
         </select>
       </div>
 
-      <div className="body">
-        {leftPanel}
-        <div className="right-col">
-          <div className="panel">
-            <header>
-              <h2>{t('visualizer.title')}</h2>
-              <div className="view-toggle">
-                <button className={viewer === '3d' ? 'active' : ''} onClick={() => setViewer('3d')}>
-                  3D
-                </button>
-                <button className={viewer === '2d' ? 'active' : ''} onClick={() => setViewer('2d')}>
-                  2D
-                </button>
-              </div>
-            </header>
-            <div
-              className="scroll"
-              style={{ padding: viewer === '3d' ? 0 : 8, flex: 1, overflow: 'hidden' }}
-            >
-              {viewer === '3d' ? <Visualizer3D /> : <Visualizer2D />}
-            </div>
+      {quartzDocked ? (
+        <div className="body body-desk">
+          <div className="desk-top">
+            {visualizerPanel}
+            <DmxMonitor universe={1} />
           </div>
-          <DmxMonitor universe={1} />
+          <div className="desk-dock">
+            <Surface />
+          </div>
         </div>
-      </div>
+      ) : (
+        <div className="body">
+          {leftPanel}
+          <div className="right-col">
+            {visualizerPanel}
+            <DmxMonitor universe={1} />
+          </div>
+        </div>
+      )}
     </div>
   )
 }

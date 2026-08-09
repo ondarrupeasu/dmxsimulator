@@ -3,7 +3,7 @@
  */
 import type { ConsoleDefinition } from './types'
 import { UniversalSurface } from '../ui/console/UniversalSurface'
-import { QuartzSurface } from '../ui/console/QuartzSurface'
+import { QuartzDesk } from '../ui/console/QuartzDesk'
 
 export const CONSOLES: ConsoleDefinition[] = [
   {
@@ -11,7 +11,7 @@ export const CONSOLES: ConsoleDefinition[] = [
     brand: 'Avolites',
     model: 'Quartz',
     status: 'wip',
-    Surface: QuartzSurface,
+    Surface: QuartzDesk,
     note: 'Faithful Quartz panel — practise the real desk. In progress.',
   },
   {
