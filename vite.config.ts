@@ -4,8 +4,9 @@ import { VitePWA } from 'vite-plugin-pwa'
 
 // https://vite.dev/config/
 export default defineConfig({
-  // Relative base so the built app works under a GitHub Pages subpath.
-  base: './',
+  // Served from the root of a custom domain (dmxsimulator.cinemafilmak.com),
+  // matching the house pattern (QRClapper, AVHandbook, SoundLab).
+  base: '/',
   // Honour the PORT assigned by the harness/host, fall back to Vite's default.
   server: { port: process.env.PORT ? Number(process.env.PORT) : 5173 },
   plugins: [
