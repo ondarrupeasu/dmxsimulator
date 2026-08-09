@@ -4,12 +4,14 @@
  */
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
+import { useMemo } from 'react'
 import type { FixtureDefinition, PatchedFixture, Show } from '../model/types'
 import { fixtureFootprint } from '../model/types'
+import type { Cue } from '../model/cue'
 import { BUILTIN_FIXTURES } from '../model/library'
 import { templateById } from '../model/templates'
 import type { ProgrammerValues } from '../engine/dmx'
-import { UNIVERSE_SIZE } from '../engine/dmx'
+import { UNIVERSE_SIZE, mergeProgrammer } from '../engine/dmx'
 
 export type AppMode = 'patch' | 'program' | 'run'
 
@@ -23,9 +25,19 @@ interface ShowState {
   consoleId: string
   /** Instance ids currently selected in the programmer. */
   selection: string[]
+  /** Recorded cues (the show's playback stack). */
+  cues: Cue[]
+  /** Cue currently output by the playback, or null. */
+  activeCueId: string | null
 
   setMode: (mode: AppMode) => void
   setConsole: (consoleId: string) => void
+
+  // Cues / playback
+  recordCue: () => void
+  deleteCue: (id: string) => void
+  goCue: (id: string) => void
+  releaseCue: () => void
 
   // Patch
   addFixture: (definitionId: string, opts?: { modeIndex?: number; address?: number }) => void
@@ -108,9 +120,29 @@ export const useShowStore = create<ShowState>()(
       mode: 'patch',
       consoleId: 'avolites-quartz',
       selection: [],
+      cues: [],
+      activeCueId: null,
 
       setMode: (mode) => set({ mode }),
       setConsole: (consoleId) => set({ consoleId }),
+
+      recordCue: () =>
+        set((s) => {
+          // Deep-copy the current programmer as the cue snapshot.
+          const values: ProgrammerValues = {}
+          for (const id in s.programmer) values[id] = { ...s.programmer[id] }
+          const cue: Cue = { id: nextInstanceId(), name: `Cue ${s.cues.length + 1}`, values }
+          return { cues: [...s.cues, cue] }
+        }),
+
+      deleteCue: (id) =>
+        set((s) => ({
+          cues: s.cues.filter((c) => c.id !== id),
+          activeCueId: s.activeCueId === id ? null : s.activeCueId,
+        })),
+
+      goCue: (id) => set({ activeCueId: id }),
+      releaseCue: () => set({ activeCueId: null }),
 
       findFreeAddress: (footprint, universe) => {
         const occupied = new Uint8Array(UNIVERSE_SIZE + 1) // 1-based
@@ -241,10 +273,11 @@ export const useShowStore = create<ShowState>()(
         const tpl = templateById(templateId)
         if (!tpl) return
         const { show, programmer } = tpl.build(get().definitions)
-        set({ show, programmer, selection: [] })
+        set({ show, programmer, selection: [], cues: [], activeCueId: null })
       },
 
-      setShow: (show, programmer = {}) => set({ show, programmer, selection: [] }),
+      setShow: (show, programmer = {}) =>
+        set({ show, programmer, selection: [], cues: [], activeCueId: null }),
 
       exportShow: () => {
         const { show, programmer } = get()
@@ -262,6 +295,8 @@ export const useShowStore = create<ShowState>()(
           show: { ...d.show, fixtures },
           programmer: d.programmer ?? {},
           selection: [],
+          cues: [],
+          activeCueId: null,
         })
         return true
       },
@@ -271,12 +306,35 @@ export const useShowStore = create<ShowState>()(
           show: makeDemoShow(s.definitions),
           programmer: {},
           selection: [],
+          cues: [],
+          activeCueId: null,
         })),
     }),
     {
       name: 'dmxsimulator-show',
+      version: 2,
       // Persist the work + chosen console, not transient UI state.
-      partialize: (s) => ({ show: s.show, programmer: s.programmer, consoleId: s.consoleId }),
+      partialize: (s) => ({
+        show: s.show,
+        programmer: s.programmer,
+        consoleId: s.consoleId,
+        cues: s.cues,
+        activeCueId: s.activeCueId,
+      }),
     },
   ),
 )
+
+/**
+ * Effective output values = the active playback cue with the live programmer laid
+ * on top. This is what the monitor and visualizers should render.
+ */
+export function useEffectiveProgrammer(): ProgrammerValues {
+  const programmer = useShowStore((s) => s.programmer)
+  const cues = useShowStore((s) => s.cues)
+  const activeCueId = useShowStore((s) => s.activeCueId)
+  return useMemo(() => {
+    const base = cues.find((c) => c.id === activeCueId)?.values ?? {}
+    return mergeProgrammer(base, programmer)
+  }, [programmer, cues, activeCueId])
+}

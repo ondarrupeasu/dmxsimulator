@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react'
 import * as THREE from 'three'
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js'
 import { useShowStore } from '../../store/showStore'
-import { computeFixtureOutputs } from '../../engine/dmx'
+import { computeFixtureOutputs, mergeProgrammer } from '../../engine/dmx'
 import { computeVisualState } from '../../engine/render'
 
 const BEAM_H = 6
@@ -122,7 +122,9 @@ export function Visualizer3D() {
     let raf = 0
     const animate = () => {
       raf = requestAnimationFrame(animate)
-      const { show, definitions, programmer } = useShowStore.getState()
+      const { show, definitions, programmer, cues, activeCueId } = useShowStore.getState()
+      const base = cues.find((c) => c.id === activeCueId)?.values ?? {}
+      const effective = mergeProgrammer(base, programmer)
 
       // Reconcile fixture objects with the current patch (create / remove).
       const live = new Set(show.fixtures.map((f) => f.id))
@@ -133,7 +135,7 @@ export function Visualizer3D() {
         }
       }
 
-      const outputs = computeFixtureOutputs(show, definitions, programmer)
+      const outputs = computeFixtureOutputs(show, definitions, effective)
       const outById = new Map(outputs.map((o) => [o.instanceId, o.values]))
 
       for (const pf of show.fixtures) {

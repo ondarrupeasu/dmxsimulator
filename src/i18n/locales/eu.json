@@ -41,6 +41,15 @@
     "top": "Goiko ikuspegia",
     "note": "2D goiko ikuspegia orain; 3D (Three.js) geroagoko fase batean."
   },
+  "run": {
+    "title": "Exekutatu",
+    "record": "Grabatu cue-a",
+    "release": "Askatu",
+    "go": "Go",
+    "empty": "Oraindik ez dago cue-rik. Programatu look bat eta grabatu.",
+    "recordHint": "Cue-ek programatzailea kapturatzen dute. Grabatu look bat, garbitu, eta sakatu Go erreproduzitzeko.",
+    "active": "Aktibo"
+  },
   "show": {
     "templates": "Txantiloiak",
     "save": "Gorde",

@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { useShowStore } from '../../store/showStore'
+import { useShowStore, useEffectiveProgrammer } from '../../store/showStore'
 import { computeFixtureOutputs } from '../../engine/dmx'
 import { computeVisualState } from '../../engine/render'
 
@@ -14,14 +14,14 @@ function place(x: number, y: number): { cx: number; cy: number } {
 export function Visualizer2D() {
   const show = useShowStore((s) => s.show)
   const definitions = useShowStore((s) => s.definitions)
-  const programmer = useShowStore((s) => s.programmer)
+  const effective = useEffectiveProgrammer()
   const selection = useShowStore((s) => s.selection)
   const toggleSelect = useShowStore((s) => s.toggleSelect)
   const select = useShowStore((s) => s.select)
 
   const outputs = useMemo(
-    () => computeFixtureOutputs(show, definitions, programmer),
-    [show, definitions, programmer],
+    () => computeFixtureOutputs(show, definitions, effective),
+    [show, definitions, effective],
   )
   const byId = useMemo(
     () => Object.fromEntries(outputs.map((o) => [o.instanceId, o.values])),

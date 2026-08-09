@@ -41,6 +41,15 @@
     "top": "Vista cenital",
     "note": "Vista cenital 2D ahora; 3D (Three.js) en una fase posterior."
   },
+  "run": {
+    "title": "Ejecutar",
+    "record": "Grabar cue",
+    "release": "Soltar",
+    "go": "Go",
+    "empty": "Aún no hay cues. Programa un look y grábalo.",
+    "recordHint": "Los cues capturan el programador. Graba un look, limpia y pulsa Go para reproducirlo.",
+    "active": "Activo"
+  },
   "show": {
     "templates": "Plantillas",
     "save": "Guardar",

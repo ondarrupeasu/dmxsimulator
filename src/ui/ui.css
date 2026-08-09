@@ -265,6 +265,43 @@
   font-weight: 600;
 }
 
+/* ---- Cue list (Run) ---- */
+.cue-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.cue-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+.cue-item.active {
+  border-color: var(--coral);
+  background: var(--coral-soft);
+}
+.cue-item .cue-num {
+  width: 22px;
+  height: 22px;
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  background: var(--bg-input);
+  font-size: 11px;
+  color: var(--text-faint);
+  font-variant-numeric: tabular-nums;
+}
+.cue-item .cue-name {
+  flex: 1;
+  font-size: 13px;
+}
+
 /* ---- Show menu (topbar) ---- */
 .show-menu {
   display: flex;

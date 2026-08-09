@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
-import { useShowStore } from '../../store/showStore'
+import { useShowStore, useEffectiveProgrammer } from '../../store/showStore'
 import { computeUniverse, UNIVERSE_SIZE } from '../../engine/dmx'
 
 /** Live grid of all 512 channel values for a universe. */
@@ -8,11 +8,11 @@ export function DmxMonitor({ universe = 1 }: { universe?: number }) {
   const { t } = useTranslation()
   const show = useShowStore((s) => s.show)
   const definitions = useShowStore((s) => s.definitions)
-  const programmer = useShowStore((s) => s.programmer)
+  const effective = useEffectiveProgrammer()
 
   const values = useMemo(
-    () => computeUniverse(show, definitions, programmer, universe),
-    [show, definitions, programmer, universe],
+    () => computeUniverse(show, definitions, effective, universe),
+    [show, definitions, effective, universe],
   )
 
   return (

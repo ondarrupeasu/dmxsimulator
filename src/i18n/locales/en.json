@@ -41,6 +41,15 @@
     "top": "Top view",
     "note": "2D top view now; 3D (Three.js) in a later phase."
   },
+  "run": {
+    "title": "Run",
+    "record": "Record cue",
+    "release": "Release",
+    "go": "Go",
+    "empty": "No cues yet. Program a look, then Record it.",
+    "recordHint": "Cues snapshot the programmer. Record a look, Clear, then Go to play it back.",
+    "active": "Active"
+  },
   "show": {
     "templates": "Templates",
     "save": "Save",

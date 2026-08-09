@@ -27,6 +27,17 @@ function clampByte(v: number): number {
 }
 
 /**
+ * Merge two programmer maps: `top` overrides `base` per instance+channel.
+ * Used to lay the live programmer on top of the active playback cue.
+ */
+export function mergeProgrammer(base: ProgrammerValues, top: ProgrammerValues): ProgrammerValues {
+  const out: ProgrammerValues = {}
+  for (const id in base) out[id] = { ...base[id] }
+  for (const id in top) out[id] = { ...out[id], ...top[id] }
+  return out
+}
+
+/**
  * Compute the 512 raw values for one universe.
  * Programmer values override the fixture's channel defaults; unpatched channels
  * stay 0. Overlapping addresses (a patch error) resolve last-fixture-wins.

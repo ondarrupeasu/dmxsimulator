@@ -7,6 +7,7 @@ import { PatchView } from './patch/PatchView'
 import { DmxMonitor } from './patch/DmxMonitor'
 import { Visualizer2D } from './visualizer/Visualizer2D'
 import { Visualizer3D } from './visualizer/Visualizer3D'
+import { RunView } from './run/RunView'
 import { ShowMenu } from './ShowMenu'
 import './ui.css'
 
@@ -21,7 +22,8 @@ export function AppShell() {
   const [viewer, setViewer] = useState<'2d' | '3d'>('3d')
 
   const Surface = consoleById(consoleId).Surface
-  const leftPanel = mode === 'patch' ? <PatchView /> : <Surface />
+  const leftPanel =
+    mode === 'patch' ? <PatchView /> : mode === 'run' ? <RunView /> : <Surface />
 
   return (
     <div className="shell">
