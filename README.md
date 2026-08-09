@@ -1,32 +1,47 @@
-# React + TypeScript + Vite
+# DMXSimulatoR
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+Educational DMX lighting simulator — **learn by doing**. Patch a DMX universe,
+program fixtures on an Avolites-inspired surface, and see the result in a
+visualizer. A pure simulator: no real hardware output (no Art-Net/sACN/USB-DMX)
+in v1 — the visualizer *is* the output.
 
-Currently, two official plugins are available:
+> Sibling product (later phase): **LightDesignR**, the desktop line with real
+> Art-Net/sACN control. This PWA is the educational simulator.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Stack
 
-## React Compiler
+- React + Vite + TypeScript, PWA (installable, offline), deployable to GitHub Pages.
+- Zustand for show state (patch + programmer), persisted to localStorage.
+- Brand-neutral fixture model fed by two importers: **Open Fixture Library** (JSON)
+  and **GDTF** (`description.xml`). 2D top-view visualizer now; **Three.js 3D** later.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Layout
 
-## Expanding the Oxlint configuration
-
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
-
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+```
+src/
+  model/       domain types + built-in fixture library
+  engine/      DMX merge (patch+programmer → 512 values) + visual-state derivation
+  importers/   ofl.ts (JSON→FixtureDefinition), gdtf.ts (description.xml→FixtureDefinition)
+  store/       Zustand show store
+  i18n/        en / es / eu (UI ships in English)
+  ui/          AppShell + patch / program / visualizer views
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+## Develop
+
+```bash
+npm install
+npm run dev
+npm run build
+```
+
+## Status (phase 1)
+
+Done: scaffold, domain model, DMX engine, live 512-channel monitor, patch
+(built-in library), a working programmer (select → intensity/color → Locate/Clear),
+2D top-view visualizer reflecting live DMX, i18n, house theme, PWA config.
+
+Next: import UI for OFL/GDTF files, groups & palettes, cue list & playback (Run
+mode), then the Three.js 3D visualizer. Pending from Alex: the Tartanga rig
+(fixtures) and the reference Avolites console model.
+```

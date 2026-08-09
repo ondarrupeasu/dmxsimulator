@@ -1,0 +1,48 @@
+{
+  "app": {
+    "title": "DMXSimulatoR",
+    "tagline": "Ikasi DMX praktikatuz"
+  },
+  "modes": {
+    "patch": "Patch",
+    "program": "Programatu",
+    "run": "Exekutatu"
+  },
+  "patch": {
+    "title": "Patch",
+    "library": "Fixture liburutegia",
+    "patched": "Esleitutako fixtureak",
+    "add": "Gehitu",
+    "remove": "Kendu",
+    "address": "Helbidea",
+    "universe": "Unibertsoa",
+    "mode": "Modua",
+    "channels": "kan",
+    "empty": "Oraindik ez dago fixturerik — gehitu bat liburutegitik.",
+    "name": "Izena",
+    "source": "Jatorria"
+  },
+  "monitor": {
+    "title": "DMX monitorea",
+    "subtitle": "Balioak zuzenean — {{universe}} unibertsoa"
+  },
+  "program": {
+    "title": "Programatzailea",
+    "placeholder": "Programatzailea, taldeak, paletak, cue-ak eta playback-a 2. fasean.",
+    "selectHint": "Hautatu fixtureak bisorean edo patch zerrendan, eta doitu kanalak.",
+    "locate": "Kokatu",
+    "clear": "Garbitu",
+    "intensity": "Intentsitatea",
+    "color": "Kolorea",
+    "selected": "{{count}} hautatuta"
+  },
+  "visualizer": {
+    "title": "Bisorea",
+    "top": "Goiko ikuspegia",
+    "note": "2D goiko ikuspegia orain; 3D (Three.js) geroagoko fase batean."
+  },
+  "common": {
+    "language": "Hizkuntza",
+    "reset": "Berrezarri show-a"
+  }
+}

@@ -1,0 +1,48 @@
+{
+  "app": {
+    "title": "DMXSimulatoR",
+    "tagline": "Learn DMX by doing"
+  },
+  "modes": {
+    "patch": "Patch",
+    "program": "Program",
+    "run": "Run"
+  },
+  "patch": {
+    "title": "Patch",
+    "library": "Fixture library",
+    "patched": "Patched fixtures",
+    "add": "Add",
+    "remove": "Remove",
+    "address": "Address",
+    "universe": "Universe",
+    "mode": "Mode",
+    "channels": "ch",
+    "empty": "No fixtures yet — add one from the library.",
+    "name": "Name",
+    "source": "Source"
+  },
+  "monitor": {
+    "title": "DMX monitor",
+    "subtitle": "Live channel values — universe {{universe}}"
+  },
+  "program": {
+    "title": "Programmer",
+    "placeholder": "Programmer, groups, palettes, cues and playback land in phase 2.",
+    "selectHint": "Select fixtures in the visualizer or patch list, then adjust channels.",
+    "locate": "Locate",
+    "clear": "Clear",
+    "intensity": "Intensity",
+    "color": "Color",
+    "selected": "{{count}} selected"
+  },
+  "visualizer": {
+    "title": "Visualizer",
+    "top": "Top view",
+    "note": "2D top view now; 3D (Three.js) in a later phase."
+  },
+  "common": {
+    "language": "Language",
+    "reset": "Reset show"
+  }
+}

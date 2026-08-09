@@ -1,0 +1,48 @@
+{
+  "app": {
+    "title": "DMXSimulatoR",
+    "tagline": "Aprende DMX practicando"
+  },
+  "modes": {
+    "patch": "Patch",
+    "program": "Programar",
+    "run": "Ejecutar"
+  },
+  "patch": {
+    "title": "Patch",
+    "library": "Librería de fixtures",
+    "patched": "Fixtures asignados",
+    "add": "Añadir",
+    "remove": "Quitar",
+    "address": "Dirección",
+    "universe": "Universo",
+    "mode": "Modo",
+    "channels": "ch",
+    "empty": "Aún no hay fixtures — añade uno desde la librería.",
+    "name": "Nombre",
+    "source": "Origen"
+  },
+  "monitor": {
+    "title": "Monitor DMX",
+    "subtitle": "Valores en vivo — universo {{universe}}"
+  },
+  "program": {
+    "title": "Programador",
+    "placeholder": "Programador, grupos, paletas, cues y playback llegan en la fase 2.",
+    "selectHint": "Selecciona fixtures en el visor o la lista de patch y ajusta canales.",
+    "locate": "Localizar",
+    "clear": "Limpiar",
+    "intensity": "Intensidad",
+    "color": "Color",
+    "selected": "{{count}} seleccionados"
+  },
+  "visualizer": {
+    "title": "Visor",
+    "top": "Vista cenital",
+    "note": "Vista cenital 2D ahora; 3D (Three.js) en una fase posterior."
+  },
+  "common": {
+    "language": "Idioma",
+    "reset": "Reiniciar show"
+  }
+}
