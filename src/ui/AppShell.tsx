@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useShowStore } from '../store/showStore'
 import { setLanguage } from '../i18n'
@@ -5,6 +6,7 @@ import { CONSOLES, consoleById } from '../console/registry'
 import { PatchView } from './patch/PatchView'
 import { DmxMonitor } from './patch/DmxMonitor'
 import { Visualizer2D } from './visualizer/Visualizer2D'
+import { Visualizer3D } from './visualizer/Visualizer3D'
 import { ShowMenu } from './ShowMenu'
 import './ui.css'
 
@@ -16,6 +18,7 @@ export function AppShell() {
   const setMode = useShowStore((s) => s.setMode)
   const consoleId = useShowStore((s) => s.consoleId)
   const setConsole = useShowStore((s) => s.setConsole)
+  const [viewer, setViewer] = useState<'2d' | '3d'>('3d')
 
   const Surface = consoleById(consoleId).Surface
   const leftPanel = mode === 'patch' ? <PatchView /> : <Surface />
@@ -73,10 +76,20 @@ export function AppShell() {
           <div className="panel">
             <header>
               <h2>{t('visualizer.title')}</h2>
-              <span className="sub">{t('visualizer.note')}</span>
+              <div className="view-toggle">
+                <button className={viewer === '3d' ? 'active' : ''} onClick={() => setViewer('3d')}>
+                  3D
+                </button>
+                <button className={viewer === '2d' ? 'active' : ''} onClick={() => setViewer('2d')}>
+                  2D
+                </button>
+              </div>
             </header>
-            <div className="scroll" style={{ padding: 8, flex: 1 }}>
-              <Visualizer2D />
+            <div
+              className="scroll"
+              style={{ padding: viewer === '3d' ? 0 : 8, flex: 1, overflow: 'hidden' }}
+            >
+              {viewer === '3d' ? <Visualizer3D /> : <Visualizer2D />}
             </div>
           </div>
           <DmxMonitor universe={1} />
