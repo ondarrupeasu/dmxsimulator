@@ -471,7 +471,13 @@
 
 .qd-attrs { display: grid; grid-template-columns: repeat(2, 1fr); gap: 5px; margin-bottom: 14px; }
 .qd-attr { border-bottom: 2px solid var(--k); }
-.qd-attr.on { background: var(--k); color: #16131a; font-weight: 700; border-color: var(--k); }
+.qd-attr.on {
+  background: var(--coral-soft);
+  border-color: var(--coral);
+  border-bottom-color: var(--k);
+  color: var(--text);
+  font-weight: 700;
+}
 
 .qd-prog { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; }
 .qd-key.rec { border-bottom: 2px solid var(--coral); }

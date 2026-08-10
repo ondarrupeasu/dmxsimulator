@@ -192,13 +192,17 @@ export function Visualizer3D() {
           fx.beamMat.opacity = vs.intensity * (vs.strobing ? 0.25 : 0.55)
         }
 
-        // Pool where the beam meets the floor.
+        // Pool where the beam meets the floor — an ellipse (a tilted beam cuts the
+        // floor obliquely), oriented and stretched along the beam's ground track.
         if (on && hitsFloor) {
           fx.pool.visible = true
           fx.pool.position.set(pf.position.x * 6 + down.x * length, 0.02, down.z * length)
-          fx.pool.scale.setScalar(length)
+          const vert = Math.max(0.2, -down.y) // cos of angle from vertical
+          const floorAngle = Math.atan2(down.z, down.x)
+          fx.pool.rotation.set(-Math.PI / 2, 0, -floorAngle)
+          fx.pool.scale.set(length / vert, length, 1)
           fx.poolMat.color.copy(col)
-          fx.poolMat.opacity = vs.intensity * 0.6
+          fx.poolMat.opacity = vs.intensity * 0.35
         } else {
           fx.pool.visible = false
         }
