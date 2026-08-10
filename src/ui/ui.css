@@ -290,11 +290,15 @@
   overflow: hidden;
   min-width: 0;
 }
+/* Patched channels are clickable — clicking selects the fixture + jumps the desk. */
+.dmx-cell.patched { cursor: pointer; }
+.dmx-cell.patched:hover { box-shadow: inset 0 0 0 1.5px var(--text-faint); }
 /* Channels belonging to the selected fixture(s) — coral ring + tinted background. */
 .dmx-cell.owned {
   background: var(--coral-soft);
   box-shadow: inset 0 0 0 1.5px var(--coral);
 }
+.dmx-cell.owned.patched:hover { box-shadow: inset 0 0 0 1.5px var(--coral); }
 .dmx-cell .fill {
   position: absolute;
   left: 0;
