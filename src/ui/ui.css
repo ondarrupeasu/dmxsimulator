@@ -670,19 +670,32 @@
 }
 .calwheel.idle { cursor: default; border-color: rgba(0, 0, 0, 0.12); }
 .calwheel:active:not(.idle) { cursor: grabbing; }
-.calwheel-tick {
-  position: absolute; left: 50%; top: 50%;
-  width: 3px; height: 40%; margin-left: -1.5px;
-  background: #c9362b; border-radius: 2px; transform-origin: 50% 0%; pointer-events: none;
+.calwheel-spin { position: absolute; inset: 0; pointer-events: none; }
+.calwheel-dot {
+  position: absolute; left: 50%; top: 7%; width: 13%; aspect-ratio: 1;
+  transform: translateX(-50%); border-radius: 50%;
+  background: #c9362b; box-shadow: 0 0 5px rgba(201, 54, 43, 0.75);
 }
 
 /* Faders (rectangular caps like the real desk) */
-.cal-faders { position: absolute; display: grid; grid-template-columns: repeat(10, 1fr); }
+/* Cover the photo's fader strip so only our (single) clean handles show */
+.cal-faders {
+  position: absolute; display: grid; grid-template-columns: repeat(10, 1fr);
+  background: #d9d8d2; border-radius: 6px;
+}
 .cal-fader { position: relative; display: flex; align-items: stretch; justify-content: center; }
-/* Visible fader groove when the photo is hidden */
-.qcal:not(.bg) .cal-fader::before {
-  content: ''; position: absolute; left: 50%; top: 4%; bottom: 4%;
-  width: 4px; margin-left: -2px; background: rgba(120, 120, 120, 0.5); border-radius: 2px;
+/* Fader groove with visible top + bottom stops */
+.cal-fader::before {
+  content: ''; position: absolute; left: 50%; top: 3%; bottom: 3%;
+  width: 6px; margin-left: -3px; border-radius: 3px;
+  background: #9a988f;
+  box-shadow: inset 0 0 2px rgba(0, 0, 0, 0.4);
+}
+/* end caps */
+.cal-fader::after {
+  content: ''; position: absolute; left: 50%; top: 3%; bottom: 3%;
+  width: 16px; margin-left: -8px; pointer-events: none;
+  border-top: 3px solid #b9b7ae; border-bottom: 3px solid #b9b7ae;
 }
 .cal-fader input[type='range'] {
   writing-mode: vertical-lr; direction: rtl;

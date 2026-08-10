@@ -57,7 +57,8 @@ function LedKey({ on, red, led = true, disabled, title, onClick }: {
 function Wheel({ x, y, d, fn }: { x: number; y: number; d: number; fn: string | undefined }) {
   const value = useSelectedValue(fn ?? '')
   const setByFn = useShowStore((s) => s.setSelectedByFunction)
-  const angle = fn ? (value / 255) * 270 - 135 : -135
+  // Endless encoder: the wheel spins freely; only the DMX value (0–255) is bounded.
+  const [spin, setSpin] = useState(0)
   const onPointerDown = (e: React.PointerEvent) => {
     if (!fn) return
     e.preventDefault()
@@ -65,19 +66,26 @@ function Wheel({ x, y, d, fn }: { x: number; y: number; d: number; fn: string | 
     let v = value
     let lastY = e.clientY
     const move = (ev: PointerEvent) => {
-      v = clamp(v + (lastY - ev.clientY) * 1.5); lastY = ev.clientY
+      const dy = lastY - ev.clientY
+      lastY = ev.clientY
+      v = clamp(v + dy * 1.5)
       setByFn(fn, Math.round(v))
+      setSpin((s) => s + dy * 2) // free, unbounded rotation
     }
     const up = () => {
-      window.removeEventListener('pointermove', move); window.removeEventListener('pointerup', up)
+      window.removeEventListener('pointermove', move)
+      window.removeEventListener('pointerup', up)
     }
-    window.addEventListener('pointermove', move); window.addEventListener('pointerup', up)
+    window.addEventListener('pointermove', move)
+    window.addEventListener('pointerup', up)
   }
   return (
     <div className={`calwheel${fn ? '' : ' idle'}`}
       style={{ left: L(x), top: T(y), width: L(d), height: T(d) }}
-      onPointerDown={onPointerDown} title={fn ?? 'no control'}>
-      <span className="calwheel-tick" style={{ transform: `rotate(${angle}deg)` }} />
+      onPointerDown={onPointerDown} title={fn ? `${fn}: ${value}` : 'no control'}>
+      <span className="calwheel-spin" style={{ transform: `rotate(${spin}deg)` }}>
+        <span className="calwheel-dot" />
+      </span>
     </div>
   )
 }
@@ -137,7 +145,7 @@ export function QuartzPanel() {
 
         {/* Fix / All / HiLight */}
         <Box x={44} y={272} w={92} h={118} cols={2} rows={2}>
-          <LedKey disabled title="Fix −1" /><LedKey disabled title="Fix +1" />
+          <LedKey led={false} disabled title="Fix −1" /><LedKey led={false} disabled title="Fix +1" />
           <LedKey disabled title="All" /><LedKey disabled title="Hi Light" />
         </Box>
 
@@ -154,18 +162,18 @@ export function QuartzPanel() {
         {/* Program keys 6×2 */}
         <Box x={658} y={272} w={386} h={118} cols={6} rows={2}>
           <LedKey red disabled={!hasProgrammer} title="Record" onClick={recordCue} />
-          <LedKey disabled={!hasActive || !hasProgrammer} title="Update" onClick={() => activeCueId && updateCue(activeCueId)} />
-          <LedKey disabled title="Edit" /><LedKey disabled title="Select If" /><LedKey disabled title="Patch" /><LedKey disabled title="Disk" />
+          <LedKey led={false} disabled={!hasActive || !hasProgrammer} title="Update" onClick={() => activeCueId && updateCue(activeCueId)} />
+          <LedKey led={false} disabled title="Edit" /><LedKey led={false} disabled title="Select If" /><LedKey led={false} disabled title="Patch" /><LedKey led={false} disabled title="Disk" />
           <LedKey disabled={!hasActive} title="Delete" onClick={() => activeCueId && deleteCue(activeCueId)} />
-          <LedKey disabled={!hasActive} title="Copy" onClick={() => activeCueId && copyCue(activeCueId)} />
-          <LedKey disabled title="Move" /><LedKey disabled title="Unfold" /><LedKey disabled title="Include" />
-          <LedKey disabled={!hasActive} title="Release" onClick={releaseCue} />
+          <LedKey led={false} disabled={!hasActive} title="Copy" onClick={() => activeCueId && copyCue(activeCueId)} />
+          <LedKey led={false} disabled title="Move" /><LedKey led={false} disabled title="Unfold" /><LedKey led={false} disabled title="Include" />
+          <LedKey led={false} disabled={!hasActive} title="Release" onClick={releaseCue} />
         </Box>
 
         {/* Min/Max ... 2×2 */}
         <Box x={1074} y={272} w={122} h={118} cols={2} rows={2}>
-          <LedKey disabled title="Min/Max" /><LedKey disabled title="Size/Pos" />
-          <LedKey disabled title="View/Open" /><LedKey disabled title="Close/Control" />
+          <LedKey led={false} disabled title="Min/Max" /><LedKey led={false} disabled title="Size/Pos" />
+          <LedKey disabled title="View/Open" /><LedKey led={false} disabled title="Close/Control" />
         </Box>
 
         {/* Flash buttons above faders — two rows (top has the LED, bottom doesn't) */}
@@ -183,8 +191,8 @@ export function QuartzPanel() {
           })}
         </Box>
 
-        {/* Faders */}
-        <div className="cal-faders" style={{ left: L(44), top: T(585), width: L(612), height: T(285) }}>
+        {/* Faders — cover the photo's tracks/handles and draw clean ones */}
+        <div className="cal-faders" style={{ left: L(44), top: T(616), width: L(612), height: T(250) }}>
           {Array.from({ length: 10 }, (_, i) => {
             const gi = playbackPage * 10 + i
             const cue = cues[gi]
@@ -197,15 +205,15 @@ export function QuartzPanel() {
         </div>
 
         {/* Page keys */}
-        <Box x={690} y={438} w={62} h={62} cols={1} rows={1}><LedKey title="Next page" onClick={() => setPlaybackPage(playbackPage + 1)} /></Box>
+        <Box x={690} y={438} w={62} h={62} cols={1} rows={1}><LedKey led={false} title="Next page" onClick={() => setPlaybackPage(playbackPage + 1)} /></Box>
         <Box x={756} y={438} w={66} h={62} cols={1} rows={1}><LedKey disabled title="Go Page" /></Box>
-        <Box x={690} y={505} w={62} h={62} cols={1} rows={1}><LedKey disabled={playbackPage === 0} title="Previous page" onClick={() => setPlaybackPage(Math.max(0, playbackPage - 1))} /></Box>
+        <Box x={690} y={505} w={62} h={62} cols={1} rows={1}><LedKey led={false} disabled={playbackPage === 0} title="Previous page" onClick={() => setPlaybackPage(Math.max(0, playbackPage - 1))} /></Box>
 
         {/* Transport 2×3 + Go */}
         <Box x={690} y={600} w={130} h={178} cols={2} rows={3}>
-          <LedKey disabled title="Live Time" /><LedKey disabled title="Next Time" />
-          <LedKey disabled={!cues.length} title="Prev Cue" onClick={() => goRel(-1)} />
-          <LedKey disabled={!cues.length} title="Next Cue" onClick={() => goRel(1)} />
+          <LedKey led={false} disabled title="Live Time" /><LedKey led={false} disabled title="Next Time" />
+          <LedKey led={false} disabled={!cues.length} title="Prev Cue" onClick={() => goRel(-1)} />
+          <LedKey led={false} disabled={!cues.length} title="Next Cue" onClick={() => goRel(1)} />
           <LedKey disabled title="Connect/Cue" /><LedKey disabled title="Stop" />
         </Box>
         <button className="calbig red" style={{ left: L(728), top: T(782), width: L(72), height: T(62) }}
@@ -226,7 +234,7 @@ export function QuartzPanel() {
         </Box>
         {/* Back/Through/And/@ */}
         <Box x={916} y={806} w={258} h={62} cols={4} rows={1}>
-          <LedKey disabled title="Back" /><LedKey disabled title="Through" /><LedKey disabled title="And" /><LedKey disabled title="@" />
+          <LedKey led={false} disabled title="Back" /><LedKey led={false} disabled title="Through" /><LedKey led={false} disabled title="And" /><LedKey led={false} disabled title="@" />
         </Box>
         {/* Locate */}
         <button className="calbig red" style={{ left: L(1214), top: T(742), width: L(74), height: T(78) }}
