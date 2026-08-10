@@ -204,18 +204,20 @@ function buildFixture(movingHead: boolean): FxObj {
   const hit = new THREE.Mesh(new THREE.SphereGeometry(0.55, 10, 10), new THREE.MeshBasicMaterial({ visible: false }))
   group.add(hit)
 
-  // Selection halo — a soft coral glow, shown only when selected.
+  // Selection indicator — a small, soft red glow on the body (subtle, like a status
+  // light), shown only when selected.
   const halo = new THREE.Sprite(
     new THREE.SpriteMaterial({
       map: haloTexture(),
-      color: 0xff5a4d,
+      color: 0xff1e1e,
       transparent: true,
-      opacity: 0.85,
+      opacity: 0.7,
       blending: THREE.AdditiveBlending,
       depthWrite: false,
     }),
   )
-  halo.scale.setScalar(1.8)
+  halo.scale.setScalar(0.8)
+  halo.position.y = movingHead ? -0.34 : -0.1 // sit on the lamp body
   halo.visible = false
   group.add(halo)
 

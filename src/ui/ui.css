@@ -747,9 +747,7 @@
 .ckled { position: absolute; top: 8%; left: 50%; transform: translateX(-50%); width: 1.2cqw; height: 1.2cqw; border-radius: 50%; background: #24242a; }
 .ck-white .ckled { background: #b8b7ad; }
 .ck-red .ckled { background: #b23a30; }
-/* Coloured LEDs show a muted tint even when off, so the colour is readable. */
-.ckled.red { background: #cf7168; }
-.ckled.blue { background: #6f93c4; }
+/* Unlit LEDs stay grey; they only take their colour (blue/red) when lit. */
 .ck.ledb .ckled { top: auto; bottom: 10%; }
 .ckled.on { background: #3ab2ff; box-shadow: 0 0 0.35cqw #cdeaff, 0 0 1.9cqw #2ea6ff, 0 0 3cqw rgba(46, 166, 255, 0.6); }
 .ckled.on.red { background: #ff3b3b; box-shadow: 0 0 0.35cqw #ffd6d6, 0 0 1.9cqw #ff2424, 0 0 3cqw rgba(255, 40, 40, 0.6); }
