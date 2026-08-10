@@ -135,10 +135,10 @@ export function AppShell() {
                Explicit id+order on both panels so the nested PanelGroups don't
                confuse the initial sizing (else the console collapses to minSize). */}
             <Panel id="quartz-console" order={1} defaultSize={62} minSize={30}>
-              <PanelGroup direction="vertical" autoSaveId="dmxsim-quartz-left-v2">
+              <PanelGroup direction="vertical" autoSaveId="dmxsim-quartz-left-v3">
                 <Panel
                   ref={screenRef} collapsible collapsedSize={4}
-                  defaultSize={14} minSize={10}
+                  defaultSize={26} minSize={16}
                   onCollapse={() => setScreenCollapsed(true)}
                   onExpand={() => setScreenCollapsed(false)}
                 >

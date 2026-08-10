@@ -103,6 +103,14 @@ interface ShowState {
   locateSelected: () => void
   clearProgrammer: () => void
 
+  // Command line (Titan-style keypad syntax, e.g. "1 THRU 4 @ 50")
+  cmd: string
+  cmdAppend: (token: string) => void
+  cmdBackspace: () => void
+  cmdClear: () => void
+  /** Parse + run the command line (select fixtures by number, optional @level). */
+  commitCommand: () => void
+
   // Library
   addDefinitions: (defs: FixtureDefinition[]) => void
 
@@ -422,6 +430,52 @@ export const useShowStore = create<ShowState>()(
         }),
 
       clearProgrammer: () => set({ programmer: {} }),
+
+      cmd: '',
+      cmdAppend: (token) => set((s) => ({ cmd: s.cmd + token })),
+      cmdBackspace: () => set((s) => ({ cmd: s.cmd.replace(/\s*\S+\s*$/, '') })),
+      cmdClear: () => set({ cmd: '' }),
+      commitCommand: () =>
+        set((s) => {
+          const fixtures = s.show.fixtures
+          const raw = s.cmd.trim()
+          if (!raw) return { cmd: '' }
+          // Split the selection expression from an optional "@ <level>".
+          const atSplit = raw.split('@')
+          const toks = atSplit[0].trim().split(/\s+/).filter(Boolean)
+          const atVal = atSplit[1]?.trim()
+          // Resolve fixture user-numbers (1-based order) with THRU ranges + AND (+).
+          const nums = new Set<number>()
+          for (let i = 0; i < toks.length; ) {
+            if (/^\d+$/.test(toks[i])) {
+              if ((toks[i + 1] === 'THRU' || toks[i + 1] === '>') && /^\d+$/.test(toks[i + 2] ?? '')) {
+                const a = +toks[i], b = +toks[i + 2]
+                for (let n = Math.min(a, b); n <= Math.max(a, b); n++) nums.add(n)
+                i += 3
+              } else {
+                nums.add(+toks[i])
+                i += 1
+              }
+            } else i += 1
+          }
+          const ids = [...nums].filter((n) => n >= 1 && n <= fixtures.length).map((n) => fixtures[n - 1].id)
+          const selection = ids.length ? ids : s.selection
+          let programmer = s.programmer
+          if (atVal !== undefined && atVal !== '') {
+            const pct = Math.max(0, Math.min(100, +atVal || 0))
+            const value = Math.round((pct / 100) * 255)
+            programmer = { ...programmer }
+            for (const id of selection) {
+              const pf = fixtures.find((f) => f.id === id)
+              if (!pf) continue
+              const channels = s.definitions[pf.definitionId]?.modes[pf.modeIndex]?.channels ?? []
+              channels.forEach((ch, i) => {
+                if (ch.function === 'dimmer') programmer[id] = { ...programmer[id], [i]: value }
+              })
+            }
+          }
+          return { selection, programmer, cmd: '' }
+        }),
 
       addDefinitions: (defs) =>
         set((s) => ({ definitions: { ...s.definitions, ...defsRecord(defs) } })),

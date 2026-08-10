@@ -169,10 +169,29 @@ export function QuartzPanel() {
   }
   const hasProgrammer = useShowStore((s) => Object.keys(s.programmer).length > 0)
   const present = useSelectionFunctions()
+  const fixtures = useShowStore((s) => s.show.fixtures)
+  const select = useShowStore((s) => s.select)
+  const setByFn = useShowStore((s) => s.setSelectedByFunction)
+  const setMode = useShowStore((s) => s.setMode)
+  const cmdAppend = useShowStore((s) => s.cmdAppend)
+  const cmdBackspace = useShowStore((s) => s.cmdBackspace)
+  const cmdClear = useShowStore((s) => s.cmdClear)
+  const commitCommand = useShowStore((s) => s.commitCommand)
 
   const active = ATTRIBUTES.find((a) => a.name === attr) ?? ATTRIBUTES[0]
   const wheelFns = [0, 1, 2].map((i) => active.wheels[i]?.find((fn) => present.has(fn)))
   const noSel = selection.length === 0
+  const noFx = fixtures.length === 0
+  // Step the selection to the previous/next patched fixture (Fix −1 / Fix +1).
+  const step = (dir: 1 | -1) => {
+    if (noFx) return
+    const picked = fixtures.map((f, i) => (selection.includes(f.id) ? i : -1)).filter((i) => i >= 0)
+    const base = dir > 0 ? Math.max(...picked, -1) : picked.length ? Math.min(...picked) : -1
+    let ni = base < 0 ? (dir > 0 ? 0 : fixtures.length - 1) : base + dir
+    ni = ((ni % fixtures.length) + fixtures.length) % fixtures.length
+    select([fixtures[ni].id])
+  }
+  const dig = (d: string) => () => cmdAppend(d)
   const hasActive = !!activeCueId
   const goRel = (dir: 1 | -1) => {
     if (!cues.length) return
@@ -232,8 +251,10 @@ export function QuartzPanel() {
         {/* Fix / All / HiLight */}
         <GridLabels x={40} y={270} w={100} cols={2} items={['Fix −1', 'Fix +1']} above />
         <Box x={40} y={272} w={100} h={118} cols={2} rows={2} narrow>
-          <Key v="dark" narrow led={false} disabled title="Fix −1" /><Key v="dark" narrow led={false} disabled title="Fix +1" />
-          <Key v="dark" narrow disabled title="All" /><Key v="dark" narrow disabled title="Hi Light" />
+          <Key v="dark" narrow led={false} disabled={fixtures.length < 2} title="Fix −1 — fixture anterior" onClick={() => step(-1)} />
+          <Key v="dark" narrow led={false} disabled={fixtures.length < 2} title="Fix +1 — fixture siguiente" onClick={() => step(1)} />
+          <Key v="dark" narrow on={!noFx && selection.length === fixtures.length} disabled={noFx} title="All — seleccionar todo" onClick={() => select(fixtures.map((f) => f.id))} />
+          <Key v="dark" narrow disabled={noSel} title="Hi Light — intensidad al máximo" onClick={() => setByFn('dimmer', 255)} />
         </Box>
         <GridLabels x={40} y={392} w={100} cols={2} items={['All', 'Hi\nLight']} subs={['Rem Dim', 'Lo Light']} />
 
@@ -252,7 +273,7 @@ export function QuartzPanel() {
         <Box x={658} y={272} w={386} h={118} cols={6} rows={2}>
           <Key v="dark" ledColor="red" on={hasProgrammer} disabled={!hasProgrammer} title="Record" onClick={recordCue} />
           <Key v="white" led={false} disabled={!hasActive || !hasProgrammer} title="Update" onClick={() => activeCueId && updateCue(activeCueId)} />
-          <Key v="white" led={false} disabled title="Edit" /><Key v="white" led={false} disabled title="Select If" /><Key v="white" led={false} disabled title="Patch" /><Key v="white" led={false} disabled title="Disk" />
+          <Key v="white" led={false} disabled title="Edit" /><Key v="white" led={false} disabled title="Select If" /><Key v="white" led={false} title="Patch — ir a la vista de patch" onClick={() => setMode('patch')} /><Key v="white" led={false} disabled title="Disk" />
           <Key v="white" led={false} disabled={!hasActive} title="Delete" onClick={() => activeCueId && deleteCue(activeCueId)} />
           <Key v="white" led={false} disabled={!hasActive} title="Copy" onClick={() => activeCueId && copyCue(activeCueId)} />
           <Key v="white" led={false} disabled title="Move" /><Key v="white" led={false} disabled title="Unfold" /><Key v="white" led={false} disabled title="Include" />
@@ -325,11 +346,11 @@ export function QuartzPanel() {
           <Key v="dark" title="Fixtures" onClick={() => setScreen('fixtures')} />
           <Key v="dark" title="Palettes" onClick={() => setScreen('colour')} />
           <Key v="dark" disabled title="Macro" /><Key v="dark" disabled title="Group" />
-          <Key v="white" led={false} disabled text="1" title="1" /><Key v="white" led={false} disabled text="2" title="2" /><Key v="white" led={false} disabled text="3" title="3" /><Key v="white" on={shift} text="Avo" title="Avo — activa/desactiva las segundas funciones" onClick={() => setShift((s) => !s)} />
-          <Key v="white" led={false} disabled text="4" title="4" /><Key v="white" led={false} disabled text="5" title="5" /><Key v="white" led={false} disabled text="6" title="6" /><Key v="white" ledColor="blue" disabled text="TIME" title="Time" />
-          <Key v="white" led={false} disabled text="7" title="7" /><Key v="white" led={false} disabled text="8" title="8" /><Key v="white" led={false} disabled text="9" title="9" /><Key v="white" ledColor="red" on={hasProgrammer} text="CLEAR" title="Clear the programmer" onClick={clearProgrammer} />
-          <Key v="white" led={false} disabled text="EXIT" title="Exit" /><Key v="white" led={false} disabled text="0" title="0" /><Key v="white" led={false} disabled text="ENTER" title="Enter" /><Key v="white" led={false} disabled text="." title="." />
-          <Key v="dark" led={false} disabled title="Back" /><Key v="dark" led={false} disabled title="Through" /><Key v="dark" led={false} disabled title="And" /><Key v="dark" led={false} disabled title="@" />
+          <Key v="white" led={false} text="1" title="1" onClick={dig('1')} /><Key v="white" led={false} text="2" title="2" onClick={dig('2')} /><Key v="white" led={false} text="3" title="3" onClick={dig('3')} /><Key v="white" on={shift} text="Avo" title="Avo — activa/desactiva las segundas funciones" onClick={() => setShift((s) => !s)} />
+          <Key v="white" led={false} text="4" title="4" onClick={dig('4')} /><Key v="white" led={false} text="5" title="5" onClick={dig('5')} /><Key v="white" led={false} text="6" title="6" onClick={dig('6')} /><Key v="white" ledColor="blue" disabled text="TIME" title="Time" />
+          <Key v="white" led={false} text="7" title="7" onClick={dig('7')} /><Key v="white" led={false} text="8" title="8" onClick={dig('8')} /><Key v="white" led={false} text="9" title="9" onClick={dig('9')} /><Key v="white" ledColor="red" on={hasProgrammer} text="CLEAR" title="Clear the programmer" onClick={clearProgrammer} />
+          <Key v="white" led={false} text="EXIT" title="Exit — vaciar la línea de comandos" onClick={cmdClear} /><Key v="white" led={false} text="0" title="0" onClick={dig('0')} /><Key v="white" led={false} text="ENTER" title="Enter — ejecutar la línea de comandos" onClick={commitCommand} /><Key v="white" led={false} disabled text="." title="." />
+          <Key v="dark" led={false} title="Back — borrar" onClick={cmdBackspace} /><Key v="dark" led={false} disabled={noFx} title="Through — rango (THRU)" onClick={() => cmdAppend(' THRU ')} /><Key v="dark" led={false} disabled={noFx} title="And — añadir (+)" onClick={() => cmdAppend(' + ')} /><Key v="dark" led={false} disabled={noSel && noFx} title="@ — fijar intensidad" onClick={() => cmdAppend(' @ ')} />
         </Box>
         <GridLabels x={916} y={892} w={258} cols={4} items={['Back', 'Through', 'And', '@']} subs={['Undo', '−%', '+%', 'Redo']} />
 

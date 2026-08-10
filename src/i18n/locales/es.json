@@ -5,7 +5,9 @@
   },
   "common": {
     "collapse": "Plegar",
-    "expand": "Expandir"
+    "expand": "Expandir",
+    "language": "Idioma",
+    "reset": "Reiniciar show"
   },
   "modes": {
     "patch": "Patch",
@@ -62,9 +64,5 @@
     "save": "Guardar",
     "load": "Cargar",
     "invalid": "Ese archivo no es un show válido de DMXSimulatoR."
-  },
-  "common": {
-    "language": "Idioma",
-    "reset": "Reiniciar show"
   }
 }

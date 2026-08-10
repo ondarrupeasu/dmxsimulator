@@ -5,7 +5,9 @@
   },
   "common": {
     "collapse": "Tolestu",
-    "expand": "Zabaldu"
+    "expand": "Zabaldu",
+    "language": "Hizkuntza",
+    "reset": "Berrezarri show-a"
   },
   "modes": {
     "patch": "Patch",
@@ -62,9 +64,5 @@
     "save": "Gorde",
     "load": "Kargatu",
     "invalid": "Fitxategi hori ez da baliozko DMXSimulatoR show bat."
-  },
-  "common": {
-    "language": "Hizkuntza",
-    "reset": "Berrezarri show-a"
   }
 }
