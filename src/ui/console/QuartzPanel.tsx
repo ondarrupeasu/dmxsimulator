@@ -150,11 +150,11 @@ export function QuartzPanel() {
         <Label x={200} y={222} w={36} text="A @" /><Label x={413} y={222} w={36} text="B @" /><Label x={626} y={222} w={36} text="C @" />
 
         {/* Executors 2×10 */}
-        <GridLabels x={712} y={36} w={532} cols={10} items={['1', '2', '3', '4', '5', '6', '7', '8', '9', '10']} />
-        <Box x={712} y={52} w={532} h={156} cols={10} rows={2}>
+        <GridLabels x={712} y={38} w={532} cols={10} items={['1', '2', '3', '4', '5', '6', '7', '8', '9', '10']} />
+        <Box x={712} y={54} w={532} h={112} cols={10} rows={2}>
           {Array.from({ length: 20 }, (_, i) => <Key key={i} v="dark" narrow disabled title={`Executor ${i + 1}`} />)}
         </Box>
-        <GridLabels x={712} y={210} w={532} cols={10} items={['11\nAttribute\nEditor', '12\nShow\nLibrary', '13\nPlaybacks', '14\nChannel\nGrid', '15\nVisualiser', '16\nGroups +\nPalettes', '17\nFixtures\n+ Groups', '18\nSnap', '19', '20']} />
+        <GridLabels x={712} y={172} w={532} cols={10} items={['11\nAttribute\nEditor', '12\nShow\nLibrary', '13\nPlaybacks', '14\nChannel\nGrid', '15\nVisualiser', '16\nGroups +\nPalettes', '17\nFixtures\n+ Groups', '18\nSnap', '19', '20']} />
 
         {/* Fix / All / HiLight */}
         <GridLabels x={40} y={252} w={100} cols={2} items={['Fix −1', 'Fix +1']} />
@@ -196,7 +196,7 @@ export function QuartzPanel() {
         <GridLabels x={1074} y={392} w={122} cols={2} items={['View\n/Open', 'Close\nControl']} />
 
         {/* Flash rows: top row LED at bottom, bottom row no LED */}
-        <Box x={44} y={432} w={612} h={108} cols={10} rows={2}>
+        <Box x={44} y={454} w={612} h={104} cols={10} rows={2}>
           {Array.from({ length: 10 }, (_, i) => {
             const gi = playbackPage * 10 + i; const cue = cues[gi]; const on = !!cue && cue.id === activeCueId
             return <Key key={`t${i}`} v="dark" narrow ledBottom on={on} disabled={!cue} title={cue ? `Go ${cue.name}` : 'Empty'} onClick={() => cue && goCue(cue.id)} />
@@ -237,8 +237,8 @@ export function QuartzPanel() {
           <Key v="white" led={false} disabled={!cues.length} title="Next Cue" onClick={() => goRel(1)} />
           <Key v="dark" disabled title="Connect/Cue" /><Key v="dark" disabled title="Stop" />
         </Box>
-        <button className="calbig red" style={{ left: L(728), top: T(782), width: L(72), height: T(62) }} disabled={!cues.length} title="Go" onClick={() => goRel(1)} />
-        <Label x={710} y={848} w={108} text="Go" />
+        <button className="calbig red" style={{ left: L(728), top: T(792), width: L(72), height: T(60) }} disabled={!cues.length} title="Go" onClick={() => goRel(1)} />
+        <Label x={710} y={858} w={108} text="Go" />
 
         {/* Keypad: Fixture/Palette/Macro/Group */}
         <GridLabels x={916} y={446} w={258} cols={4} items={['Fixture', 'Palette', 'Macro', 'Group']} />

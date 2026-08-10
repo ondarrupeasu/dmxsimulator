@@ -646,7 +646,7 @@
   position: relative;
   /* Fit the whole desk inside the pane: limited by width (100%) OR height (141cqh
      keeps the 1306:919 ratio against the pane height), whichever is smaller. */
-  width: min(100%, 141cqh); max-width: 1000px;
+  width: min(100%, 141cqh); max-width: 960px;
   aspect-ratio: 1306 / 919;
   background: #17181d;
   border: 1px solid #2a2b31;
@@ -660,7 +660,7 @@
 /* Keys — exactly two colours (white / grey) + blue wheel keys. Every key has the
    SAME height; only two widths exist: 1:1 (fills its cell) and a little narrower. */
 .qcal .ck {
-  position: relative; width: 4.5cqw; height: 4.6cqw;
+  position: relative; width: 4.4cqw; height: 4.05cqw;
   align-self: center; justify-self: center;
   border-radius: 0.8cqw; cursor: pointer; padding: 0;
   display: flex; align-items: center; justify-content: center;
@@ -703,7 +703,8 @@
   position: absolute; display: flex; flex-direction: column; align-items: center;
   color: #e6e6ec; font-size: 1.05cqw; line-height: 1.08; text-align: center; pointer-events: none;
 }
-.cal-lbl .sub { color: #9a9aa2; }
+/* Shifted-function labels stay hidden until Avo is on. */
+.cal-lbl .sub { display: none; color: #9a9aa2; }
 /* Avo (shift) latched on — make it impossible to miss */
 .qcal.shift { outline: 0.25cqw solid var(--coral); outline-offset: -0.25cqw; }
 .cal-shift-badge {
@@ -712,7 +713,7 @@
   padding: 0.3cqw 1.1cqw; border-radius: 0.7cqw; z-index: 20; pointer-events: none;
   letter-spacing: 0.3px; box-shadow: 0 0.3cqw 1cqw rgba(0, 0, 0, 0.55);
 }
-.qcal.shift .cal-lbl .sub { color: var(--coral); font-weight: 700; }
+.qcal.shift .cal-lbl .sub { display: block; color: var(--coral); font-weight: 700; }
 /* Where a key HAS a shifted function, the primary label is replaced by it
    (e.g. "All" → "Rem Dim"); keys with no shifted function just dim. */
 .qcal.shift .cal-lbl:has(.sub) > span:not(.sub) { display: none; }
