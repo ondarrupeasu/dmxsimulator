@@ -173,6 +173,35 @@
   flex-direction: column;
   gap: 6px;
 }
+
+/* Truss layout strip — draggable fixture chips along the rig */
+.truss-strip {
+  position: relative;
+  height: 62px;
+  margin: 2px 0 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-elev);
+}
+.truss-bar {
+  position: absolute; left: 3%; right: 3%; top: 42%; height: 6px; transform: translateY(-50%);
+  background: linear-gradient(180deg, #3a3a44, #222229);
+  border: 1px solid #14141a; border-radius: 3px;
+}
+.truss-fx {
+  position: absolute; top: 42%; transform: translate(-50%, -50%);
+  display: flex; flex-direction: column; align-items: center; gap: 3px;
+  cursor: grab; touch-action: none; user-select: none;
+}
+.truss-fx:active { cursor: grabbing; }
+.truss-fx-dot {
+  width: 20px; height: 20px; border-radius: 5px;
+  background: linear-gradient(180deg, #50505a, #2c2c33); border: 1px solid #14141a;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+}
+.truss-fx.selected .truss-fx-dot { border-color: var(--coral); box-shadow: 0 0 0 2px var(--coral-soft); }
+.truss-fx-lbl { font-size: 10px; color: var(--text-faint); font-variant-numeric: tabular-nums; }
+.truss-fx.selected .truss-fx-lbl { color: var(--coral); }
 .lib-item,
 .patched-item {
   display: flex;

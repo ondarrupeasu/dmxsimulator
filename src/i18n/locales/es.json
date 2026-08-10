@@ -12,6 +12,7 @@
     "title": "Patch",
     "library": "Librería de fixtures",
     "patched": "Fixtures asignados",
+    "rig": "Distribución en el truss — arrastra para colocar",
     "add": "Añadir",
     "remove": "Quitar",
     "address": "Dirección",

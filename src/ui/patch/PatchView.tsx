@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useShowStore } from '../../store/showStore'
 import { fixtureFootprint } from '../../model/types'
@@ -11,6 +11,34 @@ export function PatchView() {
   const addFixture = useShowStore((s) => s.addFixture)
   const removeFixture = useShowStore((s) => s.removeFixture)
   const toggleSelect = useShowStore((s) => s.toggleSelect)
+  const select = useShowStore((s) => s.select)
+  const setFixturePosition = useShowStore((s) => s.setFixturePosition)
+
+  // Truss strip — drag a chip to set its position along the rig (x = −1..1).
+  const stripRef = useRef<HTMLDivElement>(null)
+  const dragId = useRef<string | null>(null)
+  const moveTo = (clientX: number, id: string) => {
+    const strip = stripRef.current
+    if (!strip) return
+    const r = strip.getBoundingClientRect()
+    const x = Math.max(-1, Math.min(1, ((clientX - r.left) / r.width) * 2 - 1))
+    const pf = show.fixtures.find((f) => f.id === id)
+    setFixturePosition(id, x, pf?.position.y ?? 0.6)
+  }
+  const onChipDown = (e: React.PointerEvent, id: string) => {
+    e.preventDefault()
+    dragId.current = id
+    select([id])
+    moveTo(e.clientX, id)
+    const move = (ev: PointerEvent) => moveTo(ev.clientX, id)
+    const up = () => {
+      dragId.current = null
+      window.removeEventListener('pointermove', move)
+      window.removeEventListener('pointerup', up)
+    }
+    window.addEventListener('pointermove', move)
+    window.addEventListener('pointerup', up)
+  }
 
   const library = useMemo(
     () =>
@@ -48,6 +76,27 @@ export function PatchView() {
             )
           })}
         </div>
+
+        {show.fixtures.length > 0 && (
+          <>
+            <div className="section-label">{t('patch.rig')}</div>
+            <div className="truss-strip" ref={stripRef}>
+              <div className="truss-bar" />
+              {show.fixtures.map((pf, i) => (
+                <div
+                  key={pf.id}
+                  className={`truss-fx${selection.includes(pf.id) ? ' selected' : ''}`}
+                  style={{ left: `${((pf.position.x + 1) / 2) * 100}%` }}
+                  title={`${pf.name} — drag to move`}
+                  onPointerDown={(e) => onChipDown(e, pf.id)}
+                >
+                  <span className="truss-fx-dot" />
+                  <span className="truss-fx-lbl">{i + 1}</span>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
 
         <div className="section-label">
           {t('patch.patched')} ({show.fixtures.length})
