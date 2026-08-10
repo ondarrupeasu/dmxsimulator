@@ -9,6 +9,8 @@ import { Visualizer2D } from './visualizer/Visualizer2D'
 import { Visualizer3D } from './visualizer/Visualizer3D'
 import { RunView } from './run/RunView'
 import { ShowMenu } from './ShowMenu'
+import { Splitter } from './Splitter'
+import { usePersistentSize } from './usePersistentSize'
 import './ui.css'
 
 const MODES = ['patch', 'program', 'run'] as const
@@ -20,6 +22,12 @@ export function AppShell() {
   const consoleId = useShowStore((s) => s.consoleId)
   const setConsole = useShowStore((s) => s.setConsole)
   const [viewer, setViewer] = useState<'2d' | '3d'>('3d')
+
+  // Resizable pane sizes (persisted, drag the dividers to change them).
+  const [leftW, setLeftW] = usePersistentSize('left', 340, 260, 680)
+  const [monitorH, setMonitorH] = usePersistentSize('monitorH', 210, 110, 560)
+  const [monitorW, setMonitorW] = usePersistentSize('monitorW', 300, 180, 760)
+  const [deskH, setDeskH] = usePersistentSize('deskH', 340, 220, 680)
 
   const Surface = consoleById(consoleId).Surface
   // The faithful Quartz desk docks wide at the bottom (like a real console under
@@ -95,21 +103,35 @@ export function AppShell() {
       </div>
 
       {quartzDocked ? (
-        <div className="body body-desk">
-          <div className="desk-top">
-            {visualizerPanel}
-            <DmxMonitor universe={1} />
+        <div className="workspace" style={{ flexDirection: 'column' }}>
+          <div className="row-flex" style={{ flex: 1, minHeight: 0 }}>
+            <div className="pane" style={{ flex: 1, minWidth: 0 }}>
+              {visualizerPanel}
+            </div>
+            <Splitter dir="col" onDrag={(d) => setMonitorW((w) => w - d)} />
+            <div className="pane" style={{ width: monitorW, flex: '0 0 auto' }}>
+              <DmxMonitor universe={1} />
+            </div>
           </div>
-          <div className="desk-dock">
+          <Splitter dir="row" onDrag={(d) => setDeskH((h) => h - d)} />
+          <div className="pane" style={{ height: deskH, flex: '0 0 auto' }}>
             <Surface />
           </div>
         </div>
       ) : (
-        <div className="body">
-          {leftPanel}
-          <div className="right-col">
-            {visualizerPanel}
-            <DmxMonitor universe={1} />
+        <div className="workspace">
+          <div className="pane" style={{ width: leftW, flex: '0 0 auto' }}>
+            {leftPanel}
+          </div>
+          <Splitter dir="col" onDrag={(d) => setLeftW((w) => w + d)} />
+          <div className="col-flex" style={{ flex: 1, minWidth: 0 }}>
+            <div className="pane" style={{ flex: 1, minHeight: 0 }}>
+              {visualizerPanel}
+            </div>
+            <Splitter dir="row" onDrag={(d) => setMonitorH((h) => h - d)} />
+            <div className="pane" style={{ height: monitorH, flex: '0 0 auto' }}>
+              <DmxMonitor universe={1} />
+            </div>
           </div>
         </div>
       )}

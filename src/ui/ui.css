@@ -73,6 +73,37 @@
   min-height: 0;
 }
 
+/* ---- Resizable workspace (flex panes + draggable splitters) ---- */
+.workspace {
+  flex: 1;
+  min-height: 0;
+  padding: var(--gap);
+  display: flex;
+}
+.row-flex { display: flex; min-width: 0; min-height: 0; }
+.col-flex { display: flex; flex-direction: column; min-width: 0; min-height: 0; }
+.pane { display: flex; min-width: 0; min-height: 0; }
+.pane > * { flex: 1; min-width: 0; min-height: 0; }
+
+.splitter {
+  flex: 0 0 auto;
+  position: relative;
+  z-index: 5;
+  touch-action: none;
+}
+.splitter-col { width: var(--gap); cursor: col-resize; }
+.splitter-row { height: var(--gap); cursor: row-resize; }
+.splitter::after {
+  content: '';
+  position: absolute;
+  background: var(--border-strong);
+  border-radius: 2px;
+  transition: background 0.12s;
+}
+.splitter-col::after { top: 50%; left: 50%; width: 3px; height: 32px; transform: translate(-50%, -50%); }
+.splitter-row::after { left: 50%; top: 50%; height: 3px; width: 32px; transform: translate(-50%, -50%); }
+.splitter:hover::after { background: var(--coral); }
+
 .panel {
   background: var(--bg-panel);
   border: 1px solid var(--border);
@@ -168,15 +199,15 @@
 /* ---- DMX monitor ---- */
 .dmx-grid {
   display: grid;
-  grid-template-columns: repeat(32, 1fr);
-  gap: 2px;
+  grid-template-columns: repeat(auto-fill, minmax(30px, 1fr));
+  gap: 3px;
 }
 .dmx-cell {
   position: relative;
   aspect-ratio: 1;
   background: var(--bg-elev);
-  border-radius: 2px;
-  font-size: 8px;
+  border-radius: 3px;
+  font-size: 10px;
   color: var(--text-faint);
   display: flex;
   align-items: flex-end;
@@ -287,7 +318,7 @@
   background: linear-gradient(180deg, #20202a, #17171e);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  overflow: hidden;
+  overflow: auto;
 }
 .qd-screen {
   background: #0d0d12;
