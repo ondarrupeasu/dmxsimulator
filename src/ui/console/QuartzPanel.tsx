@@ -210,10 +210,14 @@ export function QuartzPanel() {
                 const on = cue && cue.id === activeCueId
                 return (
                   <div className="qp-fader" key={i}>
-                    <button className={`qp-flash${on ? ' on' : ''}${cue ? '' : ' empty'}`}
-                      title={cue ? `Fire ${cue.name}` : 'Empty playback'} onClick={() => cue && goCue(cue.id)}>
+                    {/* Two rows of buttons above each fader, like the real desk */}
+                    <button className={`qp-flash top${on ? ' on' : ''}${cue ? '' : ' empty'}`}
+                      title={cue ? `Go ${cue.name}` : 'Empty playback'} onClick={() => cue && goCue(cue.id)}>
                       {gi + 1}
                     </button>
+                    <button className={`qp-flash bot${on ? ' on' : ''}${cue ? '' : ' empty'}`}
+                      title={cue ? `Flash ${cue.name}` : 'Empty playback'} disabled={!cue}
+                      onClick={() => cue && goCue(cue.id)} />
                     <input type="range" min={0} max={255} defaultValue={cue ? 255 : 0} disabled={!cue} />
                   </div>
                 )
