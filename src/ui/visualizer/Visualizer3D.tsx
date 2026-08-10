@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react'
 import * as THREE from 'three'
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js'
+import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js'
 import { useShowStore } from '../../store/showStore'
 import { computeFixtureOutputs, mergeProgrammer } from '../../engine/dmx'
 import { applyEffects } from '../../engine/effects'
@@ -15,8 +16,9 @@ function place(x: number): THREE.Vector3 {
 
 interface FxObj {
   group: THREE.Group
-  head: THREE.Group
-  body: THREE.Mesh
+  panPart: THREE.Object3D // yoke — rotates around Y (pan)
+  tiltPart: THREE.Object3D // head — rotates around X (tilt); the beam lives here
+  body: THREE.Mesh // lamp barrel (carries the lit-colour tint)
   edges: THREE.LineSegments
   hit: THREE.Mesh
   halo: THREE.Sprite
@@ -25,6 +27,13 @@ interface FxObj {
   pool: THREE.Mesh
   poolMat: THREE.MeshBasicMaterial
 }
+
+// Reused temporaries for the per-frame beam-direction maths (no allocation).
+const _qy = new THREE.Quaternion()
+const _qx = new THREE.Quaternion()
+const _q = new THREE.Quaternion()
+const _X = new THREE.Vector3(1, 0, 0)
+const _Y = new THREE.Vector3(0, 1, 0)
 
 /** Soft radial-gradient texture for the selection halo (created once). */
 let _haloTex: THREE.CanvasTexture | null = null
@@ -58,36 +67,116 @@ function makeBeamGeometry(): THREE.ConeGeometry {
   return geo
 }
 
-function buildFixture(): FxObj {
+/** A cylinder between two points — the building block of the truss lattice. */
+function tube(a: THREE.Vector3, b: THREE.Vector3, r: number): THREE.BufferGeometry {
+  const dir = new THREE.Vector3().subVectors(b, a)
+  const len = dir.length() || 0.001
+  const geo = new THREE.CylinderGeometry(r, r, len, 6, 1)
+  const q = new THREE.Quaternion().setFromUnitVectors(_Y, dir.normalize())
+  const mid = new THREE.Vector3().addVectors(a, b).multiplyScalar(0.5)
+  geo.applyMatrix4(new THREE.Matrix4().compose(mid, q, new THREE.Vector3(1, 1, 1)))
+  return geo
+}
+
+const trussMat = new THREE.MeshStandardMaterial({ color: 0x9c9ca4, metalness: 0.75, roughness: 0.35 })
+
+/** A box-truss (4 chords + zig-zag bracing), merged to a single mesh. */
+function buildTruss(length: number): THREE.Mesh {
+  const geos: THREE.BufferGeometry[] = []
+  const s = 0.2 // half cross-section
+  const x0 = -length / 2
+  const x1 = length / 2
+  const corners: [number, number][] = [
+    [s, s],
+    [s, -s],
+    [-s, s],
+    [-s, -s],
+  ]
+  for (const [y, z] of corners) geos.push(tube(new THREE.Vector3(x0, y, z), new THREE.Vector3(x1, y, z), 0.045))
+  const n = Math.max(1, Math.round(length / 0.7))
+  const step = length / n
+  const faces: [[number, number], [number, number]][] = [
+    [[s, s], [s, -s]],
+    [[-s, s], [-s, -s]],
+    [[s, s], [-s, s]],
+    [[s, -s], [-s, -s]],
+  ]
+  for (const [c1, c2] of faces) {
+    for (let i = 0; i < n; i++) {
+      const xa = x0 + i * step
+      const xb = xa + step
+      geos.push(tube(new THREE.Vector3(xa, c1[0], c1[1]), new THREE.Vector3(xa, c2[0], c2[1]), 0.026))
+      const d1 = i % 2 === 0 ? c1 : c2
+      const d2 = i % 2 === 0 ? c2 : c1
+      geos.push(tube(new THREE.Vector3(xa, d1[0], d1[1]), new THREE.Vector3(xb, d2[0], d2[1]), 0.026))
+    }
+  }
+  return new THREE.Mesh(mergeGeometries(geos, false), trussMat)
+}
+
+const metalMat = new THREE.MeshStandardMaterial({ color: 0x2b2b31, metalness: 0.6, roughness: 0.5 })
+
+/** A fixture model. Moving heads get a base + panning yoke + tilting head; other
+ *  kinds get a static can on a yoke. Either way the beam lives in the tilt part. */
+function buildFixture(movingHead: boolean): FxObj {
   const group = new THREE.Group()
+  const panPart = new THREE.Group()
+  const tiltPart = new THREE.Group()
 
-  // Static bracket clamped to the truss — stays put while the head moves.
-  const base = new THREE.Mesh(
-    new THREE.BoxGeometry(0.5, 0.14, 0.32),
-    new THREE.MeshStandardMaterial({ color: 0x2b2b32, metalness: 0.6, roughness: 0.5 }),
-  )
-  base.position.y = 0.32
-  group.add(base)
+  const barrelMat = new THREE.MeshStandardMaterial({ color: 0x16161c, metalness: 0.5, roughness: 0.5 })
+  let body: THREE.Mesh
 
-  // The moving head: body + beam live here so they pan/tilt together, like a real
-  // moving head — the lamp visibly follows the light cone.
-  const head = new THREE.Group()
-  group.add(head)
+  if (movingHead) {
+    // Clamp + base that stay on the truss; the yoke pans, the head tilts.
+    const clamp = new THREE.Mesh(new THREE.BoxGeometry(0.34, 0.12, 0.34), metalMat)
+    clamp.position.y = 0.44
+    group.add(clamp)
+    const baseCyl = new THREE.Mesh(new THREE.CylinderGeometry(0.19, 0.21, 0.14, 18), metalMat)
+    baseCyl.position.y = 0.3
+    group.add(baseCyl)
 
-  // A small dark lamp body (like a PAR can) with a light edge, so it reads as a
-  // fixture without a bright cube stealing attention.
-  const bodyGeo = new THREE.CylinderGeometry(0.22, 0.27, 0.44, 20)
-  const body = new THREE.Mesh(
-    bodyGeo,
-    new THREE.MeshStandardMaterial({ color: 0x14141a, metalness: 0.5, roughness: 0.55 }),
-  )
+    panPart.position.y = 0.23
+    group.add(panPart)
+    const armGeo = new THREE.BoxGeometry(0.06, 0.5, 0.14)
+    const armL = new THREE.Mesh(armGeo, metalMat)
+    armL.position.set(-0.26, -0.2, 0)
+    const armR = new THREE.Mesh(armGeo, metalMat)
+    armR.position.set(0.26, -0.2, 0)
+    panPart.add(armL, armR)
+
+    tiltPart.position.y = -0.34
+    panPart.add(tiltPart)
+    const barrelGeo = new THREE.CylinderGeometry(0.17, 0.19, 0.42, 20)
+    body = new THREE.Mesh(barrelGeo, barrelMat)
+    body.position.y = -0.13
+    tiltPart.add(body)
+    const lens = new THREE.Mesh(new THREE.TorusGeometry(0.17, 0.022, 8, 20), metalMat)
+    lens.rotation.x = Math.PI / 2
+    lens.position.y = -0.34
+    tiltPart.add(lens)
+  } else {
+    // Static can (PAR / strobe / dimmer) hanging from a simple yoke bracket.
+    const clamp = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.1, 0.3), metalMat)
+    clamp.position.y = 0.42
+    group.add(clamp)
+    const yoke = new THREE.Mesh(new THREE.TorusGeometry(0.27, 0.03, 8, 20, Math.PI), metalMat)
+    yoke.position.y = 0.05
+    group.add(yoke)
+    group.add(panPart)
+    panPart.add(tiltPart)
+    const barrelGeo = new THREE.CylinderGeometry(0.22, 0.24, 0.4, 20)
+    body = new THREE.Mesh(barrelGeo, barrelMat)
+    body.position.y = -0.1
+    tiltPart.add(body)
+  }
+
   const edges = new THREE.LineSegments(
-    new THREE.EdgesGeometry(bodyGeo, 25),
+    new THREE.EdgesGeometry(body.geometry, 25),
     new THREE.LineBasicMaterial({ color: 0x7f7f8c }),
   )
   body.add(edges)
-  head.add(body)
 
+  // Beam — apex at the lens, pointing down the tilt part's local −Y.
   const beamMat = new THREE.MeshBasicMaterial({
     vertexColors: true,
     transparent: true,
@@ -97,9 +186,10 @@ function buildFixture(): FxObj {
     side: THREE.DoubleSide,
   })
   const beam = new THREE.Mesh(makeBeamGeometry(), beamMat)
-  head.add(beam)
+  beam.position.y = movingHead ? -0.34 : -0.3
+  tiltPart.add(beam)
 
-  // Floor pool (added to the scene, not the head, so it stays flat on the floor).
+  // Floor pool (in the scene, not the head, so it stays flat on the floor).
   const poolMat = new THREE.MeshBasicMaterial({
     color: 0xffffff,
     transparent: true,
@@ -110,15 +200,11 @@ function buildFixture(): FxObj {
   const pool = new THREE.Mesh(new THREE.CircleGeometry(0.13, 24), poolMat)
   pool.rotation.x = -Math.PI / 2
 
-  // Invisible pick proxy at the lamp — a generous, precise click target that isn't
-  // the big overlapping beam cone, so clicks pick the fixture you aimed at.
-  const hit = new THREE.Mesh(
-    new THREE.SphereGeometry(0.5, 10, 10),
-    new THREE.MeshBasicMaterial({ visible: false }),
-  )
+  // Invisible, generous pick proxy so clicks select the fixture, not the big beam.
+  const hit = new THREE.Mesh(new THREE.SphereGeometry(0.55, 10, 10), new THREE.MeshBasicMaterial({ visible: false }))
   group.add(hit)
 
-  // Selection halo — a soft coral glow around the fixture, shown only when selected.
+  // Selection halo — a soft coral glow, shown only when selected.
   const halo = new THREE.Sprite(
     new THREE.SpriteMaterial({
       map: haloTexture(),
@@ -129,11 +215,11 @@ function buildFixture(): FxObj {
       depthWrite: false,
     }),
   )
-  halo.scale.setScalar(1.7)
+  halo.scale.setScalar(1.8)
   halo.visible = false
   group.add(halo)
 
-  return { group, head, body, edges, hit, halo, beam, beamMat, pool, poolMat }
+  return { group, panPart, tiltPart, body, edges, hit, halo, beam, beamMat, pool, poolMat }
 }
 
 export function Visualizer3D() {
@@ -174,11 +260,8 @@ export function Visualizer3D() {
     const grid = new THREE.GridHelper(40, 40, 0x3c3c4a, 0x272730)
     grid.position.y = 0.02
     scene.add(grid)
-    const truss = new THREE.Mesh(
-      new THREE.BoxGeometry(16, 0.15, 0.15),
-      new THREE.MeshStandardMaterial({ color: 0x33333c, metalness: 0.6, roughness: 0.5 }),
-    )
-    truss.position.set(0, TRUSS_Y + 0.3, 0)
+    const truss = buildTruss(18)
+    truss.position.set(0, TRUSS_Y + 0.55, 0)
     scene.add(truss)
 
     const fxMap = new Map<string, FxObj>()
@@ -222,10 +305,8 @@ export function Visualizer3D() {
       let o: THREE.Object3D | null = picked.object
       while (o && !o.userData.fixtureId) o = o.parent
       const id = o?.userData.fixtureId as string | undefined
-      if (id) {
-        if (e.shiftKey) st.toggleSelect(id)
-        else st.select([id])
-      }
+      // Click toggles, accumulating a multi-selection like the patch list does.
+      if (id) st.toggleSelect(id)
     }
     renderer.domElement.addEventListener('pointerdown', onDown)
     renderer.domElement.addEventListener('pointerup', onUp)
@@ -262,7 +343,7 @@ export function Visualizer3D() {
         if (!def) continue
         let fx = fxMap.get(pf.id)
         if (!fx) {
-          fx = buildFixture()
+          fx = buildFixture(def.category === 'movingHead')
           scene.add(fx.group)
           scene.add(fx.pool)
           fxMap.set(pf.id, fx)
@@ -276,11 +357,14 @@ export function Visualizer3D() {
         const vs = computeVisualState(def, pf.modeIndex, outById.get(pf.id) ?? [])
         const col = new THREE.Color(vs.color.r / 255, vs.color.g / 255, vs.color.b / 255)
 
-        fx.head.rotation.y = THREE.MathUtils.degToRad(vs.pan ?? 0)
-        fx.head.rotation.x = THREE.MathUtils.degToRad(vs.tilt ?? 0)
+        // Pan turns the yoke, tilt turns the head — the beam (in the head) follows.
+        fx.panPart.rotation.y = THREE.MathUtils.degToRad(vs.pan ?? 0)
+        fx.tiltPart.rotation.x = THREE.MathUtils.degToRad(vs.tilt ?? 0)
 
-        // Beam direction in world space; length = distance to the floor (y=0).
-        down.set(0, -1, 0).applyEuler(fx.head.rotation)
+        // Beam world direction = pan ∘ tilt applied to local −Y (down).
+        _qy.setFromAxisAngle(_Y, fx.panPart.rotation.y)
+        _qx.setFromAxisAngle(_X, fx.tiltPart.rotation.x)
+        down.set(0, -1, 0).applyQuaternion(_q.copy(_qy).multiply(_qx))
         let length = 16
         let hitsFloor = false
         if (down.y < -0.02) {
