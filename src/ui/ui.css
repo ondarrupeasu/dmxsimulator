@@ -596,6 +596,189 @@
 }
 .qd-hw .qd-key.clear { padding: 12px; }
 
+/* ==== Quartz console: screen (top-left) + button panel (bottom-left) ==== */
+.qscreen {
+  display: flex;
+  flex-direction: column;
+  background: #0d0d12;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  min-height: 0;
+}
+.qscreen-head {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+  flex: 0 0 auto;
+}
+.qscreen-body { flex: 1; overflow: auto; padding: 10px 12px; min-height: 0; }
+
+/* The physical button panel — silver chassis */
+.qpanel {
+  --key-face: linear-gradient(180deg, #f4f2ec, #dddbd2);
+  --key-face-hover: linear-gradient(180deg, #fffffb, #e8e6dd);
+  --key-edge: #9a978d;
+  --key-text: #2c2b27;
+  --led: #2ea6ff;
+  --desk-red: linear-gradient(180deg, #ec5646, #c9352a);
+  background: linear-gradient(180deg, #d9d8d2, #bebdb5);
+  border: 1px solid #8b897f;
+  border-radius: var(--radius);
+  color: var(--key-text);
+  overflow: auto;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-height: 0;
+}
+
+/* Generic physical key */
+.qpanel .qk {
+  font: inherit;
+  font-size: 10.5px;
+  color: var(--key-text);
+  background: var(--key-face);
+  border: 1px solid var(--key-edge);
+  border-top-color: #ffffff;
+  border-radius: 4px;
+  padding: 6px 5px;
+  cursor: pointer;
+  text-align: center;
+  line-height: 1.1;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 30px;
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+.qpanel .qk:hover:not(:disabled) { background: var(--key-face-hover); }
+.qpanel .qk:disabled { color: #8a887f; cursor: default; }
+.qpanel .qk.lit {
+  background: linear-gradient(180deg, #fffef8, #e9e7dd);
+  box-shadow: 0 0 0 2px var(--led), inset 0 1px 0 #fff;
+  font-weight: 700;
+}
+.qpanel .qk.lit::after {
+  content: '';
+  position: absolute;
+  top: 3px; right: 3px;
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: var(--led);
+  box-shadow: 0 0 5px var(--led);
+}
+.qpanel .qk-red {
+  background: var(--desk-red);
+  border-color: #7a231c;
+  color: #fff;
+  font-weight: 700;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.4);
+}
+.qpanel .qk-rec::before {
+  content: '';
+  display: inline-block;
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: #e33;
+  box-shadow: 0 0 4px #e33;
+  margin-right: 4px;
+}
+.qpanel .qk-attr { border-bottom: 3px solid var(--k); }
+
+/* The three rows keep their natural size; the panel scrolls if the quadrant is
+   narrow (rather than squishing keys on top of each other). */
+.qp-top,
+.qp-mid,
+.qp-bot { min-width: max-content; }
+
+/* Top row: wheels + 20 executor buttons */
+.qp-top { display: grid; grid-template-columns: auto auto; gap: 18px; align-items: start; }
+.qp-wheels { display: flex; gap: 12px; }
+.qp-wheel { display: flex; flex-direction: column; align-items: center; gap: 4px; width: 66px; }
+.qp-dial {
+  width: 52px; height: 52px; border-radius: 50%;
+  background: radial-gradient(circle at 50% 35%, #f4f3f0, #bdbbb3 58%, #8f8d85);
+  border: 1px solid #7d7b73;
+  box-shadow: inset 0 2px 4px rgba(255, 255, 255, 0.7), 0 2px 3px rgba(0, 0, 0, 0.3);
+  position: relative;
+}
+.qp-dial::after {
+  content: '';
+  position: absolute;
+  width: 14px; height: 14px; border-radius: 50%;
+  left: 50%; top: 66%; transform: translate(-50%, -50%);
+  background: radial-gradient(circle at 50% 38%, #6f6d66, #38372f);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.6);
+}
+.qp-dial-tick {
+  position: absolute; left: 50%; top: 5px;
+  width: 3px; height: 18px; margin-left: -1.5px;
+  background: #c9362b; border-radius: 2px;
+  transform-origin: 50% 21px;
+}
+.qp-wheel.dim .qp-dial { opacity: 0.65; }
+.qp-wheel input[type='range'] { width: 100%; }
+.qp-wheel-cap { font-size: 10px; color: #3a3934; font-weight: 600; text-transform: capitalize; }
+
+.qp-exec { display: grid; grid-template-columns: repeat(10, 1fr); gap: 4px; }
+.qpanel .qk-exec {
+  flex-direction: column;
+  gap: 1px;
+  min-height: 34px;
+  padding: 3px 2px;
+  background: linear-gradient(180deg, #1c3a68, #112548);
+  border-color: #0c1830;
+  color: #cfe6ff;
+  box-shadow: inset 0 0 5px rgba(46, 166, 255, 0.35);
+}
+.qk-exec .qk-num { font-size: 9px; opacity: 0.85; }
+.qk-exec .qk-leg { font-size: 7.5px; line-height: 1; }
+
+/* Middle: fix keys + attribute bank + program + utilities */
+.qp-mid { display: grid; grid-template-columns: auto auto auto auto; gap: 14px; align-items: start; }
+.qp-fixcol { display: grid; grid-template-columns: repeat(2, 1fr); gap: 4px; width: 112px; align-content: start; }
+.qp-attrblock { display: flex; flex-direction: column; gap: 4px; }
+.qp-attr-row { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+.qp-attr-row .qk { min-width: 54px; }
+.qp-progblock { display: grid; grid-template-columns: repeat(6, 1fr); gap: 4px; }
+.qp-progblock .qk { min-width: 52px; }
+.qp-utilblock { display: grid; grid-template-columns: repeat(2, 1fr); gap: 4px; width: 128px; align-content: start; }
+
+/* Bottom: faders + page + cue/keypad cluster */
+.qp-bot { display: grid; grid-template-columns: auto auto; gap: 18px; align-items: start; }
+.qp-faderblock { display: flex; gap: 10px; align-items: flex-start; }
+.qp-faders { display: grid; grid-template-columns: repeat(10, 1fr); gap: 5px; }
+.qp-fader { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.qp-flash {
+  width: 100%; padding: 5px 0; font-size: 10px; color: #dff1ff;
+  background: linear-gradient(180deg, #1c3a68, #112548);
+  border: 1px solid #0c1830; border-radius: 4px; cursor: pointer;
+  box-shadow: inset 0 0 6px rgba(46, 166, 255, 0.45);
+}
+.qp-flash.on { background: linear-gradient(180deg, #3ab0ff, #1878d0); color: #04203a; font-weight: 700; box-shadow: 0 0 8px rgba(46, 166, 255, 0.8); }
+.qp-flash.empty { opacity: 0.4; box-shadow: none; cursor: default; }
+.qp-fader input[type='range'] { writing-mode: vertical-lr; direction: rtl; width: 10px; height: 70px; }
+.qp-fader-cap { font-size: 9px; color: #5c5a52; }
+.qp-pagecol { display: flex; flex-direction: column; gap: 4px; align-items: center; }
+.qp-pagen { font-size: 9px; color: #5c5a52; }
+.qp-logo { margin-top: 6px; font-size: 11px; font-weight: 800; letter-spacing: 1px; color: #6a685f; }
+
+.qp-cluster { display: flex; flex-direction: column; gap: 6px; }
+.qp-selrow { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; }
+.qp-transport { display: grid; grid-template-columns: 1fr auto; gap: 6px; align-items: stretch; }
+.qp-tcol { display: grid; grid-template-rows: 1fr 1fr; gap: 4px; }
+.qpanel .qk-go { min-width: 72px; padding: 0 16px; font-size: 14px; }
+.qp-keyzone { display: grid; grid-template-columns: auto auto; gap: 6px; }
+.qp-numpad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; }
+.qp-numpad .qk { min-width: 34px; font-size: 13px; }
+.qp-sidekeys { display: grid; grid-template-rows: repeat(4, 1fr); gap: 4px; }
+
 /* ---- Cue list (Run) ---- */
 .cue-list {
   display: flex;

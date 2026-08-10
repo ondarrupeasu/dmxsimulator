@@ -3,7 +3,7 @@
  */
 import type { ConsoleDefinition } from './types'
 import { UniversalSurface } from '../ui/console/UniversalSurface'
-import { QuartzDesk } from '../ui/console/QuartzDesk'
+import { QuartzPanel } from '../ui/console/QuartzPanel'
 
 export const CONSOLES: ConsoleDefinition[] = [
   {
@@ -11,7 +11,8 @@ export const CONSOLES: ConsoleDefinition[] = [
     brand: 'Avolites',
     model: 'Quartz',
     status: 'wip',
-    Surface: QuartzDesk,
+    // Rendered as a 4-quadrant layout (screen + panel) by AppShell when docked.
+    Surface: QuartzPanel,
     note: 'Faithful Quartz panel — practise the real desk. In progress.',
   },
   {

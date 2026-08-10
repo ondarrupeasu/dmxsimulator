@@ -50,6 +50,12 @@ interface ShowState {
   updateEffect: (id: string, partial: Partial<Effect>) => void
   removeEffect: (id: string) => void
 
+  // Quartz desk UI state (shared between its screen + button panel)
+  deskAttr: string
+  setDeskAttr: (a: string) => void
+  deskScreen: string
+  setDeskScreen: (s: string) => void
+
   setMode: (mode: AppMode) => void
   setConsole: (consoleId: string) => void
 
@@ -167,6 +173,11 @@ export const useShowStore = create<ShowState>()(
           effects: s.effects.map((e) => (e.id === id ? { ...e, ...partial } : e)),
         })),
       removeEffect: (id) => set((s) => ({ effects: s.effects.filter((e) => e.id !== id) })),
+
+      deskAttr: 'Intensity',
+      setDeskAttr: (a) => set({ deskAttr: a }),
+      deskScreen: 'fixtures',
+      setDeskScreen: (screen) => set({ deskScreen: screen }),
 
       setMode: (mode) => set({ mode }),
       setConsole: (consoleId) => set({ consoleId }),

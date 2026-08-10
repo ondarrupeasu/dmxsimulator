@@ -9,6 +9,8 @@ import { DmxMonitor } from './patch/DmxMonitor'
 import { Visualizer2D } from './visualizer/Visualizer2D'
 import { Visualizer3D } from './visualizer/Visualizer3D'
 import { RunView } from './run/RunView'
+import { QuartzScreen } from './console/QuartzScreen'
+import { QuartzPanel } from './console/QuartzPanel'
 import { ShowMenu } from './ShowMenu'
 import './ui.css'
 
@@ -120,23 +122,35 @@ export function AppShell() {
 
       <div className="workspace">
         {quartzDocked ? (
-          <PanelGroup direction="vertical" autoSaveId="dmxsim-desk">
-            <Panel minSize={30}>
-              <PanelGroup direction="horizontal" autoSaveId="dmxsim-desk-top">
-                <Panel minSize={30}>
-                  <div className="pane">{visualizerPanel}</div>
+          <PanelGroup direction="horizontal" autoSaveId="dmxsim-quartz">
+            {/* LEFT: the console — screen (top) + button panel (bottom) */}
+            <Panel defaultSize={50} minSize={30}>
+              <PanelGroup direction="vertical" autoSaveId="dmxsim-quartz-left">
+                <Panel defaultSize={36} minSize={16}>
+                  <div className="pane">
+                    <QuartzScreen />
+                  </div>
                 </Panel>
-                <PanelResizeHandle className="rz rz-v" />
-                <Panel defaultSize={24} minSize={12}>
-                  <div className="pane">{monitorPanel}</div>
+                <PanelResizeHandle className="rz rz-h" />
+                <Panel minSize={30}>
+                  <div className="pane">
+                    <QuartzPanel />
+                  </div>
                 </Panel>
               </PanelGroup>
             </Panel>
-            <PanelResizeHandle className="rz rz-h" />
-            <Panel defaultSize={42} minSize={22}>
-              <div className="pane">
-                <Surface />
-              </div>
+            <PanelResizeHandle className="rz rz-v" />
+            {/* RIGHT: 3D viewer (top) + DMX monitor (bottom) */}
+            <Panel minSize={28}>
+              <PanelGroup direction="vertical" autoSaveId="dmxsim-quartz-right">
+                <Panel minSize={30}>
+                  <div className="pane">{visualizerPanel}</div>
+                </Panel>
+                <PanelResizeHandle className="rz rz-h" />
+                <Panel defaultSize={28} minSize={14}>
+                  <div className="pane">{monitorPanel}</div>
+                </Panel>
+              </PanelGroup>
             </Panel>
           </PanelGroup>
         ) : (
