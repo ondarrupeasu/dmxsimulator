@@ -104,7 +104,6 @@ function Wheel({ x, y, d, fn }: { x: number; y: number; d: number; fn: string | 
 }
 
 export function QuartzPanel() {
-  const [showBg, setShowBg] = useState(false)
   // Avo = the Titan "shift". No physical desk, so it latches: click to hold the
   // second functions on, click again to release. State is shown loudly (see badge).
   const [shift, setShift] = useState(false)
@@ -139,10 +138,7 @@ export function QuartzPanel() {
 
   return (
     <div className="qpanel">
-      <button className="qcal-bgtoggle" onClick={() => setShowBg((s) => !s)}>
-        {showBg ? 'Ocultar foto' : 'Ver foto'}
-      </button>
-      <div className={`qcal${showBg ? ' bg' : ''}${shift ? ' shift' : ''}`}>
+      <div className={`qcal${shift ? ' shift' : ''}`}>
         {shift && <div className="cal-shift-badge">AVO · segundas funciones activas</div>}
         {/* Wheels + @ buttons */}
         <Wheel x={8} y={8} d={196} fn={wheelFns[0]} />
@@ -230,7 +226,6 @@ export function QuartzPanel() {
         <Box x={756} y={438} w={66} h={62} cols={1} rows={1}><Key v="white" title="Go Page" disabled /></Box>
         <Box x={690} y={505} w={62} h={62} cols={1} rows={1}><Key v="white" led={false} disabled={playbackPage === 0} title="Previous page" onClick={() => setPlaybackPage(Math.max(0, playbackPage - 1))} /></Box>
         <Label x={686} y={570} w={70} text={`− Page · Pg ${playbackPage + 1}`} />
-        <Label x={790} y={560} w={110} text="avolites" />
 
         {/* Transport 2×3 + Go */}
         <Label x={630} y={614} w={56} text={'Live\nTime'} sub="Review" align="right" /><Label x={824} y={614} w={56} text={'Next\nTime'} sub="Snap Back" align="left" />
