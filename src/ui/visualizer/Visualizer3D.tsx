@@ -397,10 +397,8 @@ export function Visualizer3D() {
           fx.pool.visible = false
         }
 
-        // Subtle tint when lit — a hint of the output colour, not a glowing cube.
-        ;(fx.body.material as THREE.MeshStandardMaterial).emissive
-          .copy(on ? col : new THREE.Color(0x000000))
-          .multiplyScalar(0.3)
+        // The body stays dark — only the beam carries the colour, like a real fixture.
+        ;(fx.body.material as THREE.MeshStandardMaterial).emissive.setHex(0x000000)
       }
 
       controls.update()
