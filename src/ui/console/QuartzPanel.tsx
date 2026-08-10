@@ -72,6 +72,11 @@ function Box({ x, y, w, h, cols, rows, narrow, spread, children }: {
   )
 }
 
+/** A thin silk-screen frame that groups a block of buttons, like on the real desk. */
+function Frame({ x, y, w, h }: { x: number; y: number; w: number; h: number }) {
+  return <div className="cal-frame" style={{ left: L(x), top: T(y), width: L(w), height: T(h) }} />
+}
+
 /** Silk-screen labels centred over each column of a grid. `subs` = shifted-function
  *  name printed in lighter grey under each label. */
 function GridLabels({ x, y, w, cols, items, subs, above, small }: { x: number; y: number; w: number; cols: number; items: string[]; subs?: string[]; above?: boolean; small?: boolean }) {
@@ -161,12 +166,13 @@ export function QuartzPanel() {
         <Wheel x={10} y={18} d={176} fn={wheelFns[0]} />
         <Wheel x={232} y={18} d={176} fn={wheelFns[1]} />
         <Wheel x={450} y={18} d={176} fn={wheelFns[2]} />
-        <Box x={190} y={168} w={56} h={50} cols={1} rows={1} narrow><Key v="blue" disabled title="A @" /></Box>
-        <Box x={403} y={168} w={56} h={50} cols={1} rows={1} narrow><Key v="blue" disabled title="B @" /></Box>
-        <Box x={616} y={168} w={56} h={50} cols={1} rows={1} narrow><Key v="blue" disabled title="C @" /></Box>
-        <Label x={200} y={222} w={36} text="A @" /><Label x={413} y={222} w={36} text="B @" /><Label x={626} y={222} w={36} text="C @" />
+        <Box x={150} y={150} w={56} h={50} cols={1} rows={1} narrow><Key v="blue" disabled title="A @" /></Box>
+        <Box x={372} y={150} w={56} h={50} cols={1} rows={1} narrow><Key v="blue" disabled title="B @" /></Box>
+        <Box x={590} y={150} w={56} h={50} cols={1} rows={1} narrow><Key v="blue" disabled title="C @" /></Box>
+        <Label x={160} y={202} w={36} text="A @" /><Label x={382} y={202} w={36} text="B @" /><Label x={600} y={202} w={36} text="C @" />
 
         {/* Executors 2×10 */}
+        <Frame x={642} y={48} w={652} h={124} />
         <GridLabels x={648} y={38} w={640} cols={10} items={['1', '2', '3', '4', '5', '6', '7', '8', '9', '10']} />
         <Box x={648} y={54} w={640} h={112} cols={10} rows={2} spread>
           {Array.from({ length: 20 }, (_, i) => <Key key={i} v="dark" narrow disabled title={`Executor ${i + 1}`} />)}
@@ -213,6 +219,7 @@ export function QuartzPanel() {
         <GridLabels x={1074} y={392} w={122} cols={2} items={['View\n/Open', 'Close\nControl']} />
 
         {/* Flash rows: top row LED at bottom, bottom row no LED. Spread to align with faders. */}
+        <Frame x={38} y={448} w={624} h={116} />
         <Box x={44} y={454} w={612} h={104} cols={10} rows={2} spread>
           {Array.from({ length: 10 }, (_, i) => {
             const gi = playbackPage * 10 + i; const cue = cues[gi]; const on = !!cue && cue.id === activeCueId

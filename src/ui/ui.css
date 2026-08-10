@@ -715,6 +715,8 @@
 
 /* Tight seam within a group; blocks are separated by their box positions. */
 .cal-grid { position: absolute; display: grid; gap: 0.18cqw; }
+/* Silk-screen frame grouping a block of buttons (executors, flash…). */
+.cal-frame { position: absolute; border: 1px solid rgba(255, 255, 255, 0.16); border-radius: 0.7cqw; pointer-events: none; }
 
 /* Keys — two colours (white / grey) + blue wheel keys. Same height; 1:1 keys fill
    their cell (so a group's buttons sit tight together), narrow keys are a bit thinner. */
@@ -732,13 +734,21 @@
 /* Real-desk look: a raised, bevelled cap on the lamp — it covers the button from
    just past the middle to the bottom, leaving the LED strip (top) flat. On the flash
    top row (LED at the bottom) the cap sits at the top instead (.ledb). */
+/* Faceted (truncated-pyramid) cap: graduated borders render as sloped facets that
+   meet in a diagonal seam at each corner — light on top/left, shadow on bottom/right.
+   The centre is the flat raised top. Sits on the lower half, clear of the LED strip. */
 .qcal .ck::before {
-  content: ''; position: absolute; left: 7%; right: 7%; top: 36%; bottom: 7%;
-  border-radius: 0.12cqw; pointer-events: none;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0.03) 45%, rgba(0, 0, 0, 0.14));
-  box-shadow: 0 0.18cqw 0.32cqw rgba(0, 0, 0, 0.45), inset 0 0.12cqw 0 rgba(255, 255, 255, 0.3);
+  content: ''; position: absolute; left: 9%; right: 9%; top: 47%; bottom: 10%;
+  pointer-events: none; border-radius: 0.1cqw;
+  background: rgba(255, 255, 255, 0.05);
+  border-style: solid; border-width: 0.42cqw;
+  border-top-color: rgba(255, 255, 255, 0.34);
+  border-left-color: rgba(255, 255, 255, 0.16);
+  border-right-color: rgba(0, 0, 0, 0.22);
+  border-bottom-color: rgba(0, 0, 0, 0.34);
+  box-shadow: 0 0.12cqw 0.22cqw rgba(0, 0, 0, 0.4);
 }
-.qcal .ck.ledb::before { top: 7%; bottom: 36%; }
+.qcal .ck.ledb::before { top: 10%; bottom: 47%; }
 /* Keep the LED and any on-key text above the bevel cap. */
 .qcal .ck > .cktext, .qcal .ck > .cktext2 { position: relative; z-index: 1; }
 .qcal .ckled { z-index: 2; }
@@ -758,7 +768,7 @@
 .cktext2 { position: absolute; bottom: 6%; font-size: 1.05cqw; font-weight: 600; color: #9a9aa2; }
 .ck-white .cktext2 { color: #8a897f; }
 /* LED — unlit by default; only lights (bright, with glow) when `on`. */
-.ckled { position: absolute; top: 8%; left: 50%; transform: translateX(-50%); width: 1.2cqw; height: 1.2cqw; border-radius: 50%; background: #24242a; }
+.ckled { position: absolute; top: 8%; left: 50%; transform: translateX(-50%); width: 0.9cqw; height: 0.9cqw; border-radius: 50%; background: #24242a; }
 .ck-white .ckled { background: #b8b7ad; }
 .ck-red .ckled { background: #5a5a62; }
 /* Unlit LEDs are always grey; they only take their colour (blue/red) when lit. */
