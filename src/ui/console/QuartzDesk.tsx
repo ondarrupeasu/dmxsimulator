@@ -59,6 +59,9 @@ export function QuartzDesk() {
   const locateSelected = useShowStore((s) => s.locateSelected)
   const clearProgrammer = useShowStore((s) => s.clearProgrammer)
   const recordCue = useShowStore((s) => s.recordCue)
+  const updateCue = useShowStore((s) => s.updateCue)
+  const deleteCue = useShowStore((s) => s.deleteCue)
+  const releaseCue = useShowStore((s) => s.releaseCue)
   const cues = useShowStore((s) => s.cues)
   const activeCueId = useShowStore((s) => s.activeCueId)
   const goCue = useShowStore((s) => s.goCue)
@@ -70,10 +73,21 @@ export function QuartzDesk() {
     .filter((fn): fn is string => !!fn)
   const noSel = selection.length === 0
 
-  const goNext = () => {
+  // Step through the cue list (wraps). Go and Next both advance.
+  const goRel = (dir: 1 | -1) => {
     if (cues.length === 0) return
     const idx = cues.findIndex((c) => c.id === activeCueId)
-    goCue(cues[(idx + 1) % cues.length].id)
+    const next = idx < 0 ? (dir > 0 ? 0 : cues.length - 1) : (idx + dir + cues.length) % cues.length
+    goCue(cues[next].id)
+  }
+  const hasProgrammer = useShowStore((s) => Object.keys(s.programmer).length > 0)
+
+  // Program-key handlers; keys not listed here stay inert (WIP).
+  const programHandlers: Record<string, { fn: () => void; enabled: boolean }> = {
+    Record: { fn: recordCue, enabled: hasProgrammer },
+    Update: { fn: () => activeCueId && updateCue(activeCueId), enabled: !!activeCueId && hasProgrammer },
+    Delete: { fn: () => activeCueId && deleteCue(activeCueId), enabled: !!activeCueId },
+    Release: { fn: releaseCue, enabled: !!activeCueId },
   }
 
   return (
@@ -123,21 +137,27 @@ export function QuartzDesk() {
 
           <div className="qd-caplabel">Program</div>
           <div className="qd-prog">
-            {PROGRAM_KEYS_TOP.map((k) => (
-              <button
-                key={k}
-                className={`qd-key${k === 'Record' ? ' rec' : ' inert'}`}
-                title={k === 'Record' ? 'Record a cue' : 'Coming soon'}
-                onClick={k === 'Record' ? recordCue : undefined}
-              >
-                {k}
-              </button>
-            ))}
-            {PROGRAM_KEYS_BOT.map((k) => (
-              <button key={k} className="qd-key inert" title="Coming soon">
-                {k}
-              </button>
-            ))}
+            {[...PROGRAM_KEYS_TOP, ...PROGRAM_KEYS_BOT].map((k) => {
+              const h = programHandlers[k]
+              if (!h) {
+                return (
+                  <button key={k} className="qd-key inert" title="Coming soon">
+                    {k}
+                  </button>
+                )
+              }
+              return (
+                <button
+                  key={k}
+                  className={`qd-key${k === 'Record' ? ' rec' : ''}`}
+                  title={k}
+                  disabled={!h.enabled}
+                  onClick={h.fn}
+                >
+                  {k}
+                </button>
+              )
+            })}
           </div>
         </div>
 
@@ -178,9 +198,13 @@ export function QuartzDesk() {
         {/* RIGHT: keypad + transport */}
         <div className="qd-col qd-right">
           <div className="qd-transport">
-            <button className="qd-key inert" title="Coming soon">Prev Cue</button>
-            <button className="qd-key inert" title="Coming soon">Next Cue</button>
-            <button className="qd-key go" title="Go to next cue" onClick={goNext}>
+            <button className="qd-key" title="Previous cue" disabled={!cues.length} onClick={() => goRel(-1)}>
+              Prev Cue
+            </button>
+            <button className="qd-key" title="Next cue" disabled={!cues.length} onClick={() => goRel(1)}>
+              Next Cue
+            </button>
+            <button className="qd-key go" title="Go to next cue" disabled={!cues.length} onClick={() => goRel(1)}>
               Go
             </button>
           </div>
