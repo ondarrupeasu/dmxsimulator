@@ -123,17 +123,19 @@ export function AppShell() {
 
       <div className="workspace">
         {quartzDocked ? (
-          <PanelGroup direction="horizontal" autoSaveId="dmxsim-quartz">
-            {/* LEFT: the console — screen (thin, top) + button panel (large, bottom) */}
-            <Panel defaultSize={60} minSize={30}>
-              <PanelGroup direction="vertical" autoSaveId="dmxsim-quartz-left">
-                <Panel defaultSize={17} minSize={10}>
+          <PanelGroup direction="horizontal" id="quartz-h" autoSaveId="dmxsim-quartz-v2">
+            {/* LEFT: the console — screen (thin, top) + button panel (large, bottom).
+               Explicit id+order on both panels so the nested PanelGroups don't
+               confuse the initial sizing (else the console collapses to minSize). */}
+            <Panel id="quartz-console" order={1} defaultSize={62} minSize={30}>
+              <PanelGroup direction="vertical" autoSaveId="dmxsim-quartz-left-v2">
+                <Panel defaultSize={14} minSize={10}>
                   <div className="pane">
                     <QuartzScreen />
                   </div>
                 </Panel>
                 <PanelResizeHandle className="rz rz-h" />
-                <Panel defaultSize={80} minSize={30}>
+                <Panel defaultSize={86} minSize={30}>
                   <div className="pane">
                     <QuartzPanel />
                   </div>
@@ -141,8 +143,10 @@ export function AppShell() {
               </PanelGroup>
             </Panel>
             <PanelResizeHandle className="rz rz-v" />
-            {/* RIGHT: 3D viewer (top) + DMX monitor (bottom) */}
-            <Panel minSize={24}>
+            {/* RIGHT: 3D viewer (top) + DMX monitor (bottom).
+               Needs an explicit defaultSize too — with only one side sized,
+               react-resizable-panels collapses the console to its minSize. */}
+            <Panel id="quartz-right" order={2} defaultSize={38} minSize={24}>
               <PanelGroup direction="vertical" autoSaveId="dmxsim-quartz-right">
                 <Panel defaultSize={64} minSize={30}>
                   <div className="pane">{visualizerPanel}</div>

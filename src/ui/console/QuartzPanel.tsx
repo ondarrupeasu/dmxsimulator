@@ -157,12 +157,12 @@ export function QuartzPanel() {
         <GridLabels x={712} y={210} w={532} cols={10} items={['11\nAttribute\nEditor', '12\nShow\nLibrary', '13\nPlaybacks', '14\nChannel\nGrid', '15\nVisualiser', '16\nGroups +\nPalettes', '17\nFixtures\n+ Groups', '18\nSnap', '19', '20']} />
 
         {/* Fix / All / HiLight */}
-        <GridLabels x={44} y={252} w={92} cols={2} items={['Fix −1', 'Fix +1']} />
-        <Box x={44} y={272} w={92} h={118} cols={2} rows={2}>
+        <GridLabels x={40} y={252} w={100} cols={2} items={['Fix −1', 'Fix +1']} />
+        <Box x={40} y={272} w={100} h={118} cols={2} rows={2}>
           <Key v="dark" narrow led={false} disabled title="Fix −1" /><Key v="dark" narrow led={false} disabled title="Fix +1" />
           <Key v="dark" narrow disabled title="All" /><Key v="dark" narrow disabled title="Hi Light" />
         </Box>
-        <GridLabels x={44} y={392} w={92} cols={2} items={['All', 'Hi\nLight']} subs={['Rem Dim', 'Lo Light']} />
+        <GridLabels x={40} y={392} w={100} cols={2} items={['All', 'Hi\nLight']} subs={['Rem Dim', 'Lo Light']} />
 
         {/* Attribute bank 7×2 */}
         <GridLabels x={178} y={252} w={452} cols={7} items={['Intensity', 'Position', 'Colour', 'Gobo', 'Beam', 'Effect', 'Special']} />
