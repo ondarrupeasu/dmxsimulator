@@ -617,16 +617,14 @@
 }
 .qscreen-body { flex: 1; overflow: auto; padding: 10px 12px; min-height: 0; }
 
-/* ===== Quartz button panel — 1:1 overlay on the reference photo ===== */
+/* ===== Quartz button panel — self-styled dark faceplate (photo behind a toggle) ===== */
 .qpanel {
   position: relative;
-  background: #17171c;
+  background: #0f0f14;
   overflow: auto;
   min-height: 0;
-  display: flex;
-  align-items: flex-start;
-  justify-content: center;
-  padding: 8px;
+  display: flex; align-items: flex-start; justify-content: center;
+  padding: 10px;
 }
 .qcal-bgtoggle {
   position: absolute; top: 6px; right: 10px; z-index: 10;
@@ -636,94 +634,75 @@
 }
 .qcal {
   position: relative;
-  width: 100%;
-  max-width: 1000px;
+  width: 100%; max-width: 1000px;
   aspect-ratio: 1306 / 919;
-  border-radius: 8px;
+  background: #17181d;
+  border: 1px solid #2a2b31;
+  border-radius: 10px;
+  container-type: size; /* enables cqw text scaling */
 }
 .qcal.bg { background: url(/quartz.png) center / 100% 100% no-repeat; }
-.qcal:not(.bg) { background: linear-gradient(180deg, #eae9e3, #d2d1c9); border: 1px solid #b7b6ae; }
 
-/* A grid of overlay cells positioned over the photo */
-.cal-grid { position: absolute; display: grid; gap: 3px; }
+.cal-grid { position: absolute; display: grid; gap: 0.5cqw; }
 
-/* Blank clickable key (transparent so the photo shows; outline aids calibration) */
-.calkey {
-  width: 100%; height: 100%;
-  background: transparent;
-  border: 1px solid rgba(0, 140, 255, 0.28);
-  border-radius: 4px; cursor: pointer;
-  display: flex; align-items: center; justify-content: center; padding: 0;
+/* Keys */
+.qcal .ck {
+  position: relative; width: 100%; height: 100%;
+  border-radius: 1cqw; cursor: pointer; padding: 0;
+  display: flex; align-items: center; justify-content: center;
+  border: 1px solid rgba(0, 0, 0, 0.5);
+  box-shadow: inset 0 0.15cqw 0 rgba(255, 255, 255, 0.12);
 }
-.calkey:hover:not(:disabled) { background: rgba(0, 140, 255, 0.12); }
-.calkey:disabled { cursor: default; border-color: rgba(0, 0, 0, 0.12); }
-.called { width: 7px; height: 7px; border-radius: 50%; background: transparent; }
-/* When the photo is hidden, show the unlit LED so you see which keys have one */
-.qcal:not(.bg) .called { background: #34353b; }
-.called.on { background: #2ea6ff; box-shadow: 0 0 6px #2ea6ff; }
-.called.red { background: #e33; box-shadow: 0 0 5px #e33; }
-
-/* Draggable jog wheels */
-.calwheel {
-  position: absolute; border-radius: 50%; cursor: grab; touch-action: none;
-  border: 1px solid rgba(0, 140, 255, 0.25);
-}
-.calwheel.idle { cursor: default; border-color: rgba(0, 0, 0, 0.12); }
-.calwheel:active:not(.idle) { cursor: grabbing; }
-.calwheel-spin { position: absolute; inset: 0; pointer-events: none; }
-.calwheel-dot {
-  position: absolute; left: 50%; top: 7%; width: 13%; aspect-ratio: 1;
-  transform: translateX(-50%); border-radius: 50%;
-  background: #c9362b; box-shadow: 0 0 5px rgba(201, 54, 43, 0.75);
-}
-
-/* Faders (rectangular caps like the real desk) */
-/* Cover the photo's fader strip so only our (single) clean handles show */
-.cal-faders {
-  position: absolute; display: grid; grid-template-columns: repeat(10, 1fr);
-  background: #d9d8d2; border-radius: 6px;
-}
-.cal-fader { position: relative; display: flex; align-items: stretch; justify-content: center; }
-/* Fader groove with visible top + bottom stops */
-.cal-fader::before {
-  content: ''; position: absolute; left: 50%; top: 3%; bottom: 3%;
-  width: 6px; margin-left: -3px; border-radius: 3px;
-  background: #9a988f;
-  box-shadow: inset 0 0 2px rgba(0, 0, 0, 0.4);
-}
-/* end caps */
-.cal-fader::after {
-  content: ''; position: absolute; left: 50%; top: 3%; bottom: 3%;
-  width: 16px; margin-left: -8px; pointer-events: none;
-  border-top: 3px solid #b9b7ae; border-bottom: 3px solid #b9b7ae;
-}
-.cal-fader input[type='range'] {
-  writing-mode: vertical-lr; direction: rtl;
-  width: 22px; height: 100%; background: transparent; -webkit-appearance: none; appearance: none; cursor: pointer;
-}
-.cal-fader input[type='range']::-webkit-slider-thumb {
-  -webkit-appearance: none; appearance: none;
-  width: 26px; height: 26px;
-  background: linear-gradient(180deg, #4a4a4a, #262626);
-  border: 1px solid #101010; border-radius: 3px;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
-}
-.cal-fader input[type='range']::-moz-range-thumb {
-  width: 26px; height: 26px;
-  background: linear-gradient(180deg, #4a4a4a, #262626);
-  border: 1px solid #101010; border-radius: 3px;
-}
-.cal-fader input[type='range']:disabled { opacity: 0.55; }
+.qcal .ck-white { background: linear-gradient(180deg, #e9e8e2, #cfcec6); color: #2a2a28; border-color: #8f8e86; }
+.qcal .ck-dark  { background: linear-gradient(180deg, #54545c, #3c3c44); color: #e8e8ee; border-color: #1c1c22; }
+.qcal .ck-blue  { background: linear-gradient(180deg, #2f63b0, #1b447e); border-color: #0c1830; }
+.qcal .ck:hover:not(:disabled) { filter: brightness(1.1); }
+.qcal .ck:disabled { cursor: default; }
+.cktext { font-size: 1.5cqw; font-weight: 600; }
+.ck-white .cktext { color: #2a2a28; }
+/* LED */
+.ckled { position: absolute; top: 8%; left: 50%; transform: translateX(-50%); width: 1.1cqw; height: 1.1cqw; border-radius: 50%; background: #2a2a30; }
+.ck-white .ckled { background: #bcbab0; }
+.ck.ledb .ckled { top: auto; bottom: 10%; }
+.ckled.on { background: #2ea6ff; box-shadow: 0 0 1.2cqw #2ea6ff; }
+.ckled.red { background: #e33; box-shadow: 0 0 1cqw rgba(230, 60, 60, 0.6); }
 
 /* Big red keys (Go, Locate) */
 .calbig {
-  position: absolute; border-radius: 6px; cursor: pointer;
-  border: 1.5px solid rgba(226, 72, 58, 0.85); background: rgba(226, 72, 58, 0.22);
+  position: absolute; border-radius: 1cqw; cursor: pointer;
+  border: 1px solid #7a231c; background: linear-gradient(180deg, #e2483a, #b62e24);
+  box-shadow: inset 0 0.15cqw 0 rgba(255, 255, 255, 0.25);
 }
-.calbig:hover:not(:disabled) { background: rgba(255, 90, 70, 0.5); border-color: #ff6a52; }
-/* Keep a visible outline even when disabled (no selection / no cues) */
-.calbig:disabled { background: rgba(226, 72, 58, 0.1); border-color: rgba(226, 72, 58, 0.5); cursor: default; }
+.calbig:hover:not(:disabled) { filter: brightness(1.12); }
+.calbig:disabled { opacity: 0.55; cursor: default; }
 
+/* Silk-screen labels */
+.cal-lbl {
+  position: absolute; display: flex; flex-direction: column; align-items: center;
+  color: #e6e6ec; font-size: 1.12cqw; line-height: 1.06; text-align: center; pointer-events: none;
+}
+
+/* Wheels — dark metal */
+.calwheel {
+  position: absolute; border-radius: 50%; cursor: grab; touch-action: none;
+  background: radial-gradient(circle at 42% 34%, #6a6b73, #3a3b42 62%, #26272c);
+  border: 1px solid #1c1d22;
+  box-shadow: inset 0 0.3cqw 0.6cqw rgba(255, 255, 255, 0.15), 0 0.3cqw 0.6cqw rgba(0, 0, 0, 0.5);
+}
+.calwheel.idle { cursor: default; opacity: 0.8; }
+.calwheel:active:not(.idle) { cursor: grabbing; }
+.calwheel-spin { position: absolute; inset: 0; pointer-events: none; }
+.calwheel-dot { position: absolute; left: 50%; top: 8%; width: 13%; aspect-ratio: 1; transform: translateX(-50%); border-radius: 50%; background: #c9362b; box-shadow: 0 0 0.6cqw rgba(201, 54, 43, 0.7); }
+
+/* Faders — clean, handle on top, with stops */
+.cal-faders { position: absolute; display: grid; grid-template-columns: repeat(10, 1fr); }
+.cal-fader { position: relative; display: flex; align-items: stretch; justify-content: center; }
+.cal-fader::before { content: ''; position: absolute; left: 50%; top: 3%; bottom: 3%; width: 0.5cqw; margin-left: -0.25cqw; background: #4a4a52; border-radius: 0.25cqw; }
+.cal-fader::after { content: ''; position: absolute; left: 50%; top: 3%; bottom: 3%; width: 1.4cqw; margin-left: -0.7cqw; border-top: 0.3cqw solid #6a6a72; border-bottom: 0.3cqw solid #6a6a72; pointer-events: none; }
+.cal-fader input[type='range'] { position: relative; z-index: 2; writing-mode: vertical-lr; direction: rtl; width: 2cqw; height: 100%; background: transparent; -webkit-appearance: none; appearance: none; cursor: pointer; }
+.cal-fader input[type='range']::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 2.6cqw; height: 2.6cqw; border-radius: 0.4cqw; background: linear-gradient(180deg, #5a5a62, #2c2c32); border: 1px solid #101014; box-shadow: 0 0.2cqw 0.4cqw rgba(0, 0, 0, 0.5); }
+.cal-fader input[type='range']::-moz-range-thumb { width: 2.6cqw; height: 2.6cqw; border-radius: 0.4cqw; background: linear-gradient(180deg, #5a5a62, #2c2c32); border: 1px solid #101014; }
+.cal-fader input[type='range']:disabled { opacity: 0.5; }
 /* ---- Cue list (Run) ---- */
 .cue-list {
   display: flex;
