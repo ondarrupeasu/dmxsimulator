@@ -2,9 +2,10 @@ import { useShowStore } from '../../store/showStore'
 import { useSelectedValue, useSelectionFunctions } from './useSelectedValue'
 
 /**
- * Avolites Quartz — faithful button panel (a "calco" of the physical surface,
- * matching the Tartanga photo). Every labelled key on the real desk is present;
- * implemented keys are wired, the rest are inert. State keys light a blue LED.
+ * Avolites Quartz — faithful button panel (a "calco" of the physical surface).
+ * Key colours match the real desk: charcoal (`qk-dark`), cream (default `qk`), red
+ * (`qk-red`), blue-LED (executors / flash). Sizes are fixed so lighting an LED or
+ * selecting fixtures never reflows the layout.
  */
 
 const ATTRIBUTES: { name: string; color: string; wheels: string[][] }[] = [
@@ -17,27 +18,25 @@ const ATTRIBUTES: { name: string; color: string; wheels: string[][] }[] = [
   { name: 'Special', color: 'var(--ink-3)', wheels: [] },
 ]
 const ATTR_ROW2 = ['Shape', 'ML Menu', 'Blind', 'Off', 'Fan', 'Options', 'Latch']
-const PROGRAM_TOP = ['Record', 'Update', 'Edit', 'Select If', 'Patch', 'Disk']
-const PROGRAM_BOT = ['Delete', 'Copy', 'Move', 'Unfold', 'Include', 'Release']
 const EXEC_LEGENDS: Record<number, string> = {
   11: 'Attr Editor', 12: 'Show Lib', 13: 'Playbacks', 14: 'Chan Grid', 15: 'Visualiser',
   16: 'Groups+Pal', 17: 'Fix+Groups', 18: 'Snap',
 }
 
 function Key({
-  children, lit, red, disabled, title, className, onClick,
+  children, lit, dark, red, disabled, title, onClick,
 }: {
   children: React.ReactNode
   lit?: boolean
+  dark?: boolean
   red?: boolean
   disabled?: boolean
   title?: string
-  className?: string
   onClick?: () => void
 }) {
   return (
     <button
-      className={`qk${lit ? ' lit' : ''}${red ? ' qk-red' : ''}${className ? ' ' + className : ''}`}
+      className={`qk${dark ? ' qk-dark' : ''}${lit ? ' lit' : ''}${red ? ' qk-red' : ''}`}
       disabled={disabled}
       title={title}
       onClick={onClick}
@@ -88,6 +87,7 @@ export function QuartzPanel() {
     .map((cands) => cands.find((fn) => present.has(fn)))
     .filter((fn): fn is string => !!fn)
   const noSel = selection.length === 0
+  const wheelLabels = ['A', 'B', 'C']
 
   const goRel = (dir: 1 | -1) => {
     if (cues.length === 0) return
@@ -95,6 +95,9 @@ export function QuartzPanel() {
     const next = idx < 0 ? (dir > 0 ? 0 : cues.length - 1) : (idx + dir + cues.length) % cues.length
     goCue(cues[next].id)
   }
+  // Program keys: [label, dark?, handler?, enabled?]
+  const programRow1: [string, boolean][] = [['Record', true], ['Update', false], ['Edit', false], ['Select If', false], ['Patch', false], ['Disk', false]]
+  const programRow2: [string, boolean][] = [['Delete', true], ['Copy', false], ['Move', false], ['Unfold', false], ['Include', false], ['Release', false]]
   const prog: Record<string, { fn: () => void; enabled: boolean }> = {
     Record: { fn: recordCue, enabled: hasProgrammer },
     Update: { fn: () => activeCueId && updateCue(activeCueId), enabled: !!activeCueId && hasProgrammer },
@@ -102,165 +105,177 @@ export function QuartzPanel() {
     Delete: { fn: () => activeCueId && deleteCue(activeCueId), enabled: !!activeCueId },
     Release: { fn: releaseCue, enabled: !!activeCueId },
   }
+  const progKey = ([label, dark]: [string, boolean]) => {
+    const h = prog[label]
+    return (
+      <button
+        key={label}
+        className={`qk${dark ? ' qk-dark' : ''}${label === 'Record' ? ' qk-rec' : ''}`}
+        disabled={!h || !h.enabled}
+        title={h ? label : `${label} (coming soon)`}
+        onClick={h?.fn}
+      >
+        {label}
+      </button>
+    )
+  }
 
   return (
     <div className="qpanel">
-      {/* ── TOP: wheels (with @ buttons) + executor buttons ── */}
-      <div className="qp-top">
-        <div className="qp-wheelcol">
-          <div className="qp-wheels">
-            {noSel || wheels.length === 0
-              ? (['A', 'B', 'C'] as const).map((w) => (
-                  <div className="qp-wheel dim" key={w}>
+      <div className="qpanel-inner">
+        {/* ── TOP: wheels + executor buttons ── */}
+        <div className="qp-top">
+          <div className="qp-wheelcol">
+            <div className="qp-wheels">
+              {[0, 1, 2].map((i) =>
+                wheels[i] ? (
+                  <Wheel key={i} fn={wheels[i]} label={wheels[i]} />
+                ) : (
+                  <div className="qp-wheel" key={i}>
                     <div className="qp-dial" />
-                    <div className="qp-wheel-cap">{w}</div>
+                    <div className="qp-wheel-cap">{wheelLabels[i]}</div>
                   </div>
-                ))
-              : wheels.map((fn) => <Wheel key={fn} fn={fn} label={fn} />)}
+                ),
+              )}
+            </div>
+            <div className="qp-wheelbtns">
+              {wheelLabels.map((w) => (
+                <button key={w} className="qk qk-blue" disabled title={`${w} @ (set/centre)`}>
+                  {w} @
+                </button>
+              ))}
+            </div>
           </div>
-          <div className="qp-wheelbtns">
-            {(['A', 'B', 'C'] as const).map((w) => (
-              <button key={w} className="qk qk-blue" disabled title={`${w} @ (set/centre)`}>
-                {w} @
+          <div className="qp-exec">
+            {Array.from({ length: 20 }, (_, i) => (
+              <button key={i} className="qk qk-exec" disabled title={EXEC_LEGENDS[i + 1] ?? `Executor ${i + 1}`}>
+                <span className="qk-led-top" />
+                <span className="qk-num">{i + 1}</span>
+                <span className="qk-led-bot" />
+                {EXEC_LEGENDS[i + 1] && <span className="qk-leg">{EXEC_LEGENDS[i + 1]}</span>}
               </button>
             ))}
           </div>
         </div>
-        <div className="qp-exec">
-          {Array.from({ length: 20 }, (_, i) => (
-            <button key={i} className="qk qk-exec" disabled title={EXEC_LEGENDS[i + 1] ?? `Executor ${i + 1}`}>
-              <span className="qk-num">{i + 1}</span>
-              {EXEC_LEGENDS[i + 1] && <span className="qk-leg">{EXEC_LEGENDS[i + 1]}</span>}
-            </button>
-          ))}
-        </div>
-      </div>
 
-      {/* ── MIDDLE: fix keys + attribute bank + program + utilities ── */}
-      <div className="qp-mid">
-        <div className="qp-fixcol">
-          <Key disabled title="Fixture −1">Fix −1</Key>
-          <Key disabled title="Fixture +1">Fix +1</Key>
-          <Key disabled title="All">All</Key>
-          <Key disabled title="Hi Light">Hi Light</Key>
-        </div>
-
-        <div className="qp-attrblock">
-          <div className="qp-attr-row">
-            {ATTRIBUTES.map((a) => (
-              <button key={a.name} className={`qk qk-attr${a.name === attr ? ' lit' : ''}`}
-                style={{ ['--k' as string]: a.color }} onClick={() => setAttr(a.name)}>
-                {a.name}
-              </button>
-            ))}
+        {/* ── MIDDLE: fix keys + attribute bank + program + utilities ── */}
+        <div className="qp-mid">
+          <div className="qp-fixcol">
+            <Key dark disabled title="Fixture −1">Fix −1</Key>
+            <Key dark disabled title="Fixture +1">Fix +1</Key>
+            <Key dark disabled title="All">All</Key>
+            <Key dark disabled title="Hi Light">Hi Light</Key>
           </div>
-          <div className="qp-attr-row">
-            {ATTR_ROW2.map((k) =>
-              k === 'Shape' ? (
-                <Key key={k} title="Shapes / Effects window" onClick={() => setScreen('effects')}>Shape</Key>
-              ) : (
-                <Key key={k} disabled title={`${k} (coming soon)`}>{k}</Key>
-              ),
-            )}
+
+          <div className="qp-attrblock">
+            <div className="qp-attr-row">
+              {ATTRIBUTES.map((a) => (
+                <button key={a.name} className={`qk qk-attr${a.name === attr ? ' lit' : ''}`}
+                  style={{ ['--k' as string]: a.color }} onClick={() => setAttr(a.name)}>
+                  {a.name}
+                </button>
+              ))}
+            </div>
+            <div className="qp-attr-row">
+              {ATTR_ROW2.map((k) =>
+                k === 'Shape' ? (
+                  <Key key={k} title="Shapes / Effects window" onClick={() => setScreen('effects')}>Shape</Key>
+                ) : (
+                  <Key key={k} disabled title={`${k} (coming soon)`}>{k}</Key>
+                ),
+              )}
+            </div>
           </div>
-        </div>
 
-        <div className="qp-progblock">
-          {[...PROGRAM_TOP, ...PROGRAM_BOT].map((k) => {
-            const h = prog[k]
-            if (!h) return <Key key={k} disabled title={`${k} (coming soon)`}>{k}</Key>
-            return (
-              <button key={k} className={`qk${k === 'Record' ? ' qk-rec' : ''}`} disabled={!h.enabled} title={k} onClick={h.fn}>
-                {k}
-              </button>
-            )
-          })}
-        </div>
-
-        <div className="qp-utilblock">
-          <Key disabled title="Min / Max">Min/Max</Key>
-          <Key disabled title="Size / Position">Size/Pos</Key>
-          <Key disabled title="View / Open">View</Key>
-          <Key disabled title="Close / Control">Close</Key>
-        </div>
-      </div>
-
-      {/* ── BOTTOM: faders + page + transport + keypad ── */}
-      <div className="qp-bot">
-        <div className="qp-faderblock">
-          <div className="qp-faders">
-            {Array.from({ length: 10 }, (_, i) => {
-              const gi = playbackPage * 10 + i
-              const cue = cues[gi]
-              const on = cue && cue.id === activeCueId
-              return (
-                <div className="qp-fader" key={i}>
-                  <button className={`qp-flash${on ? ' on' : ''}${cue ? '' : ' empty'}`}
-                    title={cue ? `Fire ${cue.name}` : 'Empty playback'} onClick={() => cue && goCue(cue.id)}>
-                    {gi + 1}
-                  </button>
-                  <input type="range" min={0} max={255} defaultValue={cue ? 255 : 0} disabled={!cue} />
-                  <span className="qp-fader-cap">{cue ? cue.name.replace('Cue ', 'Q') : '—'}</span>
-                </div>
-              )
-            })}
+          <div className="qp-progblock">
+            {programRow1.map(progKey)}
+            {programRow2.map(progKey)}
           </div>
-          <div className="qp-pagecol">
-            <Key disabled title="Go Page">Go Page</Key>
-            <Key title="Next page" onClick={() => setPlaybackPage(playbackPage + 1)}>+ Page</Key>
-            <span className="qp-pagen">Pg {playbackPage + 1}</span>
-            <Key disabled={playbackPage === 0} title="Previous page" onClick={() => setPlaybackPage(playbackPage - 1)}>− Page</Key>
-            <span className="qp-logo">avolites</span>
+
+          <div className="qp-utilblock">
+            <Key dark disabled title="Min / Max">Min/Max</Key>
+            <Key dark disabled title="Size / Position">Size/Pos</Key>
+            <Key dark disabled title="View / Open">View</Key>
+            <Key dark disabled title="Close / Control">Close</Key>
           </div>
         </div>
 
-        <div className="qp-cluster">
-          <div className="qp-selrow">
-            <Key title="Fixtures window" onClick={() => setScreen('fixtures')}>Fixture</Key>
-            <Key title="Palettes window" onClick={() => setScreen('colour')}>Palette</Key>
-            <Key disabled title="Macro">Macro</Key>
-            <Key disabled title="Group">Group</Key>
-          </div>
-
-          <div className="qp-lower">
-            <div className="qp-transport2">
-              <div className="qp-tgrid">
-                <Key disabled title="Live Time">Live Time</Key>
-                <Key disabled title="Next Time">Next Time</Key>
-                <Key disabled={!cues.length} title="Previous cue" onClick={() => goRel(-1)}>Prev Cue</Key>
-                <Key disabled={!cues.length} title="Next cue" onClick={() => goRel(1)}>Next Cue</Key>
-                <Key disabled title="Connect / Cue">Connect</Key>
-                <Key disabled title="Stop">Stop</Key>
+        {/* ── BOTTOM: faders + page + transport + keypad ── */}
+        <div className="qp-bot">
+          <div className="qp-faderblock">
+            <div className="qp-faders">
+              {Array.from({ length: 10 }, (_, i) => {
+                const gi = playbackPage * 10 + i
+                const cue = cues[gi]
+                const on = cue && cue.id === activeCueId
+                return (
+                  <div className="qp-fader" key={i}>
+                    <button className={`qp-flash${on ? ' on' : ''}${cue ? '' : ' empty'}`}
+                      title={cue ? `Fire ${cue.name}` : 'Empty playback'} onClick={() => cue && goCue(cue.id)}>
+                      {gi + 1}
+                    </button>
+                    <input type="range" min={0} max={255} defaultValue={cue ? 255 : 0} disabled={!cue} />
+                  </div>
+                )
+              })}
+            </div>
+            <div className="qp-pagecol">
+              <div className="qp-pagerow">
+                <Key disabled title="Previous page" onClick={() => setPlaybackPage(Math.max(0, playbackPage - 1))}>− Page</Key>
+                <Key disabled title="Go Page">Go Page</Key>
               </div>
-              <button className="qk qk-go" disabled={!cues.length} title="Go" onClick={() => goRel(1)}>Go</button>
+              <Key title="Next page" onClick={() => setPlaybackPage(playbackPage + 1)}>+ Page</Key>
+              <span className="qp-pagen">Pg {playbackPage + 1}</span>
+              <span className="qp-logo">avolites</span>
+            </div>
+          </div>
+
+          <div className="qp-cluster">
+            <div className="qp-selrow">
+              <Key dark title="Fixtures window" onClick={() => setScreen('fixtures')}>Fixture</Key>
+              <Key dark title="Palettes window" onClick={() => setScreen('colour')}>Palette</Key>
+              <Key dark disabled title="Macro">Macro</Key>
+              <Key dark disabled title="Group">Group</Key>
             </div>
 
-            <div className="qp-keypadblock">
-              <div className="qp-numpad">
-                <Key disabled title="7">7</Key>
-                <Key disabled title="8">8</Key>
-                <Key disabled title="9">9</Key>
-                <Key disabled title="Time">Time</Key>
-                <Key disabled title="4">4</Key>
-                <Key disabled title="5">5</Key>
-                <Key disabled title="6">6</Key>
-                <Key title="Clear the programmer" onClick={clearProgrammer}>Clear</Key>
-                <Key disabled title="1">1</Key>
-                <Key disabled title="2">2</Key>
-                <Key disabled title="3">3</Key>
-                <Key disabled title="Exit">Exit</Key>
-                <Key disabled title=".">.</Key>
-                <Key disabled title="0">0</Key>
-                <Key disabled title="Enter">Enter</Key>
-                <button className="qk qk-red qk-locate" disabled={noSel} title="Locate selected" onClick={locateSelected}>
-                  Locate
-                </button>
+            <div className="qp-lower">
+              <div className="qp-transport2">
+                <div className="qp-tgrid">
+                  <Key disabled title="Live Time">Live Time</Key>
+                  <Key disabled title="Next Time">Next Time</Key>
+                  <Key disabled={!cues.length} title="Previous cue" onClick={() => goRel(-1)}>Prev Cue</Key>
+                  <Key disabled={!cues.length} title="Next cue" onClick={() => goRel(1)}>Next Cue</Key>
+                  <Key dark disabled title="Connect / Cue">Connect</Key>
+                  <Key dark disabled title="Stop">Stop</Key>
+                </div>
+                <button className="qk qk-go" disabled={!cues.length} title="Go" onClick={() => goRel(1)}>Go</button>
               </div>
-              <div className="qp-atrow">
-                <Key disabled title="Back / Undo">Back</Key>
-                <Key disabled title="Through">Thru</Key>
-                <Key disabled title="And">And</Key>
-                <Key disabled title="At (@)">@</Key>
+
+              <div className="qp-keypadblock">
+                <div className="qp-numpad">
+                  <Key disabled title="1">1</Key>
+                  <Key disabled title="2">2</Key>
+                  <Key disabled title="3">3</Key>
+                  <Key disabled title="Time">Time</Key>
+                  <Key disabled title="4">4</Key>
+                  <Key disabled title="5">5</Key>
+                  <Key disabled title="6">6</Key>
+                  <Key title="Clear the programmer" onClick={clearProgrammer}>Clear</Key>
+                  <Key disabled title="7">7</Key>
+                  <Key disabled title="8">8</Key>
+                  <Key disabled title="9">9</Key>
+                  <button className="qk qk-red qk-locate" disabled={noSel} title="Locate selected" onClick={locateSelected}>Locate</button>
+                  <Key disabled title="Exit">Exit</Key>
+                  <Key disabled title="0">0</Key>
+                  <Key disabled title="Enter">Enter</Key>
+                  <Key disabled title=".">.</Key>
+                </div>
+                <div className="qp-atrow">
+                  <Key dark disabled title="Back / Undo">Back</Key>
+                  <Key dark disabled title="Through">Thru</Key>
+                  <Key dark disabled title="And">And</Key>
+                  <Key dark disabled title="At (@)">@</Key>
+                </div>
               </div>
             </div>
           </div>

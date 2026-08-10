@@ -617,36 +617,40 @@
 }
 .qscreen-body { flex: 1; overflow: auto; padding: 10px 12px; min-height: 0; }
 
-/* The physical button panel — silver chassis */
+/* The physical button panel — silver chassis; scroll container holding a
+   fixed-size faceplate so lighting an LED never reflows anything. */
 .qpanel {
-  --key-face: linear-gradient(180deg, #f4f2ec, #dddbd2);
-  --key-face-hover: linear-gradient(180deg, #fffffb, #e8e6dd);
-  --key-edge: #9a978d;
+  --key-face: linear-gradient(180deg, #f6f4ee, #e0ded5);
+  --key-face-hover: linear-gradient(180deg, #fffffb, #ecebe2);
+  --key-edge: #a6a399;
   --key-text: #2c2b27;
   --led: #2ea6ff;
-  --desk-red: linear-gradient(180deg, #ec5646, #c9352a);
-  background: linear-gradient(180deg, #d9d8d2, #bebdb5);
+  --desk-red: linear-gradient(180deg, #e2483a, #b62e24);
+  background: linear-gradient(180deg, #dedcd6 0%, #c9c8c0 60%, #bcbbb3 100%);
   border: 1px solid #8b897f;
   border-radius: var(--radius);
   color: var(--key-text);
   overflow: auto;
-  padding: 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
   min-height: 0;
 }
+.qpanel-inner {
+  width: 960px;
+  padding: 16px 18px 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
 
-/* Generic physical key */
+/* Generic cream key */
 .qpanel .qk {
   font: inherit;
   font-size: 10.5px;
   color: var(--key-text);
-  background: var(--key-face);
+  background: linear-gradient(180deg, #f6f4ee, #e0ded5);
   border: 1px solid var(--key-edge);
   border-top-color: #ffffff;
   border-radius: 4px;
-  padding: 6px 5px;
+  padding: 6px 4px;
   cursor: pointer;
   text-align: center;
   line-height: 1.1;
@@ -654,16 +658,13 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 30px;
+  min-height: 34px;
   box-shadow: 0 1px 1px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.6);
 }
 .qpanel .qk:hover:not(:disabled) { background: var(--key-face-hover); }
-.qpanel .qk:disabled { color: #8a887f; cursor: default; }
-.qpanel .qk.lit {
-  background: linear-gradient(180deg, #fffef8, #e9e7dd);
-  box-shadow: 0 0 0 2px var(--led), inset 0 1px 0 #fff;
-  font-weight: 700;
-}
+.qpanel .qk:disabled { color: #97948b; cursor: default; }
+/* Lit = blue LED ring + dot (no weight change, so nothing reflows) */
+.qpanel .qk.lit { box-shadow: 0 0 0 2px var(--led), inset 0 1px 0 #fff; }
 .qpanel .qk.lit::after {
   content: '';
   position: absolute;
@@ -673,123 +674,142 @@
   background: var(--led);
   box-shadow: 0 0 5px var(--led);
 }
+
+/* Charcoal (dark grey) keys */
+.qpanel .qk-dark {
+  background: linear-gradient(180deg, #4d4d54, #35353b);
+  border: 1px solid #1b1b1f;
+  border-top-color: #5f5f68;
+  color: #ecedf2;
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.14);
+}
+.qpanel .qk-dark:hover:not(:disabled) { background: linear-gradient(180deg, #58585f, #3d3d43); }
+.qpanel .qk-dark:disabled { color: #b6b6bf; }
+
+/* Red keys (Go, Locate) */
 .qpanel .qk-red {
   background: var(--desk-red);
   border-color: #7a231c;
   color: #fff;
-  font-weight: 700;
   text-shadow: 0 1px 1px rgba(0, 0, 0, 0.4);
 }
+.qpanel .qk-red:disabled { opacity: 0.5; color: #ffe; }
+
+/* Record red dot */
 .qpanel .qk-rec::before {
   content: '';
   display: inline-block;
   width: 6px; height: 6px;
   border-radius: 50%;
-  background: #e33;
-  box-shadow: 0 0 4px #e33;
+  background: #ff5a4d;
+  box-shadow: 0 0 4px #ff5a4d;
   margin-right: 4px;
 }
 .qpanel .qk-attr { border-bottom: 3px solid var(--k); }
 
-/* The three rows keep their natural size; the panel scrolls if the quadrant is
-   narrow (rather than squishing keys on top of each other). */
-.qp-top,
-.qp-mid,
-.qp-bot { min-width: max-content; }
-
-/* Top row: wheels + 20 executor buttons */
-.qp-top { display: grid; grid-template-columns: auto auto; gap: 18px; align-items: start; }
-.qp-wheelcol { display: flex; flex-direction: column; gap: 6px; }
-.qp-wheelbtns { display: flex; gap: 12px; }
-.qp-wheelbtns .qk { width: 66px; }
-.qpanel .qk-blue {
-  background: linear-gradient(180deg, #1c3a68, #112548);
-  border-color: #0c1830;
-  color: #cfe6ff;
-  box-shadow: inset 0 0 5px rgba(46, 166, 255, 0.35);
-  min-height: 24px;
-  font-size: 10px;
-}
+/* ── TOP: wheels + executors ── */
+.qp-top { display: grid; grid-template-columns: 300px 1fr; gap: 26px; align-items: start; }
+.qp-wheelcol { display: flex; flex-direction: column; gap: 8px; }
 .qp-wheels { display: flex; gap: 12px; }
-.qp-wheel { display: flex; flex-direction: column; align-items: center; gap: 4px; width: 66px; }
+.qp-wheel { display: flex; flex-direction: column; align-items: center; gap: 5px; width: 92px; }
 .qp-dial {
-  width: 52px; height: 52px; border-radius: 50%;
-  background: radial-gradient(circle at 50% 35%, #f4f3f0, #bdbbb3 58%, #8f8d85);
-  border: 1px solid #7d7b73;
-  box-shadow: inset 0 2px 4px rgba(255, 255, 255, 0.7), 0 2px 3px rgba(0, 0, 0, 0.3);
+  width: 82px; height: 82px; border-radius: 50%;
+  background: radial-gradient(circle at 42% 32%, #fbfaf8, #cdccc6 46%, #9a988f 82%, #7c7a72);
+  border: 1px solid #6f6d65;
+  box-shadow: inset 0 2px 5px rgba(255, 255, 255, 0.65), 0 3px 5px rgba(0, 0, 0, 0.35);
   position: relative;
+}
+/* Two recessed holes, like the real jog wheel */
+.qp-dial::before {
+  content: '';
+  position: absolute; width: 22px; height: 22px; border-radius: 50%;
+  left: 50%; top: 50%; transform: translate(-50%, -50%);
+  background: radial-gradient(circle at 50% 38%, #8b8981, #46453e);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.7), 0 1px 0 rgba(255, 255, 255, 0.4);
 }
 .qp-dial::after {
   content: '';
-  position: absolute;
-  width: 14px; height: 14px; border-radius: 50%;
-  left: 50%; top: 66%; transform: translate(-50%, -50%);
-  background: radial-gradient(circle at 50% 38%, #6f6d66, #38372f);
-  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.6);
+  position: absolute; width: 16px; height: 16px; border-radius: 50%;
+  left: 72%; top: 40%; transform: translate(-50%, -50%);
+  background: radial-gradient(circle at 50% 38%, #8b8981, #46453e);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.7), 0 1px 0 rgba(255, 255, 255, 0.4);
 }
 .qp-dial-tick {
-  position: absolute; left: 50%; top: 5px;
-  width: 3px; height: 18px; margin-left: -1.5px;
+  position: absolute; left: 50%; top: 4px;
+  width: 3px; height: 14px; margin-left: -1.5px;
   background: #c9362b; border-radius: 2px;
-  transform-origin: 50% 21px;
+  transform-origin: 50% 37px;
 }
-.qp-wheel.dim .qp-dial { opacity: 0.65; }
 .qp-wheel input[type='range'] { width: 100%; }
-.qp-wheel-cap { font-size: 10px; color: #3a3934; font-weight: 600; text-transform: capitalize; }
+.qp-wheel-cap { font-size: 11px; color: #35342f; font-weight: 700; text-transform: capitalize; }
+.qp-wheelbtns { display: flex; gap: 12px; }
+.qp-wheelbtns .qk { width: 92px; }
+.qpanel .qk-blue {
+  background: linear-gradient(180deg, #2a5aa0, #163a6e);
+  border-color: #0c1830; color: #dff0ff; min-height: 22px; font-size: 10px;
+  box-shadow: inset 0 0 5px rgba(46, 166, 255, 0.4);
+}
 
-.qp-exec { display: grid; grid-template-columns: repeat(10, 1fr); gap: 4px; }
+.qp-exec { display: grid; grid-template-columns: repeat(10, 1fr); gap: 5px; }
 .qpanel .qk-exec {
   flex-direction: column;
-  gap: 1px;
-  min-height: 34px;
-  padding: 3px 2px;
-  background: linear-gradient(180deg, #1c3a68, #112548);
-  border-color: #0c1830;
-  color: #cfe6ff;
-  box-shadow: inset 0 0 5px rgba(46, 166, 255, 0.35);
+  gap: 2px;
+  min-height: 40px;
+  padding: 4px 2px;
+  background: linear-gradient(180deg, #45454c, #303035);
+  border-color: #17171b;
+  color: #f0f1f6;
 }
-.qk-exec .qk-num { font-size: 9px; opacity: 0.85; }
-.qk-exec .qk-leg { font-size: 7.5px; line-height: 1; }
+.qk-exec .qk-num { font-size: 9px; color: #cfd2da; }
+.qk-exec .qk-leg { font-size: 7.5px; line-height: 1.05; color: #eef0f5; }
+.qk-exec .qk-led-top, .qk-exec .qk-led-bot {
+  width: 5px; height: 5px; border-radius: 50%;
+  background: #2ea6ff; box-shadow: 0 0 5px rgba(46, 166, 255, 0.9);
+}
 
-/* Middle: fix keys + attribute bank + program + utilities */
-.qp-mid { display: grid; grid-template-columns: auto auto auto auto; gap: 14px; align-items: start; }
-.qp-fixcol { display: grid; grid-template-columns: repeat(2, 1fr); gap: 4px; width: 112px; align-content: start; }
-.qp-attrblock { display: flex; flex-direction: column; gap: 4px; }
-.qp-attr-row { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
-.qp-attr-row .qk { min-width: 54px; }
-.qp-progblock { display: grid; grid-template-columns: repeat(6, 1fr); gap: 4px; }
-.qp-progblock .qk { min-width: 52px; }
-.qp-utilblock { display: grid; grid-template-columns: repeat(2, 1fr); gap: 4px; width: 128px; align-content: start; }
+/* ── MIDDLE: fix + attribute bank + program + utilities ── */
+.qp-mid { display: grid; grid-template-columns: auto auto auto auto; gap: 16px; align-items: start; }
+.qp-fixcol { display: grid; grid-template-columns: repeat(2, 56px); gap: 5px; align-content: start; }
+.qp-attrblock { display: flex; flex-direction: column; gap: 5px; }
+.qp-attr-row { display: grid; grid-template-columns: repeat(7, 66px); gap: 5px; }
+.qp-progblock { display: grid; grid-template-columns: repeat(6, 66px); gap: 5px; }
+.qp-utilblock { display: grid; grid-template-columns: repeat(2, 66px); gap: 5px; align-content: start; }
 
-/* Bottom: faders + page + cue/keypad cluster */
-.qp-bot { display: grid; grid-template-columns: auto auto; gap: 18px; align-items: start; }
-.qp-faderblock { display: flex; gap: 10px; align-items: flex-start; }
-.qp-faders { display: grid; grid-template-columns: repeat(10, 1fr); gap: 5px; }
-.qp-fader { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+/* ── BOTTOM: faders + page + cue/keypad cluster ── */
+.qp-bot { display: grid; grid-template-columns: auto auto; gap: 26px; align-items: start; }
+.qp-faderblock { display: flex; gap: 16px; align-items: flex-start; }
+.qp-faders { display: grid; grid-template-columns: repeat(10, 26px); gap: 6px; }
+.qp-fader { display: flex; flex-direction: column; align-items: center; gap: 6px; }
 .qp-flash {
-  width: 100%; padding: 5px 0; font-size: 10px; color: #dff1ff;
-  background: linear-gradient(180deg, #1c3a68, #112548);
-  border: 1px solid #0c1830; border-radius: 4px; cursor: pointer;
-  box-shadow: inset 0 0 6px rgba(46, 166, 255, 0.45);
+  width: 100%; padding: 6px 0; font-size: 10px; color: #dff1ff;
+  background: linear-gradient(180deg, #3a3a41, #2a2a30);
+  border: 1px solid #17171b; border-radius: 4px; cursor: pointer;
+  position: relative;
 }
-.qp-flash.on { background: linear-gradient(180deg, #3ab0ff, #1878d0); color: #04203a; font-weight: 700; box-shadow: 0 0 8px rgba(46, 166, 255, 0.8); }
-.qp-flash.empty { opacity: 0.4; box-shadow: none; cursor: default; }
-.qp-fader input[type='range'] { writing-mode: vertical-lr; direction: rtl; width: 10px; height: 70px; }
-.qp-fader-cap { font-size: 9px; color: #5c5a52; }
-.qp-pagecol { display: flex; flex-direction: column; gap: 4px; align-items: center; }
-.qp-pagen { font-size: 9px; color: #5c5a52; }
-.qp-logo { margin-top: 6px; font-size: 11px; font-weight: 800; letter-spacing: 1px; color: #6a685f; }
+.qp-flash::after {
+  content: ''; position: absolute; left: 50%; bottom: 3px; transform: translateX(-50%);
+  width: 5px; height: 5px; border-radius: 50%;
+  background: #2ea6ff; box-shadow: 0 0 5px rgba(46, 166, 255, 0.9);
+}
+.qp-flash.on { background: linear-gradient(180deg, #3ab0ff, #1878d0); color: #04203a; font-weight: 700; }
+.qp-flash.empty { color: #9aa; }
+.qp-flash.empty::after { background: #3a4a5a; box-shadow: none; }
+.qp-fader input[type='range'] { writing-mode: vertical-lr; direction: rtl; width: 14px; height: 132px; }
+.qp-pagecol { display: flex; flex-direction: column; gap: 6px; align-items: center; width: 132px; }
+.qp-pagerow { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; width: 100%; }
+.qp-pagen { font-size: 10px; color: #5c5a52; }
+.qp-logo { margin-top: 10px; font-size: 13px; font-weight: 800; letter-spacing: 1.5px; color: #6a685f; }
 
-.qp-cluster { display: flex; flex-direction: column; gap: 8px; }
-.qp-selrow { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; }
-.qp-lower { display: grid; grid-template-columns: auto auto; gap: 12px; align-items: start; }
-.qp-transport2 { display: flex; flex-direction: column; gap: 6px; width: 150px; }
-.qp-tgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
-.qpanel .qk-go { padding: 12px; font-size: 15px; }
+.qp-cluster { display: flex; flex-direction: column; gap: 10px; }
+.qp-selrow { display: grid; grid-template-columns: repeat(4, 92px); gap: 6px; }
+.qp-lower { display: grid; grid-template-columns: auto auto; gap: 16px; align-items: start; }
+.qp-transport2 { display: flex; flex-direction: column; gap: 6px; width: 166px; }
+.qp-tgrid { display: grid; grid-template-columns: repeat(2, 80px); gap: 6px; }
+.qpanel .qk-go { padding: 16px; font-size: 17px; font-weight: 700; }
 .qp-keypadblock { display: flex; flex-direction: column; gap: 6px; }
-.qp-numpad { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; }
-.qp-numpad .qk { min-width: 42px; font-size: 13px; }
-.qp-atrow { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; }
+.qp-numpad { display: grid; grid-template-columns: repeat(4, 54px); gap: 6px; }
+.qp-numpad .qk { font-size: 14px; min-height: 40px; }
+.qp-atrow { display: grid; grid-template-columns: repeat(4, 54px); gap: 6px; }
 
 /* ---- Cue list (Run) ---- */
 .cue-list {

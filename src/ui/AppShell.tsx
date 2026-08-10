@@ -123,16 +123,16 @@ export function AppShell() {
       <div className="workspace">
         {quartzDocked ? (
           <PanelGroup direction="horizontal" autoSaveId="dmxsim-quartz">
-            {/* LEFT: the console — screen (top) + button panel (bottom) */}
-            <Panel defaultSize={50} minSize={30}>
+            {/* LEFT: the console — screen (thin, top) + button panel (large, bottom) */}
+            <Panel defaultSize={56} minSize={30}>
               <PanelGroup direction="vertical" autoSaveId="dmxsim-quartz-left">
-                <Panel defaultSize={36} minSize={16}>
+                <Panel defaultSize={20} minSize={10}>
                   <div className="pane">
                     <QuartzScreen />
                   </div>
                 </Panel>
                 <PanelResizeHandle className="rz rz-h" />
-                <Panel minSize={30}>
+                <Panel defaultSize={80} minSize={30}>
                   <div className="pane">
                     <QuartzPanel />
                   </div>
@@ -141,13 +141,13 @@ export function AppShell() {
             </Panel>
             <PanelResizeHandle className="rz rz-v" />
             {/* RIGHT: 3D viewer (top) + DMX monitor (bottom) */}
-            <Panel minSize={28}>
+            <Panel minSize={24}>
               <PanelGroup direction="vertical" autoSaveId="dmxsim-quartz-right">
-                <Panel minSize={30}>
+                <Panel defaultSize={64} minSize={30}>
                   <div className="pane">{visualizerPanel}</div>
                 </Panel>
                 <PanelResizeHandle className="rz rz-h" />
-                <Panel defaultSize={28} minSize={14}>
+                <Panel defaultSize={36} minSize={14}>
                   <div className="pane">{monitorPanel}</div>
                 </Panel>
               </PanelGroup>
