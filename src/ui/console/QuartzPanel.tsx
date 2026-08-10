@@ -1,68 +1,89 @@
+import { useState } from 'react'
 import { useShowStore } from '../../store/showStore'
 import { useSelectedValue, useSelectionFunctions } from './useSelectedValue'
 
 /**
- * Avolites Quartz — faithful button panel (a "calco" of the physical surface).
- * Key colours match the real desk: charcoal (`qk-dark`), cream (default `qk`), red
- * (`qk-red`), blue-LED (executors / flash). Sizes are fixed so lighting an LED or
- * selecting fixtures never reflows the layout.
+ * Avolites Quartz — the button panel is laid out 1:1 over a photo of the real
+ * desk (public/quartz.png). Controls are absolutely positioned in % of the image
+ * so the shape/size/position match exactly; the background can be toggled off
+ * once everything lines up. Wheels are draggable jog wheels; faders are sliders.
  */
 
-const ATTRIBUTES: { name: string; color: string; wheels: string[][] }[] = [
-  { name: 'Intensity', color: 'var(--at-intensity)', wheels: [['dimmer']] },
-  { name: 'Position', color: 'var(--at-position)', wheels: [['pan'], ['tilt']] },
-  { name: 'Colour', color: 'var(--at-colour)', wheels: [['red', 'colorWheel'], ['green'], ['blue', 'white']] },
-  { name: 'Gobo', color: 'var(--at-gobo)', wheels: [['gobo'], ['goboRotation']] },
-  { name: 'Beam', color: 'var(--at-beam)', wheels: [['prism'], ['shutter'], ['zoom', 'focus']] },
-  { name: 'Effect', color: 'var(--ink-3)', wheels: [] },
-  { name: 'Special', color: 'var(--ink-3)', wheels: [] },
-]
-const ATTR_ROW2 = ['Shape', 'ML Menu', 'Blind', 'Off', 'Fan', 'Options', 'Latch']
-const EXEC_LEGENDS: Record<number, string> = {
-  11: 'Attr Editor', 12: 'Show Lib', 13: 'Playbacks', 14: 'Chan Grid', 15: 'Visualiser',
-  16: 'Groups+Pal', 17: 'Fix+Groups', 18: 'Snap',
-}
+const IMG_W = 1306
+const IMG_H = 919
+const L = (px: number) => `${(px / IMG_W) * 100}%`
+const T = (px: number) => `${(px / IMG_H) * 100}%`
 
-function Key({
-  children, lit, dark, red, disabled, title, onClick,
-}: {
-  children: React.ReactNode
-  lit?: boolean
-  dark?: boolean
-  red?: boolean
-  disabled?: boolean
-  title?: string
-  onClick?: () => void
+const ATTRIBUTES: { name: string; wheels: string[][] }[] = [
+  { name: 'Intensity', wheels: [['dimmer']] },
+  { name: 'Position', wheels: [['pan'], ['tilt']] },
+  { name: 'Colour', wheels: [['red', 'colorWheel'], ['green'], ['blue', 'white']] },
+  { name: 'Gobo', wheels: [['gobo'], ['goboRotation']] },
+  { name: 'Beam', wheels: [['prism'], ['shutter'], ['zoom', 'focus']] },
+  { name: 'Effect', wheels: [] },
+  { name: 'Special', wheels: [] },
+]
+
+function clamp(v: number) { return Math.max(0, Math.min(255, v)) }
+
+/** A grid of cells positioned over the image (px coords of the 1306×919 photo). */
+function Box({ x, y, w, h, cols, rows, children }: {
+  x: number; y: number; w: number; h: number; cols: number; rows: number; children: React.ReactNode
 }) {
   return (
-    <button
-      className={`qk${dark ? ' qk-dark' : ''}${lit ? ' lit' : ''}${red ? ' qk-red' : ''}`}
-      disabled={disabled}
-      title={title}
-      onClick={onClick}
+    <div
+      className="cal-grid"
+      style={{
+        left: L(x), top: T(y), width: L(w), height: T(h),
+        gridTemplateColumns: `repeat(${cols}, 1fr)`,
+        gridTemplateRows: `repeat(${rows}, 1fr)`,
+      }}
     >
       {children}
+    </div>
+  )
+}
+
+function LedKey({ on, red, disabled, title, onClick }: {
+  on?: boolean; red?: boolean; disabled?: boolean; title?: string; onClick?: () => void
+}) {
+  return (
+    <button className="calkey" disabled={disabled} title={title} onClick={onClick}>
+      <span className={`called${on ? ' on' : ''}${red ? ' red' : ''}`} />
     </button>
   )
 }
 
-function Wheel({ label, fn }: { label: string; fn: string }) {
-  const value = useSelectedValue(fn)
+function Wheel({ x, y, d, fn }: { x: number; y: number; d: number; fn: string | undefined }) {
+  const value = useSelectedValue(fn ?? '')
   const setByFn = useShowStore((s) => s.setSelectedByFunction)
-  const angle = (value / 255) * 270 - 135
+  const angle = fn ? (value / 255) * 270 - 135 : -135
+  const onPointerDown = (e: React.PointerEvent) => {
+    if (!fn) return
+    e.preventDefault()
+    ;(e.target as HTMLElement).setPointerCapture?.(e.pointerId)
+    let v = value
+    let lastY = e.clientY
+    const move = (ev: PointerEvent) => {
+      v = clamp(v + (lastY - ev.clientY) * 1.5); lastY = ev.clientY
+      setByFn(fn, Math.round(v))
+    }
+    const up = () => {
+      window.removeEventListener('pointermove', move); window.removeEventListener('pointerup', up)
+    }
+    window.addEventListener('pointermove', move); window.addEventListener('pointerup', up)
+  }
   return (
-    <div className="qp-wheel">
-      <div className="qp-dial">
-        <span className="qp-dial-tick" style={{ transform: `rotate(${angle}deg)` }} />
-      </div>
-      <input type="range" min={0} max={255} value={value} aria-label={label}
-        onChange={(e) => setByFn(fn, Number(e.target.value))} />
-      <div className="qp-wheel-cap">{label}</div>
+    <div className={`calwheel${fn ? '' : ' idle'}`}
+      style={{ left: L(x), top: T(y), width: L(d), height: T(d) }}
+      onPointerDown={onPointerDown} title={fn ?? 'no control'}>
+      <span className="calwheel-tick" style={{ transform: `rotate(${angle}deg)` }} />
     </div>
   )
 }
 
 export function QuartzPanel() {
+  const [showBg, setShowBg] = useState(true)
   const attr = useShowStore((s) => s.deskAttr)
   const setAttr = useShowStore((s) => s.setDeskAttr)
   const setScreen = useShowStore((s) => s.setDeskScreen)
@@ -83,11 +104,9 @@ export function QuartzPanel() {
   const present = useSelectionFunctions()
 
   const active = ATTRIBUTES.find((a) => a.name === attr) ?? ATTRIBUTES[0]
-  const wheels = active.wheels
-    .map((cands) => cands.find((fn) => present.has(fn)))
-    .filter((fn): fn is string => !!fn)
+  const wheelFns = [0, 1, 2].map((i) => active.wheels[i]?.find((fn) => present.has(fn)))
   const noSel = selection.length === 0
-  const wheelLabels = ['A', 'B', 'C']
+  const hasActive = !!activeCueId
 
   const goRel = (dir: 1 | -1) => {
     if (cues.length === 0) return
@@ -95,195 +114,118 @@ export function QuartzPanel() {
     const next = idx < 0 ? (dir > 0 ? 0 : cues.length - 1) : (idx + dir + cues.length) % cues.length
     goCue(cues[next].id)
   }
-  // Program keys: [label, dark?, handler?, enabled?]
-  const programRow1: [string, boolean][] = [['Record', true], ['Update', false], ['Edit', false], ['Select If', false], ['Patch', false], ['Disk', false]]
-  const programRow2: [string, boolean][] = [['Delete', true], ['Copy', false], ['Move', false], ['Unfold', false], ['Include', false], ['Release', false]]
-  const prog: Record<string, { fn: () => void; enabled: boolean }> = {
-    Record: { fn: recordCue, enabled: hasProgrammer },
-    Update: { fn: () => activeCueId && updateCue(activeCueId), enabled: !!activeCueId && hasProgrammer },
-    Copy: { fn: () => activeCueId && copyCue(activeCueId), enabled: !!activeCueId },
-    Delete: { fn: () => activeCueId && deleteCue(activeCueId), enabled: !!activeCueId },
-    Release: { fn: releaseCue, enabled: !!activeCueId },
-  }
-  const progKey = ([label, dark]: [string, boolean]) => {
-    const h = prog[label]
-    return (
-      <button
-        key={label}
-        className={`qk${dark ? ' qk-dark' : ''}${label === 'Record' ? ' qk-rec' : ''}`}
-        disabled={!h || !h.enabled}
-        title={h ? label : `${label} (coming soon)`}
-        onClick={h?.fn}
-      >
-        {label}
-      </button>
-    )
-  }
 
   return (
     <div className="qpanel">
-      <div className="qpanel-inner">
-        {/* ── TOP: wheels + executor buttons ── */}
-        <div className="qp-top">
-          <div className="qp-wheelcol">
-            <div className="qp-wheels">
-              {[0, 1, 2].map((i) =>
-                wheels[i] ? (
-                  <Wheel key={i} fn={wheels[i]} label={wheels[i]} />
-                ) : (
-                  <div className="qp-wheel" key={i}>
-                    <div className="qp-dial" />
-                    <div className="qp-wheel-cap">{wheelLabels[i]}</div>
-                  </div>
-                ),
-              )}
-            </div>
-            <div className="qp-wheelbtns">
-              {wheelLabels.map((w) => (
-                <button key={w} className="qk qk-blue" disabled title={`${w} @ (set/centre)`}>
-                  {w} @
-                </button>
-              ))}
-            </div>
-          </div>
-          <div className="qp-exec">
-            {Array.from({ length: 20 }, (_, i) => (
-              <button key={i} className="qk qk-exec" disabled title={EXEC_LEGENDS[i + 1] ?? `Executor ${i + 1}`}>
-                <span className="qk-led-top" />
-                <span className="qk-num">{i + 1}</span>
-                <span className="qk-led-bot" />
-                {EXEC_LEGENDS[i + 1] && <span className="qk-leg">{EXEC_LEGENDS[i + 1]}</span>}
-              </button>
-            ))}
-          </div>
+      <button className="qcal-bgtoggle" onClick={() => setShowBg((s) => !s)} title="Show/hide the reference photo">
+        {showBg ? 'Ocultar foto' : 'Mostrar foto'}
+      </button>
+      <div className={`qcal${showBg ? ' bg' : ''}`}>
+        {/* Wheels */}
+        <Wheel x={8} y={8} d={196} fn={wheelFns[0]} />
+        <Wheel x={230} y={5} d={196} fn={wheelFns[1]} />
+        <Wheel x={447} y={8} d={196} fn={wheelFns[2]} />
+        {/* @ buttons */}
+        <Box x={197} y={168} w={42} h={50} cols={1} rows={1}><LedKey disabled title="A @" /></Box>
+        <Box x={410} y={168} w={42} h={50} cols={1} rows={1}><LedKey disabled title="B @" /></Box>
+        <Box x={623} y={168} w={42} h={50} cols={1} rows={1}><LedKey disabled title="C @" /></Box>
+
+        {/* Executors 2×10 */}
+        <Box x={712} y={52} w={532} h={156} cols={10} rows={2}>
+          {Array.from({ length: 20 }, (_, i) => <LedKey key={i} disabled title={`Executor ${i + 1}`} />)}
+        </Box>
+
+        {/* Fix / All / HiLight */}
+        <Box x={44} y={272} w={92} h={118} cols={2} rows={2}>
+          <LedKey disabled title="Fix −1" /><LedKey disabled title="Fix +1" />
+          <LedKey disabled title="All" /><LedKey disabled title="Hi Light" />
+        </Box>
+
+        {/* Attribute bank 7×2 */}
+        <Box x={178} y={272} w={452} h={118} cols={7} rows={2}>
+          {ATTRIBUTES.map((a) => (
+            <LedKey key={a.name} on={a.name === attr} title={a.name} onClick={() => setAttr(a.name)} />
+          ))}
+          <LedKey title="Shape → Shapes" onClick={() => setScreen('effects')} />
+          <LedKey disabled title="ML Menu" /><LedKey disabled title="Blind" /><LedKey disabled title="Off" />
+          <LedKey disabled title="Fan" /><LedKey disabled title="Options" /><LedKey disabled title="Latch Menu" />
+        </Box>
+
+        {/* Program keys 6×2 */}
+        <Box x={658} y={272} w={386} h={118} cols={6} rows={2}>
+          <LedKey red disabled={!hasProgrammer} title="Record" onClick={recordCue} />
+          <LedKey disabled={!hasActive || !hasProgrammer} title="Update" onClick={() => activeCueId && updateCue(activeCueId)} />
+          <LedKey disabled title="Edit" /><LedKey disabled title="Select If" /><LedKey disabled title="Patch" /><LedKey disabled title="Disk" />
+          <LedKey disabled={!hasActive} title="Delete" onClick={() => activeCueId && deleteCue(activeCueId)} />
+          <LedKey disabled={!hasActive} title="Copy" onClick={() => activeCueId && copyCue(activeCueId)} />
+          <LedKey disabled title="Move" /><LedKey disabled title="Unfold" /><LedKey disabled title="Include" />
+          <LedKey disabled={!hasActive} title="Release" onClick={releaseCue} />
+        </Box>
+
+        {/* Min/Max ... 2×2 */}
+        <Box x={1074} y={272} w={122} h={118} cols={2} rows={2}>
+          <LedKey disabled title="Min/Max" /><LedKey disabled title="Size/Pos" />
+          <LedKey disabled title="View/Open" /><LedKey disabled title="Close/Control" />
+        </Box>
+
+        {/* Flash buttons above faders (1 row) */}
+        <Box x={44} y={432} w={612} h={108} cols={10} rows={1}>
+          {Array.from({ length: 10 }, (_, i) => {
+            const gi = playbackPage * 10 + i
+            const cue = cues[gi]
+            const on = !!cue && cue.id === activeCueId
+            return <LedKey key={i} on={on} disabled={!cue} title={cue ? `Go ${cue.name}` : 'Empty'} onClick={() => cue && goCue(cue.id)} />
+          })}
+        </Box>
+
+        {/* Faders */}
+        <div className="cal-faders" style={{ left: L(44), top: T(600), width: L(612), height: T(275) }}>
+          {Array.from({ length: 10 }, (_, i) => {
+            const gi = playbackPage * 10 + i
+            const cue = cues[gi]
+            return (
+              <div className="cal-fader" key={i}>
+                <input type="range" min={0} max={255} defaultValue={cue ? 255 : 0} disabled={!cue} title={cue ? cue.name : `Fader ${gi + 1}`} />
+              </div>
+            )
+          })}
         </div>
 
-        {/* ── MIDDLE: fix keys + attribute bank + program + utilities ── */}
-        <div className="qp-mid">
-          <div className="qp-fixcol">
-            <Key dark disabled title="Fixture −1">Fix −1</Key>
-            <Key dark disabled title="Fixture +1">Fix +1</Key>
-            <Key dark disabled title="All">All</Key>
-            <Key dark disabled title="Hi Light">Hi Light</Key>
-          </div>
+        {/* Page keys */}
+        <Box x={690} y={438} w={62} h={62} cols={1} rows={1}><LedKey title="Next page" onClick={() => setPlaybackPage(playbackPage + 1)} /></Box>
+        <Box x={756} y={438} w={66} h={62} cols={1} rows={1}><LedKey disabled title="Go Page" /></Box>
+        <Box x={690} y={505} w={62} h={62} cols={1} rows={1}><LedKey disabled={playbackPage === 0} title="Previous page" onClick={() => setPlaybackPage(Math.max(0, playbackPage - 1))} /></Box>
 
-          <div className="qp-attrblock">
-            <div className="qp-attr-row">
-              {ATTRIBUTES.map((a) => (
-                <button key={a.name} className={`qk qk-attr${a.name === attr ? ' lit' : ''}`}
-                  style={{ ['--k' as string]: a.color }} onClick={() => setAttr(a.name)}>
-                  {a.name}
-                </button>
-              ))}
-            </div>
-            <div className="qp-attr-row">
-              {ATTR_ROW2.map((k) =>
-                k === 'Shape' ? (
-                  <Key key={k} title="Shapes / Effects window" onClick={() => setScreen('effects')}>Shape</Key>
-                ) : (
-                  <Key key={k} disabled title={`${k} (coming soon)`}>{k}</Key>
-                ),
-              )}
-            </div>
-          </div>
+        {/* Transport 2×3 + Go */}
+        <Box x={690} y={600} w={130} h={178} cols={2} rows={3}>
+          <LedKey disabled title="Live Time" /><LedKey disabled title="Next Time" />
+          <LedKey disabled={!cues.length} title="Prev Cue" onClick={() => goRel(-1)} />
+          <LedKey disabled={!cues.length} title="Next Cue" onClick={() => goRel(1)} />
+          <LedKey disabled title="Connect/Cue" /><LedKey disabled title="Stop" />
+        </Box>
+        <button className="calbig red" style={{ left: L(728), top: T(782), width: L(72), height: T(62) }}
+          disabled={!cues.length} title="Go" onClick={() => goRel(1)} />
 
-          <div className="qp-progblock">
-            {programRow1.map(progKey)}
-            {programRow2.map(progKey)}
-          </div>
-
-          <div className="qp-utilblock">
-            <Key dark disabled title="Min / Max">Min/Max</Key>
-            <Key dark disabled title="Size / Position">Size/Pos</Key>
-            <Key dark disabled title="View / Open">View</Key>
-            <Key dark disabled title="Close / Control">Close</Key>
-          </div>
-        </div>
-
-        {/* ── BOTTOM: faders + page + transport + keypad ── */}
-        <div className="qp-bot">
-          <div className="qp-faderblock">
-            <div className="qp-faders">
-              {Array.from({ length: 10 }, (_, i) => {
-                const gi = playbackPage * 10 + i
-                const cue = cues[gi]
-                const on = cue && cue.id === activeCueId
-                return (
-                  <div className="qp-fader" key={i}>
-                    {/* Two rows of buttons above each fader, like the real desk */}
-                    <button className={`qp-flash top${on ? ' on' : ''}${cue ? '' : ' empty'}`}
-                      title={cue ? `Go ${cue.name}` : 'Empty playback'} onClick={() => cue && goCue(cue.id)}>
-                      {gi + 1}
-                    </button>
-                    <button className={`qp-flash bot${on ? ' on' : ''}${cue ? '' : ' empty'}`}
-                      title={cue ? `Flash ${cue.name}` : 'Empty playback'} disabled={!cue}
-                      onClick={() => cue && goCue(cue.id)} />
-                    <input type="range" min={0} max={255} defaultValue={cue ? 255 : 0} disabled={!cue} />
-                  </div>
-                )
-              })}
-            </div>
-            <div className="qp-pagecol">
-              <div className="qp-pagerow">
-                <Key disabled title="Previous page" onClick={() => setPlaybackPage(Math.max(0, playbackPage - 1))}>− Page</Key>
-                <Key disabled title="Go Page">Go Page</Key>
-              </div>
-              <Key title="Next page" onClick={() => setPlaybackPage(playbackPage + 1)}>+ Page</Key>
-              <span className="qp-pagen">Pg {playbackPage + 1}</span>
-              <span className="qp-logo">avolites</span>
-            </div>
-          </div>
-
-          <div className="qp-cluster">
-            <div className="qp-selrow">
-              <Key dark title="Fixtures window" onClick={() => setScreen('fixtures')}>Fixture</Key>
-              <Key dark title="Palettes window" onClick={() => setScreen('colour')}>Palette</Key>
-              <Key dark disabled title="Macro">Macro</Key>
-              <Key dark disabled title="Group">Group</Key>
-            </div>
-
-            <div className="qp-lower">
-              <div className="qp-transport2">
-                <div className="qp-tgrid">
-                  <Key disabled title="Live Time">Live Time</Key>
-                  <Key disabled title="Next Time">Next Time</Key>
-                  <Key disabled={!cues.length} title="Previous cue" onClick={() => goRel(-1)}>Prev Cue</Key>
-                  <Key disabled={!cues.length} title="Next cue" onClick={() => goRel(1)}>Next Cue</Key>
-                  <Key dark disabled title="Connect / Cue">Connect</Key>
-                  <Key dark disabled title="Stop">Stop</Key>
-                </div>
-                <button className="qk qk-go" disabled={!cues.length} title="Go" onClick={() => goRel(1)}>Go</button>
-              </div>
-
-              <div className="qp-keypadblock">
-                <div className="qp-numpad">
-                  <Key disabled title="1">1</Key>
-                  <Key disabled title="2">2</Key>
-                  <Key disabled title="3">3</Key>
-                  <Key disabled title="Time">Time</Key>
-                  <Key disabled title="4">4</Key>
-                  <Key disabled title="5">5</Key>
-                  <Key disabled title="6">6</Key>
-                  <Key title="Clear the programmer" onClick={clearProgrammer}>Clear</Key>
-                  <Key disabled title="7">7</Key>
-                  <Key disabled title="8">8</Key>
-                  <Key disabled title="9">9</Key>
-                  <button className="qk qk-red qk-locate" disabled={noSel} title="Locate selected" onClick={locateSelected}>Locate</button>
-                  <Key disabled title="Exit">Exit</Key>
-                  <Key disabled title="0">0</Key>
-                  <Key disabled title="Enter">Enter</Key>
-                  <Key disabled title=".">.</Key>
-                </div>
-                <div className="qp-atrow">
-                  <Key dark disabled title="Back / Undo">Back</Key>
-                  <Key dark disabled title="Through">Thru</Key>
-                  <Key dark disabled title="And">And</Key>
-                  <Key dark disabled title="At (@)">@</Key>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+        {/* Keypad: Fixture/Palette/Macro/Group */}
+        <Box x={916} y={462} w={258} h={50} cols={4} rows={1}>
+          <LedKey title="Fixtures" onClick={() => setScreen('fixtures')} />
+          <LedKey title="Palettes" onClick={() => setScreen('colour')} />
+          <LedKey disabled title="Macro" /><LedKey disabled title="Group" />
+        </Box>
+        {/* Numeric 4×4 */}
+        <Box x={916} y={528} w={258} h={274} cols={4} rows={4}>
+          <LedKey disabled title="1" /><LedKey disabled title="2" /><LedKey disabled title="3" /><LedKey disabled title="Avolites" />
+          <LedKey disabled title="4" /><LedKey disabled title="5" /><LedKey disabled title="6" /><LedKey disabled title="Time" />
+          <LedKey disabled title="7" /><LedKey disabled title="8" /><LedKey disabled title="9" /><LedKey title="Clear the programmer" onClick={clearProgrammer} />
+          <LedKey disabled title="Exit" /><LedKey disabled title="0" /><LedKey disabled title="Enter" /><LedKey disabled title="." />
+        </Box>
+        {/* Back/Through/And/@ */}
+        <Box x={916} y={808} w={258} h={50} cols={4} rows={1}>
+          <LedKey disabled title="Back" /><LedKey disabled title="Through" /><LedKey disabled title="And" /><LedKey disabled title="@" />
+        </Box>
+        {/* Locate */}
+        <button className="calbig red" style={{ left: L(1214), top: T(742), width: L(74), height: T(78) }}
+          disabled={noSel} title="Locate selected" onClick={locateSelected} />
       </div>
     </div>
   )
