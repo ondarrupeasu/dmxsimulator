@@ -18,10 +18,29 @@ interface FxObj {
   head: THREE.Group
   body: THREE.Mesh
   edges: THREE.LineSegments
+  hit: THREE.Mesh
+  halo: THREE.Sprite
   beam: THREE.Mesh
   beamMat: THREE.MeshBasicMaterial
   pool: THREE.Mesh
   poolMat: THREE.MeshBasicMaterial
+}
+
+/** Soft radial-gradient texture for the selection halo (created once). */
+let _haloTex: THREE.CanvasTexture | null = null
+function haloTexture(): THREE.CanvasTexture {
+  if (_haloTex) return _haloTex
+  const c = document.createElement('canvas')
+  c.width = c.height = 128
+  const ctx = c.getContext('2d')!
+  const g = ctx.createRadialGradient(64, 64, 0, 64, 64, 64)
+  g.addColorStop(0, 'rgba(255,255,255,0.9)')
+  g.addColorStop(0.4, 'rgba(255,255,255,0.35)')
+  g.addColorStop(1, 'rgba(255,255,255,0)')
+  ctx.fillStyle = g
+  ctx.fillRect(0, 0, 128, 128)
+  _haloTex = new THREE.CanvasTexture(c)
+  return _haloTex
 }
 
 /** Cone beam of unit length (apex at origin, base at y=-1) that fades to black
@@ -91,7 +110,30 @@ function buildFixture(): FxObj {
   const pool = new THREE.Mesh(new THREE.CircleGeometry(0.13, 24), poolMat)
   pool.rotation.x = -Math.PI / 2
 
-  return { group, head, body, edges, beam, beamMat, pool, poolMat }
+  // Invisible pick proxy at the lamp — a generous, precise click target that isn't
+  // the big overlapping beam cone, so clicks pick the fixture you aimed at.
+  const hit = new THREE.Mesh(
+    new THREE.SphereGeometry(0.5, 10, 10),
+    new THREE.MeshBasicMaterial({ visible: false }),
+  )
+  group.add(hit)
+
+  // Selection halo — a soft coral glow around the fixture, shown only when selected.
+  const halo = new THREE.Sprite(
+    new THREE.SpriteMaterial({
+      map: haloTexture(),
+      color: 0xff5a4d,
+      transparent: true,
+      opacity: 0.85,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+    }),
+  )
+  halo.scale.setScalar(1.7)
+  halo.visible = false
+  group.add(halo)
+
+  return { group, head, body, edges, hit, halo, beam, beamMat, pool, poolMat }
 }
 
 export function Visualizer3D() {
@@ -127,7 +169,11 @@ export function Visualizer3D() {
     )
     floor.rotation.x = -Math.PI / 2
     scene.add(floor)
-    scene.add(new THREE.GridHelper(40, 40, 0x3c3c4a, 0x272730))
+    // Lift the grid a hair above the floor so the two coplanar surfaces don't
+    // z-fight (which shows as a shimmer even when the camera is still).
+    const grid = new THREE.GridHelper(40, 40, 0x3c3c4a, 0x272730)
+    grid.position.y = 0.02
+    scene.add(grid)
     const truss = new THREE.Mesh(
       new THREE.BoxGeometry(16, 0.15, 0.15),
       new THREE.MeshStandardMaterial({ color: 0x33333c, metalness: 0.6, roughness: 0.5 }),
@@ -166,14 +212,14 @@ export function Visualizer3D() {
       ndc.x = ((e.clientX - rect.left) / rect.width) * 2 - 1
       ndc.y = -((e.clientY - rect.top) / rect.height) * 2 + 1
       raycaster.setFromCamera(ndc, camera)
-      const groups = [...fxMap.values()].map((fx) => fx.group)
-      const hit = raycaster.intersectObjects(groups, true)[0]
+      const proxies = [...fxMap.values()].map((fx) => fx.hit)
+      const picked = raycaster.intersectObjects(proxies, false)[0]
       const st = useShowStore.getState()
-      if (!hit) {
+      if (!picked) {
         st.select([])
         return
       }
-      let o: THREE.Object3D | null = hit.object
+      let o: THREE.Object3D | null = picked.object
       while (o && !o.userData.fixtureId) o = o.parent
       const id = o?.userData.fixtureId as string | undefined
       if (id) {
@@ -224,9 +270,8 @@ export function Visualizer3D() {
         fx.group.userData.fixtureId = pf.id
         fx.group.position.copy(place(pf.position.x))
 
-        // Selection highlight — coral edge + a soft coral glow on the body.
-        const selected = selSet.has(pf.id)
-        ;(fx.edges.material as THREE.LineBasicMaterial).color.setHex(selected ? 0xff5a4d : 0x7f7f8c)
+        // Selection — just a soft coral halo around the fixture (not the whole body).
+        fx.halo.visible = selSet.has(pf.id)
 
         const vs = computeVisualState(def, pf.modeIndex, outById.get(pf.id) ?? [])
         const col = new THREE.Color(vs.color.r / 255, vs.color.g / 255, vs.color.b / 255)
@@ -267,10 +312,9 @@ export function Visualizer3D() {
         }
 
         // Subtle tint when lit — a hint of the output colour, not a glowing cube.
-        const bodyMat = fx.body.material as THREE.MeshStandardMaterial
-        bodyMat.emissive.copy(on ? col : new THREE.Color(0x000000)).multiplyScalar(0.3)
-        // A selected fixture glows coral so it's obvious what's picked.
-        if (selected) bodyMat.emissive.lerp(new THREE.Color(0xff5a4d), 0.7)
+        ;(fx.body.material as THREE.MeshStandardMaterial).emissive
+          .copy(on ? col : new THREE.Color(0x000000))
+          .multiplyScalar(0.3)
       }
 
       controls.update()

@@ -290,6 +290,11 @@
   overflow: hidden;
   min-width: 0;
 }
+/* Channels belonging to the selected fixture(s) — coral ring + tinted background. */
+.dmx-cell.owned {
+  background: var(--coral-soft);
+  box-shadow: inset 0 0 0 1.5px var(--coral);
+}
 .dmx-cell .fill {
   position: absolute;
   left: 0;
@@ -721,7 +726,7 @@
   /* Flat single tone per key — no inner highlight, so there are only two shades. */
   transition: transform 0.08s ease;
 }
-.qcal .ck-white { background: #f1f1f3; color: #222; border-color: #c9c9c4; }
+.qcal .ck-white { background: #e9e6de; color: #222; border-color: #c4c1b8; }
 .qcal .ck-dark  { background: #585862; color: #eaeaf0; border-color: #35353c; }
 .qcal .ck-blue  { background: #2a5aa0; border-color: #123056; }
 /* Go / Locate — the house coral, the only red used on a button body. */
@@ -742,9 +747,13 @@
 .ckled { position: absolute; top: 8%; left: 50%; transform: translateX(-50%); width: 1.2cqw; height: 1.2cqw; border-radius: 50%; background: #24242a; }
 .ck-white .ckled { background: #b8b7ad; }
 .ck-red .ckled { background: #b23a30; }
+/* Coloured LEDs show a muted tint even when off, so the colour is readable. */
+.ckled.red { background: #cf7168; }
+.ckled.blue { background: #6f93c4; }
 .ck.ledb .ckled { top: auto; bottom: 10%; }
 .ckled.on { background: #3ab2ff; box-shadow: 0 0 0.35cqw #cdeaff, 0 0 1.9cqw #2ea6ff, 0 0 3cqw rgba(46, 166, 255, 0.6); }
 .ckled.on.red { background: #ff3b3b; box-shadow: 0 0 0.35cqw #ffd6d6, 0 0 1.9cqw #ff2424, 0 0 3cqw rgba(255, 40, 40, 0.6); }
+.ckled.on.blue { background: #3ab2ff; box-shadow: 0 0 0.35cqw #cdeaff, 0 0 1.9cqw #2ea6ff, 0 0 3cqw rgba(46, 166, 255, 0.6); }
 
 /* Big red keys (Go, Locate) */
 .calbig {

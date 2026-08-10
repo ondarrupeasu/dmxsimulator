@@ -30,7 +30,7 @@ type V = 'white' | 'dark' | 'blue' | 'red'
 function Key({
   v = 'dark', led = true, ledColor, ledBottom, on, text, narrow, disabled, title, onClick,
 }: {
-  v?: V; led?: boolean; ledColor?: 'red'; ledBottom?: boolean; on?: boolean
+  v?: V; led?: boolean; ledColor?: 'red' | 'blue'; ledBottom?: boolean; on?: boolean
   text?: string; narrow?: boolean; disabled?: boolean; title?: string; onClick?: () => void
 }) {
   return (
@@ -249,7 +249,7 @@ export function QuartzPanel() {
           <Key v="dark" title="Palettes" onClick={() => setScreen('colour')} />
           <Key v="dark" disabled title="Macro" /><Key v="dark" disabled title="Group" />
           <Key v="white" led={false} disabled text="1" title="1" /><Key v="white" led={false} disabled text="2" title="2" /><Key v="white" led={false} disabled text="3" title="3" /><Key v="white" on={shift} text="Avo" title="Avo — activa/desactiva las segundas funciones" onClick={() => setShift((s) => !s)} />
-          <Key v="white" led={false} disabled text="4" title="4" /><Key v="white" led={false} disabled text="5" title="5" /><Key v="white" led={false} disabled text="6" title="6" /><Key v="white" ledColor="red" disabled text="TIME" title="Time" />
+          <Key v="white" led={false} disabled text="4" title="4" /><Key v="white" led={false} disabled text="5" title="5" /><Key v="white" led={false} disabled text="6" title="6" /><Key v="white" ledColor="blue" disabled text="TIME" title="Time" />
           <Key v="white" led={false} disabled text="7" title="7" /><Key v="white" led={false} disabled text="8" title="8" /><Key v="white" led={false} disabled text="9" title="9" /><Key v="white" ledColor="red" on={hasProgrammer} text="CLEAR" title="Clear the programmer" onClick={clearProgrammer} />
           <Key v="white" led={false} disabled text="EXIT" title="Exit" /><Key v="white" led={false} disabled text="0" title="0" /><Key v="white" led={false} disabled text="ENTER" title="Enter" /><Key v="white" led={false} disabled text="." title="." />
           <Key v="dark" led={false} disabled title="Back" /><Key v="dark" led={false} disabled title="Through" /><Key v="dark" led={false} disabled title="And" /><Key v="dark" led={false} disabled title="@" />
