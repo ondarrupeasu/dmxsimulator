@@ -3,29 +3,21 @@
   <g clip-path="url(#rs)">
     <rect width="1024" height="1024" fill="#17191e"/>
 
-    <!-- DMX 5-pin XLR connector: shell ring + key tab + 5 pins (top pin = coral, "with signal") -->
-    <circle cx="512" cy="512" r="262" fill="none" stroke="#f2f2f4" stroke-width="46"/>
-    <!-- key tab at the bottom of the shell -->
-    <rect x="470" y="742" width="84" height="52" rx="18" fill="#17191e"/>
-    <rect x="470" y="742" width="84" height="52" rx="18" fill="none" stroke="#f2f2f4" stroke-width="30"/>
+    <!-- DMX 5-pin XLR: red shell with white border + key tab, black pins ringed white -->
+    <rect x="466" y="744" width="92" height="56" rx="20" fill="#ff5a4d" stroke="#f2f2f4" stroke-width="32"/>
+    <circle cx="512" cy="512" r="262" fill="#ff5a4d" stroke="#f2f2f4" stroke-width="32"/>
 
-    <!-- 5 pins arranged like the connector face -->
-    <g fill="#f2f2f4">
-      <circle cx="512" cy="370" r="48"/>
-      <circle cx="647" cy="468" r="48"/>
-      <circle cx="377" cy="468" r="48"/>
-      <circle cx="595" cy="627" r="48"/>
-      <circle cx="429" cy="627" r="48"/>
-    </g>
-    <!-- the live pin, coral -->
-    <circle cx="512" cy="370" r="48" fill="#ff5a4d"/>
-    <!-- dark pin sockets -->
-    <g fill="#17191e">
-      <circle cx="512" cy="370" r="17"/>
-      <circle cx="647" cy="468" r="17"/>
-      <circle cx="377" cy="468" r="17"/>
-      <circle cx="595" cy="627" r="17"/>
-      <circle cx="429" cy="627" r="17"/>
+    <g>
+      <!-- top -->
+      <circle cx="512" cy="370" r="52" fill="#f2f2f4"/><circle cx="512" cy="370" r="46" fill="#17191e"/>
+      <!-- upper-right -->
+      <circle cx="647" cy="468" r="52" fill="#f2f2f4"/><circle cx="647" cy="468" r="46" fill="#17191e"/>
+      <!-- lower-right -->
+      <circle cx="595" cy="627" r="52" fill="#f2f2f4"/><circle cx="595" cy="627" r="46" fill="#17191e"/>
+      <!-- lower-left -->
+      <circle cx="429" cy="627" r="52" fill="#f2f2f4"/><circle cx="429" cy="627" r="46" fill="#17191e"/>
+      <!-- upper-left -->
+      <circle cx="377" cy="468" r="52" fill="#f2f2f4"/><circle cx="377" cy="468" r="46" fill="#17191e"/>
     </g>
   </g>
 </svg>
