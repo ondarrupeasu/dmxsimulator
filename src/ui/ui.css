@@ -749,6 +749,11 @@
   box-shadow: 0 0.12cqw 0.22cqw rgba(0, 0, 0, 0.4);
 }
 .qcal .ck.ledb::before { top: 10%; bottom: 47%; }
+/* Assignable (empty) executor — a faint + hint that you can label it. */
+.qcal .ck.assignable::after {
+  content: '+'; position: absolute; top: 16%; left: 50%; transform: translateX(-50%);
+  z-index: 2; color: rgba(255, 255, 255, 0.32); font-size: 1.3cqw; line-height: 1;
+}
 /* Keep the LED and any on-key text above the bevel cap. */
 .qcal .ck > .cktext, .qcal .ck > .cktext2 { position: relative; z-index: 1; }
 .qcal .ckled { z-index: 2; }

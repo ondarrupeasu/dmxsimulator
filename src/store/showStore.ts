@@ -37,6 +37,9 @@ interface ShowState {
   palettes: Palette[]
   /** Current playback page (0-based); each page shows 10 cues. */
   playbackPage: number
+  /** User labels for the assignable executors 1–10 (handwritten-tape style). */
+  executorLabels: Record<number, string>
+  setExecutorLabel: (n: number, label: string) => void
   /** Running effects (movement/colour animation). Set by templates for now. */
   effects: Effect[]
   /** Animation clock in seconds (driven while effects run), for 2D/monitor. */
@@ -270,6 +273,14 @@ export const useShowStore = create<ShowState>()(
         set((s) => ({ palettes: s.palettes.filter((p) => p.id !== id) })),
 
       setPlaybackPage: (page) => set({ playbackPage: Math.max(0, page) }),
+      executorLabels: {},
+      setExecutorLabel: (n, label) =>
+        set((s) => {
+          const next = { ...s.executorLabels }
+          if (label.trim()) next[n] = label.trim()
+          else delete next[n]
+          return { executorLabels: next }
+        }),
 
       findFreeAddress: (footprint, universe) => {
         const occupied = new Uint8Array(UNIVERSE_SIZE + 1) // 1-based
@@ -505,6 +516,7 @@ export const useShowStore = create<ShowState>()(
         activeCueId: s.activeCueId,
         palettes: s.palettes,
         effects: s.effects,
+        executorLabels: s.executorLabels,
       }),
     },
   ),

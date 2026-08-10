@@ -28,14 +28,14 @@ const ATTRIBUTES: { name: string; wheels: string[][] }[] = [
 
 type V = 'white' | 'dark' | 'blue' | 'red'
 function Key({
-  v = 'dark', led = true, ledColor, ledBottom, on, text, narrow, disabled, title, onClick,
+  v = 'dark', led = true, ledColor, ledBottom, on, text, narrow, assignable, disabled, title, onClick,
 }: {
   v?: V; led?: boolean; ledColor?: 'red' | 'blue'; ledBottom?: boolean; on?: boolean
-  text?: string; narrow?: boolean; disabled?: boolean; title?: string; onClick?: () => void
+  text?: string; narrow?: boolean; assignable?: boolean; disabled?: boolean; title?: string; onClick?: () => void
 }) {
   return (
     <button
-      className={`ck ck-${v}${ledBottom ? ' ledb' : ''}${narrow ? ' narrow' : ''}`}
+      className={`ck ck-${v}${ledBottom ? ' ledb' : ''}${narrow ? ' narrow' : ''}${assignable ? ' assignable' : ''}`}
       disabled={disabled} title={title} onClick={onClick}
     >
       {led && <span className={`ckled${on ? ' on' : ''}${ledColor ? ' ' + ledColor : ''}`} />}
@@ -145,6 +145,13 @@ export function QuartzPanel() {
   const goCue = useShowStore((s) => s.goCue)
   const playbackPage = useShowStore((s) => s.playbackPage)
   const setPlaybackPage = useShowStore((s) => s.setPlaybackPage)
+  const executorLabels = useShowStore((s) => s.executorLabels)
+  const setExecutorLabel = useShowStore((s) => s.setExecutorLabel)
+  const editExecutor = (n: number) => {
+    const cur = executorLabels[n] ?? ''
+    const v = window.prompt(`Executor ${n} — escribe su etiqueta (vacío para borrar)`, cur)
+    if (v !== null) setExecutorLabel(n, v)
+  }
   const hasProgrammer = useShowStore((s) => Object.keys(s.programmer).length > 0)
   const present = useSelectionFunctions()
 
@@ -175,7 +182,21 @@ export function QuartzPanel() {
         <Frame x={642} y={48} w={652} h={124} />
         <GridLabels x={648} y={38} w={640} cols={10} items={['1', '2', '3', '4', '5', '6', '7', '8', '9', '10']} />
         <Box x={648} y={54} w={640} h={112} cols={10} rows={2} spread>
-          {Array.from({ length: 20 }, (_, i) => <Key key={i} v="dark" narrow disabled title={`Executor ${i + 1}`} />)}
+          {Array.from({ length: 20 }, (_, i) => {
+            const n = i + 1
+            // 1–10 (top) and 19–20 are blank/assignable; 11–18 have fixed functions.
+            if (n <= 10 || n >= 19) {
+              const label = executorLabels[n]
+              return (
+                <Key
+                  key={i} v="dark" narrow led={false} text={label} assignable={!label}
+                  title={label ? `Executor ${n}: ${label}` : `Executor ${n} — clic para etiquetar`}
+                  onClick={() => editExecutor(n)}
+                />
+              )
+            }
+            return <Key key={i} v="dark" narrow disabled title={`Executor ${n}`} />
+          })}
         </Box>
         <GridLabels x={648} y={172} w={640} cols={10} small items={['11\nAttribute\nEditor', '12\nShow\nLibrary', '13\nPlaybacks', '14\nChannel\nGrid', '15\nVisualiser', '16\nGroups +\nPalettes', '17\nFixtures\n+ Groups', '18\nSnap', '19', '20']} />
 
