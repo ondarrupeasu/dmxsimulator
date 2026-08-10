@@ -132,13 +132,18 @@ export function Visualizer3D() {
     ro.observe(mount)
 
     let raf = 0
+    let lastMs = performance.now()
+    let clock = 0
     const animate = () => {
       raf = requestAnimationFrame(animate)
-      const { show, definitions, programmer, cues, activeCueId, effects } =
-        useShowStore.getState()
+      const state = useShowStore.getState()
+      const { show, definitions, programmer, cues, activeCueId, effects } = state
+      const nowMs = performance.now()
+      if (state.playing) clock += (nowMs - lastMs) / 1000 // freeze on Pause
+      lastMs = nowMs
       const base = cues.find((c) => c.id === activeCueId)?.values ?? {}
       const merged = mergeProgrammer(base, programmer)
-      const effective = applyEffects(merged, effects, show, definitions, performance.now() / 1000)
+      const effective = applyEffects(merged, effects, show, definitions, clock)
 
       const live = new Set(show.fixtures.map((f) => f.id))
       for (const [id, fx] of fxMap) {

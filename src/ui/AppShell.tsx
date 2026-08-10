@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels'
 import { useShowStore } from '../store/showStore'
 import { setLanguage } from '../i18n'
 import { CONSOLES, consoleById } from '../console/registry'
@@ -9,8 +10,6 @@ import { Visualizer2D } from './visualizer/Visualizer2D'
 import { Visualizer3D } from './visualizer/Visualizer3D'
 import { RunView } from './run/RunView'
 import { ShowMenu } from './ShowMenu'
-import { Splitter } from './Splitter'
-import { usePersistentSize } from './usePersistentSize'
 import './ui.css'
 
 const MODES = ['patch', 'program', 'run'] as const
@@ -23,26 +22,20 @@ export function AppShell() {
   const setConsole = useShowStore((s) => s.setConsole)
   const [viewer, setViewer] = useState<'2d' | '3d'>('3d')
 
-  // Drive the animation clock (for the 2D view + monitor) while effects run.
-  // The 3D view self-clocks for smoothness; here we tick ~20fps to keep React
-  // re-renders reasonable.
+  // Animation clock for the 2D view + monitor (the 3D view self-clocks). Advances
+  // only while effects exist and playback isn't paused.
   const effectsCount = useShowStore((s) => s.effects.length)
-  const setNow = useShowStore((s) => s.setNow)
+  const playing = useShowStore((s) => s.playing)
+  const setPlaying = useShowStore((s) => s.setPlaying)
+  const tickClock = useShowStore((s) => s.tickClock)
   useEffect(() => {
-    if (effectsCount === 0) return
-    const iv = setInterval(() => setNow(performance.now() / 1000), 50)
+    if (effectsCount === 0 || !playing) return
+    const iv = setInterval(() => tickClock(0.05), 50)
     return () => clearInterval(iv)
-  }, [effectsCount, setNow])
-
-  // Resizable pane sizes (persisted, drag the dividers to change them).
-  const [leftW, setLeftW] = usePersistentSize('left', 340, 260, 680)
-  const [monitorH, setMonitorH] = usePersistentSize('monitorH', 210, 110, 560)
-  const [monitorW, setMonitorW] = usePersistentSize('monitorW', 300, 180, 760)
-  const [deskH, setDeskH] = usePersistentSize('deskH', 340, 220, 680)
+  }, [effectsCount, playing, tickClock])
 
   const Surface = consoleById(consoleId).Surface
-  // The faithful Quartz desk docks wide at the bottom (like a real console under
-  // the stage); other surfaces sit in the side panel.
+  // The faithful Quartz desk docks wide at the bottom; other surfaces sit at left.
   const quartzDocked = consoleId === 'avolites-quartz' && mode !== 'patch'
   const leftPanel =
     mode === 'patch' ? <PatchView /> : mode === 'run' ? <RunView /> : <Surface />
@@ -51,13 +44,24 @@ export function AppShell() {
     <div className="panel">
       <header>
         <h2>{t('visualizer.title')}</h2>
-        <div className="view-toggle">
-          <button className={viewer === '3d' ? 'active' : ''} onClick={() => setViewer('3d')}>
-            3D
-          </button>
-          <button className={viewer === '2d' ? 'active' : ''} onClick={() => setViewer('2d')}>
-            2D
-          </button>
+        <div className="vh-tools">
+          {effectsCount > 0 && (
+            <button
+              className="play-toggle"
+              onClick={() => setPlaying(!playing)}
+              title={playing ? 'Pause effects' : 'Play effects'}
+            >
+              {playing ? '❚❚ Pause' : '▶ Play'}
+            </button>
+          )}
+          <div className="view-toggle">
+            <button className={viewer === '3d' ? 'active' : ''} onClick={() => setViewer('3d')}>
+              3D
+            </button>
+            <button className={viewer === '2d' ? 'active' : ''} onClick={() => setViewer('2d')}>
+              2D
+            </button>
+          </div>
         </div>
       </header>
       <div className="scroll" style={{ padding: viewer === '3d' ? 0 : 8, flex: 1, overflow: 'hidden' }}>
@@ -65,6 +69,7 @@ export function AppShell() {
       </div>
     </div>
   )
+  const monitorPanel = <DmxMonitor universe={1} />
 
   return (
     <div className="shell">
@@ -113,39 +118,47 @@ export function AppShell() {
         </select>
       </div>
 
-      {quartzDocked ? (
-        <div className="workspace" style={{ flexDirection: 'column' }}>
-          <div className="row-flex" style={{ flex: 1, minHeight: 0 }}>
-            <div className="pane" style={{ flex: 1, minWidth: 0 }}>
-              {visualizerPanel}
-            </div>
-            <Splitter dir="col" onDrag={(d) => setMonitorW((w) => w - d)} />
-            <div className="pane" style={{ width: monitorW, flex: '0 0 auto' }}>
-              <DmxMonitor universe={1} />
-            </div>
-          </div>
-          <Splitter dir="row" onDrag={(d) => setDeskH((h) => h - d)} />
-          <div className="pane" style={{ height: deskH, flex: '0 0 auto' }}>
-            <Surface />
-          </div>
-        </div>
-      ) : (
-        <div className="workspace">
-          <div className="pane" style={{ width: leftW, flex: '0 0 auto' }}>
-            {leftPanel}
-          </div>
-          <Splitter dir="col" onDrag={(d) => setLeftW((w) => w + d)} />
-          <div className="col-flex" style={{ flex: 1, minWidth: 0 }}>
-            <div className="pane" style={{ flex: 1, minHeight: 0 }}>
-              {visualizerPanel}
-            </div>
-            <Splitter dir="row" onDrag={(d) => setMonitorH((h) => h - d)} />
-            <div className="pane" style={{ height: monitorH, flex: '0 0 auto' }}>
-              <DmxMonitor universe={1} />
-            </div>
-          </div>
-        </div>
-      )}
+      <div className="workspace">
+        {quartzDocked ? (
+          <PanelGroup direction="vertical" autoSaveId="dmxsim-desk">
+            <Panel minSize={30}>
+              <PanelGroup direction="horizontal" autoSaveId="dmxsim-desk-top">
+                <Panel minSize={30}>
+                  <div className="pane">{visualizerPanel}</div>
+                </Panel>
+                <PanelResizeHandle className="rz rz-v" />
+                <Panel defaultSize={24} minSize={12}>
+                  <div className="pane">{monitorPanel}</div>
+                </Panel>
+              </PanelGroup>
+            </Panel>
+            <PanelResizeHandle className="rz rz-h" />
+            <Panel defaultSize={42} minSize={22}>
+              <div className="pane">
+                <Surface />
+              </div>
+            </Panel>
+          </PanelGroup>
+        ) : (
+          <PanelGroup direction="horizontal" autoSaveId="dmxsim-main">
+            <Panel defaultSize={26} minSize={16}>
+              <div className="pane">{leftPanel}</div>
+            </Panel>
+            <PanelResizeHandle className="rz rz-v" />
+            <Panel minSize={40}>
+              <PanelGroup direction="vertical" autoSaveId="dmxsim-right">
+                <Panel minSize={30}>
+                  <div className="pane">{visualizerPanel}</div>
+                </Panel>
+                <PanelResizeHandle className="rz rz-h" />
+                <Panel defaultSize={28} minSize={14}>
+                  <div className="pane">{monitorPanel}</div>
+                </Panel>
+              </PanelGroup>
+            </Panel>
+          </PanelGroup>
+        )}
+      </div>
     </div>
   )
 }

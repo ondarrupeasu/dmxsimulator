@@ -42,6 +42,11 @@ interface ShowState {
   /** Animation clock in seconds (driven while effects run), for 2D/monitor. */
   now: number
   setNow: (t: number) => void
+  /** Advance the animation clock by dt seconds. */
+  tickClock: (dt: number) => void
+  /** Whether effect animations are running (Play) or frozen (Pause). */
+  playing: boolean
+  setPlaying: (v: boolean) => void
 
   setMode: (mode: AppMode) => void
   setConsole: (consoleId: string) => void
@@ -152,6 +157,9 @@ export const useShowStore = create<ShowState>()(
       effects: [],
       now: 0,
       setNow: (t) => set({ now: t }),
+      tickClock: (dt) => set((s) => ({ now: s.now + dt })),
+      playing: true,
+      setPlaying: (v) => set({ playing: v }),
 
       setMode: (mode) => set({ mode }),
       setConsole: (consoleId) => set({ consoleId }),
