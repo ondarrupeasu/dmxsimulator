@@ -8,6 +8,8 @@ import { applyEffects } from '../../engine/effects'
 import { computeVisualState } from '../../engine/render'
 
 const TRUSS_Y = 5
+const STAGE_TOP = 1 // stage deck (tarima) height above the floor, in metres
+const TRUSS_ROWS_Z = [-4, 0, 4] // three truss rows, front ↔ back over the stage
 
 /** World position for a fixture on the truss (x normalized -1..1). */
 function place(x: number): THREE.Vector3 {
@@ -262,11 +264,22 @@ export function Visualizer3D() {
     const grid = new THREE.GridHelper(40, 40, 0x3c3c4a, 0x272730)
     grid.position.y = 0.02
     scene.add(grid)
-    const truss = buildTruss(18)
-    truss.position.set(0, TRUSS_Y + 0.55, 0)
-    scene.add(truss)
+    // Three truss rows front ↔ back. Fixtures currently hang on the middle row;
+    // the outer rows are there for the upcoming multi-truss / multi-universe work.
+    for (const tz of TRUSS_ROWS_Z) {
+      const truss = buildTruss(18)
+      truss.position.set(0, TRUSS_Y + 0.55, tz)
+      scene.add(truss)
+    }
 
-    // ---- Venue: gives the stage an orientation (front = audience, back = wall) ----
+    // ---- Venue: a 1 m-high stage (tarima) with the audience flat in front ----
+    // Stage deck — top surface sits STAGE_TOP metres above the floor.
+    const stage = new THREE.Mesh(
+      new THREE.BoxGeometry(20, STAGE_TOP, 11),
+      new THREE.MeshStandardMaterial({ color: 0x17171d, roughness: 0.95, metalness: 0.05 }),
+    )
+    stage.position.set(0, STAGE_TOP / 2, -1.5)
+    scene.add(stage)
     // Back wall (upstage) — marks the back of the stage.
     const backWall = new THREE.Mesh(
       new THREE.PlaneGeometry(30, 12),
@@ -274,29 +287,28 @@ export function Visualizer3D() {
     )
     backWall.position.set(0, 6, -7)
     scene.add(backWall)
-    // Stage-front edge (downstage lip) — a thin bright strip where the stage meets
-    // the audience, so the front is obvious.
+    // Bright nosing along the downstage edge, so the front of the stage is obvious.
     const lip = new THREE.Mesh(
-      new THREE.BoxGeometry(20, 0.12, 0.25),
-      new THREE.MeshStandardMaterial({ color: 0x54545e, metalness: 0.4, roughness: 0.6 }),
+      new THREE.BoxGeometry(20, 0.06, 0.25),
+      new THREE.MeshStandardMaterial({ color: 0x6a6a74, metalness: 0.4, roughness: 0.6 }),
     )
-    lip.position.set(0, 0.06, 4)
+    lip.position.set(0, STAGE_TOP + 0.02, 4)
     scene.add(lip)
-    // Audience — a few raked rows of seats in front of the stage.
+    // Audience — flat rows of seats on the floor in front of the stage (no rake).
     const seatGeo = mergeGeometries([
       new THREE.BoxGeometry(0.5, 0.12, 0.5).translate(0, 0.22, 0),
       new THREE.BoxGeometry(0.5, 0.5, 0.09).translate(0, 0.46, 0.22),
     ])
     const seats = new THREE.InstancedMesh(
       seatGeo,
-      new THREE.MeshStandardMaterial({ color: 0x3a3348, roughness: 0.8, metalness: 0.05, emissive: 0x0e0c14 }),
+      new THREE.MeshStandardMaterial({ color: 0x453d55, roughness: 0.8, metalness: 0.05, emissive: 0x15111d }),
       5 * 16,
     )
     const seatM = new THREE.Matrix4()
     let si = 0
     for (let r = 0; r < 5; r++) {
       for (let c = 0; c < 16; c++) {
-        seatM.makeTranslation((c - 7.5) * 0.82, r * 0.28, 5.6 + r * 1.05)
+        seatM.makeTranslation((c - 7.5) * 0.82, 0, 5.6 + r * 1.05)
         seats.setMatrixAt(si++, seatM)
       }
     }
@@ -407,7 +419,8 @@ export function Visualizer3D() {
         let length = 16
         let hitsFloor = false
         if (down.y < -0.02) {
-          length = Math.min(24, TRUSS_Y / -down.y)
+          // Reach the stage deck (1 m above the floor), not the floor itself.
+          length = Math.min(24, (TRUSS_Y - STAGE_TOP) / -down.y)
           hitsFloor = true
         }
         fx.beam.scale.setScalar(length)
@@ -423,7 +436,7 @@ export function Visualizer3D() {
         // floor obliquely), oriented and stretched along the beam's ground track.
         if (on && hitsFloor) {
           fx.pool.visible = true
-          fx.pool.position.set(pf.position.x * 6 + down.x * length, 0.02, down.z * length)
+          fx.pool.position.set(pf.position.x * 6 + down.x * length, STAGE_TOP + 0.02, down.z * length)
           const vert = Math.max(0.2, -down.y) // cos of angle from vertical
           const floorAngle = Math.atan2(down.z, down.x)
           fx.pool.rotation.set(-Math.PI / 2, 0, -floorAngle)
