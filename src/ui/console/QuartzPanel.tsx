@@ -125,10 +125,25 @@ function Wheel({ x, y, d, fn }: { x: number; y: number; d: number; fn: string | 
   )
 }
 
+// Named functional areas of the desk, for the learning overlay.
+const ZONES: { name: string; x: number; y: number; w: number; h: number; c: string }[] = [
+  { name: 'Wheels', x: 4, y: 6, w: 636, h: 220, c: '#4aa3ff' },
+  { name: 'Executors', x: 642, y: 30, w: 652, h: 200, c: '#c078ff' },
+  { name: 'Fixture control', x: 32, y: 246, w: 122, h: 156, c: '#ff8a3d' },
+  { name: 'Attribute bank', x: 168, y: 246, w: 470, h: 156, c: '#38c98b' },
+  { name: 'Program', x: 648, y: 246, w: 400, h: 156, c: '#ff5a4d' },
+  { name: 'Windows', x: 1066, y: 246, w: 136, h: 156, c: '#e0c341' },
+  { name: 'Page', x: 706, y: 440, w: 146, h: 130, c: '#4ad6d6' },
+  { name: 'Playback faders', x: 36, y: 444, w: 628, h: 460, c: '#7d8cff' },
+  { name: 'Playbacks / Go', x: 644, y: 592, w: 268, h: 306, c: '#ff77b0' },
+  { name: 'Keypad · command line', x: 906, y: 456, w: 372, h: 442, c: '#9be14a' },
+]
+
 export function QuartzPanel() {
   // Avo = the Titan "shift". No physical desk, so it latches: click to hold the
   // second functions on, click again to release. State is shown loudly (see badge).
   const [shift, setShift] = useState(false)
+  const [showZones, setShowZones] = useState(false)
   const attr = useShowStore((s) => s.deskAttr)
   const setAttr = useShowStore((s) => s.setDeskAttr)
   const setScreen = useShowStore((s) => s.setDeskScreen)
@@ -167,8 +182,20 @@ export function QuartzPanel() {
 
   return (
     <div className="qpanel">
+      <button className="qcal-zonetoggle" onClick={() => setShowZones((s) => !s)}>
+        {showZones ? 'Ocultar zonas' : 'Ver zonas'}
+      </button>
       <div className={`qcal${shift ? ' shift' : ''}`}>
         {shift && <div className="cal-shift-badge">AVO · segundas funciones activas</div>}
+        {showZones && (
+          <div className="cal-zones">
+            {ZONES.map((z) => (
+              <div key={z.name} className="cal-zone" style={{ left: L(z.x), top: T(z.y), width: L(z.w), height: T(z.h), borderColor: z.c }}>
+                <span className="zname" style={{ color: z.c }}>{z.name}</span>
+              </div>
+            ))}
+          </div>
+        )}
         {/* Wheels + @ buttons */}
         <Wheel x={10} y={18} d={176} fn={wheelFns[0]} />
         <Wheel x={232} y={18} d={176} fn={wheelFns[1]} />

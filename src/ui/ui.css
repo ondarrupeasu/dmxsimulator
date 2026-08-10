@@ -718,6 +718,25 @@
 /* Silk-screen frame grouping a block of buttons (executors, flash…). */
 .cal-frame { position: absolute; border: 1px solid rgba(255, 255, 255, 0.16); border-radius: 0.7cqw; pointer-events: none; }
 
+/* Learning overlay — named functional zones over the desk. */
+.qcal-zonetoggle {
+  position: absolute; top: 6px; right: 10px; z-index: 30;
+  font: inherit; font-size: 11px; padding: 3px 9px; cursor: pointer;
+  color: var(--text); background: var(--bg-elev);
+  border: 1px solid var(--border); border-radius: var(--radius-sm);
+}
+.qcal-zonetoggle:hover { border-color: var(--coral); color: var(--coral); }
+.cal-zones { position: absolute; inset: 0; z-index: 25; pointer-events: none; }
+.cal-zone {
+  position: absolute; border-width: 0.22cqw; border-style: dashed; border-radius: 0.9cqw;
+  background: rgba(10, 10, 14, 0.35);
+}
+.cal-zone .zname {
+  position: absolute; top: 0.4cqw; left: 0.7cqw;
+  font-size: 1.25cqw; font-weight: 700; letter-spacing: 0.2px;
+  padding: 0.1cqw 0.5cqw; border-radius: 0.4cqw; background: rgba(0, 0, 0, 0.55);
+}
+
 /* Keys — two colours (white / grey) + blue wheel keys. Same height; 1:1 keys fill
    their cell (so a group's buttons sit tight together), narrow keys are a bit thinner. */
 .qcal .ck {
