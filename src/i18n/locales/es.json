@@ -17,6 +17,8 @@
     "library": "Librería de fixtures",
     "patched": "Fixtures asignados",
     "rig": "Distribución en el truss — arrastra para colocar",
+    "readdress": "Re-direccionar por orden de rig",
+    "readdressHint": "Ordena los focos de izquierda a derecha y reasigna las direcciones DMX, como se parchea un rig real (la dirección sigue el cable)",
     "add": "Añadir",
     "remove": "Quitar",
     "address": "Dirección",

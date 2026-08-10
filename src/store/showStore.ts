@@ -84,6 +84,9 @@ interface ShowState {
   removeFixture: (instanceId: string) => void
   renameFixture: (instanceId: string, name: string) => void
   setFixturePosition: (instanceId: string, x: number, y: number) => void
+  /** Reorder fixtures left→right by truss position and re-assign DMX addresses in
+   *  that order — the way a rig is usually patched (address follows the cable run). */
+  readdressByRigOrder: () => void
   /** First free address in a universe for a given footprint, or null if none. */
   findFreeAddress: (footprint: number, universe: number) => number | null
 
@@ -309,6 +312,25 @@ export const useShowStore = create<ShowState>()(
         }
         set((s) => ({ show: { ...s.show, fixtures: [...s.show.fixtures, fixture] } }))
       },
+
+      readdressByRigOrder: () =>
+        set((s) => {
+          const defs = s.definitions
+          // Left→right by truss position; current address breaks ties.
+          const ordered = [...s.show.fixtures].sort(
+            (a, b) => a.position.x - b.position.x || a.address - b.address,
+          )
+          // Pack addresses sequentially per universe, in that order.
+          const nextByUniverse: Record<number, number> = {}
+          const fixtures = ordered.map((f) => {
+            const def = defs[f.definitionId]
+            const fp = def ? fixtureFootprint(def, f.modeIndex) : 1
+            const start = nextByUniverse[f.universe] ?? 1
+            nextByUniverse[f.universe] = start + fp
+            return { ...f, address: start }
+          })
+          return { show: { ...s.show, fixtures } }
+        }),
 
       removeFixture: (instanceId) =>
         set((s) => {

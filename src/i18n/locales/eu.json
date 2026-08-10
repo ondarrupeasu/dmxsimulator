@@ -17,6 +17,8 @@
     "library": "Fixture liburutegia",
     "patched": "Esleitutako fixtureak",
     "rig": "Truss-eko banaketa — arrastatu kokatzeko",
+    "readdress": "Birhelbideratu rig ordenaz",
+    "readdressHint": "Ordenatu fokuak ezkerretik eskuinera eta esleitu berriro DMX helbideak, benetako rig bat parcheatzen den bezala",
     "add": "Gehitu",
     "remove": "Kendu",
     "address": "Helbidea",

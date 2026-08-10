@@ -17,6 +17,8 @@
     "library": "Fixture library",
     "patched": "Patched fixtures",
     "rig": "Rig layout — drag to position on the truss",
+    "readdress": "Re-address by rig order",
+    "readdressHint": "Reorder fixtures left→right and re-assign DMX addresses, as a real rig is patched (address follows the cable run)",
     "add": "Add",
     "remove": "Remove",
     "address": "Address",

@@ -13,6 +13,7 @@ export function PatchView() {
   const toggleSelect = useShowStore((s) => s.toggleSelect)
   const select = useShowStore((s) => s.select)
   const setFixturePosition = useShowStore((s) => s.setFixturePosition)
+  const readdressByRigOrder = useShowStore((s) => s.readdressByRigOrder)
 
   // Truss strip — drag a chip to set its position along the rig (x = −1..1).
   const stripRef = useRef<HTMLDivElement>(null)
@@ -79,7 +80,12 @@ export function PatchView() {
 
         {show.fixtures.length > 0 && (
           <>
-            <div className="section-label">{t('patch.rig')}</div>
+            <div className="section-label rig-label">
+              <span>{t('patch.rig')}</span>
+              <button className="rig-readdress" onClick={readdressByRigOrder} title={t('patch.readdressHint')}>
+                {t('patch.readdress')}
+              </button>
+            </div>
             <div className="truss-strip" ref={stripRef}>
               <div className="truss-bar" />
               {show.fixtures.map((pf, i) => (

@@ -17,6 +17,7 @@ interface FxObj {
   group: THREE.Group
   head: THREE.Group
   body: THREE.Mesh
+  edges: THREE.LineSegments
   beam: THREE.Mesh
   beamMat: THREE.MeshBasicMaterial
   pool: THREE.Mesh
@@ -90,7 +91,7 @@ function buildFixture(): FxObj {
   const pool = new THREE.Mesh(new THREE.CircleGeometry(0.13, 24), poolMat)
   pool.rotation.x = -Math.PI / 2
 
-  return { group, head, body, beam, beamMat, pool, poolMat }
+  return { group, head, body, edges, beam, beamMat, pool, poolMat }
 }
 
 export function Visualizer3D() {
@@ -149,13 +150,48 @@ export function Visualizer3D() {
     const ro = new ResizeObserver(resize)
     ro.observe(mount)
 
+    // Click a fixture to select it (a drag rotates the view, so only a click that
+    // barely moved counts as a pick). Shift-click adds/removes from the selection.
+    const raycaster = new THREE.Raycaster()
+    const ndc = new THREE.Vector2()
+    let downX = 0
+    let downY = 0
+    const onDown = (e: PointerEvent) => {
+      downX = e.clientX
+      downY = e.clientY
+    }
+    const onUp = (e: PointerEvent) => {
+      if (Math.abs(e.clientX - downX) > 4 || Math.abs(e.clientY - downY) > 4) return
+      const rect = renderer.domElement.getBoundingClientRect()
+      ndc.x = ((e.clientX - rect.left) / rect.width) * 2 - 1
+      ndc.y = -((e.clientY - rect.top) / rect.height) * 2 + 1
+      raycaster.setFromCamera(ndc, camera)
+      const groups = [...fxMap.values()].map((fx) => fx.group)
+      const hit = raycaster.intersectObjects(groups, true)[0]
+      const st = useShowStore.getState()
+      if (!hit) {
+        st.select([])
+        return
+      }
+      let o: THREE.Object3D | null = hit.object
+      while (o && !o.userData.fixtureId) o = o.parent
+      const id = o?.userData.fixtureId as string | undefined
+      if (id) {
+        if (e.shiftKey) st.toggleSelect(id)
+        else st.select([id])
+      }
+    }
+    renderer.domElement.addEventListener('pointerdown', onDown)
+    renderer.domElement.addEventListener('pointerup', onUp)
+
     let raf = 0
     let lastMs = performance.now()
     let clock = 0
     const animate = () => {
       raf = requestAnimationFrame(animate)
       const state = useShowStore.getState()
-      const { show, definitions, programmer, cues, activeCueId, effects } = state
+      const { show, definitions, programmer, cues, activeCueId, effects, selection } = state
+      const selSet = new Set(selection)
       const nowMs = performance.now()
       if (state.playing) clock += (nowMs - lastMs) / 1000 // freeze on Pause
       lastMs = nowMs
@@ -185,7 +221,12 @@ export function Visualizer3D() {
           scene.add(fx.pool)
           fxMap.set(pf.id, fx)
         }
+        fx.group.userData.fixtureId = pf.id
         fx.group.position.copy(place(pf.position.x))
+
+        // Selection highlight — coral edge + a soft coral glow on the body.
+        const selected = selSet.has(pf.id)
+        ;(fx.edges.material as THREE.LineBasicMaterial).color.setHex(selected ? 0xff5a4d : 0x7f7f8c)
 
         const vs = computeVisualState(def, pf.modeIndex, outById.get(pf.id) ?? [])
         const col = new THREE.Color(vs.color.r / 255, vs.color.g / 255, vs.color.b / 255)
@@ -226,9 +267,10 @@ export function Visualizer3D() {
         }
 
         // Subtle tint when lit — a hint of the output colour, not a glowing cube.
-        ;(fx.body.material as THREE.MeshStandardMaterial).emissive
-          .copy(on ? col : new THREE.Color(0x000000))
-          .multiplyScalar(0.3)
+        const bodyMat = fx.body.material as THREE.MeshStandardMaterial
+        bodyMat.emissive.copy(on ? col : new THREE.Color(0x000000)).multiplyScalar(0.3)
+        // A selected fixture glows coral so it's obvious what's picked.
+        if (selected) bodyMat.emissive.lerp(new THREE.Color(0xff5a4d), 0.7)
       }
 
       controls.update()
@@ -239,6 +281,8 @@ export function Visualizer3D() {
     return () => {
       cancelAnimationFrame(raf)
       ro.disconnect()
+      renderer.domElement.removeEventListener('pointerdown', onDown)
+      renderer.domElement.removeEventListener('pointerup', onUp)
       controls.dispose()
       renderer.dispose()
       if (renderer.domElement.parentNode === mount) mount.removeChild(renderer.domElement)

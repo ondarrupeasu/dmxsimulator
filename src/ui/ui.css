@@ -185,6 +185,14 @@
   gap: 6px;
 }
 
+.section-label.rig-label { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.rig-readdress {
+  font: inherit; font-size: 11px; text-transform: none; letter-spacing: 0;
+  padding: 3px 9px; color: var(--text); background: var(--bg-elev);
+  border: 1px solid var(--border); border-radius: var(--radius-sm); cursor: pointer;
+}
+.rig-readdress:hover { border-color: var(--coral); color: var(--coral); }
+
 /* Truss layout strip — draggable fixture chips along the rig */
 .truss-strip {
   position: relative;
