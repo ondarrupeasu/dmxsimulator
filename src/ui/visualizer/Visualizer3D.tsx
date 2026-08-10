@@ -3,13 +3,14 @@ import * as THREE from 'three'
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js'
 import { useShowStore } from '../../store/showStore'
 import { computeFixtureOutputs, mergeProgrammer } from '../../engine/dmx'
+import { applyEffects } from '../../engine/effects'
 import { computeVisualState } from '../../engine/render'
 
-const BEAM_H = 6
+const TRUSS_Y = 5
 
 /** World position for a fixture on the truss (x normalized -1..1). */
 function place(x: number): THREE.Vector3 {
-  return new THREE.Vector3(x * 6, 5, 0)
+  return new THREE.Vector3(x * 6, TRUSS_Y, 0)
 }
 
 interface FxObj {
@@ -20,6 +21,21 @@ interface FxObj {
   beamMat: THREE.MeshBasicMaterial
   pool: THREE.Mesh
   poolMat: THREE.MeshBasicMaterial
+}
+
+/** Cone beam of unit length (apex at origin, base at y=-1) that fades to black
+ *  toward the base via vertex colours — reads as a light beam, not a solid. */
+function makeBeamGeometry(): THREE.ConeGeometry {
+  const geo = new THREE.ConeGeometry(0.13, 1, 24, 1, true)
+  geo.translate(0, -0.5, 0)
+  const pos = geo.attributes.position
+  const colors: number[] = []
+  for (let i = 0; i < pos.count; i++) {
+    const c = 1 + pos.getY(i) // y=0 (apex) → 1, y=-1 (base) → 0
+    colors.push(c, c, c)
+  }
+  geo.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3))
+  return geo
 }
 
 function buildFixture(): FxObj {
@@ -34,21 +50,18 @@ function buildFixture(): FxObj {
   const head = new THREE.Group()
   group.add(head)
 
-  // Volumetric beam: additive, transparent cone with the tip at the head.
-  const beamGeo = new THREE.ConeGeometry(0.9, BEAM_H, 24, 1, true)
-  beamGeo.translate(0, -BEAM_H / 2, 0)
   const beamMat = new THREE.MeshBasicMaterial({
-    color: 0xffffff,
+    vertexColors: true,
     transparent: true,
-    opacity: 0.25,
+    opacity: 0.5,
     blending: THREE.AdditiveBlending,
     depthWrite: false,
     side: THREE.DoubleSide,
   })
-  const beam = new THREE.Mesh(beamGeo, beamMat)
+  const beam = new THREE.Mesh(makeBeamGeometry(), beamMat)
   head.add(beam)
 
-  // Light pool where the beam meets the floor.
+  // Floor pool (added to the scene, not the head, so it stays flat on the floor).
   const poolMat = new THREE.MeshBasicMaterial({
     color: 0xffffff,
     transparent: true,
@@ -56,10 +69,8 @@ function buildFixture(): FxObj {
     blending: THREE.AdditiveBlending,
     depthWrite: false,
   })
-  const pool = new THREE.Mesh(new THREE.CircleGeometry(1.1, 24), poolMat)
+  const pool = new THREE.Mesh(new THREE.CircleGeometry(0.13, 24), poolMat)
   pool.rotation.x = -Math.PI / 2
-  pool.position.y = -BEAM_H + 0.02
-  head.add(pool)
 
   return { group, head, body, beam, beamMat, pool, poolMat }
 }
@@ -73,7 +84,7 @@ export function Visualizer3D() {
 
     const scene = new THREE.Scene()
     scene.background = new THREE.Color(0x0b0b0f)
-    scene.fog = new THREE.FogExp2(0x0b0b0f, 0.028)
+    scene.fog = new THREE.FogExp2(0x0b0b0f, 0.025)
 
     const camera = new THREE.PerspectiveCamera(50, 1, 0.1, 200)
     camera.position.set(0, 6, 14)
@@ -102,10 +113,11 @@ export function Visualizer3D() {
       new THREE.BoxGeometry(16, 0.15, 0.15),
       new THREE.MeshStandardMaterial({ color: 0x33333c, metalness: 0.6, roughness: 0.5 }),
     )
-    truss.position.set(0, 5.3, 0)
+    truss.position.set(0, TRUSS_Y + 0.3, 0)
     scene.add(truss)
 
     const fxMap = new Map<string, FxObj>()
+    const down = new THREE.Vector3()
 
     const resize = () => {
       const w = mount.clientWidth
@@ -122,15 +134,17 @@ export function Visualizer3D() {
     let raf = 0
     const animate = () => {
       raf = requestAnimationFrame(animate)
-      const { show, definitions, programmer, cues, activeCueId } = useShowStore.getState()
+      const { show, definitions, programmer, cues, activeCueId, effects } =
+        useShowStore.getState()
       const base = cues.find((c) => c.id === activeCueId)?.values ?? {}
-      const effective = mergeProgrammer(base, programmer)
+      const merged = mergeProgrammer(base, programmer)
+      const effective = applyEffects(merged, effects, show, definitions, performance.now() / 1000)
 
-      // Reconcile fixture objects with the current patch (create / remove).
       const live = new Set(show.fixtures.map((f) => f.id))
       for (const [id, fx] of fxMap) {
         if (!live.has(id)) {
           scene.remove(fx.group)
+          scene.remove(fx.pool)
           fxMap.delete(id)
         }
       }
@@ -145,6 +159,7 @@ export function Visualizer3D() {
         if (!fx) {
           fx = buildFixture()
           scene.add(fx.group)
+          scene.add(fx.pool)
           fxMap.set(pf.id, fx)
         }
         fx.group.position.copy(place(pf.position.x))
@@ -155,15 +170,34 @@ export function Visualizer3D() {
         fx.head.rotation.y = THREE.MathUtils.degToRad(vs.pan ?? 0)
         fx.head.rotation.x = THREE.MathUtils.degToRad(vs.tilt ?? 0)
 
+        // Beam direction in world space; length = distance to the floor (y=0).
+        down.set(0, -1, 0).applyEuler(fx.head.rotation)
+        let length = 16
+        let hitsFloor = false
+        if (down.y < -0.02) {
+          length = Math.min(24, TRUSS_Y / -down.y)
+          hitsFloor = true
+        }
+        fx.beam.scale.setScalar(length)
+
         const on = vs.intensity > 0.01
         fx.beam.visible = on
-        fx.pool.visible = on
         if (on) {
           fx.beamMat.color.copy(col)
-          fx.beamMat.opacity = vs.intensity * (vs.strobing ? 0.12 : 0.28)
-          fx.poolMat.color.copy(col)
-          fx.poolMat.opacity = vs.intensity * 0.5
+          fx.beamMat.opacity = vs.intensity * (vs.strobing ? 0.25 : 0.55)
         }
+
+        // Pool where the beam meets the floor.
+        if (on && hitsFloor) {
+          fx.pool.visible = true
+          fx.pool.position.set(pf.position.x * 6 + down.x * length, 0.02, down.z * length)
+          fx.pool.scale.setScalar(length)
+          fx.poolMat.color.copy(col)
+          fx.poolMat.opacity = vs.intensity * 0.6
+        } else {
+          fx.pool.visible = false
+        }
+
         ;(fx.body.material as THREE.MeshStandardMaterial).emissive.copy(
           on ? col : new THREE.Color(0x000000),
         )

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useShowStore } from '../store/showStore'
 import { setLanguage } from '../i18n'
@@ -22,6 +22,17 @@ export function AppShell() {
   const consoleId = useShowStore((s) => s.consoleId)
   const setConsole = useShowStore((s) => s.setConsole)
   const [viewer, setViewer] = useState<'2d' | '3d'>('3d')
+
+  // Drive the animation clock (for the 2D view + monitor) while effects run.
+  // The 3D view self-clocks for smoothness; here we tick ~20fps to keep React
+  // re-renders reasonable.
+  const effectsCount = useShowStore((s) => s.effects.length)
+  const setNow = useShowStore((s) => s.setNow)
+  useEffect(() => {
+    if (effectsCount === 0) return
+    const iv = setInterval(() => setNow(performance.now() / 1000), 50)
+    return () => clearInterval(iv)
+  }, [effectsCount, setNow])
 
   // Resizable pane sizes (persisted, drag the dividers to change them).
   const [leftW, setLeftW] = usePersistentSize('left', 340, 260, 680)

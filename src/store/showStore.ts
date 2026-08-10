@@ -10,6 +10,8 @@ import { fixtureFootprint } from '../model/types'
 import type { Cue } from '../model/cue'
 import type { Palette, PaletteKind } from '../model/palette'
 import { PALETTE_FUNCTIONS, PALETTE_LABELS } from '../model/palette'
+import type { Effect } from '../engine/effects'
+import { applyEffects } from '../engine/effects'
 import { BUILTIN_FIXTURES } from '../model/library'
 import { templateById } from '../model/templates'
 import type { ProgrammerValues } from '../engine/dmx'
@@ -35,6 +37,11 @@ interface ShowState {
   palettes: Palette[]
   /** Current playback page (0-based); each page shows 10 cues. */
   playbackPage: number
+  /** Running effects (movement/colour animation). Set by templates for now. */
+  effects: Effect[]
+  /** Animation clock in seconds (driven while effects run), for 2D/monitor. */
+  now: number
+  setNow: (t: number) => void
 
   setMode: (mode: AppMode) => void
   setConsole: (consoleId: string) => void
@@ -142,6 +149,9 @@ export const useShowStore = create<ShowState>()(
       activeCueId: null,
       palettes: [],
       playbackPage: 0,
+      effects: [],
+      now: 0,
+      setNow: (t) => set({ now: t }),
 
       setMode: (mode) => set({ mode }),
       setConsole: (consoleId) => set({ consoleId }),
@@ -348,21 +358,50 @@ export const useShowStore = create<ShowState>()(
       loadTemplate: (templateId) => {
         const tpl = templateById(templateId)
         if (!tpl) return
-        const { show, programmer } = tpl.build(get().definitions)
-        set({ show, programmer, selection: [], cues: [], activeCueId: null, palettes: [], playbackPage: 0 })
+        const { show, programmer, effects } = tpl.build(get().definitions)
+        set({
+          show,
+          programmer,
+          effects: effects ?? [],
+          now: 0,
+          selection: [],
+          cues: [],
+          activeCueId: null,
+          palettes: [],
+          playbackPage: 0,
+        })
       },
 
       setShow: (show, programmer = {}) =>
-        set({ show, programmer, selection: [], cues: [], activeCueId: null, palettes: [], playbackPage: 0 }),
+        set({
+          show,
+          programmer,
+          effects: [],
+          now: 0,
+          selection: [],
+          cues: [],
+          activeCueId: null,
+          palettes: [],
+          playbackPage: 0,
+        }),
 
       exportShow: () => {
-        const { show, programmer } = get()
-        return JSON.stringify({ app: 'DMXSimulatoR', version: 1, show, programmer }, null, 2)
+        const { show, programmer, effects, palettes } = get()
+        return JSON.stringify(
+          { app: 'DMXSimulatoR', version: 1, show, programmer, effects, palettes },
+          null,
+          2,
+        )
       },
 
       importShow: (data) => {
         if (typeof data !== 'object' || data === null) return false
-        const d = data as { show?: Show; programmer?: ProgrammerValues }
+        const d = data as {
+          show?: Show
+          programmer?: ProgrammerValues
+          effects?: Effect[]
+          palettes?: Palette[]
+        }
         if (!d.show || !Array.isArray(d.show.fixtures)) return false
         // Drop fixtures whose definition isn't in the library (unknown import).
         const defs = get().definitions
@@ -370,10 +409,12 @@ export const useShowStore = create<ShowState>()(
         set({
           show: { ...d.show, fixtures },
           programmer: d.programmer ?? {},
+          effects: d.effects ?? [],
+          palettes: d.palettes ?? [],
+          now: 0,
           selection: [],
           cues: [],
           activeCueId: null,
-          palettes: [],
           playbackPage: 0,
         })
         return true
@@ -388,6 +429,8 @@ export const useShowStore = create<ShowState>()(
           activeCueId: null,
           palettes: [],
           playbackPage: 0,
+          effects: [],
+          now: 0,
         })),
     }),
     {
@@ -401,6 +444,7 @@ export const useShowStore = create<ShowState>()(
         cues: s.cues,
         activeCueId: s.activeCueId,
         palettes: s.palettes,
+        effects: s.effects,
       }),
     },
   ),
@@ -414,8 +458,13 @@ export function useEffectiveProgrammer(): ProgrammerValues {
   const programmer = useShowStore((s) => s.programmer)
   const cues = useShowStore((s) => s.cues)
   const activeCueId = useShowStore((s) => s.activeCueId)
+  const effects = useShowStore((s) => s.effects)
+  const show = useShowStore((s) => s.show)
+  const definitions = useShowStore((s) => s.definitions)
+  const now = useShowStore((s) => s.now)
   return useMemo(() => {
     const base = cues.find((c) => c.id === activeCueId)?.values ?? {}
-    return mergeProgrammer(base, programmer)
-  }, [programmer, cues, activeCueId])
+    const merged = mergeProgrammer(base, programmer)
+    return applyEffects(merged, effects, show, definitions, now)
+  }, [programmer, cues, activeCueId, effects, show, definitions, now])
 }

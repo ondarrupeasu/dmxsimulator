@@ -30,9 +30,10 @@ export function DmxMonitor({ universe = 1 }: { universe?: number }) {
               <div
                 key={i}
                 className={`dmx-cell${v > 0 ? ' active' : ''}`}
-                title={`Ch ${i + 1}: ${v}`}
+                title={`Channel ${i + 1}: ${v}`}
               >
                 {v > 0 && <span className="fill" style={{ height: `${pct}%` }} />}
+                <span className="ch">{i + 1}</span>
                 {v > 0 && <span className="val">{v}</span>}
               </div>
             )

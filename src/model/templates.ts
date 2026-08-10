@@ -5,6 +5,7 @@
 import type { FixtureDefinition, PatchedFixture, Show } from './types'
 import { fixtureFootprint } from './types'
 import type { ProgrammerValues } from '../engine/dmx'
+import type { Effect } from '../engine/effects'
 
 export interface ShowTemplate {
   id: string
@@ -13,6 +14,7 @@ export interface ShowTemplate {
   build: (defsById: Record<string, FixtureDefinition>) => {
     show: Show
     programmer: ProgrammerValues
+    effects?: Effect[]
   }
 }
 
@@ -28,9 +30,9 @@ function builder(defsById: Record<string, FixtureDefinition>, showName: string) 
     name: string,
     x: number,
     look?: Record<number, number>,
-  ) {
+  ): string {
     const def = defsById[definitionId]
-    if (!def) return
+    if (!def) return ''
     const id = `tmpl-${n++}`
     fixtures.push({
       id,
@@ -43,6 +45,7 @@ function builder(defsById: Record<string, FixtureDefinition>, showName: string) 
     })
     address += fixtureFootprint(def, modeIndex)
     if (look) programmer[id] = look
+    return id
   }
   return {
     add,
@@ -102,6 +105,34 @@ export const TEMPLATES: ShowTemplate[] = [
       b.add(PAR, 0, 'PAR 4', 0.7, parLook(120, 0, 255))
       b.add(STROBE, 0, 'Strobe', 0)
       return b.done()
+    },
+  },
+  {
+    id: 'movers',
+    name: 'Movers show (animated)',
+    description: 'Phantoms sweeping in a fan + colour-cycling PARs. Load and watch it move.',
+    build: (defs) => {
+      const b = builder(defs, 'Movers show')
+      // Phantoms: dimmer full + shutter open; movement comes from the effect.
+      const phantomIds = [
+        b.add(PHANTOM, 0, 'Phantom 1', -0.6, { 6: 255, 7: 255 }),
+        b.add(PHANTOM, 0, 'Phantom 2', -0.2, { 6: 255, 7: 255 }),
+        b.add(PHANTOM, 0, 'Phantom 3', 0.2, { 6: 255, 7: 255 }),
+        b.add(PHANTOM, 0, 'Phantom 4', 0.6, { 6: 255, 7: 255 }),
+      ]
+      // PARs at full; colour comes from the cycle effect.
+      const parIds = [
+        b.add(PAR, 0, 'PAR 1', -0.7, { 0: 255 }),
+        b.add(PAR, 0, 'PAR 2', -0.25, { 0: 255 }),
+        b.add(PAR, 0, 'PAR 3', 0.25, { 0: 255 }),
+        b.add(PAR, 0, 'PAR 4', 0.7, { 0: 255 }),
+      ]
+      const { show, programmer } = b.done()
+      const effects: Effect[] = [
+        { id: 'fx-move', type: 'circle', fixtureIds: phantomIds, speed: 0.12, size: 75, spread: 1.3 },
+        { id: 'fx-colour', type: 'colourCycle', fixtureIds: parIds, speed: 0.08, size: 0, spread: 1.6 },
+      ]
+      return { show, programmer, effects }
     },
   },
 ]
