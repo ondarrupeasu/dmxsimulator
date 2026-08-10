@@ -74,12 +74,12 @@ function Box({ x, y, w, h, cols, rows, narrow, spread, children }: {
 
 /** Silk-screen labels centred over each column of a grid. `subs` = shifted-function
  *  name printed in lighter grey under each label. */
-function GridLabels({ x, y, w, cols, items, subs, above }: { x: number; y: number; w: number; cols: number; items: string[]; subs?: string[]; above?: boolean }) {
+function GridLabels({ x, y, w, cols, items, subs, above, small }: { x: number; y: number; w: number; cols: number; items: string[]; subs?: string[]; above?: boolean; small?: boolean }) {
   const cw = w / cols
   return (
     <>
       {items.map((t, i) => (t || subs?.[i]) ? (
-        <div key={i} className={`cal-lbl${above ? ' above' : ''}`} style={{ left: L(x + cw * i), top: T(y), width: L(cw) }}>
+        <div key={i} className={`cal-lbl${above ? ' above' : ''}${small ? ' small' : ''}`} style={{ left: L(x + cw * i), top: T(y), width: L(cw) }}>
           {t.split('\n').map((l, j) => <span key={j}>{l}</span>)}
           {subs?.[i] && <span className="sub">{subs[i]}</span>}
         </div>
@@ -158,20 +158,20 @@ export function QuartzPanel() {
       <div className={`qcal${shift ? ' shift' : ''}`}>
         {shift && <div className="cal-shift-badge">AVO · segundas funciones activas</div>}
         {/* Wheels + @ buttons */}
-        <Wheel x={8} y={8} d={196} fn={wheelFns[0]} />
-        <Wheel x={230} y={5} d={196} fn={wheelFns[1]} />
-        <Wheel x={447} y={8} d={196} fn={wheelFns[2]} />
+        <Wheel x={10} y={18} d={176} fn={wheelFns[0]} />
+        <Wheel x={232} y={18} d={176} fn={wheelFns[1]} />
+        <Wheel x={450} y={18} d={176} fn={wheelFns[2]} />
         <Box x={190} y={168} w={56} h={50} cols={1} rows={1} narrow><Key v="blue" disabled title="A @" /></Box>
         <Box x={403} y={168} w={56} h={50} cols={1} rows={1} narrow><Key v="blue" disabled title="B @" /></Box>
         <Box x={616} y={168} w={56} h={50} cols={1} rows={1} narrow><Key v="blue" disabled title="C @" /></Box>
         <Label x={200} y={222} w={36} text="A @" /><Label x={413} y={222} w={36} text="B @" /><Label x={626} y={222} w={36} text="C @" />
 
         {/* Executors 2×10 */}
-        <GridLabels x={700} y={38} w={588} cols={10} items={['1', '2', '3', '4', '5', '6', '7', '8', '9', '10']} />
-        <Box x={700} y={54} w={588} h={112} cols={10} rows={2} narrow>
+        <GridLabels x={648} y={38} w={640} cols={10} items={['1', '2', '3', '4', '5', '6', '7', '8', '9', '10']} />
+        <Box x={648} y={54} w={640} h={112} cols={10} rows={2} spread>
           {Array.from({ length: 20 }, (_, i) => <Key key={i} v="dark" narrow disabled title={`Executor ${i + 1}`} />)}
         </Box>
-        <GridLabels x={700} y={172} w={588} cols={10} items={['11\nAttribute\nEditor', '12\nShow\nLibrary', '13\nPlaybacks', '14\nChannel\nGrid', '15\nVisualiser', '16\nGroups +\nPalettes', '17\nFixtures\n+ Groups', '18\nSnap', '19', '20']} />
+        <GridLabels x={648} y={172} w={640} cols={10} small items={['11\nAttribute\nEditor', '12\nShow\nLibrary', '13\nPlaybacks', '14\nChannel\nGrid', '15\nVisualiser', '16\nGroups +\nPalettes', '17\nFixtures\n+ Groups', '18\nSnap', '19', '20']} />
 
         {/* Fix / All / HiLight */}
         <GridLabels x={40} y={270} w={100} cols={2} items={['Fix −1', 'Fix +1']} above />
@@ -237,12 +237,15 @@ export function QuartzPanel() {
           })}
         </div>
 
-        {/* Page keys */}
-        <Label x={710} y={420} w={70} text="+ Page" /><Label x={776} y={420} w={72} text="Go Page" />
-        <Box x={714} y={438} w={62} h={62} cols={1} rows={1}><Key v="white" led={false} title="Next page" onClick={() => setPlaybackPage(playbackPage + 1)} /></Box>
-        <Box x={780} y={438} w={66} h={62} cols={1} rows={1}><Key v="white" title="Go Page" disabled /></Box>
-        <Box x={714} y={505} w={62} h={62} cols={1} rows={1}><Key v="white" led={false} disabled={playbackPage === 0} title="Previous page" onClick={() => setPlaybackPage(Math.max(0, playbackPage - 1))} /></Box>
-        <Label x={710} y={570} w={70} text={`− Page · Pg ${playbackPage + 1}`} />
+        {/* Page keys — +Page/Go Page/−Page joined, level with the two flash rows */}
+        <Label x={712} y={444} w={62} text="+ Page" /><Label x={774} y={444} w={62} text="Go Page" />
+        <Box x={714} y={454} w={122} h={110} cols={2} rows={2}>
+          <Key v="white" led={false} title="Next page" onClick={() => setPlaybackPage(playbackPage + 1)} />
+          <Key v="dark" title="Go Page" disabled />
+          <Key v="white" led={false} disabled={playbackPage === 0} title="Previous page" onClick={() => setPlaybackPage(Math.max(0, playbackPage - 1))} />
+          <span />
+        </Box>
+        <Label x={712} y={566} w={62} text={`− Page · ${playbackPage + 1}`} />
 
         {/* Transport 2×3 + Go */}
         <Label x={654} y={614} w={56} text={'Live\nTime'} sub="Review" align="right" /><Label x={848} y={614} w={56} text={'Next\nTime'} sub="Snap Back" align="left" />
@@ -254,10 +257,10 @@ export function QuartzPanel() {
           <Key v="white" led={false} disabled={!cues.length} title="Next Cue" onClick={() => goRel(1)} />
           <Key v="dark" disabled title="Connect/Cue" /><Key v="dark" disabled title="Stop" />
         </Box>
-        <Box x={758} y={826} w={60} h={62} cols={1} rows={1}>
+        <Box x={749} y={826} w={60} h={62} cols={1} rows={1}>
           <Key v="red" ledColor="red" on={cues.length > 0} disabled={!cues.length} title="Go" onClick={() => goRel(1)} />
         </Box>
-        <Label x={734} y={892} w={108} text="Go" />
+        <Label x={725} y={892} w={108} text="Go" />
 
         {/* Keypad — one 6×4 grid so every row is evenly spaced */}
         <GridLabels x={916} y={472} w={258} cols={4} items={['Fixture', 'Palette', 'Macro', 'Group']} />
@@ -274,10 +277,10 @@ export function QuartzPanel() {
         <GridLabels x={916} y={892} w={258} cols={4} items={['Back', 'Through', 'And', '@']} subs={['Undo', '−%', '+%', 'Redo']} />
 
         {/* Locate */}
-        <Box x={1221} y={826} w={60} h={62} cols={1} rows={1}>
+        <Box x={1210} y={744} w={60} h={62} cols={1} rows={1}>
           <Key v="red" ledColor="red" on={!noSel} disabled={noSel} title="Locate selected" onClick={locateSelected} />
         </Box>
-        <Label x={1200} y={892} w={100} text="Locate" />
+        <Label x={1190} y={810} w={100} text="Locate" />
       </div>
     </div>
   )

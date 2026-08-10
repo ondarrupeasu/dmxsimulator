@@ -721,7 +721,7 @@
 .qcal .ck {
   position: relative; width: 100%; height: 100%;
   align-self: center; justify-self: center;
-  border-radius: 0.8cqw; cursor: pointer; padding: 0;
+  border-radius: 0.18cqw; cursor: pointer; padding: 0;
   display: flex; align-items: center; justify-content: center;
   border: 1px solid rgba(0, 0, 0, 0.35);
   /* Flat single tone per key — no inner highlight, so there are only two shades. */
@@ -734,7 +734,7 @@
    top row (LED at the bottom) the cap sits at the top instead (.ledb). */
 .qcal .ck::before {
   content: ''; position: absolute; left: 7%; right: 7%; top: 36%; bottom: 7%;
-  border-radius: 0.55cqw; pointer-events: none;
+  border-radius: 0.12cqw; pointer-events: none;
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0.03) 45%, rgba(0, 0, 0, 0.14));
   box-shadow: 0 0.18cqw 0.32cqw rgba(0, 0, 0, 0.45), inset 0 0.12cqw 0 rgba(255, 255, 255, 0.3);
 }
@@ -785,6 +785,7 @@
 /* Above-a-box labels grow upward from their anchor line, so multi-line names
    (Select If, Other Screen…) never spill down onto the keys. */
 .cal-lbl.above { transform: translateY(-100%); }
+.cal-lbl.small { font-size: 0.86cqw; line-height: 1.04; }
 /* Shifted-function labels stay hidden until Avo is on. */
 .cal-lbl .sub { display: none; color: #9a9aa2; }
 /* Avo (shift) latched on — make it impossible to miss */
