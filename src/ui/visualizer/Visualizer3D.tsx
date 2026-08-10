@@ -41,6 +41,19 @@ function makeBeamGeometry(): THREE.ConeGeometry {
 function buildFixture(): FxObj {
   const group = new THREE.Group()
 
+  // Static bracket clamped to the truss — stays put while the head moves.
+  const base = new THREE.Mesh(
+    new THREE.BoxGeometry(0.5, 0.14, 0.32),
+    new THREE.MeshStandardMaterial({ color: 0x2b2b32, metalness: 0.6, roughness: 0.5 }),
+  )
+  base.position.y = 0.32
+  group.add(base)
+
+  // The moving head: body + beam live here so they pan/tilt together, like a real
+  // moving head — the lamp visibly follows the light cone.
+  const head = new THREE.Group()
+  group.add(head)
+
   // A small dark lamp body (like a PAR can) with a light edge, so it reads as a
   // fixture without a bright cube stealing attention.
   const bodyGeo = new THREE.CylinderGeometry(0.22, 0.27, 0.44, 20)
@@ -53,10 +66,7 @@ function buildFixture(): FxObj {
     new THREE.LineBasicMaterial({ color: 0x7f7f8c }),
   )
   body.add(edges)
-  group.add(body)
-
-  const head = new THREE.Group()
-  group.add(head)
+  head.add(body)
 
   const beamMat = new THREE.MeshBasicMaterial({
     vertexColors: true,
