@@ -203,13 +203,13 @@ export function QuartzPanel() {
         <Box x={112} y={168} w={56} h={50} cols={1} rows={1} narrow><Key v="blue" disabled title="A @" /></Box>
         <Box x={332} y={168} w={56} h={50} cols={1} rows={1} narrow><Key v="blue" disabled title="B @" /></Box>
         <Box x={552} y={168} w={56} h={50} cols={1} rows={1} narrow><Key v="blue" disabled title="C @" /></Box>
-        <Label x={122} y={220} w={36} text="A @" /><Label x={342} y={220} w={36} text="B @" /><Label x={562} y={220} w={36} text="C @" />
+        <Label x={78} y={172} w={28} text={'A\n@'} align="right" /><Label x={298} y={172} w={28} text={'B\n@'} align="right" /><Label x={518} y={172} w={28} text={'C\n@'} align="right" />
 
         {/* Executors 2×10 — assignable ones show their user label as a silk-screen
             caption (outside the button), like the printed 11–18 functions. */}
         <Frame x={642} y={48} w={652} h={124} />
-        <GridLabels x={648} y={38} w={640} cols={10} small
-          items={Array.from({ length: 10 }, (_, i) => (executorLabels[i + 1] ? `${i + 1}\n${executorLabels[i + 1]}` : String(i + 1)))} />
+        <GridLabels x={648} y={52} w={640} cols={10} small above
+          items={Array.from({ length: 10 }, (_, i) => (executorLabels[i + 1] ? `${executorLabels[i + 1]}\n${i + 1}` : String(i + 1)))} />
         <Box x={648} y={54} w={640} h={112} cols={10} rows={2} spread>
           {Array.from({ length: 20 }, (_, i) => {
             const n = i + 1
