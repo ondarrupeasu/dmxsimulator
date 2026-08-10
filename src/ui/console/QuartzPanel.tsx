@@ -209,7 +209,7 @@ export function QuartzPanel() {
             caption (outside the button), like the printed 11–18 functions. */}
         <Frame x={642} y={48} w={652} h={124} />
         <GridLabels x={648} y={38} w={640} cols={10} small
-          items={Array.from({ length: 10 }, (_, i) => executorLabels[i + 1] || String(i + 1))} />
+          items={Array.from({ length: 10 }, (_, i) => (executorLabels[i + 1] ? `${i + 1}\n${executorLabels[i + 1]}` : String(i + 1)))} />
         <Box x={648} y={54} w={640} h={112} cols={10} rows={2} spread>
           {Array.from({ length: 20 }, (_, i) => {
             const n = i + 1
@@ -227,7 +227,7 @@ export function QuartzPanel() {
             return <Key key={i} v="dark" narrow disabled title={`Executor ${n}`} />
           })}
         </Box>
-        <GridLabels x={648} y={172} w={640} cols={10} small items={['11\nAttribute\nEditor', '12\nShow\nLibrary', '13\nPlaybacks', '14\nChannel\nGrid', '15\nVisualiser', '16\nGroups +\nPalettes', '17\nFixtures\n+ Groups', '18\nSnap', executorLabels[19] || '19', executorLabels[20] || '20']} />
+        <GridLabels x={648} y={172} w={640} cols={10} small items={['11\nAttribute\nEditor', '12\nShow\nLibrary', '13\nPlaybacks', '14\nChannel\nGrid', '15\nVisualiser', '16\nGroups +\nPalettes', '17\nFixtures\n+ Groups', '18\nSnap', executorLabels[19] ? `19\n${executorLabels[19]}` : '19', executorLabels[20] ? `20\n${executorLabels[20]}` : '20']} />
 
         {/* Fix / All / HiLight */}
         <GridLabels x={40} y={270} w={100} cols={2} items={['Fix −1', 'Fix +1']} above />
