@@ -225,7 +225,7 @@ export function QuartzPanel() {
           <LedKey disabled title="Exit" /><LedKey disabled title="0" /><LedKey disabled title="Enter" /><LedKey disabled title="." />
         </Box>
         {/* Back/Through/And/@ */}
-        <Box x={916} y={808} w={258} h={50} cols={4} rows={1}>
+        <Box x={916} y={806} w={258} h={62} cols={4} rows={1}>
           <LedKey disabled title="Back" /><LedKey disabled title="Through" /><LedKey disabled title="And" /><LedKey disabled title="@" />
         </Box>
         {/* Locate */}
