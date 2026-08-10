@@ -236,7 +236,7 @@ export function Visualizer3D() {
     scene.fog = new THREE.FogExp2(0x16161c, 0.022)
 
     const camera = new THREE.PerspectiveCamera(50, 1, 0.1, 200)
-    camera.position.set(0, 6, 14)
+    camera.position.set(0, 7.5, 17)
 
     const renderer = new THREE.WebGLRenderer({ antialias: true })
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
@@ -246,7 +246,7 @@ export function Visualizer3D() {
     mount.appendChild(renderer.domElement)
 
     const controls = new OrbitControls(camera, renderer.domElement)
-    controls.target.set(0, 2, 0)
+    controls.target.set(0, 1.5, 1.5)
     controls.enableDamping = true
     controls.maxPolarAngle = Math.PI * 0.52
 
@@ -265,6 +265,43 @@ export function Visualizer3D() {
     const truss = buildTruss(18)
     truss.position.set(0, TRUSS_Y + 0.55, 0)
     scene.add(truss)
+
+    // ---- Venue: gives the stage an orientation (front = audience, back = wall) ----
+    // Back wall (upstage) — marks the back of the stage.
+    const backWall = new THREE.Mesh(
+      new THREE.PlaneGeometry(30, 12),
+      new THREE.MeshStandardMaterial({ color: 0x141319, roughness: 1, metalness: 0 }),
+    )
+    backWall.position.set(0, 6, -7)
+    scene.add(backWall)
+    // Stage-front edge (downstage lip) — a thin bright strip where the stage meets
+    // the audience, so the front is obvious.
+    const lip = new THREE.Mesh(
+      new THREE.BoxGeometry(20, 0.12, 0.25),
+      new THREE.MeshStandardMaterial({ color: 0x54545e, metalness: 0.4, roughness: 0.6 }),
+    )
+    lip.position.set(0, 0.06, 4)
+    scene.add(lip)
+    // Audience — a few raked rows of seats in front of the stage.
+    const seatGeo = mergeGeometries([
+      new THREE.BoxGeometry(0.5, 0.12, 0.5).translate(0, 0.22, 0),
+      new THREE.BoxGeometry(0.5, 0.5, 0.09).translate(0, 0.46, 0.22),
+    ])
+    const seats = new THREE.InstancedMesh(
+      seatGeo,
+      new THREE.MeshStandardMaterial({ color: 0x3a3348, roughness: 0.8, metalness: 0.05, emissive: 0x0e0c14 }),
+      5 * 16,
+    )
+    const seatM = new THREE.Matrix4()
+    let si = 0
+    for (let r = 0; r < 5; r++) {
+      for (let c = 0; c < 16; c++) {
+        seatM.makeTranslation((c - 7.5) * 0.82, r * 0.28, 5.6 + r * 1.05)
+        seats.setMatrixAt(si++, seatM)
+      }
+    }
+    seats.instanceMatrix.needsUpdate = true
+    scene.add(seats)
 
     const fxMap = new Map<string, FxObj>()
     const down = new THREE.Vector3()
