@@ -8,6 +8,8 @@ import { useMemo } from 'react'
 import type { FixtureDefinition, PatchedFixture, Show } from '../model/types'
 import { fixtureFootprint } from '../model/types'
 import type { Cue } from '../model/cue'
+import type { Palette, PaletteKind } from '../model/palette'
+import { PALETTE_FUNCTIONS, PALETTE_LABELS } from '../model/palette'
 import { BUILTIN_FIXTURES } from '../model/library'
 import { templateById } from '../model/templates'
 import type { ProgrammerValues } from '../engine/dmx'
@@ -29,6 +31,10 @@ interface ShowState {
   cues: Cue[]
   /** Cue currently output by the playback, or null. */
   activeCueId: string | null
+  /** Saved palettes (colour/position/gobo/beam/intensity). */
+  palettes: Palette[]
+  /** Current playback page (0-based); each page shows 10 cues. */
+  playbackPage: number
 
   setMode: (mode: AppMode) => void
   setConsole: (consoleId: string) => void
@@ -40,6 +46,16 @@ interface ShowState {
   deleteCue: (id: string) => void
   goCue: (id: string) => void
   releaseCue: () => void
+
+  // Palettes
+  /** Capture the programmer's values for a palette kind on the current selection. */
+  recordPalette: (kind: PaletteKind) => void
+  /** Apply a palette to the current selection (sets its functions in the programmer). */
+  applyPalette: (id: string) => void
+  deletePalette: (id: string) => void
+
+  // Playback pages
+  setPlaybackPage: (page: number) => void
 
   // Patch
   addFixture: (definitionId: string, opts?: { modeIndex?: number; address?: number }) => void
@@ -124,6 +140,8 @@ export const useShowStore = create<ShowState>()(
       selection: [],
       cues: [],
       activeCueId: null,
+      palettes: [],
+      playbackPage: 0,
 
       setMode: (mode) => set({ mode }),
       setConsole: (consoleId) => set({ consoleId }),
@@ -152,6 +170,55 @@ export const useShowStore = create<ShowState>()(
 
       goCue: (id) => set({ activeCueId: id }),
       releaseCue: () => set({ activeCueId: null }),
+
+      recordPalette: (kind) =>
+        set((s) => {
+          const fns = new Set<string>(PALETTE_FUNCTIONS[kind])
+          const values: Palette['values'] = {}
+          // Capture only functions the user actually programmed on the selection.
+          for (const id of s.selection) {
+            const pf = s.show.fixtures.find((f) => f.id === id)
+            const channels = pf && s.definitions[pf.definitionId]?.modes[pf.modeIndex]?.channels
+            const edits = s.programmer[id]
+            if (!channels || !edits) continue
+            channels.forEach((ch, i) => {
+              if (fns.has(ch.function) && edits[i] !== undefined) {
+                values[ch.function] = edits[i]
+              }
+            })
+          }
+          if (Object.keys(values).length === 0) return s // nothing to store
+          const count = s.palettes.filter((p) => p.kind === kind).length
+          const palette: Palette = {
+            id: nextInstanceId(),
+            name: `${PALETTE_LABELS[kind]} ${count + 1}`,
+            kind,
+            values,
+          }
+          return { palettes: [...s.palettes, palette] }
+        }),
+
+      applyPalette: (id) =>
+        set((s) => {
+          const palette = s.palettes.find((p) => p.id === id)
+          if (!palette) return s
+          const programmer = { ...s.programmer }
+          for (const inst of s.selection) {
+            const pf = s.show.fixtures.find((f) => f.id === inst)
+            const channels = pf && s.definitions[pf.definitionId]?.modes[pf.modeIndex]?.channels
+            if (!channels) continue
+            channels.forEach((ch, i) => {
+              const v = palette.values[ch.function]
+              if (v !== undefined) programmer[inst] = { ...programmer[inst], [i]: v }
+            })
+          }
+          return { programmer }
+        }),
+
+      deletePalette: (id) =>
+        set((s) => ({ palettes: s.palettes.filter((p) => p.id !== id) })),
+
+      setPlaybackPage: (page) => set({ playbackPage: Math.max(0, page) }),
 
       findFreeAddress: (footprint, universe) => {
         const occupied = new Uint8Array(UNIVERSE_SIZE + 1) // 1-based
@@ -282,11 +349,11 @@ export const useShowStore = create<ShowState>()(
         const tpl = templateById(templateId)
         if (!tpl) return
         const { show, programmer } = tpl.build(get().definitions)
-        set({ show, programmer, selection: [], cues: [], activeCueId: null })
+        set({ show, programmer, selection: [], cues: [], activeCueId: null, palettes: [], playbackPage: 0 })
       },
 
       setShow: (show, programmer = {}) =>
-        set({ show, programmer, selection: [], cues: [], activeCueId: null }),
+        set({ show, programmer, selection: [], cues: [], activeCueId: null, palettes: [], playbackPage: 0 }),
 
       exportShow: () => {
         const { show, programmer } = get()
@@ -306,6 +373,8 @@ export const useShowStore = create<ShowState>()(
           selection: [],
           cues: [],
           activeCueId: null,
+          palettes: [],
+          playbackPage: 0,
         })
         return true
       },
@@ -317,6 +386,8 @@ export const useShowStore = create<ShowState>()(
           selection: [],
           cues: [],
           activeCueId: null,
+          palettes: [],
+          playbackPage: 0,
         })),
     }),
     {
@@ -329,6 +400,7 @@ export const useShowStore = create<ShowState>()(
         consoleId: s.consoleId,
         cues: s.cues,
         activeCueId: s.activeCueId,
+        palettes: s.palettes,
       }),
     },
   ),

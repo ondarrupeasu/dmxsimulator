@@ -327,6 +327,44 @@
 .qd-fx-def { font-size: 10px; color: var(--text-faint); }
 .qd-muted { color: var(--text-faint); font-size: 12px; }
 
+/* Touchscreen tabs (Fixtures / palette windows) */
+.qd-tabs { display: flex; gap: 3px; margin-left: 8px; flex-wrap: wrap; }
+.qd-tabs button {
+  font: inherit; font-size: 10px; padding: 3px 9px;
+  color: var(--text-dim); background: var(--bg-elev);
+  border: 1px solid var(--border); border-radius: 4px; cursor: pointer;
+}
+.qd-tabs button.on { background: var(--coral); color: #16131a; border-color: var(--coral); font-weight: 600; }
+.qd-tab-colour.on { background: var(--at-colour); border-color: var(--at-colour); color: #16131a; }
+.qd-tab-position.on { background: var(--at-position); border-color: var(--at-position); color: #16131a; }
+.qd-tab-gobo.on { background: var(--at-gobo); border-color: var(--at-gobo); color: #16131a; }
+.qd-tab-beam.on { background: var(--at-beam); border-color: var(--at-beam); color: #16131a; }
+.qd-tab-intensity.on { background: var(--at-intensity); border-color: var(--at-intensity); color: #16131a; }
+
+/* Palette window */
+.qd-palettes { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.qd-pal-rec { flex: 0 0 auto; }
+.qd-pal { display: inline-flex; align-items: stretch; border: 1px solid var(--border); border-radius: var(--radius-sm); overflow: hidden; }
+.qd-pal-apply {
+  font: inherit; font-size: 12px; color: var(--text);
+  background: var(--bg-elev); border: none; padding: 5px 10px; cursor: pointer;
+}
+.qd-pal-apply:hover:not(:disabled) { background: var(--bg-input); }
+.qd-pal-apply:disabled { opacity: 0.4; cursor: not-allowed; }
+.qd-pal-del {
+  font: inherit; font-size: 11px; color: var(--text-faint);
+  background: var(--bg-elev); border: none; border-left: 1px solid var(--border);
+  padding: 0 7px; cursor: pointer;
+}
+.qd-pal-del:hover { color: var(--coral); }
+
+/* Playback page controls */
+.qd-playhead { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+.qd-playhead .qd-caplabel { margin: 0; }
+.qd-pages { display: flex; align-items: center; gap: 6px; }
+.qd-pages .qd-key { padding: 3px 8px; font-size: 10px; }
+.qd-page-n { font-size: 10px; color: var(--text-faint); font-variant-numeric: tabular-nums; }
+
 .qd-hw {
   display: grid;
   grid-template-columns: minmax(210px, 1fr) minmax(300px, 1.5fr) minmax(220px, 1fr);
