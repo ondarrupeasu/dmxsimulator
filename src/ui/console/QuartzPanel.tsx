@@ -44,12 +44,12 @@ function Box({ x, y, w, h, cols, rows, children }: {
   )
 }
 
-function LedKey({ on, red, disabled, title, onClick }: {
-  on?: boolean; red?: boolean; disabled?: boolean; title?: string; onClick?: () => void
+function LedKey({ on, red, led = true, disabled, title, onClick }: {
+  on?: boolean; red?: boolean; led?: boolean; disabled?: boolean; title?: string; onClick?: () => void
 }) {
   return (
     <button className="calkey" disabled={disabled} title={title} onClick={onClick}>
-      <span className={`called${on ? ' on' : ''}${red ? ' red' : ''}`} />
+      {led && <span className={`called${on ? ' on' : ''}${red ? ' red' : ''}`} />}
     </button>
   )
 }
@@ -217,12 +217,12 @@ export function QuartzPanel() {
           <LedKey title="Palettes" onClick={() => setScreen('colour')} />
           <LedKey disabled title="Macro" /><LedKey disabled title="Group" />
         </Box>
-        {/* Numeric 4×4 */}
+        {/* Numeric 4×4 — plain digits have no LED; the right column (logo/Time/Clear) does */}
         <Box x={916} y={528} w={258} h={274} cols={4} rows={4}>
-          <LedKey disabled title="1" /><LedKey disabled title="2" /><LedKey disabled title="3" /><LedKey disabled title="Avolites" />
-          <LedKey disabled title="4" /><LedKey disabled title="5" /><LedKey disabled title="6" /><LedKey red disabled title="Time" />
-          <LedKey disabled title="7" /><LedKey disabled title="8" /><LedKey disabled title="9" /><LedKey red title="Clear the programmer" onClick={clearProgrammer} />
-          <LedKey disabled title="Exit" /><LedKey disabled title="0" /><LedKey disabled title="Enter" /><LedKey disabled title="." />
+          <LedKey led={false} disabled title="1" /><LedKey led={false} disabled title="2" /><LedKey led={false} disabled title="3" /><LedKey red disabled title="Avolites" />
+          <LedKey led={false} disabled title="4" /><LedKey led={false} disabled title="5" /><LedKey led={false} disabled title="6" /><LedKey red disabled title="Time" />
+          <LedKey led={false} disabled title="7" /><LedKey led={false} disabled title="8" /><LedKey led={false} disabled title="9" /><LedKey red title="Clear the programmer" onClick={clearProgrammer} />
+          <LedKey led={false} disabled title="Exit" /><LedKey led={false} disabled title="0" /><LedKey led={false} disabled title="Enter" /><LedKey led={false} disabled title="." />
         </Box>
         {/* Back/Through/And/@ */}
         <Box x={916} y={806} w={258} h={62} cols={4} rows={1}>

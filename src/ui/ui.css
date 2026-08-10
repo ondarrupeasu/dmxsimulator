@@ -658,6 +658,8 @@
 .calkey:hover:not(:disabled) { background: rgba(0, 140, 255, 0.12); }
 .calkey:disabled { cursor: default; border-color: rgba(0, 0, 0, 0.12); }
 .called { width: 7px; height: 7px; border-radius: 50%; background: transparent; }
+/* When the photo is hidden, show the unlit LED so you see which keys have one */
+.qcal:not(.bg) .called { background: #34353b; }
 .called.on { background: #2ea6ff; box-shadow: 0 0 6px #2ea6ff; }
 .called.red { background: #e33; box-shadow: 0 0 5px #e33; }
 
@@ -676,7 +678,12 @@
 
 /* Faders (rectangular caps like the real desk) */
 .cal-faders { position: absolute; display: grid; grid-template-columns: repeat(10, 1fr); }
-.cal-fader { display: flex; align-items: stretch; justify-content: center; }
+.cal-fader { position: relative; display: flex; align-items: stretch; justify-content: center; }
+/* Visible fader groove when the photo is hidden */
+.qcal:not(.bg) .cal-fader::before {
+  content: ''; position: absolute; left: 50%; top: 4%; bottom: 4%;
+  width: 4px; margin-left: -2px; background: rgba(120, 120, 120, 0.5); border-radius: 2px;
+}
 .cal-fader input[type='range'] {
   writing-mode: vertical-lr; direction: rtl;
   width: 22px; height: 100%; background: transparent; -webkit-appearance: none; appearance: none; cursor: pointer;
