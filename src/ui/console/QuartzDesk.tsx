@@ -2,10 +2,11 @@ import { useState } from 'react'
 import { useShowStore } from '../../store/showStore'
 import type { PaletteKind } from '../../model/palette'
 import { PALETTE_LABELS } from '../../model/palette'
+import { EffectsPanel } from '../run/EffectsPanel'
 import { useSelectedValue, useSelectionFunctions } from './useSelectedValue'
 
 const PALETTE_KINDS: PaletteKind[] = ['colour', 'position', 'gobo', 'beam', 'intensity']
-type ScreenTab = 'fixtures' | PaletteKind
+type ScreenTab = 'fixtures' | 'effects' | PaletteKind
 
 /**
  * Avolites Quartz — faithful control surface (work in progress).
@@ -124,6 +125,12 @@ export function QuartzDesk() {
                 {PALETTE_LABELS[k]}
               </button>
             ))}
+            <button
+              className={screenTab === 'effects' ? 'on' : ''}
+              onClick={() => setScreenTab('effects')}
+            >
+              Shapes
+            </button>
           </div>
           <span className="qd-wip">WIP</span>
         </div>
@@ -145,6 +152,8 @@ export function QuartzDesk() {
               ))
             )}
           </div>
+        ) : screenTab === 'effects' ? (
+          <EffectsPanel />
         ) : (
           <div className="qd-palettes">
             <button

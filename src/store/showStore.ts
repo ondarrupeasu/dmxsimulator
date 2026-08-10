@@ -47,6 +47,8 @@ interface ShowState {
   /** Whether effect animations are running (Play) or frozen (Pause). */
   playing: boolean
   setPlaying: (v: boolean) => void
+  updateEffect: (id: string, partial: Partial<Effect>) => void
+  removeEffect: (id: string) => void
 
   setMode: (mode: AppMode) => void
   setConsole: (consoleId: string) => void
@@ -160,6 +162,11 @@ export const useShowStore = create<ShowState>()(
       tickClock: (dt) => set((s) => ({ now: s.now + dt })),
       playing: true,
       setPlaying: (v) => set({ playing: v }),
+      updateEffect: (id, partial) =>
+        set((s) => ({
+          effects: s.effects.map((e) => (e.id === id ? { ...e, ...partial } : e)),
+        })),
+      removeEffect: (id) => set((s) => ({ effects: s.effects.filter((e) => e.id !== id) })),
 
       setMode: (mode) => set({ mode }),
       setConsole: (consoleId) => set({ consoleId }),

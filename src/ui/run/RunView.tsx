@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next'
 import { useShowStore } from '../../store/showStore'
+import { EffectsPanel } from './EffectsPanel'
 
 /** Run mode: the cue list / playback. Record snapshots the programmer; Go fires. */
 export function RunView() {
@@ -57,6 +58,8 @@ export function RunView() {
             <button onClick={clearProgrammer}>{t('program.clear')}</button>
           </div>
         )}
+
+        <EffectsPanel />
       </div>
     </div>
   )
