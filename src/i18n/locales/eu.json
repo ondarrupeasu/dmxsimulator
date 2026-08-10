@@ -3,6 +3,10 @@
     "title": "DMXSimulatoR",
     "tagline": "Ikasi DMX praktikatuz"
   },
+  "common": {
+    "collapse": "Tolestu",
+    "expand": "Zabaldu"
+  },
   "modes": {
     "patch": "Patch",
     "program": "Programatu",

@@ -3,6 +3,10 @@
     "title": "DMXSimulatoR",
     "tagline": "Learn DMX by doing"
   },
+  "common": {
+    "collapse": "Collapse",
+    "expand": "Expand"
+  },
   "modes": {
     "patch": "Patch",
     "program": "Program",

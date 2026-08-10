@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels'
+import { Panel, PanelGroup, PanelResizeHandle, type ImperativePanelHandle } from 'react-resizable-panels'
 import { useShowStore } from '../store/showStore'
 import { setLanguage } from '../i18n'
 import { CONSOLES, consoleById } from '../console/registry'
@@ -23,6 +23,13 @@ export function AppShell() {
   const consoleId = useShowStore((s) => s.consoleId)
   const setConsole = useShowStore((s) => s.setConsole)
   const [viewer, setViewer] = useState<'2d' | '3d'>('3d')
+
+  // Collapsible secondary panes: folding the Fixtures window maximises the desk,
+  // folding the DMX monitor maximises the visualiser.
+  const screenRef = useRef<ImperativePanelHandle>(null)
+  const monitorRef = useRef<ImperativePanelHandle>(null)
+  const [screenCollapsed, setScreenCollapsed] = useState(false)
+  const [monitorCollapsed, setMonitorCollapsed] = useState(false)
 
   // Animation clock for the 2D view + monitor (the 3D view self-clocks). Advances
   // only while effects exist and playback isn't paused.
@@ -129,9 +136,21 @@ export function AppShell() {
                confuse the initial sizing (else the console collapses to minSize). */}
             <Panel id="quartz-console" order={1} defaultSize={62} minSize={30}>
               <PanelGroup direction="vertical" autoSaveId="dmxsim-quartz-left-v2">
-                <Panel defaultSize={14} minSize={10}>
+                <Panel
+                  ref={screenRef} collapsible collapsedSize={4}
+                  defaultSize={14} minSize={10}
+                  onCollapse={() => setScreenCollapsed(true)}
+                  onExpand={() => setScreenCollapsed(false)}
+                >
                   <div className="pane">
-                    <QuartzScreen />
+                    <button
+                      className="pane-fold"
+                      title={screenCollapsed ? t('common.expand') : t('common.collapse')}
+                      onClick={() => (screenCollapsed ? screenRef.current?.expand() : screenRef.current?.collapse())}
+                    >
+                      {screenCollapsed ? '⌄' : '⌃'}
+                    </button>
+                    {!screenCollapsed && <QuartzScreen />}
                   </div>
                 </Panel>
                 <PanelResizeHandle className="rz rz-h" />
@@ -152,8 +171,22 @@ export function AppShell() {
                   <div className="pane">{visualizerPanel}</div>
                 </Panel>
                 <PanelResizeHandle className="rz rz-h" />
-                <Panel defaultSize={36} minSize={14}>
-                  <div className="pane">{monitorPanel}</div>
+                <Panel
+                  ref={monitorRef} collapsible collapsedSize={4}
+                  defaultSize={36} minSize={14}
+                  onCollapse={() => setMonitorCollapsed(true)}
+                  onExpand={() => setMonitorCollapsed(false)}
+                >
+                  <div className="pane">
+                    <button
+                      className="pane-fold"
+                      title={monitorCollapsed ? t('common.expand') : t('common.collapse')}
+                      onClick={() => (monitorCollapsed ? monitorRef.current?.expand() : monitorRef.current?.collapse())}
+                    >
+                      {monitorCollapsed ? '⌃' : '⌄'}
+                    </button>
+                    {!monitorCollapsed && monitorPanel}
+                  </div>
                 </Panel>
               </PanelGroup>
             </Panel>
