@@ -719,7 +719,7 @@
 /* Keys — two colours (white / grey) + blue wheel keys. Same height; 1:1 keys fill
    their cell (so a group's buttons sit tight together), narrow keys are a bit thinner. */
 .qcal .ck {
-  position: relative; width: 100%; height: 4.05cqw;
+  position: relative; width: 100%; height: 100%;
   align-self: center; justify-self: center;
   border-radius: 0.8cqw; cursor: pointer; padding: 0;
   display: flex; align-items: center; justify-content: center;
@@ -727,6 +727,21 @@
   /* Flat single tone per key — no inner highlight, so there are only two shades. */
   transition: transform 0.08s ease;
 }
+/* Flash row is 1fr-spread above the faders, so its keys keep the fixed narrow size. */
+.cal-grid.spread .ck { width: 3.7cqw; height: 4.05cqw; }
+/* Real-desk look: a raised, bevelled cap on the lamp — it covers the button from
+   just past the middle to the bottom, leaving the LED strip (top) flat. On the flash
+   top row (LED at the bottom) the cap sits at the top instead (.ledb). */
+.qcal .ck::before {
+  content: ''; position: absolute; left: 7%; right: 7%; top: 36%; bottom: 7%;
+  border-radius: 0.55cqw; pointer-events: none;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0.03) 45%, rgba(0, 0, 0, 0.14));
+  box-shadow: 0 0.18cqw 0.32cqw rgba(0, 0, 0, 0.45), inset 0 0.12cqw 0 rgba(255, 255, 255, 0.3);
+}
+.qcal .ck.ledb::before { top: 7%; bottom: 36%; }
+/* Keep the LED and any on-key text above the bevel cap. */
+.qcal .ck > .cktext, .qcal .ck > .cktext2 { position: relative; z-index: 1; }
+.qcal .ckled { z-index: 2; }
 .qcal .ck-white { background: #e9e6de; color: #222; border-color: #c4c1b8; }
 .qcal .ck-dark  { background: #585862; color: #eaeaf0; border-color: #35353c; }
 .qcal .ck-blue  { background: #2a5aa0; border-color: #123056; }
@@ -736,9 +751,7 @@
 /* Panel keys keep their true colour even when they have no function yet — a real
    desk shows every button lit the same, so override the global disabled dimming. */
 .qcal .ck:disabled { cursor: default; opacity: 1; }
-/* Exactly two widths: 1:1 (above) and this one, a touch narrower. Both fixed so
-   every key of a kind is identical regardless of its grid cell. */
-.qcal .ck.narrow { width: 82%; }
+/* Key width now comes from the grid cell (Box sets 1:1 or narrow), so keys fill it. */
 .cktext { font-size: 1.05cqw; font-weight: 600; letter-spacing: -0.2px; }
 .ck-white .cktext { color: #23231f; }
 /* Secondary (shifted) function printed on the key, lighter grey */

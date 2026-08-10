@@ -44,14 +44,31 @@ function Key({
   )
 }
 
-function Box({ x, y, w, h, cols, rows, children }: {
-  x: number; y: number; w: number; h: number; cols: number; rows: number; children: React.ReactNode
+// The only two key sizes on the desk (in cqw): 1:1 and a little narrower; one height.
+const KW = 4.4
+const NW = 3.7
+const KH = 4.05
+
+/** A grid of keys. By default the cells are exactly one key wide/tall, so a group's
+ *  buttons sit tight together (H and V) and every key is one of the two widths. The
+ *  content is centred in the box. `spread` keeps 1fr columns (used for the flash row
+ *  so it stays aligned above the faders). */
+function Box({ x, y, w, h, cols, rows, narrow, spread, children }: {
+  x: number; y: number; w: number; h: number; cols: number; rows: number
+  narrow?: boolean; spread?: boolean; children: React.ReactNode
 }) {
+  const style: React.CSSProperties = spread
+    ? { gridTemplateColumns: `repeat(${cols}, 1fr)`, gridTemplateRows: `repeat(${rows}, 1fr)` }
+    : {
+        gridTemplateColumns: `repeat(${cols}, ${narrow ? NW : KW}cqw)`,
+        gridTemplateRows: `repeat(${rows}, ${KH}cqw)`,
+        justifyContent: 'center',
+        alignContent: 'center',
+      }
   return (
-    <div className="cal-grid" style={{
-      left: L(x), top: T(y), width: L(w), height: T(h),
-      gridTemplateColumns: `repeat(${cols}, 1fr)`, gridTemplateRows: `repeat(${rows}, 1fr)`,
-    }}>{children}</div>
+    <div className={`cal-grid${spread ? ' spread' : ''}`} style={{ left: L(x), top: T(y), width: L(w), height: T(h), ...style }}>
+      {children}
+    </div>
   )
 }
 
@@ -144,21 +161,21 @@ export function QuartzPanel() {
         <Wheel x={8} y={8} d={196} fn={wheelFns[0]} />
         <Wheel x={230} y={5} d={196} fn={wheelFns[1]} />
         <Wheel x={447} y={8} d={196} fn={wheelFns[2]} />
-        <Box x={190} y={168} w={56} h={50} cols={1} rows={1}><Key v="blue" narrow disabled title="A @" /></Box>
-        <Box x={403} y={168} w={56} h={50} cols={1} rows={1}><Key v="blue" narrow disabled title="B @" /></Box>
-        <Box x={616} y={168} w={56} h={50} cols={1} rows={1}><Key v="blue" narrow disabled title="C @" /></Box>
+        <Box x={190} y={168} w={56} h={50} cols={1} rows={1} narrow><Key v="blue" disabled title="A @" /></Box>
+        <Box x={403} y={168} w={56} h={50} cols={1} rows={1} narrow><Key v="blue" disabled title="B @" /></Box>
+        <Box x={616} y={168} w={56} h={50} cols={1} rows={1} narrow><Key v="blue" disabled title="C @" /></Box>
         <Label x={200} y={222} w={36} text="A @" /><Label x={413} y={222} w={36} text="B @" /><Label x={626} y={222} w={36} text="C @" />
 
         {/* Executors 2×10 */}
         <GridLabels x={700} y={38} w={588} cols={10} items={['1', '2', '3', '4', '5', '6', '7', '8', '9', '10']} />
-        <Box x={700} y={54} w={588} h={112} cols={10} rows={2}>
+        <Box x={700} y={54} w={588} h={112} cols={10} rows={2} narrow>
           {Array.from({ length: 20 }, (_, i) => <Key key={i} v="dark" narrow disabled title={`Executor ${i + 1}`} />)}
         </Box>
         <GridLabels x={700} y={172} w={588} cols={10} items={['11\nAttribute\nEditor', '12\nShow\nLibrary', '13\nPlaybacks', '14\nChannel\nGrid', '15\nVisualiser', '16\nGroups +\nPalettes', '17\nFixtures\n+ Groups', '18\nSnap', '19', '20']} />
 
         {/* Fix / All / HiLight */}
         <GridLabels x={40} y={270} w={100} cols={2} items={['Fix −1', 'Fix +1']} above />
-        <Box x={40} y={272} w={100} h={118} cols={2} rows={2}>
+        <Box x={40} y={272} w={100} h={118} cols={2} rows={2} narrow>
           <Key v="dark" narrow led={false} disabled title="Fix −1" /><Key v="dark" narrow led={false} disabled title="Fix +1" />
           <Key v="dark" narrow disabled title="All" /><Key v="dark" narrow disabled title="Hi Light" />
         </Box>
@@ -189,14 +206,14 @@ export function QuartzPanel() {
 
         {/* Min/Max ... */}
         <GridLabels x={1074} y={270} w={122} cols={2} items={['Min/Max', 'Size/Pos']} subs={['Next', 'Other Screen']} above />
-        <Box x={1074} y={272} w={122} h={118} cols={2} rows={2}>
+        <Box x={1074} y={272} w={122} h={118} cols={2} rows={2} narrow>
           <Key v="dark" narrow led={false} disabled title="Min/Max" /><Key v="dark" narrow led={false} disabled title="Size/Pos" />
           <Key v="dark" narrow disabled title="View/Open" /><Key v="dark" narrow led={false} disabled title="Close/Control" />
         </Box>
         <GridLabels x={1074} y={392} w={122} cols={2} items={['View\n/Open', 'Close\nControl']} />
 
-        {/* Flash rows: top row LED at bottom, bottom row no LED */}
-        <Box x={44} y={454} w={612} h={104} cols={10} rows={2}>
+        {/* Flash rows: top row LED at bottom, bottom row no LED. Spread to align with faders. */}
+        <Box x={44} y={454} w={612} h={104} cols={10} rows={2} spread>
           {Array.from({ length: 10 }, (_, i) => {
             const gi = playbackPage * 10 + i; const cue = cues[gi]; const on = !!cue && cue.id === activeCueId
             return <Key key={`t${i}`} v="dark" narrow ledBottom on={on} disabled={!cue} title={cue ? `Go ${cue.name}` : 'Empty'} onClick={() => cue && goCue(cue.id)} />
