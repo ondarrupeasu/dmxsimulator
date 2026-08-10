@@ -677,7 +677,9 @@
 .qcal .ck-dark  { background: #585862; color: #eaeaf0; border-color: #35353c; }
 .qcal .ck-blue  { background: #2a5aa0; border-color: #123056; }
 .qcal .ck:hover:not(:disabled) { transform: scale(1.06); z-index: 3; }
-.qcal .ck:disabled { cursor: default; }
+/* Panel keys keep their true colour even when they have no function yet — a real
+   desk shows every button lit the same, so override the global disabled dimming. */
+.qcal .ck:disabled { cursor: default; opacity: 1; }
 /* Exactly two widths: 1:1 (above) and this one, a touch narrower. Both fixed so
    every key of a kind is identical regardless of its grid cell. */
 .qcal .ck.narrow { width: 3.5cqw; }
@@ -701,7 +703,7 @@
   transition: transform 0.08s ease;
 }
 .calbig:hover:not(:disabled) { transform: scale(1.05); }
-.calbig:disabled { opacity: 0.55; cursor: default; }
+.calbig:disabled { opacity: 0.72; cursor: default; }
 
 /* Silk-screen labels; secondary line in lighter grey */
 .cal-lbl {
