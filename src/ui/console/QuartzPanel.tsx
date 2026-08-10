@@ -148,7 +148,7 @@ export function QuartzPanel() {
           ))}
           <LedKey title="Shape → Shapes" onClick={() => setScreen('effects')} />
           <LedKey disabled title="ML Menu" /><LedKey disabled title="Blind" /><LedKey disabled title="Off" />
-          <LedKey disabled title="Fan" /><LedKey disabled title="Options" /><LedKey disabled title="Latch Menu" />
+          <LedKey disabled title="Fan" /><LedKey disabled title="Options" /><LedKey red disabled title="Latch Menu" />
         </Box>
 
         {/* Program keys 6×2 */}
@@ -168,18 +168,23 @@ export function QuartzPanel() {
           <LedKey disabled title="View/Open" /><LedKey disabled title="Close/Control" />
         </Box>
 
-        {/* Flash buttons above faders (1 row) */}
-        <Box x={44} y={432} w={612} h={108} cols={10} rows={1}>
+        {/* Flash buttons above faders — two rows (top has the LED, bottom doesn't) */}
+        <Box x={44} y={432} w={612} h={108} cols={10} rows={2}>
           {Array.from({ length: 10 }, (_, i) => {
             const gi = playbackPage * 10 + i
             const cue = cues[gi]
             const on = !!cue && cue.id === activeCueId
-            return <LedKey key={i} on={on} disabled={!cue} title={cue ? `Go ${cue.name}` : 'Empty'} onClick={() => cue && goCue(cue.id)} />
+            return <LedKey key={`t${i}`} on={on} disabled={!cue} title={cue ? `Go ${cue.name}` : 'Empty'} onClick={() => cue && goCue(cue.id)} />
+          })}
+          {Array.from({ length: 10 }, (_, i) => {
+            const gi = playbackPage * 10 + i
+            const cue = cues[gi]
+            return <button key={`b${i}`} className="calkey" disabled={!cue} title={cue ? `Flash ${cue.name}` : 'Empty'} onClick={() => cue && goCue(cue.id)} />
           })}
         </Box>
 
         {/* Faders */}
-        <div className="cal-faders" style={{ left: L(44), top: T(600), width: L(612), height: T(275) }}>
+        <div className="cal-faders" style={{ left: L(44), top: T(585), width: L(612), height: T(285) }}>
           {Array.from({ length: 10 }, (_, i) => {
             const gi = playbackPage * 10 + i
             const cue = cues[gi]
@@ -215,8 +220,8 @@ export function QuartzPanel() {
         {/* Numeric 4×4 */}
         <Box x={916} y={528} w={258} h={274} cols={4} rows={4}>
           <LedKey disabled title="1" /><LedKey disabled title="2" /><LedKey disabled title="3" /><LedKey disabled title="Avolites" />
-          <LedKey disabled title="4" /><LedKey disabled title="5" /><LedKey disabled title="6" /><LedKey disabled title="Time" />
-          <LedKey disabled title="7" /><LedKey disabled title="8" /><LedKey disabled title="9" /><LedKey title="Clear the programmer" onClick={clearProgrammer} />
+          <LedKey disabled title="4" /><LedKey disabled title="5" /><LedKey disabled title="6" /><LedKey red disabled title="Time" />
+          <LedKey disabled title="7" /><LedKey disabled title="8" /><LedKey disabled title="9" /><LedKey red title="Clear the programmer" onClick={clearProgrammer} />
           <LedKey disabled title="Exit" /><LedKey disabled title="0" /><LedKey disabled title="Enter" /><LedKey disabled title="." />
         </Box>
         {/* Back/Through/And/@ */}

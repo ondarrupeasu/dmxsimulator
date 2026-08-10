@@ -697,12 +697,12 @@
 
 /* Big red keys (Go, Locate) */
 .calbig {
-  position: absolute; border-radius: 5px; cursor: pointer;
+  position: absolute; border-radius: 6px; cursor: pointer;
   border: 1px solid rgba(0, 140, 255, 0.3); background: transparent;
 }
-.calbig.red { background: rgba(226, 72, 58, 0.15); border-color: rgba(226, 72, 58, 0.5); }
-.calbig:hover:not(:disabled) { filter: brightness(1.2); }
-.calbig:disabled { opacity: 0.5; cursor: default; }
+.calbig.red { background: rgba(226, 72, 58, 0.22); border-color: rgba(226, 72, 58, 0.7); }
+.calbig:hover:not(:disabled) { background: rgba(0, 150, 255, 0.28); border-color: rgba(0, 150, 255, 0.85); }
+.calbig:disabled { opacity: 0.45; cursor: default; }
 
 /* ---- Cue list (Run) ---- */
 .cue-list {
