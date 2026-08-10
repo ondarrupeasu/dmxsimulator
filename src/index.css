@@ -119,3 +119,68 @@ h3 {
 ::selection {
   background: var(--coral-soft);
 }
+
+/* ===== Access gate (soft client-side password screen) ===== */
+.gate {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 24px;
+  text-align: center;
+  background: var(--bg);
+}
+.gate-logo {
+  border-radius: 18px;
+}
+.gate h1 {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 700;
+}
+.gate p {
+  margin: 0;
+  font-size: 14px;
+  color: var(--text-faint);
+}
+.gate form {
+  display: flex;
+  gap: 8px;
+  width: min(360px, 90%);
+  margin-top: 4px;
+}
+.gate input {
+  flex: 1;
+  padding: 10px 12px;
+  font: inherit;
+  color: var(--text);
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-radius: 9px;
+}
+.gate input:focus {
+  outline: none;
+  border-color: var(--coral);
+}
+.gate button {
+  padding: 10px 18px;
+  font: inherit;
+  font-weight: 600;
+  color: #fff;
+  background: var(--coral);
+  border: 0;
+  border-radius: 9px;
+  cursor: pointer;
+}
+.gate button:hover {
+  background: var(--coral-bright);
+}
+.gate-err {
+  min-height: 16px;
+  font-size: 13px;
+  color: var(--coral);
+}
