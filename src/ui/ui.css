@@ -621,10 +621,11 @@
 .qpanel {
   position: relative;
   background: #0f0f14;
-  overflow: auto;
+  overflow: hidden;
   min-height: 0;
-  display: flex; align-items: flex-start; justify-content: center;
+  display: flex; align-items: center; justify-content: center;
   padding: 10px;
+  container-type: size;
 }
 .qcal-bgtoggle {
   position: absolute; top: 6px; right: 10px; z-index: 10;
@@ -634,7 +635,9 @@
 }
 .qcal {
   position: relative;
-  width: 100%; max-width: 1000px;
+  /* Fit the whole desk inside the pane: limited by width (100%) OR height (141cqh
+     keeps the 1306:919 ratio against the pane height), whichever is smaller. */
+  width: min(100%, 141cqh); max-width: 1000px;
   aspect-ratio: 1306 / 919;
   background: #17181d;
   border: 1px solid #2a2b31;
@@ -645,42 +648,60 @@
 
 .cal-grid { position: absolute; display: grid; gap: 0.5cqw; }
 
-/* Keys */
+/* Keys — one grey tone; hover grows the key a hair (no colour change) */
 .qcal .ck {
   position: relative; width: 100%; height: 100%;
-  border-radius: 1cqw; cursor: pointer; padding: 0;
+  border-radius: 0.9cqw; cursor: pointer; padding: 0;
   display: flex; align-items: center; justify-content: center;
   border: 1px solid rgba(0, 0, 0, 0.5);
   box-shadow: inset 0 0.15cqw 0 rgba(255, 255, 255, 0.12);
+  transition: transform 0.08s ease;
 }
-.qcal .ck-white { background: linear-gradient(180deg, #e9e8e2, #cfcec6); color: #2a2a28; border-color: #8f8e86; }
-.qcal .ck-dark  { background: linear-gradient(180deg, #54545c, #3c3c44); color: #e8e8ee; border-color: #1c1c22; }
+.qcal .ck-white { background: linear-gradient(180deg, #eae9e3, #d3d2ca); color: #23231f; border-color: #8f8e86; }
+.qcal .ck-dark  { background: linear-gradient(180deg, #55555d, #45454d); color: #e8e8ee; border-color: #26262c; }
 .qcal .ck-blue  { background: linear-gradient(180deg, #2f63b0, #1b447e); border-color: #0c1830; }
-.qcal .ck:hover:not(:disabled) { filter: brightness(1.1); }
+.qcal .ck:hover:not(:disabled) { transform: scale(1.06); z-index: 3; }
 .qcal .ck:disabled { cursor: default; }
-.cktext { font-size: 1.5cqw; font-weight: 600; }
-.ck-white .cktext { color: #2a2a28; }
+/* Narrow keys — same height, thinner width, centred in their cell */
+.qcal .ck.narrow { width: 60%; justify-self: center; }
+.cktext { font-size: 1.4cqw; font-weight: 600; }
+.ck-white .cktext { color: #23231f; }
+/* Secondary (shifted) function printed on the key, lighter grey */
+.cktext2 { position: absolute; bottom: 6%; font-size: 1.05cqw; font-weight: 600; color: #9a9aa2; }
+.ck-white .cktext2 { color: #8a897f; }
 /* LED */
 .ckled { position: absolute; top: 8%; left: 50%; transform: translateX(-50%); width: 1.1cqw; height: 1.1cqw; border-radius: 50%; background: #2a2a30; }
-.ck-white .ckled { background: #bcbab0; }
+.ck-white .ckled { background: #b0afa5; }
 .ck.ledb .ckled { top: auto; bottom: 10%; }
 .ckled.on { background: #2ea6ff; box-shadow: 0 0 1.2cqw #2ea6ff; }
 .ckled.red { background: #e33; box-shadow: 0 0 1cqw rgba(230, 60, 60, 0.6); }
 
 /* Big red keys (Go, Locate) */
 .calbig {
-  position: absolute; border-radius: 1cqw; cursor: pointer;
+  position: absolute; border-radius: 0.9cqw; cursor: pointer;
   border: 1px solid #7a231c; background: linear-gradient(180deg, #e2483a, #b62e24);
   box-shadow: inset 0 0.15cqw 0 rgba(255, 255, 255, 0.25);
+  transition: transform 0.08s ease;
 }
-.calbig:hover:not(:disabled) { filter: brightness(1.12); }
+.calbig:hover:not(:disabled) { transform: scale(1.05); }
 .calbig:disabled { opacity: 0.55; cursor: default; }
 
-/* Silk-screen labels */
+/* Silk-screen labels; secondary line in lighter grey */
 .cal-lbl {
   position: absolute; display: flex; flex-direction: column; align-items: center;
-  color: #e6e6ec; font-size: 1.12cqw; line-height: 1.06; text-align: center; pointer-events: none;
+  color: #e6e6ec; font-size: 1.05cqw; line-height: 1.08; text-align: center; pointer-events: none;
 }
+.cal-lbl .sub { color: #9a9aa2; }
+/* Avo (shift) latched on — make it impossible to miss */
+.qcal.shift { outline: 0.25cqw solid var(--coral); outline-offset: -0.25cqw; }
+.cal-shift-badge {
+  position: absolute; top: 1.4%; left: 50%; transform: translateX(-50%);
+  background: var(--coral); color: #1a1113; font-size: 1.3cqw; font-weight: 700;
+  padding: 0.3cqw 1.1cqw; border-radius: 0.7cqw; z-index: 20; pointer-events: none;
+  letter-spacing: 0.3px; box-shadow: 0 0.3cqw 1cqw rgba(0, 0, 0, 0.55);
+}
+.qcal.shift .cal-lbl .sub { color: var(--coral); font-weight: 700; }
+.qcal.shift .cal-lbl > span:not(.sub) { opacity: 0.4; }
 
 /* Wheels — dark metal */
 .calwheel {
@@ -697,11 +718,19 @@
 /* Faders — clean, handle on top, with stops */
 .cal-faders { position: absolute; display: grid; grid-template-columns: repeat(10, 1fr); }
 .cal-fader { position: relative; display: flex; align-items: stretch; justify-content: center; }
-.cal-fader::before { content: ''; position: absolute; left: 50%; top: 3%; bottom: 3%; width: 0.5cqw; margin-left: -0.25cqw; background: #4a4a52; border-radius: 0.25cqw; }
-.cal-fader::after { content: ''; position: absolute; left: 50%; top: 3%; bottom: 3%; width: 1.4cqw; margin-left: -0.7cqw; border-top: 0.3cqw solid #6a6a72; border-bottom: 0.3cqw solid #6a6a72; pointer-events: none; }
-.cal-fader input[type='range'] { position: relative; z-index: 2; writing-mode: vertical-lr; direction: rtl; width: 2cqw; height: 100%; background: transparent; -webkit-appearance: none; appearance: none; cursor: pointer; }
-.cal-fader input[type='range']::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 2.6cqw; height: 2.6cqw; border-radius: 0.4cqw; background: linear-gradient(180deg, #5a5a62, #2c2c32); border: 1px solid #101014; box-shadow: 0 0.2cqw 0.4cqw rgba(0, 0, 0, 0.5); }
-.cal-fader input[type='range']::-moz-range-thumb { width: 2.6cqw; height: 2.6cqw; border-radius: 0.4cqw; background: linear-gradient(180deg, #5a5a62, #2c2c32); border: 1px solid #101014; }
+/* central groove */
+.cal-fader::before { content: ''; position: absolute; left: 50%; top: 2%; bottom: 2%; width: 0.45cqw; margin-left: -0.22cqw; background: #43434b; border-radius: 0.25cqw; z-index: 0; }
+/* ruler tick marks down both sides */
+.cal-fader::after {
+  content: ''; position: absolute; left: 50%; top: 3%; bottom: 3%; width: 3cqw; margin-left: -1.5cqw;
+  background: repeating-linear-gradient(to bottom, #767680 0, #767680 0.2cqw, transparent 0.2cqw, transparent 2.6cqw);
+  opacity: 0.5; pointer-events: none; z-index: 0;
+}
+.cal-fader input[type='range'] { position: relative; z-index: 2; writing-mode: vertical-lr; direction: rtl; width: 2.4cqw; height: 100%; background: transparent; -webkit-appearance: none; appearance: none; cursor: pointer; }
+.cal-fader input[type='range']::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 2.8cqw; height: 2.2cqw; border-radius: 0.35cqw; background: linear-gradient(180deg, #6a6a74, #303038); border: 1px solid #0e0e12; box-shadow: 0 0.2cqw 0.4cqw rgba(0, 0, 0, 0.6); transition: transform 0.08s ease; }
+.cal-fader input[type='range']::-moz-range-thumb { width: 2.8cqw; height: 2.2cqw; border-radius: 0.35cqw; background: linear-gradient(180deg, #6a6a74, #303038); border: 1px solid #0e0e12; }
+.cal-fader input[type='range']:hover:not(:disabled)::-webkit-slider-thumb { transform: scale(1.12); }
+.cal-fader input[type='range']:hover:not(:disabled)::-moz-range-thumb { transform: scale(1.12); }
 .cal-fader input[type='range']:disabled { opacity: 0.5; }
 /* ---- Cue list (Run) ---- */
 .cue-list {

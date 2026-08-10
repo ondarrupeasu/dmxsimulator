@@ -41,10 +41,18 @@ function makeBeamGeometry(): THREE.ConeGeometry {
 function buildFixture(): FxObj {
   const group = new THREE.Group()
 
+  // A small dark lamp body (like a PAR can) with a light edge, so it reads as a
+  // fixture without a bright cube stealing attention.
+  const bodyGeo = new THREE.CylinderGeometry(0.22, 0.27, 0.44, 20)
   const body = new THREE.Mesh(
-    new THREE.BoxGeometry(0.5, 0.5, 0.5),
-    new THREE.MeshStandardMaterial({ color: 0x1c1c22, metalness: 0.5, roughness: 0.6 }),
+    bodyGeo,
+    new THREE.MeshStandardMaterial({ color: 0x14141a, metalness: 0.5, roughness: 0.55 }),
   )
+  const edges = new THREE.LineSegments(
+    new THREE.EdgesGeometry(bodyGeo, 25),
+    new THREE.LineBasicMaterial({ color: 0x7f7f8c }),
+  )
+  body.add(edges)
   group.add(body)
 
   const head = new THREE.Group()
@@ -83,8 +91,8 @@ export function Visualizer3D() {
     if (!mount) return
 
     const scene = new THREE.Scene()
-    scene.background = new THREE.Color(0x0b0b0f)
-    scene.fog = new THREE.FogExp2(0x0b0b0f, 0.025)
+    scene.background = new THREE.Color(0x16161c)
+    scene.fog = new THREE.FogExp2(0x16161c, 0.022)
 
     const camera = new THREE.PerspectiveCamera(50, 1, 0.1, 200)
     camera.position.set(0, 6, 14)
@@ -104,11 +112,11 @@ export function Visualizer3D() {
     scene.add(new THREE.AmbientLight(0x404050, 1.2))
     const floor = new THREE.Mesh(
       new THREE.PlaneGeometry(40, 30),
-      new THREE.MeshStandardMaterial({ color: 0x111116, roughness: 0.9, metalness: 0.1 }),
+      new THREE.MeshStandardMaterial({ color: 0x1b1b22, roughness: 0.9, metalness: 0.1 }),
     )
     floor.rotation.x = -Math.PI / 2
     scene.add(floor)
-    scene.add(new THREE.GridHelper(40, 40, 0x2c2c38, 0x1c1c24))
+    scene.add(new THREE.GridHelper(40, 40, 0x3c3c4a, 0x272730))
     const truss = new THREE.Mesh(
       new THREE.BoxGeometry(16, 0.15, 0.15),
       new THREE.MeshStandardMaterial({ color: 0x33333c, metalness: 0.6, roughness: 0.5 }),
@@ -207,9 +215,10 @@ export function Visualizer3D() {
           fx.pool.visible = false
         }
 
-        ;(fx.body.material as THREE.MeshStandardMaterial).emissive.copy(
-          on ? col : new THREE.Color(0x000000),
-        )
+        // Subtle tint when lit — a hint of the output colour, not a glowing cube.
+        ;(fx.body.material as THREE.MeshStandardMaterial).emissive
+          .copy(on ? col : new THREE.Color(0x000000))
+          .multiplyScalar(0.3)
       }
 
       controls.update()

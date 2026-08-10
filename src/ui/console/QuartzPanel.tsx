@@ -28,13 +28,16 @@ const ATTRIBUTES: { name: string; wheels: string[][] }[] = [
 
 type V = 'white' | 'dark' | 'blue'
 function Key({
-  v = 'dark', led = true, ledColor, ledBottom, on, text, disabled, title, onClick,
+  v = 'dark', led = true, ledColor, ledBottom, on, text, narrow, disabled, title, onClick,
 }: {
   v?: V; led?: boolean; ledColor?: 'red'; ledBottom?: boolean; on?: boolean
-  text?: string; disabled?: boolean; title?: string; onClick?: () => void
+  text?: string; narrow?: boolean; disabled?: boolean; title?: string; onClick?: () => void
 }) {
   return (
-    <button className={`ck ck-${v}${ledBottom ? ' ledb' : ''}`} disabled={disabled} title={title} onClick={onClick}>
+    <button
+      className={`ck ck-${v}${ledBottom ? ' ledb' : ''}${narrow ? ' narrow' : ''}`}
+      disabled={disabled} title={title} onClick={onClick}
+    >
       {led && <span className={`ckled${on ? ' on' : ''}${ledColor ? ' ' + ledColor : ''}`} />}
       {text != null && <span className="cktext">{text}</span>}
     </button>
@@ -52,23 +55,26 @@ function Box({ x, y, w, h, cols, rows, children }: {
   )
 }
 
-/** Silk-screen labels centred over each column of a grid. */
-function GridLabels({ x, y, w, cols, items }: { x: number; y: number; w: number; cols: number; items: string[] }) {
+/** Silk-screen labels centred over each column of a grid. `subs` = shifted-function
+ *  name printed in lighter grey under each label. */
+function GridLabels({ x, y, w, cols, items, subs }: { x: number; y: number; w: number; cols: number; items: string[]; subs?: string[] }) {
   const cw = w / cols
   return (
     <>
-      {items.map((t, i) => t ? (
+      {items.map((t, i) => (t || subs?.[i]) ? (
         <div key={i} className="cal-lbl" style={{ left: L(x + cw * i), top: T(y), width: L(cw) }}>
           {t.split('\n').map((l, j) => <span key={j}>{l}</span>)}
+          {subs?.[i] && <span className="sub">{subs[i]}</span>}
         </div>
       ) : null)}
     </>
   )
 }
-function Label({ x, y, w, text, align = 'center' }: { x: number; y: number; w: number; text: string; align?: 'center' | 'left' | 'right' }) {
+function Label({ x, y, w, text, sub, align = 'center' }: { x: number; y: number; w: number; text: string; sub?: string; align?: 'center' | 'left' | 'right' }) {
   return (
     <div className="cal-lbl" style={{ left: L(x), top: T(y), width: L(w), textAlign: align, alignItems: align === 'right' ? 'flex-end' : align === 'left' ? 'flex-start' : 'center' }}>
       {text.split('\n').map((l, j) => <span key={j}>{l}</span>)}
+      {sub && <span className="sub">{sub}</span>}
     </div>
   )
 }
@@ -99,6 +105,9 @@ function Wheel({ x, y, d, fn }: { x: number; y: number; d: number; fn: string | 
 
 export function QuartzPanel() {
   const [showBg, setShowBg] = useState(false)
+  // Avo = the Titan "shift". No physical desk, so it latches: click to hold the
+  // second functions on, click again to release. State is shown loudly (see badge).
+  const [shift, setShift] = useState(false)
   const attr = useShowStore((s) => s.deskAttr)
   const setAttr = useShowStore((s) => s.setDeskAttr)
   const setScreen = useShowStore((s) => s.setDeskScreen)
@@ -133,30 +142,31 @@ export function QuartzPanel() {
       <button className="qcal-bgtoggle" onClick={() => setShowBg((s) => !s)}>
         {showBg ? 'Ocultar foto' : 'Ver foto'}
       </button>
-      <div className={`qcal${showBg ? ' bg' : ''}`}>
+      <div className={`qcal${showBg ? ' bg' : ''}${shift ? ' shift' : ''}`}>
+        {shift && <div className="cal-shift-badge">AVO · segundas funciones activas</div>}
         {/* Wheels + @ buttons */}
         <Wheel x={8} y={8} d={196} fn={wheelFns[0]} />
         <Wheel x={230} y={5} d={196} fn={wheelFns[1]} />
         <Wheel x={447} y={8} d={196} fn={wheelFns[2]} />
-        <Box x={197} y={168} w={42} h={50} cols={1} rows={1}><Key v="blue" disabled title="A @" /></Box>
-        <Box x={410} y={168} w={42} h={50} cols={1} rows={1}><Key v="blue" disabled title="B @" /></Box>
-        <Box x={623} y={168} w={42} h={50} cols={1} rows={1}><Key v="blue" disabled title="C @" /></Box>
+        <Box x={190} y={168} w={56} h={50} cols={1} rows={1}><Key v="blue" narrow disabled title="A @" /></Box>
+        <Box x={403} y={168} w={56} h={50} cols={1} rows={1}><Key v="blue" narrow disabled title="B @" /></Box>
+        <Box x={616} y={168} w={56} h={50} cols={1} rows={1}><Key v="blue" narrow disabled title="C @" /></Box>
         <Label x={200} y={222} w={36} text="A @" /><Label x={413} y={222} w={36} text="B @" /><Label x={626} y={222} w={36} text="C @" />
 
         {/* Executors 2×10 */}
         <GridLabels x={712} y={36} w={532} cols={10} items={['1', '2', '3', '4', '5', '6', '7', '8', '9', '10']} />
         <Box x={712} y={52} w={532} h={156} cols={10} rows={2}>
-          {Array.from({ length: 20 }, (_, i) => <Key key={i} v="dark" disabled title={`Executor ${i + 1}`} />)}
+          {Array.from({ length: 20 }, (_, i) => <Key key={i} v="dark" narrow disabled title={`Executor ${i + 1}`} />)}
         </Box>
         <GridLabels x={712} y={210} w={532} cols={10} items={['11\nAttribute\nEditor', '12\nShow\nLibrary', '13\nPlaybacks', '14\nChannel\nGrid', '15\nVisualiser', '16\nGroups +\nPalettes', '17\nFixtures\n+ Groups', '18\nSnap', '19', '20']} />
 
         {/* Fix / All / HiLight */}
         <GridLabels x={44} y={252} w={92} cols={2} items={['Fix −1', 'Fix +1']} />
         <Box x={44} y={272} w={92} h={118} cols={2} rows={2}>
-          <Key v="dark" led={false} disabled title="Fix −1" /><Key v="dark" led={false} disabled title="Fix +1" />
-          <Key v="dark" disabled title="All" /><Key v="dark" disabled title="Hi Light" />
+          <Key v="dark" narrow led={false} disabled title="Fix −1" /><Key v="dark" narrow led={false} disabled title="Fix +1" />
+          <Key v="dark" narrow disabled title="All" /><Key v="dark" narrow disabled title="Hi Light" />
         </Box>
-        <GridLabels x={44} y={392} w={92} cols={2} items={['All', 'Hi Light']} />
+        <GridLabels x={44} y={392} w={92} cols={2} items={['All', 'Hi\nLight']} subs={['Rem Dim', 'Lo Light']} />
 
         {/* Attribute bank 7×2 */}
         <GridLabels x={178} y={252} w={452} cols={7} items={['Intensity', 'Position', 'Colour', 'Gobo', 'Beam', 'Effect', 'Special']} />
@@ -164,17 +174,17 @@ export function QuartzPanel() {
           {ATTRIBUTES.map((a) => <Key key={a.name} v="white" on={a.name === attr} title={a.name} onClick={() => setAttr(a.name)} />)}
           <Key v="white" title="Shape → Shapes" onClick={() => setScreen('effects')} />
           <Key v="white" disabled title="ML Menu" /><Key v="white" disabled title="Blind" /><Key v="white" disabled title="Off" />
-          <Key v="white" disabled title="Fan" /><Key v="white" disabled title="Options" /><Key v="white" ledColor="red" disabled title="Latch Menu" />
+          <Key v="white" disabled title="Fan" /><Key v="white" disabled title="Options" /><Key v="dark" disabled title="Latch Menu" />
         </Box>
-        <GridLabels x={178} y={392} w={452} cols={7} items={['Shape', 'ML Menu', 'Blind', 'Off', 'Fan', 'Options', 'Latch Menu']} />
+        <GridLabels x={178} y={392} w={452} cols={7} items={['Shape', 'ML\nMenu', 'Blind', 'Off', 'Fan', 'Options', 'Latch\nMenu']} />
 
         {/* Program keys 6×2 */}
-        <GridLabels x={658} y={252} w={386} cols={6} items={['Record', 'Update', 'Edit', 'Select If', 'Patch', 'Disk']} />
+        <GridLabels x={658} y={252} w={386} cols={6} items={['Record', 'Update', 'Edit', 'Select\nIf', 'Patch', 'Disk']} subs={['', '', '', '', '', 'Setup']} />
         <Box x={658} y={272} w={386} h={118} cols={6} rows={2}>
           <Key v="dark" ledColor="red" disabled={!hasProgrammer} title="Record" onClick={recordCue} />
           <Key v="white" led={false} disabled={!hasActive || !hasProgrammer} title="Update" onClick={() => activeCueId && updateCue(activeCueId)} />
           <Key v="white" led={false} disabled title="Edit" /><Key v="white" led={false} disabled title="Select If" /><Key v="white" led={false} disabled title="Patch" /><Key v="white" led={false} disabled title="Disk" />
-          <Key v="dark" disabled={!hasActive} title="Delete" onClick={() => activeCueId && deleteCue(activeCueId)} />
+          <Key v="white" led={false} disabled={!hasActive} title="Delete" onClick={() => activeCueId && deleteCue(activeCueId)} />
           <Key v="white" led={false} disabled={!hasActive} title="Copy" onClick={() => activeCueId && copyCue(activeCueId)} />
           <Key v="white" led={false} disabled title="Move" /><Key v="white" led={false} disabled title="Unfold" /><Key v="white" led={false} disabled title="Include" />
           <Key v="white" led={false} disabled={!hasActive} title="Release" onClick={releaseCue} />
@@ -182,10 +192,10 @@ export function QuartzPanel() {
         <GridLabels x={658} y={392} w={386} cols={6} items={['Delete', 'Copy', 'Move', 'Unfold', 'Include', 'Release']} />
 
         {/* Min/Max ... */}
-        <GridLabels x={1074} y={252} w={122} cols={2} items={['Min/Max', 'Size/Pos']} />
+        <GridLabels x={1074} y={252} w={122} cols={2} items={['Min/Max', 'Size/Pos']} subs={['Next', 'Other Screen']} />
         <Box x={1074} y={272} w={122} h={118} cols={2} rows={2}>
-          <Key v="dark" led={false} disabled title="Min/Max" /><Key v="dark" led={false} disabled title="Size/Pos" />
-          <Key v="dark" disabled title="View/Open" /><Key v="dark" led={false} disabled title="Close/Control" />
+          <Key v="dark" narrow led={false} disabled title="Min/Max" /><Key v="dark" narrow led={false} disabled title="Size/Pos" />
+          <Key v="dark" narrow disabled title="View/Open" /><Key v="dark" narrow led={false} disabled title="Close/Control" />
         </Box>
         <GridLabels x={1074} y={392} w={122} cols={2} items={['View\n/Open', 'Close\nControl']} />
 
@@ -193,17 +203,17 @@ export function QuartzPanel() {
         <Box x={44} y={432} w={612} h={108} cols={10} rows={2}>
           {Array.from({ length: 10 }, (_, i) => {
             const gi = playbackPage * 10 + i; const cue = cues[gi]; const on = !!cue && cue.id === activeCueId
-            return <Key key={`t${i}`} v="dark" ledBottom on={on} disabled={!cue} title={cue ? `Go ${cue.name}` : 'Empty'} onClick={() => cue && goCue(cue.id)} />
+            return <Key key={`t${i}`} v="dark" narrow ledBottom on={on} disabled={!cue} title={cue ? `Go ${cue.name}` : 'Empty'} onClick={() => cue && goCue(cue.id)} />
           })}
           {Array.from({ length: 10 }, (_, i) => {
             const gi = playbackPage * 10 + i; const cue = cues[gi]
-            return <Key key={`b${i}`} v="dark" led={false} disabled={!cue} title={cue ? `Flash ${cue.name}` : 'Empty'} onClick={() => cue && goCue(cue.id)} />
+            return <Key key={`b${i}`} v="dark" narrow led={false} disabled={!cue} title={cue ? `Flash ${cue.name}` : 'Empty'} onClick={() => cue && goCue(cue.id)} />
           })}
         </Box>
 
         {/* Fader numbers + faders */}
         <GridLabels x={44} y={592} w={612} cols={10} items={['1', '2', '3', '4', '5', '6', '7', '8', '9', '10']} />
-        <div className="cal-faders" style={{ left: L(44), top: T(616), width: L(612), height: T(250) }}>
+        <div className="cal-faders" style={{ left: L(44), top: T(610), width: L(612), height: T(278) }}>
           {Array.from({ length: 10 }, (_, i) => {
             const gi = playbackPage * 10 + i; const cue = cues[gi]
             return (
@@ -223,9 +233,9 @@ export function QuartzPanel() {
         <Label x={790} y={560} w={110} text="avolites" />
 
         {/* Transport 2×3 + Go */}
-        <Label x={630} y={614} w={56} text="Live\nTime" align="right" /><Label x={824} y={614} w={56} text="Next\nTime" align="left" />
-        <Label x={630} y={678} w={56} text="Prev\nCue" align="right" /><Label x={824} y={678} w={56} text="Next\nCue" align="left" />
-        <Label x={628} y={742} w={58} text="Connect\n/Cue" align="right" /><Label x={824} y={742} w={56} text="Stop" align="left" />
+        <Label x={630} y={614} w={56} text={'Live\nTime'} sub="Review" align="right" /><Label x={824} y={614} w={56} text={'Next\nTime'} sub="Snap Back" align="left" />
+        <Label x={630} y={678} w={56} text={'Prev\nCue'} align="right" /><Label x={824} y={678} w={56} text={'Next\nCue'} align="left" />
+        <Label x={628} y={742} w={58} text={'Connect\n/Cue'} align="right" /><Label x={824} y={742} w={56} text="Stop" align="left" />
         <Box x={690} y={600} w={130} h={178} cols={2} rows={3}>
           <Key v="white" led={false} disabled title="Live Time" /><Key v="white" led={false} disabled title="Next Time" />
           <Key v="white" led={false} disabled={!cues.length} title="Prev Cue" onClick={() => goRel(-1)} />
@@ -244,7 +254,7 @@ export function QuartzPanel() {
         </Box>
         {/* Numeric 4×4 with text on keys */}
         <Box x={916} y={528} w={258} h={274} cols={4} rows={4}>
-          <Key v="white" led={false} disabled text="1" title="1" /><Key v="white" led={false} disabled text="2" title="2" /><Key v="white" led={false} disabled text="3" title="3" /><Key v="white" ledColor="red" disabled title="Avolites" />
+          <Key v="white" led={false} disabled text="1" title="1" /><Key v="white" led={false} disabled text="2" title="2" /><Key v="white" led={false} disabled text="3" title="3" /><Key v="white" on={shift} text="Avo" title="Avo — activa/desactiva las segundas funciones" onClick={() => setShift((s) => !s)} />
           <Key v="white" led={false} disabled text="4" title="4" /><Key v="white" led={false} disabled text="5" title="5" /><Key v="white" led={false} disabled text="6" title="6" /><Key v="white" ledColor="red" disabled text="TIME" title="Time" />
           <Key v="white" led={false} disabled text="7" title="7" /><Key v="white" led={false} disabled text="8" title="8" /><Key v="white" led={false} disabled text="9" title="9" /><Key v="white" ledColor="red" text="CLEAR" title="Clear the programmer" onClick={clearProgrammer} />
           <Key v="white" led={false} disabled text="EXIT" title="Exit" /><Key v="white" led={false} disabled text="0" title="0" /><Key v="white" led={false} disabled text="ENTER" title="Enter" /><Key v="white" led={false} disabled text="." title="." />
@@ -253,7 +263,7 @@ export function QuartzPanel() {
         <Box x={916} y={806} w={258} h={56} cols={4} rows={1}>
           <Key v="dark" led={false} disabled title="Back" /><Key v="dark" led={false} disabled title="Through" /><Key v="dark" led={false} disabled title="And" /><Key v="dark" led={false} disabled title="@" />
         </Box>
-        <GridLabels x={916} y={866} w={258} cols={4} items={['Back', 'Through', 'And', '@']} />
+        <GridLabels x={916} y={866} w={258} cols={4} items={['Back', 'Through', 'And', '@']} subs={['Undo', '−%', '+%', 'Redo']} />
 
         {/* Locate */}
         <button className="calbig red" style={{ left: L(1214), top: T(742), width: L(74), height: T(78) }} disabled={noSel} title="Locate selected" onClick={locateSelected} />

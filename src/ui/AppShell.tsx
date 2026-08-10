@@ -124,9 +124,9 @@ export function AppShell() {
         {quartzDocked ? (
           <PanelGroup direction="horizontal" autoSaveId="dmxsim-quartz">
             {/* LEFT: the console — screen (thin, top) + button panel (large, bottom) */}
-            <Panel defaultSize={56} minSize={30}>
+            <Panel defaultSize={60} minSize={30}>
               <PanelGroup direction="vertical" autoSaveId="dmxsim-quartz-left">
-                <Panel defaultSize={20} minSize={10}>
+                <Panel defaultSize={17} minSize={10}>
                   <div className="pane">
                     <QuartzScreen />
                   </div>
