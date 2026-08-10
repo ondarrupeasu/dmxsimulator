@@ -63,6 +63,8 @@ interface ShowState {
   recordCue: () => void
   /** Re-snapshot the current programmer into an existing cue. */
   updateCue: (id: string) => void
+  /** Duplicate a cue at the end of the list. */
+  copyCue: (id: string) => void
   deleteCue: (id: string) => void
   goCue: (id: string) => void
   releaseCue: () => void
@@ -196,6 +198,16 @@ export const useShowStore = create<ShowState>()(
           const values: ProgrammerValues = {}
           for (const inst in s.programmer) values[inst] = { ...s.programmer[inst] }
           return { cues: s.cues.map((c) => (c.id === id ? { ...c, values } : c)) }
+        }),
+
+      copyCue: (id) =>
+        set((s) => {
+          const src = s.cues.find((c) => c.id === id)
+          if (!src) return s
+          const values: ProgrammerValues = {}
+          for (const inst in src.values) values[inst] = { ...src.values[inst] }
+          const cue: Cue = { id: nextInstanceId(), name: `Cue ${s.cues.length + 1}`, values }
+          return { cues: [...s.cues, cue] }
         }),
 
       deleteCue: (id) =>

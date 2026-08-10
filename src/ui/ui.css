@@ -699,6 +699,17 @@
 
 /* Top row: wheels + 20 executor buttons */
 .qp-top { display: grid; grid-template-columns: auto auto; gap: 18px; align-items: start; }
+.qp-wheelcol { display: flex; flex-direction: column; gap: 6px; }
+.qp-wheelbtns { display: flex; gap: 12px; }
+.qp-wheelbtns .qk { width: 66px; }
+.qpanel .qk-blue {
+  background: linear-gradient(180deg, #1c3a68, #112548);
+  border-color: #0c1830;
+  color: #cfe6ff;
+  box-shadow: inset 0 0 5px rgba(46, 166, 255, 0.35);
+  min-height: 24px;
+  font-size: 10px;
+}
 .qp-wheels { display: flex; gap: 12px; }
 .qp-wheel { display: flex; flex-direction: column; align-items: center; gap: 4px; width: 66px; }
 .qp-dial {
@@ -769,15 +780,16 @@
 .qp-pagen { font-size: 9px; color: #5c5a52; }
 .qp-logo { margin-top: 6px; font-size: 11px; font-weight: 800; letter-spacing: 1px; color: #6a685f; }
 
-.qp-cluster { display: flex; flex-direction: column; gap: 6px; }
+.qp-cluster { display: flex; flex-direction: column; gap: 8px; }
 .qp-selrow { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; }
-.qp-transport { display: grid; grid-template-columns: 1fr auto; gap: 6px; align-items: stretch; }
-.qp-tcol { display: grid; grid-template-rows: 1fr 1fr; gap: 4px; }
-.qpanel .qk-go { min-width: 72px; padding: 0 16px; font-size: 14px; }
-.qp-keyzone { display: grid; grid-template-columns: auto auto; gap: 6px; }
-.qp-numpad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; }
-.qp-numpad .qk { min-width: 34px; font-size: 13px; }
-.qp-sidekeys { display: grid; grid-template-rows: repeat(4, 1fr); gap: 4px; }
+.qp-lower { display: grid; grid-template-columns: auto auto; gap: 12px; align-items: start; }
+.qp-transport2 { display: flex; flex-direction: column; gap: 6px; width: 150px; }
+.qp-tgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
+.qpanel .qk-go { padding: 12px; font-size: 15px; }
+.qp-keypadblock { display: flex; flex-direction: column; gap: 6px; }
+.qp-numpad { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; }
+.qp-numpad .qk { min-width: 42px; font-size: 13px; }
+.qp-atrow { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; }
 
 /* ---- Cue list (Run) ---- */
 .cue-list {

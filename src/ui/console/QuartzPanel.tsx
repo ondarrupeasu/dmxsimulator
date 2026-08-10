@@ -2,13 +2,11 @@ import { useShowStore } from '../../store/showStore'
 import { useSelectedValue, useSelectionFunctions } from './useSelectedValue'
 
 /**
- * Avolites Quartz — faithful button panel (a "calco" of the physical surface).
- * Every key is laid out roughly where it sits on the real desk; the ones we've
- * implemented are wired, the rest are present but inert. Keys that represent a
- * state light a blue LED when active, like the real console.
+ * Avolites Quartz — faithful button panel (a "calco" of the physical surface,
+ * matching the Tartanga photo). Every labelled key on the real desk is present;
+ * implemented keys are wired, the rest are inert. State keys light a blue LED.
  */
 
-// Attribute → which channel functions the 3 wheels drive (first present wins).
 const ATTRIBUTES: { name: string; color: string; wheels: string[][] }[] = [
   { name: 'Intensity', color: 'var(--at-intensity)', wheels: [['dimmer']] },
   { name: 'Position', color: 'var(--at-position)', wheels: [['pan'], ['tilt']] },
@@ -22,35 +20,24 @@ const ATTR_ROW2 = ['Shape', 'ML Menu', 'Blind', 'Off', 'Fan', 'Options', 'Latch'
 const PROGRAM_TOP = ['Record', 'Update', 'Edit', 'Select If', 'Patch', 'Disk']
 const PROGRAM_BOT = ['Delete', 'Copy', 'Move', 'Unfold', 'Include', 'Release']
 const EXEC_LEGENDS: Record<number, string> = {
-  11: 'Attr Editor',
-  12: 'Show Lib',
-  13: 'Playbacks',
-  14: 'Chan Grid',
-  15: 'Visualiser',
-  16: 'Groups+Pal',
-  17: 'Fix+Groups',
-  18: 'Snap',
+  11: 'Attr Editor', 12: 'Show Lib', 13: 'Playbacks', 14: 'Chan Grid', 15: 'Visualiser',
+  16: 'Groups+Pal', 17: 'Fix+Groups', 18: 'Snap',
 }
 
-/** Generic physical key. */
 function Key({
-  children,
-  lit,
-  red,
-  disabled,
-  title,
-  onClick,
+  children, lit, red, disabled, title, className, onClick,
 }: {
   children: React.ReactNode
   lit?: boolean
   red?: boolean
   disabled?: boolean
   title?: string
+  className?: string
   onClick?: () => void
 }) {
   return (
     <button
-      className={`qk${lit ? ' lit' : ''}${red ? ' qk-red' : ''}`}
+      className={`qk${lit ? ' lit' : ''}${red ? ' qk-red' : ''}${className ? ' ' + className : ''}`}
       disabled={disabled}
       title={title}
       onClick={onClick}
@@ -69,14 +56,8 @@ function Wheel({ label, fn }: { label: string; fn: string }) {
       <div className="qp-dial">
         <span className="qp-dial-tick" style={{ transform: `rotate(${angle}deg)` }} />
       </div>
-      <input
-        type="range"
-        min={0}
-        max={255}
-        value={value}
-        aria-label={label}
-        onChange={(e) => setByFn(fn, Number(e.target.value))}
-      />
+      <input type="range" min={0} max={255} value={value} aria-label={label}
+        onChange={(e) => setByFn(fn, Number(e.target.value))} />
       <div className="qp-wheel-cap">{label}</div>
     </div>
   )
@@ -91,6 +72,7 @@ export function QuartzPanel() {
   const clearProgrammer = useShowStore((s) => s.clearProgrammer)
   const recordCue = useShowStore((s) => s.recordCue)
   const updateCue = useShowStore((s) => s.updateCue)
+  const copyCue = useShowStore((s) => s.copyCue)
   const deleteCue = useShowStore((s) => s.deleteCue)
   const releaseCue = useShowStore((s) => s.releaseCue)
   const cues = useShowStore((s) => s.cues)
@@ -116,24 +98,33 @@ export function QuartzPanel() {
   const prog: Record<string, { fn: () => void; enabled: boolean }> = {
     Record: { fn: recordCue, enabled: hasProgrammer },
     Update: { fn: () => activeCueId && updateCue(activeCueId), enabled: !!activeCueId && hasProgrammer },
+    Copy: { fn: () => activeCueId && copyCue(activeCueId), enabled: !!activeCueId },
     Delete: { fn: () => activeCueId && deleteCue(activeCueId), enabled: !!activeCueId },
     Release: { fn: releaseCue, enabled: !!activeCueId },
   }
 
   return (
     <div className="qpanel">
-      {/* ── TOP: wheels + executor buttons ── */}
+      {/* ── TOP: wheels (with @ buttons) + executor buttons ── */}
       <div className="qp-top">
-        <div className="qp-wheels">
-          {noSel || wheels.length === 0 ? (
-            <>
-              <div className="qp-wheel dim"><div className="qp-dial" /><div className="qp-wheel-cap">A</div></div>
-              <div className="qp-wheel dim"><div className="qp-dial" /><div className="qp-wheel-cap">B</div></div>
-              <div className="qp-wheel dim"><div className="qp-dial" /><div className="qp-wheel-cap">C</div></div>
-            </>
-          ) : (
-            wheels.map((fn) => <Wheel key={fn} fn={fn} label={fn} />)
-          )}
+        <div className="qp-wheelcol">
+          <div className="qp-wheels">
+            {noSel || wheels.length === 0
+              ? (['A', 'B', 'C'] as const).map((w) => (
+                  <div className="qp-wheel dim" key={w}>
+                    <div className="qp-dial" />
+                    <div className="qp-wheel-cap">{w}</div>
+                  </div>
+                ))
+              : wheels.map((fn) => <Wheel key={fn} fn={fn} label={fn} />)}
+          </div>
+          <div className="qp-wheelbtns">
+            {(['A', 'B', 'C'] as const).map((w) => (
+              <button key={w} className="qk qk-blue" disabled title={`${w} @ (set/centre)`}>
+                {w} @
+              </button>
+            ))}
+          </div>
         </div>
         <div className="qp-exec">
           {Array.from({ length: 20 }, (_, i) => (
@@ -145,7 +136,7 @@ export function QuartzPanel() {
         </div>
       </div>
 
-      {/* ── MIDDLE: attribute bank + program keys + utilities ── */}
+      {/* ── MIDDLE: fix keys + attribute bank + program + utilities ── */}
       <div className="qp-mid">
         <div className="qp-fixcol">
           <Key disabled title="Fixture −1">Fix −1</Key>
@@ -157,22 +148,20 @@ export function QuartzPanel() {
         <div className="qp-attrblock">
           <div className="qp-attr-row">
             {ATTRIBUTES.map((a) => (
-              <button
-                key={a.name}
-                className={`qk qk-attr${a.name === attr ? ' lit' : ''}`}
-                style={{ ['--k' as string]: a.color }}
-                onClick={() => setAttr(a.name)}
-              >
+              <button key={a.name} className={`qk qk-attr${a.name === attr ? ' lit' : ''}`}
+                style={{ ['--k' as string]: a.color }} onClick={() => setAttr(a.name)}>
                 {a.name}
               </button>
             ))}
           </div>
           <div className="qp-attr-row">
-            {ATTR_ROW2.map((k) => (
-              <button key={k} className="qk" disabled title={`${k} (coming soon)`}>
-                {k}
-              </button>
-            ))}
+            {ATTR_ROW2.map((k) =>
+              k === 'Shape' ? (
+                <Key key={k} title="Shapes / Effects window" onClick={() => setScreen('effects')}>Shape</Key>
+              ) : (
+                <Key key={k} disabled title={`${k} (coming soon)`}>{k}</Key>
+              ),
+            )}
           </div>
         </div>
 
@@ -181,13 +170,7 @@ export function QuartzPanel() {
             const h = prog[k]
             if (!h) return <Key key={k} disabled title={`${k} (coming soon)`}>{k}</Key>
             return (
-              <button
-                key={k}
-                className={`qk${k === 'Record' ? ' qk-rec' : ''}`}
-                disabled={!h.enabled}
-                title={k}
-                onClick={h.fn}
-              >
+              <button key={k} className={`qk${k === 'Record' ? ' qk-rec' : ''}`} disabled={!h.enabled} title={k} onClick={h.fn}>
                 {k}
               </button>
             )
@@ -202,7 +185,7 @@ export function QuartzPanel() {
         </div>
       </div>
 
-      {/* ── BOTTOM: faders + page + cue/keypad cluster ── */}
+      {/* ── BOTTOM: faders + page + transport + keypad ── */}
       <div className="qp-bot">
         <div className="qp-faderblock">
           <div className="qp-faders">
@@ -212,11 +195,8 @@ export function QuartzPanel() {
               const on = cue && cue.id === activeCueId
               return (
                 <div className="qp-fader" key={i}>
-                  <button
-                    className={`qp-flash${on ? ' on' : ''}${cue ? '' : ' empty'}`}
-                    title={cue ? `Fire ${cue.name}` : 'Empty playback'}
-                    onClick={() => cue && goCue(cue.id)}
-                  >
+                  <button className={`qp-flash${on ? ' on' : ''}${cue ? '' : ' empty'}`}
+                    title={cue ? `Fire ${cue.name}` : 'Empty playback'} onClick={() => cue && goCue(cue.id)}>
                     {gi + 1}
                   </button>
                   <input type="range" min={0} max={255} defaultValue={cue ? 255 : 0} disabled={!cue} />
@@ -226,11 +206,10 @@ export function QuartzPanel() {
             })}
           </div>
           <div className="qp-pagecol">
-            <Key disabled={playbackPage === 0} title="Previous page" onClick={() => setPlaybackPage(playbackPage - 1)}>
-              − Page
-            </Key>
-            <span className="qp-pagen">Pg {playbackPage + 1}</span>
+            <Key disabled title="Go Page">Go Page</Key>
             <Key title="Next page" onClick={() => setPlaybackPage(playbackPage + 1)}>+ Page</Key>
+            <span className="qp-pagen">Pg {playbackPage + 1}</span>
+            <Key disabled={playbackPage === 0} title="Previous page" onClick={() => setPlaybackPage(playbackPage - 1)}>− Page</Key>
             <span className="qp-logo">avolites</span>
           </div>
         </div>
@@ -243,29 +222,46 @@ export function QuartzPanel() {
             <Key disabled title="Group">Group</Key>
           </div>
 
-          <div className="qp-transport">
-            <div className="qp-tcol">
-              <Key disabled={!cues.length} title="Previous cue" onClick={() => goRel(-1)}>Prev Cue</Key>
-              <Key disabled={!cues.length} title="Next cue" onClick={() => goRel(1)}>Next Cue</Key>
+          <div className="qp-lower">
+            <div className="qp-transport2">
+              <div className="qp-tgrid">
+                <Key disabled title="Live Time">Live Time</Key>
+                <Key disabled title="Next Time">Next Time</Key>
+                <Key disabled={!cues.length} title="Previous cue" onClick={() => goRel(-1)}>Prev Cue</Key>
+                <Key disabled={!cues.length} title="Next cue" onClick={() => goRel(1)}>Next Cue</Key>
+                <Key disabled title="Connect / Cue">Connect</Key>
+                <Key disabled title="Stop">Stop</Key>
+              </div>
+              <button className="qk qk-go" disabled={!cues.length} title="Go" onClick={() => goRel(1)}>Go</button>
             </div>
-            <button className="qk qk-go" disabled={!cues.length} title="Go" onClick={() => goRel(1)}>
-              Go
-            </button>
-          </div>
 
-          <div className="qp-keyzone">
-            <div className="qp-numpad">
-              {['7', '8', '9', '4', '5', '6', '1', '2', '3', '.', '0', 'Enter'].map((k) => (
-                <Key key={k} disabled title={`${k} (command syntax — coming soon)`}>{k}</Key>
-              ))}
-            </div>
-            <div className="qp-sidekeys">
-              <Key disabled title="Time">Time</Key>
-              <Key disabled title="Clear (numeric)">Clr</Key>
-              <button className="qk qk-red qk-locate" disabled={noSel} title="Locate selected" onClick={locateSelected}>
-                Locate
-              </button>
-              <Key title="Clear the programmer" onClick={clearProgrammer}>Clear</Key>
+            <div className="qp-keypadblock">
+              <div className="qp-numpad">
+                <Key disabled title="7">7</Key>
+                <Key disabled title="8">8</Key>
+                <Key disabled title="9">9</Key>
+                <Key disabled title="Time">Time</Key>
+                <Key disabled title="4">4</Key>
+                <Key disabled title="5">5</Key>
+                <Key disabled title="6">6</Key>
+                <Key title="Clear the programmer" onClick={clearProgrammer}>Clear</Key>
+                <Key disabled title="1">1</Key>
+                <Key disabled title="2">2</Key>
+                <Key disabled title="3">3</Key>
+                <Key disabled title="Exit">Exit</Key>
+                <Key disabled title=".">.</Key>
+                <Key disabled title="0">0</Key>
+                <Key disabled title="Enter">Enter</Key>
+                <button className="qk qk-red qk-locate" disabled={noSel} title="Locate selected" onClick={locateSelected}>
+                  Locate
+                </button>
+              </div>
+              <div className="qp-atrow">
+                <Key disabled title="Back / Undo">Back</Key>
+                <Key disabled title="Through">Thru</Key>
+                <Key disabled title="And">And</Key>
+                <Key disabled title="At (@)">@</Key>
+              </div>
             </div>
           </div>
         </div>
