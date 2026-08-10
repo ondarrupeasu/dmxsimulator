@@ -237,14 +237,14 @@ export function QuartzPanel() {
           <Key v="white" led={false} disabled={!cues.length} title="Next Cue" onClick={() => goRel(1)} />
           <Key v="dark" disabled title="Connect/Cue" /><Key v="dark" disabled title="Stop" />
         </Box>
-        <Box x={758} y={790} w={60} h={62} cols={1} rows={1}>
+        <Box x={758} y={826} w={60} h={62} cols={1} rows={1}>
           <Key v="red" ledColor="red" on={cues.length > 0} disabled={!cues.length} title="Go" onClick={() => goRel(1)} />
         </Box>
-        <Label x={734} y={858} w={108} text="Go" />
+        <Label x={734} y={892} w={108} text="Go" />
 
         {/* Keypad — one 6×4 grid so every row is evenly spaced */}
-        <GridLabels x={916} y={446} w={258} cols={4} items={['Fixture', 'Palette', 'Macro', 'Group']} />
-        <Box x={916} y={462} w={258} h={400} cols={4} rows={6}>
+        <GridLabels x={916} y={472} w={258} cols={4} items={['Fixture', 'Palette', 'Macro', 'Group']} />
+        <Box x={916} y={488} w={258} h={400} cols={4} rows={6}>
           <Key v="dark" title="Fixtures" onClick={() => setScreen('fixtures')} />
           <Key v="dark" title="Palettes" onClick={() => setScreen('colour')} />
           <Key v="dark" disabled title="Macro" /><Key v="dark" disabled title="Group" />
@@ -254,13 +254,13 @@ export function QuartzPanel() {
           <Key v="white" led={false} disabled text="EXIT" title="Exit" /><Key v="white" led={false} disabled text="0" title="0" /><Key v="white" led={false} disabled text="ENTER" title="Enter" /><Key v="white" led={false} disabled text="." title="." />
           <Key v="dark" led={false} disabled title="Back" /><Key v="dark" led={false} disabled title="Through" /><Key v="dark" led={false} disabled title="And" /><Key v="dark" led={false} disabled title="@" />
         </Box>
-        <GridLabels x={916} y={866} w={258} cols={4} items={['Back', 'Through', 'And', '@']} subs={['Undo', '−%', '+%', 'Redo']} />
+        <GridLabels x={916} y={892} w={258} cols={4} items={['Back', 'Through', 'And', '@']} subs={['Undo', '−%', '+%', 'Redo']} />
 
         {/* Locate */}
-        <Box x={1221} y={748} w={60} h={62} cols={1} rows={1}>
+        <Box x={1221} y={826} w={60} h={62} cols={1} rows={1}>
           <Key v="red" ledColor="red" on={!noSel} disabled={noSel} title="Locate selected" onClick={locateSelected} />
         </Box>
-        <Label x={1200} y={824} w={100} text="Locate" />
+        <Label x={1200} y={892} w={100} text="Locate" />
       </div>
     </div>
   )
