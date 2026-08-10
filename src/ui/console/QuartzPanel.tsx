@@ -197,17 +197,19 @@ export function QuartzPanel() {
           </div>
         )}
         {/* Wheels + @ buttons */}
-        <Wheel x={10} y={18} d={176} fn={wheelFns[0]} />
-        <Wheel x={232} y={18} d={176} fn={wheelFns[1]} />
-        <Wheel x={450} y={18} d={176} fn={wheelFns[2]} />
-        <Box x={150} y={150} w={56} h={50} cols={1} rows={1} narrow><Key v="blue" disabled title="A @" /></Box>
-        <Box x={372} y={150} w={56} h={50} cols={1} rows={1} narrow><Key v="blue" disabled title="B @" /></Box>
-        <Box x={590} y={150} w={56} h={50} cols={1} rows={1} narrow><Key v="blue" disabled title="C @" /></Box>
-        <Label x={160} y={202} w={36} text="A @" /><Label x={382} y={202} w={36} text="B @" /><Label x={600} y={202} w={36} text="C @" />
+        <Wheel x={16} y={22} d={150} fn={wheelFns[0]} />
+        <Wheel x={236} y={22} d={150} fn={wheelFns[1]} />
+        <Wheel x={456} y={22} d={150} fn={wheelFns[2]} />
+        <Box x={112} y={168} w={56} h={50} cols={1} rows={1} narrow><Key v="blue" disabled title="A @" /></Box>
+        <Box x={332} y={168} w={56} h={50} cols={1} rows={1} narrow><Key v="blue" disabled title="B @" /></Box>
+        <Box x={552} y={168} w={56} h={50} cols={1} rows={1} narrow><Key v="blue" disabled title="C @" /></Box>
+        <Label x={122} y={220} w={36} text="A @" /><Label x={342} y={220} w={36} text="B @" /><Label x={562} y={220} w={36} text="C @" />
 
-        {/* Executors 2×10 */}
+        {/* Executors 2×10 — assignable ones show their user label as a silk-screen
+            caption (outside the button), like the printed 11–18 functions. */}
         <Frame x={642} y={48} w={652} h={124} />
-        <GridLabels x={648} y={38} w={640} cols={10} items={['1', '2', '3', '4', '5', '6', '7', '8', '9', '10']} />
+        <GridLabels x={648} y={38} w={640} cols={10} small
+          items={Array.from({ length: 10 }, (_, i) => executorLabels[i + 1] || String(i + 1))} />
         <Box x={648} y={54} w={640} h={112} cols={10} rows={2} spread>
           {Array.from({ length: 20 }, (_, i) => {
             const n = i + 1
@@ -216,7 +218,7 @@ export function QuartzPanel() {
               const label = executorLabels[n]
               return (
                 <Key
-                  key={i} v="dark" narrow led={false} text={label} assignable={!label}
+                  key={i} v="dark" narrow assignable={!label}
                   title={label ? `Executor ${n}: ${label}` : `Executor ${n} — clic para etiquetar`}
                   onClick={() => editExecutor(n)}
                 />
@@ -225,7 +227,7 @@ export function QuartzPanel() {
             return <Key key={i} v="dark" narrow disabled title={`Executor ${n}`} />
           })}
         </Box>
-        <GridLabels x={648} y={172} w={640} cols={10} small items={['11\nAttribute\nEditor', '12\nShow\nLibrary', '13\nPlaybacks', '14\nChannel\nGrid', '15\nVisualiser', '16\nGroups +\nPalettes', '17\nFixtures\n+ Groups', '18\nSnap', '19', '20']} />
+        <GridLabels x={648} y={172} w={640} cols={10} small items={['11\nAttribute\nEditor', '12\nShow\nLibrary', '13\nPlaybacks', '14\nChannel\nGrid', '15\nVisualiser', '16\nGroups +\nPalettes', '17\nFixtures\n+ Groups', '18\nSnap', executorLabels[19] || '19', executorLabels[20] || '20']} />
 
         {/* Fix / All / HiLight */}
         <GridLabels x={40} y={270} w={100} cols={2} items={['Fix −1', 'Fix +1']} above />
@@ -279,9 +281,9 @@ export function QuartzPanel() {
           })}
         </Box>
 
-        {/* Fader numbers + faders */}
-        <GridLabels x={44} y={592} w={612} cols={10} items={['1', '2', '3', '4', '5', '6', '7', '8', '9', '10']} />
-        <div className="cal-faders" style={{ left: L(44), top: T(610), width: L(612), height: T(278) }}>
+        {/* Fader numbers + faders (shorter travel, bottom still aligned at 888) */}
+        <GridLabels x={44} y={648} w={612} cols={10} items={['1', '2', '3', '4', '5', '6', '7', '8', '9', '10']} />
+        <div className="cal-faders" style={{ left: L(44), top: T(668), width: L(612), height: T(220) }}>
           {Array.from({ length: 10 }, (_, i) => {
             const gi = playbackPage * 10 + i; const cue = cues[gi]
             return (
@@ -293,7 +295,7 @@ export function QuartzPanel() {
         </div>
 
         {/* Page keys — +Page/Go Page/−Page joined, level with the two flash rows */}
-        <Label x={712} y={444} w={62} text="+ Page" /><Label x={774} y={444} w={62} text="Go Page" />
+        <Label x={712} y={434} w={62} text="+ Page" /><Label x={774} y={434} w={62} text="Go Page" />
         <Box x={714} y={454} w={122} h={110} cols={2} rows={2}>
           <Key v="white" led={false} title="Next page" onClick={() => setPlaybackPage(playbackPage + 1)} />
           <Key v="dark" title="Go Page" disabled />
@@ -302,11 +304,11 @@ export function QuartzPanel() {
         </Box>
         <Label x={712} y={566} w={62} text={`− Page · ${playbackPage + 1}`} />
 
-        {/* Transport 2×3 + Go */}
-        <Label x={654} y={614} w={56} text={'Live\nTime'} sub="Review" align="right" /><Label x={848} y={614} w={56} text={'Next\nTime'} sub="Snap Back" align="left" />
-        <Label x={654} y={678} w={56} text={'Prev\nCue'} align="right" /><Label x={848} y={678} w={56} text={'Next\nCue'} align="left" />
-        <Label x={652} y={742} w={58} text={'Connect\n/Cue'} align="right" /><Label x={848} y={742} w={56} text="Stop" align="left" />
-        <Box x={714} y={600} w={130} h={178} cols={2} rows={3}>
+        {/* Transport 2×3 + Go — dropped down to sit right on top of Go */}
+        <Label x={654} y={668} w={56} text={'Live\nTime'} sub="Review" align="right" /><Label x={848} y={668} w={56} text={'Next\nTime'} sub="Snap Back" align="left" />
+        <Label x={654} y={732} w={56} text={'Prev\nCue'} align="right" /><Label x={848} y={732} w={56} text={'Next\nCue'} align="left" />
+        <Label x={652} y={796} w={58} text={'Connect\n/Cue'} align="right" /><Label x={848} y={796} w={56} text="Stop" align="left" />
+        <Box x={714} y={654} w={130} h={178} cols={2} rows={3}>
           <Key v="white" led={false} disabled title="Live Time" /><Key v="white" led={false} disabled title="Next Time" />
           <Key v="white" led={false} disabled={!cues.length} title="Prev Cue" onClick={() => goRel(-1)} />
           <Key v="white" led={false} disabled={!cues.length} title="Next Cue" onClick={() => goRel(1)} />
@@ -318,8 +320,8 @@ export function QuartzPanel() {
         <Label x={725} y={892} w={108} text="Go" />
 
         {/* Keypad — one 6×4 grid so every row is evenly spaced */}
-        <GridLabels x={916} y={472} w={258} cols={4} items={['Fixture', 'Palette', 'Macro', 'Group']} />
-        <Box x={916} y={488} w={258} h={400} cols={4} rows={6}>
+        <GridLabels x={916} y={548} w={258} cols={4} items={['Fixture', 'Palette', 'Macro', 'Group']} above />
+        <Box x={916} y={558} w={258} h={330} cols={4} rows={6}>
           <Key v="dark" title="Fixtures" onClick={() => setScreen('fixtures')} />
           <Key v="dark" title="Palettes" onClick={() => setScreen('colour')} />
           <Key v="dark" disabled title="Macro" /><Key v="dark" disabled title="Group" />
@@ -332,10 +334,10 @@ export function QuartzPanel() {
         <GridLabels x={916} y={892} w={258} cols={4} items={['Back', 'Through', 'And', '@']} subs={['Undo', '−%', '+%', 'Redo']} />
 
         {/* Locate */}
-        <Box x={1210} y={744} w={60} h={62} cols={1} rows={1}>
+        <Box x={1210} y={778} w={60} h={58} cols={1} rows={1}>
           <Key v="red" ledColor="red" on={!noSel} disabled={noSel} title="Locate selected" onClick={locateSelected} />
         </Box>
-        <Label x={1190} y={810} w={100} text="Locate" />
+        <Label x={1190} y={840} w={100} text="Locate" />
       </div>
     </div>
   )

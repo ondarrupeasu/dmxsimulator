@@ -757,21 +757,20 @@
    meet in a diagonal seam at each corner — light on top/left, shadow on bottom/right.
    The centre is the flat raised top. Sits on the lower half, clear of the LED strip. */
 .qcal .ck::before {
-  content: ''; position: absolute; left: 9%; right: 9%; top: 47%; bottom: 10%;
-  pointer-events: none; border-radius: 0.1cqw;
-  background: rgba(255, 255, 255, 0.05);
-  border-style: solid; border-width: 0.42cqw;
+  content: ''; position: absolute; left: 0; right: 0; top: 36%; bottom: 0;
+  pointer-events: none; border-radius: 0 0 0.18cqw 0.18cqw;
+  background: rgba(255, 255, 255, 0.04);
+  border-style: solid; border-width: 0.55cqw;
   border-top-color: rgba(255, 255, 255, 0.34);
-  border-left-color: rgba(255, 255, 255, 0.16);
-  border-right-color: rgba(0, 0, 0, 0.22);
+  border-left-color: rgba(255, 255, 255, 0.15);
+  border-right-color: rgba(0, 0, 0, 0.24);
   border-bottom-color: rgba(0, 0, 0, 0.34);
-  box-shadow: 0 0.12cqw 0.22cqw rgba(0, 0, 0, 0.4);
 }
-.qcal .ck.ledb::before { top: 10%; bottom: 47%; }
-/* Assignable (empty) executor — a faint + hint that you can label it. */
+.qcal .ck.ledb::before { top: 0; bottom: 36%; border-radius: 0.18cqw 0.18cqw 0 0; }
+/* Assignable (empty) executor — a faint + hint on the bevel (clear of the LED). */
 .qcal .ck.assignable::after {
-  content: '+'; position: absolute; top: 16%; left: 50%; transform: translateX(-50%);
-  z-index: 2; color: rgba(255, 255, 255, 0.32); font-size: 1.3cqw; line-height: 1;
+  content: '+'; position: absolute; top: 64%; left: 50%; transform: translate(-50%, -50%);
+  z-index: 2; color: rgba(255, 255, 255, 0.4); font-size: 1.6cqw; line-height: 1;
 }
 /* Keep the LED and any on-key text above the bevel cap. */
 .qcal .ck > .cktext, .qcal .ck > .cktext2 { position: relative; z-index: 1; }
