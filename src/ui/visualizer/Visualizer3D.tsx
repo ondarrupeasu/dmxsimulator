@@ -22,6 +22,7 @@ interface FxObj {
   edges: THREE.LineSegments
   hit: THREE.Mesh
   halo: THREE.Sprite
+  label?: THREE.Sprite // floating name tag, shown under work lights
   beam: THREE.Mesh
   beamMat: THREE.MeshBasicMaterial
   pool: THREE.Mesh
@@ -34,6 +35,36 @@ const _qx = new THREE.Quaternion()
 const _q = new THREE.Quaternion()
 const _X = new THREE.Vector3(1, 0, 0)
 const _Y = new THREE.Vector3(0, 1, 0)
+
+/** A floating text tag (name) that hangs under a fixture when work lights are on. */
+function makeLabelSprite(text: string): THREE.Sprite {
+  const c = document.createElement('canvas')
+  const ctx = c.getContext('2d')!
+  const font = 'bold 40px system-ui, sans-serif'
+  ctx.font = font
+  c.width = Math.ceil(ctx.measureText(text).width) + 36
+  c.height = 60
+  ctx.font = font
+  ctx.fillStyle = 'rgba(10,10,14,0.82)'
+  ctx.beginPath()
+  ctx.roundRect(2, 2, c.width - 4, c.height - 4, 14)
+  ctx.fill()
+  ctx.strokeStyle = 'rgba(255,255,255,0.28)'
+  ctx.lineWidth = 2
+  ctx.stroke()
+  ctx.fillStyle = '#ffffff'
+  ctx.textAlign = 'center'
+  ctx.textBaseline = 'middle'
+  ctx.fillText(text, c.width / 2, c.height / 2 + 2)
+  const tex = new THREE.CanvasTexture(c)
+  tex.minFilter = THREE.LinearFilter
+  const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true, depthTest: false }))
+  const h = 0.4
+  sprite.scale.set(h * (c.width / c.height), h, 1)
+  sprite.position.set(0, -0.8, 0)
+  sprite.renderOrder = 10
+  return sprite
+}
 
 /** Soft radial-gradient texture for the selection halo (created once). */
 let _haloTex: THREE.CanvasTexture | null = null
@@ -408,11 +439,15 @@ export function Visualizer3D() {
         let fx = fxMap.get(pf.id)
         if (!fx) {
           fx = buildFixture(def.category === 'movingHead')
+          const label = makeLabelSprite(pf.name)
+          fx.label = label
+          fx.group.add(label)
           scene.add(fx.group)
           scene.add(fx.pool)
           fxMap.set(pf.id, fx)
         }
         fx.group.userData.fixtureId = pf.id
+        if (fx.label) fx.label.visible = lit
         const home = place(pf.position.x, pf.truss)
         fx.group.position.copy(home)
 
