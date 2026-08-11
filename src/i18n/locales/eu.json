@@ -57,6 +57,7 @@
   },
   "visualizer": {
     "title": "Bisorea",
+    "roomLights": "Aretoko argia",
     "top": "Goiko ikuspegia",
     "note": "2D goiko ikuspegia orain; 3D (Three.js) geroagoko fase batean."
   },

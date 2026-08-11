@@ -234,6 +234,8 @@ export function Visualizer3D() {
     const scene = new THREE.Scene()
     scene.background = new THREE.Color(0x16161c)
     scene.fog = new THREE.FogExp2(0x16161c, 0.022)
+    const BG_DARK = new THREE.Color(0x16161c)
+    const BG_LIT = new THREE.Color(0x2c2d36)
 
     const camera = new THREE.PerspectiveCamera(50, 1, 0.1, 200)
     camera.position.set(0, 7.5, 17)
@@ -251,6 +253,13 @@ export function Visualizer3D() {
     controls.maxPolarAngle = Math.PI * 0.52
 
     scene.add(new THREE.AmbientLight(0x404050, 1.2))
+    // Work/house lights — off by default (dark, beams-only look); toggled on to see
+    // where every fixture sits, then off again to design the look.
+    const workHemi = new THREE.HemisphereLight(0xcfe0f2, 0x2a2a33, 0)
+    scene.add(workHemi)
+    const workDir = new THREE.DirectionalLight(0xffffff, 0)
+    workDir.position.set(6, 16, 10)
+    scene.add(workDir)
     const floor = new THREE.Mesh(
       new THREE.PlaneGeometry(40, 30),
       new THREE.MeshStandardMaterial({ color: 0x1b1b22, roughness: 0.9, metalness: 0.1 }),
@@ -367,6 +376,13 @@ export function Visualizer3D() {
       const state = useShowStore.getState()
       const { show, definitions, programmer, cues, activeCueId, effects, selection } = state
       const selSet = new Set(selection)
+      // House/work lights toggle: lit room + lighter background, or dark beams-only.
+      const lit = state.viewLights
+      workHemi.intensity = lit ? 1.6 : 0
+      workDir.intensity = lit ? 0.55 : 0
+      scene.background = lit ? BG_LIT : BG_DARK
+      ;(scene.fog as THREE.FogExp2).color.copy(lit ? BG_LIT : BG_DARK)
+      ;(scene.fog as THREE.FogExp2).density = lit ? 0.006 : 0.022
       const nowMs = performance.now()
       if (state.playing) clock += (nowMs - lastMs) / 1000 // freeze on Pause
       lastMs = nowMs
@@ -445,8 +461,9 @@ export function Visualizer3D() {
           fx.pool.visible = false
         }
 
-        // The body stays dark — only the beam carries the colour, like a real fixture.
-        ;(fx.body.material as THREE.MeshStandardMaterial).emissive.setHex(0x000000)
+        // Body stays dark so only the beam carries colour — but lift it a touch under
+        // work lights so you can clearly see each fixture on the truss.
+        ;(fx.body.material as THREE.MeshStandardMaterial).emissive.setHex(lit ? 0x15151b : 0x000000)
       }
 
       controls.update()

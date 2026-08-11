@@ -23,6 +23,8 @@ export function AppShell() {
   const { t, i18n } = useTranslation()
   const mode = useShowStore((s) => s.mode)
   const setMode = useShowStore((s) => s.setMode)
+  const viewLights = useShowStore((s) => s.viewLights)
+  const setViewLights = useShowStore((s) => s.setViewLights)
   const startTour = useTour((t) => t.start)
   const consoleId = useShowStore((s) => s.consoleId)
   const setConsole = useShowStore((s) => s.setConsole)
@@ -65,6 +67,15 @@ export function AppShell() {
               title={playing ? 'Pause effects' : 'Play effects'}
             >
               {playing ? '❚❚ Pause' : '▶ Play'}
+            </button>
+          )}
+          {viewer === '3d' && (
+            <button
+              className={`ghost-btn${viewLights ? ' active' : ''}`}
+              onClick={() => setViewLights(!viewLights)}
+              title={t('visualizer.roomLights')}
+            >
+              💡 {t('visualizer.roomLights')}
             </button>
           )}
           <div className="view-toggle">

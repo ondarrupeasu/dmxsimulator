@@ -57,6 +57,7 @@
   },
   "visualizer": {
     "title": "Visualizer",
+    "roomLights": "Room lights",
     "top": "Top view",
     "note": "2D top view now; 3D (Three.js) in a later phase."
   },

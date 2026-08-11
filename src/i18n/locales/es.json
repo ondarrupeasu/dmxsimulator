@@ -57,6 +57,7 @@
   },
   "visualizer": {
     "title": "Visor",
+    "roomLights": "Luz de sala",
     "top": "Vista cenital",
     "note": "Vista cenital 2D ahora; 3D (Three.js) en una fase posterior."
   },
