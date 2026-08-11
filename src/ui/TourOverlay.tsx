@@ -15,48 +15,69 @@ interface Step {
 const STEPS: Step[] = [
   {
     title: 'Montar un truss de luces',
-    body: 'Te guío para encender tu primer truss: posición, color, intensidad, un cue y un efecto. Puedes hacer cada paso tú mismo (se resalta el sitio) o solo pulsar Siguiente para leerlo.',
+    body: 'Te guío para encender tu primer truss: seleccionar, posición, color, intensidad, grabar un cue, executors, grupos, un efecto y modo blind. Haz cada paso tú mismo (se resalta el sitio) o pulsa Siguiente para leerlo.',
   },
-  { mode: 'patch', target: 'mode-patch', title: '1 · Patch', body: 'Estás en Patch: aquí eliges y colocas las luces del rig.' },
+  { mode: 'patch', target: 'mode-patch', title: 'Patch', body: 'Estás en Patch: aquí eliges y colocas las luces del rig.' },
   {
     mode: 'patch',
     target: 'library',
-    title: '2 · Añade luces',
-    body: 'Pulsa “Add” en algún foco (un Moving head o un PAR). Aparece en el rig, y abajo puedes asignarle truss (Front/Mid/Back/FOH) y universo.',
+    title: 'Añade luces',
+    body: 'Pulsa “Add” en algún foco (un Moving head o un PAR). Aparece en el rig, y en la lista puedes asignarle truss (Front/Mid/Back/FOH) y universo.',
   },
-  { mode: 'program', target: 'mode-program', title: '3 · Program', body: 'Pasa a Program para controlar las luces que has puesto.' },
+  { mode: 'program', target: 'mode-program', title: 'Program', body: 'Pasa a Program para controlar las luces que has puesto.' },
   {
     mode: 'program',
     target: 'fixtures',
-    title: '4 · Selecciona',
-    body: 'Elige una o varias luces haciendo clic aquí. En la mesa también puedes teclear en el numpad: Fixture 1 Through 4.',
+    title: 'Selecciona',
+    body: 'Elige una o varias luces haciendo clic aquí. En la mesa también puedes teclear en el numpad: Fixture 1 Through 4 Enter. Y en el monitor DMX, un clic en un canal selecciona su foco y salta al atributo.',
   },
   {
     mode: 'program',
     target: 'desk-locate',
-    title: '5 · Locate',
+    title: 'Locate',
     body: 'Pulsa Locate: enciende las luces seleccionadas en su posición base para poder verlas en el visor.',
   },
-  { mode: 'program', target: 'desk-position', title: '6 · Posición', body: 'Selecciona el atributo Position…' },
-  { mode: 'program', target: 'desk-wheel', title: '6 · Ruedas', body: '…y arrastra las ruedas (arriba-izquierda) para orientar el pan/tilt de los focos.' },
+  { mode: 'program', target: 'desk-position', title: 'Posición', body: 'Selecciona el atributo Position…' },
+  { mode: 'program', target: 'desk-wheel', title: 'Ruedas', body: '…y arrastra las ruedas (arriba-izquierda) para orientar el pan/tilt de los focos. Con Fan abanicas los valores por la selección.' },
   {
     mode: 'program',
     target: 'desk-colour',
-    title: '7 · Color',
+    title: 'Color',
     body: 'Atributo Colour: cambia el color con las ruedas, o graba/aplica una paleta desde la pantalla Titan.',
   },
-  { mode: 'program', target: 'desk-fader', title: '8 · Intensidad', body: 'Sube un fader de playback (o usa el atributo Intensity) para dar intensidad.' },
+  { mode: 'program', target: 'desk-fader', title: 'Intensidad', body: 'Sube un fader de playback (o usa el atributo Intensity) para dar intensidad. Cada fader es el máster de su cue.' },
   {
     mode: 'program',
     target: 'desk-record',
-    title: '9 · Graba un cue',
-    body: 'Pulsa Record para guardar este look como un cue. Después lo disparas con Go y aparece en los faders.',
+    title: 'Graba un cue',
+    body: 'Pulsa Record para guardar este look como un cue. Después lo disparas con Go o con su fader; aparece en la pestaña Playbacks de la pantalla.',
   },
-  { mode: 'program', target: 'desk-shape', title: '10 · Efecto', body: 'Shape abre los efectos (Shapes): añade movimiento o un cambio de color automático.' },
+  {
+    mode: 'program',
+    title: 'Executors',
+    body: 'En la fila de arriba de la mesa: con un look en el programmer, pulsa un executor vacío para grabarlo en ese botón. Pulsándolo lo disparas/apagas; clic derecho lo libera. Son tus playbacks a un toque.',
+  },
+  {
+    mode: 'program',
+    title: 'Grupos y paletas',
+    body: 'En la pantalla Titan (arriba-izquierda), la pestaña Groups guarda selecciones (Record Group) para reusarlas; Colour/Position… guardan paletas. Clic aplica, ✎ renombra el nombre a mano.',
+  },
+  { mode: 'program', target: 'desk-shape', title: 'Efecto', body: 'Shape abre los efectos (Shapes): añade movimiento o un cambio de color automático.' },
+  {
+    mode: 'program',
+    title: 'Blind',
+    body: 'La tecla Blind te deja programar el siguiente look sin que salga a la salida real (el monitor DMX se congela); lo previsualizas en el visor 3D. Útil para preparar cambios en directo.',
+  },
+  {
+    mode: 'program',
+    target: 'room-lights',
+    title: 'Luz de sala',
+    body: 'En el visor, “Luz de sala” enciende la sala para ver dónde está cada foco (con su nombre y dirección DMX). Apágala para diseñar el look a oscuras.',
+  },
   {
     target: 'visualizer',
     title: '¡Listo! 🎉',
-    body: 'Has montado un truss con posición, color, intensidad, un cue y un efecto. Repite para más trusses o carga una plantilla. ¡A jugar!',
+    body: 'Has montado un truss con posición, color, intensidad, un cue, executors, grupos y un efecto. Repite para más trusses o carga una plantilla. ¡A jugar!',
   },
 ]
 
@@ -73,18 +94,22 @@ export function TourOverlay() {
     if (active && s?.mode) setMode(s.mode)
   }, [active, step, s?.mode, setMode])
 
-  // Measure the spotlight target (after the mode switch has re-rendered the DOM).
+  // Measure the spotlight target. Re-measure across a few frames so the highlight
+  // never lags a step behind while the layout (mode switch, panel reflow) settles.
   useEffect(() => {
     if (!active || !s) return
     const measure = () => {
       const el = s.target ? document.querySelector(`[data-tour="${s.target}"]`) : null
       setRect(el ? el.getBoundingClientRect() : null)
     }
-    const t = window.setTimeout(measure, s.mode ? 140 : 20)
+    // rAF catches layout after React commits; the extra timers catch late reflow.
+    const raf = requestAnimationFrame(() => requestAnimationFrame(measure))
+    const timers = [80, 200, 400].map((d) => window.setTimeout(measure, d))
     window.addEventListener('resize', measure)
     window.addEventListener('scroll', measure, true)
     return () => {
-      window.clearTimeout(t)
+      cancelAnimationFrame(raf)
+      timers.forEach((t) => window.clearTimeout(t))
       window.removeEventListener('resize', measure)
       window.removeEventListener('scroll', measure, true)
     }

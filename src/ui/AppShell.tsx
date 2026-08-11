@@ -72,6 +72,7 @@ export function AppShell() {
           {viewer === '3d' && (
             <button
               className={`ghost-btn${viewLights ? ' active' : ''}`}
+              data-tour="room-lights"
               onClick={() => setViewLights(!viewLights)}
               title={t('visualizer.roomLights')}
             >

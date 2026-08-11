@@ -79,8 +79,8 @@ function Box({ x, y, w, h, cols, rows, narrow, spread, children }: {
 }
 
 /** A thin silk-screen frame that groups a block of buttons, like on the real desk. */
-function Frame({ x, y, w, h }: { x: number; y: number; w: number; h: number }) {
-  return <div className="cal-frame" style={{ left: L(x), top: T(y), width: L(w), height: T(h) }} />
+function Frame({ x, y, w, h, tour }: { x: number; y: number; w: number; h: number; tour?: string }) {
+  return <div className="cal-frame" data-tour={tour} style={{ left: L(x), top: T(y), width: L(w), height: T(h) }} />
 }
 
 /** Silk-screen labels centred over each column of a grid. `subs` = shifted-function
@@ -258,7 +258,7 @@ export function QuartzPanel() {
 
         {/* Executors 2×10 — assignable ones show their user label as a silk-screen
             caption (outside the button), like the printed 11–18 functions. */}
-        <Frame x={642} y={48} w={652} h={124} />
+        <Frame x={642} y={48} w={652} h={124} tour="desk-executors" />
         <GridLabels x={648} y={52} w={640} cols={10} small above
           items={Array.from({ length: 10 }, (_, i) => (execCaption(i + 1) ? `${execCaption(i + 1)}\n${i + 1}` : String(i + 1)))} />
         <Box x={648} y={54} w={640} h={112} cols={10} rows={2} spread>

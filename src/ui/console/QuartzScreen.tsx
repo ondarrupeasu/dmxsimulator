@@ -244,7 +244,7 @@ export function QuartzScreen() {
   }
 
   return (
-    <div className="qscreen">
+    <div className="qscreen" data-tour="titan-screen">
       <div className="qscreen-head">
         <span className="qd-brand">Avolites Quartz</span>
         <span className="qd-titan">TITAN</span>
