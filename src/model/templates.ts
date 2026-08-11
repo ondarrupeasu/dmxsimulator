@@ -30,6 +30,7 @@ function builder(defsById: Record<string, FixtureDefinition>, showName: string) 
     name: string,
     x: number,
     look?: Record<number, number>,
+    truss = 1,
   ): string {
     const def = defsById[definitionId]
     if (!def) return ''
@@ -42,6 +43,7 @@ function builder(defsById: Record<string, FixtureDefinition>, showName: string) 
       universe: 1,
       address,
       position: { x, y: 0.6, z: 0 },
+      truss,
     })
     address += fixtureFootprint(def, modeIndex)
     if (look) programmer[id] = look
@@ -59,11 +61,24 @@ function builder(defsById: Record<string, FixtureDefinition>, showName: string) 
 const PHANTOM = 'showtec-phantom-50-led-spot-mkii'
 const PAR = 'generic-rgbw-par'
 const STROBE = 'generic-strobe'
+const ROGUE = 'chauvet-rogue-r2-wash'
+const AURA = 'martin-mac-aura-xb'
+const PROFILE = 'generic-profile-spot'
+const BLINDER = 'generic-blinder-2'
+
+// Truss indices (see model/venue.ts): 0 Front, 1 Mid, 2 Back, 3 FOH.
+const FRONT = 0, MID = 1, BACK = 2, FOH = 3
 
 // RGBW PAR channel indices: 0 Dimmer, 1 R, 2 G, 3 B, 4 W.
 const parLook = (r: number, g: number, b: number, w = 0) => ({ 0: 255, 1: r, 2: g, 3: b, 4: w })
 // Phantom 13-ch indices: 0 Pan, 1 Tilt, 5 ColorWheel, 6 Shutter, 7 Dimmer.
 const phantomLook = (tilt: number, colorSlot: number) => ({ 1: tilt, 5: colorSlot, 6: 255, 7: 255 })
+// Chauvet Rogue R2 Wash: 2 Tilt, 4 Dimmer, 5 Shutter, 6 R, 7 G, 8 B.
+const rogueLook = (tilt: number, r: number, g: number, b: number) => ({ 2: tilt, 4: 255, 5: 255, 6: r, 7: g, 8: b })
+// Martin MAC Aura XB: 2 Tilt, 4 Shutter, 5 Dimmer, 6 R, 7 G, 8 B, 9 W.
+const auraLook = (tilt: number, r: number, g: number, b: number, w = 0) => ({ 2: tilt, 4: 255, 5: 255, 6: r, 7: g, 8: b, 9: w })
+// Single-channel conventional (profile / fresnel): 0 Intensity.
+const dim = () => ({ 0: 255 })
 
 export const TEMPLATES: ShowTemplate[] = [
   {
@@ -131,6 +146,76 @@ export const TEMPLATES: ShowTemplate[] = [
       const effects: Effect[] = [
         { id: 'fx-move', type: 'circle', fixtureIds: phantomIds, speed: 0.12, size: 75, spread: 1.3 },
         { id: 'fx-colour', type: 'colourCycle', fixtureIds: parIds, speed: 0.08, size: 0, spread: 1.6 },
+      ]
+      return { show, programmer, effects }
+    },
+  },
+  {
+    id: 'theatre',
+    name: 'Theatre (three trusses)',
+    description: 'Front-light profiles, mid spots and a blue back-truss cyc — a classic theatre wash.',
+    build: (defs) => {
+      const b = builder(defs, 'Theatre')
+      // Front truss — warm front light.
+      b.add(PROFILE, 0, 'Front 1', -0.6, dim(), FRONT)
+      b.add(PROFILE, 0, 'Front 2', -0.2, dim(), FRONT)
+      b.add(PROFILE, 0, 'Front 3', 0.2, dim(), FRONT)
+      b.add(PROFILE, 0, 'Front 4', 0.6, dim(), FRONT)
+      // Mid truss — spots (open white).
+      b.add(PHANTOM, 0, 'Spot 1', -0.4, phantomLook(120, 0), MID)
+      b.add(PHANTOM, 0, 'Spot 2', 0, phantomLook(120, 0), MID)
+      b.add(PHANTOM, 0, 'Spot 3', 0.4, phantomLook(120, 0), MID)
+      // Back truss — blue cyc wash.
+      b.add(PAR, 0, 'Cyc 1', -0.6, parLook(0, 40, 255), BACK)
+      b.add(PAR, 0, 'Cyc 2', -0.2, parLook(0, 40, 255), BACK)
+      b.add(PAR, 0, 'Cyc 3', 0.2, parLook(0, 40, 255), BACK)
+      b.add(PAR, 0, 'Cyc 4', 0.6, parLook(0, 40, 255), BACK)
+      return b.done()
+    },
+  },
+  {
+    id: 'concert',
+    name: 'Concert (multi-truss)',
+    description: 'Aura washes on the back truss, spots mid, FOH front-light and blinders — coloured look on.',
+    build: (defs) => {
+      const b = builder(defs, 'Concert')
+      // Back truss — colour washes, amber / blue alternating.
+      b.add(AURA, 0, 'Wash 1', -0.6, auraLook(128, 255, 120, 0), BACK)
+      b.add(AURA, 0, 'Wash 2', -0.2, auraLook(128, 0, 80, 255), BACK)
+      b.add(AURA, 0, 'Wash 3', 0.2, auraLook(128, 255, 120, 0), BACK)
+      b.add(AURA, 0, 'Wash 4', 0.6, auraLook(128, 0, 80, 255), BACK)
+      // Mid truss — spots tilted out, alternating colour-wheel slots.
+      b.add(PHANTOM, 0, 'Spot 1', -0.5, phantomLook(90, 28), MID)
+      b.add(PHANTOM, 0, 'Spot 2', -0.17, phantomLook(90, 56), MID)
+      b.add(PHANTOM, 0, 'Spot 3', 0.17, phantomLook(90, 28), MID)
+      b.add(PHANTOM, 0, 'Spot 4', 0.5, phantomLook(90, 56), MID)
+      // FOH truss — front light.
+      b.add(PROFILE, 0, 'FOH 1', -0.3, dim(), FOH)
+      b.add(PROFILE, 0, 'FOH 2', 0.3, dim(), FOH)
+      // Front truss — blinders (both lamps up).
+      b.add(BLINDER, 0, 'Blinder L', -0.4, { 0: 255, 1: 255 }, FRONT)
+      b.add(BLINDER, 0, 'Blinder R', 0.4, { 0: 255, 1: 255 }, FRONT)
+      return b.done()
+    },
+  },
+  {
+    id: 'movers-xl',
+    name: 'Movers XL (animated)',
+    description: 'Moving heads on all three stage trusses sweeping in a fan — load and watch.',
+    build: (defs) => {
+      const b = builder(defs, 'Movers XL')
+      const ids = [
+        b.add(PHANTOM, 0, 'Mid 1', -0.5, { 6: 255, 7: 255 }, MID),
+        b.add(PHANTOM, 0, 'Mid 2', -0.17, { 6: 255, 7: 255 }, MID),
+        b.add(PHANTOM, 0, 'Mid 3', 0.17, { 6: 255, 7: 255 }, MID),
+        b.add(PHANTOM, 0, 'Mid 4', 0.5, { 6: 255, 7: 255 }, MID),
+        b.add(ROGUE, 0, 'Back 1', -0.5, rogueLook(80, 0, 120, 255), BACK),
+        b.add(ROGUE, 0, 'Back 2', 0, rogueLook(80, 255, 0, 120), BACK),
+        b.add(ROGUE, 0, 'Back 3', 0.5, rogueLook(80, 0, 120, 255), BACK),
+      ]
+      const { show, programmer } = b.done()
+      const effects: Effect[] = [
+        { id: 'fx-fan', type: 'circle', fixtureIds: ids, speed: 0.12, size: 80, spread: 1.5 },
       ]
       return { show, programmer, effects }
     },
