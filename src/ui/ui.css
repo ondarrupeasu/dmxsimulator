@@ -248,6 +248,14 @@
   border: 1px solid var(--border); border-radius: var(--radius-sm); cursor: pointer;
 }
 .rig-readdress:hover { border-color: var(--coral); color: var(--coral); }
+.rig-tools { display: flex; align-items: center; gap: 6px; }
+.rig-truss {
+  font: inherit; font-size: 11px; text-transform: none; letter-spacing: 0;
+  padding: 3px 6px; color: var(--text); background: var(--bg-input);
+  border: 1px solid var(--border); border-radius: var(--radius-sm); cursor: pointer;
+}
+/* Library search now lives in the panel header; leave room for the fold chevron. */
+.panel > header .lib-search { flex: 1 1 auto; max-width: none; margin-right: 34px; align-self: center; }
 
 /* Truss layout strip — draggable fixture chips along the rig */
 .truss-strip {

@@ -25,6 +25,7 @@
     "library": "Fixture library",
     "search": "Search brand / model…",
     "noMatch": "No fixtures match your search.",
+    "allTrusses": "All trusses",
     "patched": "Patched fixtures",
     "rig": "Rig layout — drag to position on the truss",
     "readdress": "Re-address by rig order",
