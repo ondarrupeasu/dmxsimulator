@@ -200,6 +200,8 @@ export function QuartzPanel() {
   const setByFn = useShowStore((s) => s.setSelectedByFunction)
   const clearSelectedFunctions = useShowStore((s) => s.clearSelectedFunctions)
   const fanSelected = useShowStore((s) => s.fanSelected)
+  const blind = useShowStore((s) => s.blind)
+  const setBlind = useShowStore((s) => s.setBlind)
   const cmdAppend = useShowStore((s) => s.cmdAppend)
   const cmdBackspace = useShowStore((s) => s.cmdBackspace)
   const cmdClear = useShowStore((s) => s.cmdClear)
@@ -235,6 +237,7 @@ export function QuartzPanel() {
       </button>
       <div className={`qcal${shift ? ' shift' : ''}`}>
         {shift && <div className="cal-shift-badge">AVO · segundas funciones activas</div>}
+        {blind && <div className="cal-blind-badge">BLIND · el programmer no sale a escena</div>}
         {showZones && (
           <div className="cal-zones">
             {ZONES.map((z) => (
@@ -305,7 +308,7 @@ export function QuartzPanel() {
         <Box x={178} y={272} w={452} h={118} cols={7} rows={2}>
           {ATTRIBUTES.map((a) => <Key key={a.name} v="white" on={a.name === attr} title={a.name} onClick={() => setAttr(a.name)} tour={a.name === 'Position' ? 'desk-position' : a.name === 'Colour' ? 'desk-colour' : undefined} />)}
           <Key v="white" title="Shape → Shapes" onClick={() => setScreen('effects')} tour="desk-shape" />
-          <Key v="white" title="ML Menu — menú Moving Light" onClick={() => setMenu('ml')} /><Key v="white" disabled title="Blind" /><Key v="white" disabled={noSel || activeFns.length === 0} title={`Off — quitar ${active.name} de la selección`} onClick={() => clearSelectedFunctions(activeFns)} />
+          <Key v="white" title="ML Menu — menú Moving Light" onClick={() => setMenu('ml')} /><Key v="white" ledColor="red" on={blind} title="Blind — programar sin salida a escena" onClick={() => setBlind(!blind)} /><Key v="white" disabled={noSel || activeFns.length === 0} title={`Off — quitar ${active.name} de la selección`} onClick={() => clearSelectedFunctions(activeFns)} />
           <Key v="white" disabled={selection.length < 2 || !fanFn} title={fanFn ? `Fan — abanicar ${fanFn} por la selección` : 'Fan'} onClick={() => fanFn && fanSelected(fanFn)} /><Key v="white" disabled title="Options" /><Key v="dark" disabled title="Latch Menu" />
         </Box>
         <GridLabels x={178} y={392} w={452} cols={7} items={['Shape', 'ML\nMenu', 'Blind', 'Off', 'Fan', 'Options', 'Latch\nMenu']} />

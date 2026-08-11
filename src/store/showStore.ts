@@ -140,6 +140,10 @@ interface ShowState {
   viewLights: boolean
   setViewLights: (v: boolean) => void
 
+  // Blind: program without the live programmer reaching the real DMX output.
+  blind: boolean
+  setBlind: (v: boolean) => void
+
   // Command line (Titan-style keypad syntax, e.g. "1 THRU 4 @ 50")
   cmd: string
   cmdAppend: (token: string) => void
@@ -608,6 +612,9 @@ export const useShowStore = create<ShowState>()(
       viewLights: false,
       setViewLights: (v) => set({ viewLights: v }),
 
+      blind: false,
+      setBlind: (v) => set({ blind: v }),
+
       cmd: '',
       cmdAppend: (token) => set((s) => ({ cmd: s.cmd + token })),
       cmdBackspace: () => set((s) => ({ cmd: s.cmd.replace(/\s*\S+\s*$/, '') })),
@@ -766,7 +773,12 @@ export const useShowStore = create<ShowState>()(
  * Effective output values = the active playback cue with the live programmer laid
  * on top. This is what the monitor and visualizers should render.
  */
-export function useEffectiveProgrammer(): ProgrammerValues {
+/**
+ * The merged output values. `respectBlind` is used by the DMX monitor (the real
+ * output): in blind mode the live programmer is withheld so it doesn't reach the
+ * rig, while the visualisers keep showing the programmer as a blind preview.
+ */
+export function useEffectiveProgrammer(respectBlind = false): ProgrammerValues {
   const programmer = useShowStore((s) => s.programmer)
   const cues = useShowStore((s) => s.cues)
   const playbackLevels = useShowStore((s) => s.playbackLevels)
@@ -774,9 +786,10 @@ export function useEffectiveProgrammer(): ProgrammerValues {
   const show = useShowStore((s) => s.show)
   const definitions = useShowStore((s) => s.definitions)
   const now = useShowStore((s) => s.now)
+  const blind = useShowStore((s) => s.blind)
   return useMemo(() => {
     const base = computePlaybackBase(cues, playbackLevels, show, definitions)
-    const merged = mergeProgrammer(base, programmer)
+    const merged = respectBlind && blind ? base : mergeProgrammer(base, programmer)
     return applyEffects(merged, effects, show, definitions, now)
-  }, [programmer, cues, playbackLevels, effects, show, definitions, now])
+  }, [programmer, cues, playbackLevels, effects, show, definitions, now, blind, respectBlind])
 }

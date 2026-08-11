@@ -318,6 +318,12 @@
   font-size: 11px;
   color: var(--text-faint);
 }
+.blind-badge {
+  font-size: 10px; font-weight: 700; letter-spacing: 0.5px;
+  padding: 1px 7px; border-radius: 4px;
+  background: #d23b30; color: #fff;
+  animation: blindpulse 1.4s ease-in-out infinite;
+}
 .badge {
   font-size: 10px;
   text-transform: uppercase;
@@ -1042,6 +1048,14 @@
   padding: 0.3cqw 1.1cqw; border-radius: 0.7cqw; z-index: 20; pointer-events: none;
   letter-spacing: 0.3px; box-shadow: 0 0.3cqw 1cqw rgba(0, 0, 0, 0.55);
 }
+.cal-blind-badge {
+  position: absolute; top: 1.4%; left: 50%; transform: translateX(-50%);
+  background: #d23b30; color: #fff; font-size: 1.3cqw; font-weight: 700;
+  padding: 0.3cqw 1.1cqw; border-radius: 0.7cqw; z-index: 21; pointer-events: none;
+  letter-spacing: 0.3px; box-shadow: 0 0.3cqw 1cqw rgba(0, 0, 0, 0.55);
+  animation: blindpulse 1.4s ease-in-out infinite;
+}
+@keyframes blindpulse { 50% { opacity: 0.55; } }
 .qcal.shift .cal-lbl .sub { display: block; color: var(--coral); font-weight: 700; }
 /* Where a key HAS a shifted function, the primary label is replaced by it
    (e.g. "All" → "Rem Dim"); keys with no shifted function just dim. */
