@@ -48,7 +48,7 @@ export function Visualizer2D() {
       e.preventDefault()
       const rect = el.getBoundingClientRect()
       setVb((v) => {
-        const k = e.deltaY > 0 ? 1.12 : 1 / 1.12
+        const k = e.deltaY > 0 ? 1.05 : 1 / 1.05
         const nw = Math.max(W * 0.15, Math.min(W * 2.5, v.w * k))
         const r = nw / v.w
         // Zoom toward the cursor; fall back to the viewBox centre if it's unavailable.
