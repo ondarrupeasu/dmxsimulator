@@ -439,15 +439,28 @@ export function Visualizer3D() {
         let fx = fxMap.get(pf.id)
         if (!fx) {
           fx = buildFixture(def.category === 'movingHead')
-          const label = makeLabelSprite(pf.name)
-          fx.label = label
-          fx.group.add(label)
           scene.add(fx.group)
           scene.add(fx.pool)
           fxMap.set(pf.id, fx)
         }
         fx.group.userData.fixtureId = pf.id
-        if (fx.label) fx.label.visible = lit
+        // Name tag (only under work lights) — name + DMX start as universe.address.
+        if (lit) {
+          const labelText = `${pf.name}  ·  ${pf.universe}.${pf.address}`
+          if (!fx.label || fx.label.userData.text !== labelText) {
+            if (fx.label) {
+              fx.group.remove(fx.label)
+              fx.label.material.map?.dispose()
+              fx.label.material.dispose()
+            }
+            fx.label = makeLabelSprite(labelText)
+            fx.label.userData.text = labelText
+            fx.group.add(fx.label)
+          }
+          fx.label.visible = true
+        } else if (fx.label) {
+          fx.label.visible = false
+        }
         const home = place(pf.position.x, pf.truss)
         fx.group.position.copy(home)
 
