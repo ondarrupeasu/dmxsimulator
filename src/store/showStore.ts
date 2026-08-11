@@ -10,6 +10,7 @@ import { fixtureFootprint } from '../model/types'
 import type { Cue } from '../model/cue'
 import type { Palette, PaletteKind } from '../model/palette'
 import { PALETTE_FUNCTIONS, PALETTE_LABELS } from '../model/palette'
+import type { Group } from '../model/group'
 import type { Effect } from '../engine/effects'
 import { applyEffects } from '../engine/effects'
 import { BUILTIN_FIXTURES } from '../model/library'
@@ -71,6 +72,15 @@ interface ShowState {
   deleteCue: (id: string) => void
   goCue: (id: string) => void
   releaseCue: () => void
+  /** Rename a cue (its hand-typed legend). */
+  renameCue: (id: string, name: string) => void
+
+  // Groups — named, reusable selections (Titan's Groups workspace).
+  groups: Group[]
+  recordGroup: () => void
+  recallGroup: (id: string) => void
+  renameGroup: (id: string, name: string) => void
+  deleteGroup: (id: string) => void
 
   // Palettes
   /** Capture the programmer's values for a palette kind on the current selection. */
@@ -78,6 +88,8 @@ interface ShowState {
   /** Apply a palette to the current selection (sets its functions in the programmer). */
   applyPalette: (id: string) => void
   deletePalette: (id: string) => void
+  /** Rename a palette (its hand-typed legend). */
+  renamePalette: (id: string, name: string) => void
 
   // Playback pages
   setPlaybackPage: (page: number) => void
@@ -244,6 +256,30 @@ export const useShowStore = create<ShowState>()(
 
       goCue: (id) => set({ activeCueId: id }),
       releaseCue: () => set({ activeCueId: null }),
+      renameCue: (id, name) =>
+        set((s) => ({ cues: s.cues.map((c) => (c.id === id ? { ...c, name } : c)) })),
+
+      groups: [],
+      recordGroup: () =>
+        set((s) => {
+          if (s.selection.length === 0) return s
+          const group: Group = {
+            id: nextInstanceId(),
+            name: `Group ${s.groups.length + 1}`,
+            fixtureIds: [...s.selection],
+          }
+          return { groups: [...s.groups, group] }
+        }),
+      recallGroup: (id) =>
+        set((s) => {
+          const g = s.groups.find((x) => x.id === id)
+          if (!g) return s
+          const live = new Set(s.show.fixtures.map((f) => f.id))
+          return { selection: g.fixtureIds.filter((fid) => live.has(fid)) }
+        }),
+      renameGroup: (id, name) =>
+        set((s) => ({ groups: s.groups.map((g) => (g.id === id ? { ...g, name } : g)) })),
+      deleteGroup: (id) => set((s) => ({ groups: s.groups.filter((g) => g.id !== id) })),
 
       recordPalette: (kind) =>
         set((s) => {
@@ -291,6 +327,8 @@ export const useShowStore = create<ShowState>()(
 
       deletePalette: (id) =>
         set((s) => ({ palettes: s.palettes.filter((p) => p.id !== id) })),
+      renamePalette: (id, name) =>
+        set((s) => ({ palettes: s.palettes.map((p) => (p.id === id ? { ...p, name } : p)) })),
 
       setPlaybackPage: (page) => set({ playbackPage: Math.max(0, page) }),
       executorLabels: {},
@@ -610,6 +648,7 @@ export const useShowStore = create<ShowState>()(
           cues: [],
           activeCueId: null,
           palettes: [],
+          groups: [],
           playbackPage: 0,
           effects: [],
           now: 0,
@@ -626,6 +665,7 @@ export const useShowStore = create<ShowState>()(
         cues: s.cues,
         activeCueId: s.activeCueId,
         palettes: s.palettes,
+        groups: s.groups,
         effects: s.effects,
         executorLabels: s.executorLabels,
       }),

@@ -345,9 +345,9 @@ export function QuartzPanel() {
         {/* Keypad — one 6×4 grid so every row is evenly spaced */}
         <GridLabels x={916} y={488} w={258} cols={4} items={['Fixture', 'Palette', 'Macro', 'Group']} above />
         <Box x={916} y={498} w={258} h={330} cols={4} rows={6}>
-          <Key v="dark" title="Fixtures" onClick={() => { setScreen('fixtures'); setMenu('root') }} />
+          <Key v="dark" title="Fixture — selección (la ventana de fixtures está a la derecha)" onClick={() => setMenu('root')} />
           <Key v="dark" title="Palettes" onClick={() => { setScreen('colour'); setMenu('palette') }} />
-          <Key v="dark" disabled title="Macro" /><Key v="dark" title="Group — menú Group" onClick={() => setMenu('group')} />
+          <Key v="dark" disabled title="Macro" /><Key v="dark" title="Group — workspace de grupos" onClick={() => { setScreen('groups'); setMenu('group') }} />
           <Key v="white" led={false} text="1" title="1" onClick={dig('1')} /><Key v="white" led={false} text="2" title="2" onClick={dig('2')} /><Key v="white" led={false} text="3" title="3" onClick={dig('3')} /><Key v="white" on={shift} text="Avo" title="Avo — activa/desactiva las segundas funciones" onClick={() => setShift((s) => !s)} />
           <Key v="white" led={false} text="4" title="4" onClick={dig('4')} /><Key v="white" led={false} text="5" title="5" onClick={dig('5')} /><Key v="white" led={false} text="6" title="6" onClick={dig('6')} /><Key v="white" ledColor="blue" disabled text="TIME" title="Time" />
           <Key v="white" led={false} text="7" title="7" onClick={dig('7')} /><Key v="white" led={false} text="8" title="8" onClick={dig('8')} /><Key v="white" led={false} text="9" title="9" onClick={dig('9')} /><Key v="white" ledColor="red" on={hasProgrammer} text="CLEAR" title="Clear the programmer" onClick={clearProgrammer} />

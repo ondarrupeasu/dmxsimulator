@@ -767,52 +767,100 @@
 .qscreen-main { flex: 1; display: flex; min-height: 0; }
 .qscreen-body { flex: 1; overflow: auto; padding: 10px 12px; min-height: 0; }
 
-/* A–G softkey column, like the Titan touchscreen edge keys. */
+/* Workspace windows — grids of hand-legended buttons (Groups / palettes / cues). */
+.qd-ws-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(94px, 1fr));
+  gap: 6px;
+  align-content: start;
+}
+.qd-cell {
+  position: relative;
+  min-height: 44px;
+  border-radius: 5px;
+  border: 1px solid var(--border);
+  background: var(--bg-elev);
+  overflow: hidden;
+}
+.qd-cell-hit {
+  width: 100%; min-height: 44px;
+  padding: 6px 8px;
+  color: var(--text); font-size: 12px; font-weight: 600;
+  text-align: left; cursor: pointer;
+  display: flex; align-items: center;
+  overflow-wrap: anywhere; line-height: 1.15;
+}
+.qd-cell-hit:disabled { opacity: 0.5; cursor: not-allowed; }
+.qd-cell-edit, .qd-cell-del {
+  position: absolute; top: 2px;
+  width: 16px; height: 16px; padding: 0;
+  font-size: 10px; line-height: 1;
+  color: var(--text-faint); background: rgba(0, 0, 0, 0.4);
+  border: none; border-radius: 3px; cursor: pointer;
+  opacity: 0; transition: opacity 0.1s;
+}
+.qd-cell-edit { right: 20px; }
+.qd-cell-del { right: 2px; }
+.qd-cell:hover .qd-cell-edit, .qd-cell:hover .qd-cell-del { opacity: 1; }
+.qd-cell-edit:hover, .qd-cell-del:hover { color: var(--text); }
+.qd-cell.active { box-shadow: inset 0 0 0 2px var(--coral); }
+.qd-cell.rec {
+  min-height: 44px;
+  border-style: dashed; color: var(--text-faint);
+  font-size: 11px; font-weight: 600; cursor: pointer; background: transparent;
+}
+.qd-cell.rec:hover:not(:disabled) { border-color: var(--coral); color: var(--coral); }
+.qd-cell.rec:disabled { opacity: 0.4; cursor: not-allowed; }
+.qd-cell.ws-group { border-left: 3px solid #8a8f9c; }
+.qd-cell.ws-playback { border-left: 3px solid #ff8a5c; }
+.qd-cell.ws-colour { border-left: 3px solid var(--at-colour, #4aa3ff); }
+.qd-cell.ws-position { border-left: 3px solid var(--at-position, #38c98b); }
+.qd-cell.ws-gobo { border-left: 3px solid var(--at-gobo, #e0c341); }
+.qd-cell.ws-beam { border-left: 3px solid var(--at-beam, #c078ff); }
+.qd-cell.ws-intensity { border-left: 3px solid var(--at-intensity, #ff5a4d); }
+
+/* A–G softkey column — physical-look grey keys (right of the screen) + labels. */
 .qscreen-soft {
-  flex: 0 0 118px;
+  flex: 0 0 134px;
   display: flex;
   flex-direction: column;
-  gap: 3px;
-  padding: 6px;
+  gap: 2px;
+  padding: 4px 6px 4px 4px;
   border-left: 1px solid var(--border);
   background: #0a0a0e;
 }
 .qsk-menu {
-  font-size: 10px; font-weight: 700; letter-spacing: 0.4px;
+  font-size: 9px; font-weight: 700; letter-spacing: 0.4px;
   color: var(--text-faint); text-transform: uppercase;
-  padding: 2px 4px 4px; text-align: center;
+  padding: 1px 4px 3px; text-align: center; flex: 0 0 auto;
 }
-.qsk {
+.qskrow {
   flex: 1 1 0; min-height: 0; overflow: hidden;
   display: flex; align-items: center; gap: 6px;
-  padding: 0 7px;
-  background: var(--key-face, #2b2b31);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  color: var(--text); text-align: left;
+}
+.qsk-lbl {
+  flex: 1 1 auto; min-width: 0; overflow: hidden;
+  display: flex; flex-direction: column; align-items: flex-end; justify-content: center;
+  font-size: 10px; font-weight: 600; line-height: 1.1;
+  color: var(--text); text-align: right; white-space: nowrap;
+}
+.qskrow.info .qsk-lbl { font-weight: 500; color: var(--text-muted, #b8b6c0); }
+.qsk-opt { font-size: 9px; font-weight: 700; color: var(--coral); }
+/* The grey physical key with the A–G letter (narrower than the desk keys). */
+.qsk-key {
+  flex: 0 0 auto;
+  width: 22px; align-self: stretch; max-height: 32px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 700; color: #edeae2;
+  background: linear-gradient(180deg, #6b6c74, #45464e 55%, #34353c);
+  border: 1px solid #232429; border-top-color: #84858e;
+  border-radius: 3px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), 0 1px 2px rgba(0, 0, 0, 0.4);
   cursor: pointer;
 }
-.qsk:hover:not(:disabled) { border-color: var(--coral); }
-.qsk:disabled { cursor: default; }
-.qsk.blank { opacity: 0.3; }
-.qsk-k {
-  flex: 0 0 auto; width: 13px;
-  font-size: 11px; font-weight: 700; color: var(--coral);
-  font-variant-numeric: tabular-nums;
-}
-.qsk.blank .qsk-k { color: var(--text-faint); }
-.qsk-lbl {
-  font-size: 11px; font-weight: 600; line-height: 1.1;
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0;
-}
-/* Reference-only menu labels (real Titan option, no backing feature yet). */
-.qsk.info { cursor: default; }
-.qsk.info .qsk-lbl { font-weight: 500; color: var(--text-muted, #b8b6c0); }
-.qsk.info:hover { border-color: var(--border); }
-.qsk-opt {
-  display: block; font-size: 9px; font-weight: 600;
-  color: var(--coral); margin-top: 1px;
-}
+.qsk-key:hover:not(:disabled) { border-color: var(--coral); }
+.qsk-key:disabled { cursor: default; }
+.qskrow.blank .qsk-key { opacity: 0.4; }
 
 /* Command line footer. */
 .qscreen-cmd {
