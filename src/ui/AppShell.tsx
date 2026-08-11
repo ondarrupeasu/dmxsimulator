@@ -164,7 +164,6 @@ export function AppShell() {
           <h1>
             <span className="accent">DMX</span>Simulato<span className="accent">R</span>
           </h1>
-          <span className="tagline">{t('app.tagline')}</span>
           <span className="appver" title="Versión en ejecución">v{__APP_VERSION__} · {__BUILD_COMMIT__}</span>
         </div>
 

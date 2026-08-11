@@ -107,6 +107,8 @@
   border-radius: 5px; cursor: pointer; flex: 0 0 auto;
 }
 .pane-fold:hover { color: var(--text); border-color: var(--coral); }
+/* Keep the monitor's universe switcher clear of the pane fold button (top-right). */
+.panel > header.mon-header { padding-right: 42px; }
 
 .rz {
   position: relative;
@@ -913,6 +915,7 @@
 .qd-cell.rec:hover:not(:disabled) { border-color: var(--coral); color: var(--coral); }
 .qd-cell.rec:disabled { opacity: 0.4; cursor: not-allowed; }
 .qd-cell.ws-group { border-left: 3px solid #8a8f9c; }
+.qd-cell.ws-fixture { border-left: 3px solid var(--coral); }
 .qd-cell.ws-playback { border-left: 3px solid #ff8a5c; }
 .qd-cell.ws-colour { border-left: 3px solid var(--at-colour, #4aa3ff); }
 .qd-cell.ws-position { border-left: 3px solid var(--at-position, #38c98b); }

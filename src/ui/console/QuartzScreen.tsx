@@ -5,8 +5,10 @@ import { EffectsPanel } from '../run/EffectsPanel'
 
 const PALETTE_KINDS: PaletteKind[] = ['colour', 'position', 'gobo', 'beam', 'intensity']
 
-// Touchscreen workspace tabs (Fixtures lives in its own docked window on the right).
+// Touchscreen workspace tabs. Fixtures is also its own docked window on the right,
+// but it lives here too so selection works from the screen like the physical desk.
 const TABS: { key: string; label: string }[] = [
+  { key: 'fixtures', label: 'Fixtures' },
   { key: 'groups', label: 'Groups' },
   { key: 'colour', label: 'Colour' },
   { key: 'position', label: 'Position' },
@@ -40,6 +42,7 @@ export function QuartzScreen() {
   const setScreen = useShowStore((s) => s.setDeskScreen)
   const selection = useShowStore((s) => s.selection)
   const select = useShowStore((s) => s.select)
+  const toggleSelect = useShowStore((s) => s.toggleSelect)
   const clearSelection = useShowStore((s) => s.clearSelection)
   const clearProgrammer = useShowStore((s) => s.clearProgrammer)
   const locateSelected = useShowStore((s) => s.locateSelected)
@@ -178,7 +181,21 @@ export function QuartzScreen() {
   )
 
   let body: React.ReactNode
-  if (screen === 'effects') {
+  if (screen === 'fixtures') {
+    body = noFx ? (
+      <div className="qd-muted" style={{ padding: 10 }}>Patch fixtures first (Patch mode).</div>
+    ) : (
+      <div className="qd-ws-grid">
+        {fixtures.map((pf) => (
+          <div key={pf.id} className={`qd-cell ws-fixture${selection.includes(pf.id) ? ' active' : ''}`}>
+            <button className="qd-cell-hit" onClick={() => toggleSelect(pf.id)} title={pf.name}>
+              {pf.name}
+            </button>
+          </div>
+        ))}
+      </div>
+    )
+  } else if (screen === 'effects') {
     body = <EffectsPanel />
   } else if (screen === 'groups') {
     body = (
