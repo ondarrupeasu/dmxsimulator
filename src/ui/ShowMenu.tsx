@@ -2,6 +2,7 @@ import { useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useShowStore } from '../store/showStore'
 import { TEMPLATES } from '../model/templates'
+import { openPatchReport } from '../model/report'
 
 /** Topbar show controls: load a template, save to file, load from file. */
 export function ShowMenu() {
@@ -52,6 +53,12 @@ export function ShowMenu() {
       </select>
       <button onClick={onExport}>{t('show.save')}</button>
       <button onClick={() => fileRef.current?.click()}>{t('show.load')}</button>
+      <button
+        onClick={() => openPatchReport(useShowStore.getState().show, useShowStore.getState().definitions)}
+        title="Informe de patch (formato tipo Titan) — imprimir o guardar como PDF"
+      >
+        Informe
+      </button>
       <input
         ref={fileRef}
         type="file"

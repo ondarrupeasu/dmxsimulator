@@ -1,0 +1,129 @@
+/**
+ * Patch report — a printable "Patch View" laid out like the Avolites Titan export
+ * Miren sent, but branded as DMXSimulatoR (we describe the simulated desk in the
+ * header fields; we don't reproduce Avolites' logo). Returns a self-contained HTML
+ * document the caller opens in a new window and prints to PDF.
+ */
+import type { Show, FixtureDefinition } from './types'
+import { fixtureFootprint } from './types'
+
+const esc = (s: string) =>
+  s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c] as string))
+
+/** Two-digit date/time in the same shape as the Titan report (DD/MM/YY-HH:MM). */
+function stamp(d: Date): string {
+  const p = (n: number) => String(n).padStart(2, '0')
+  return `${p(d.getDate())}/${p(d.getMonth() + 1)}/${String(d.getFullYear()).slice(2)}-${p(d.getHours())}:${p(d.getMinutes())}`
+}
+
+export function buildPatchReportHTML(
+  show: Show,
+  definitions: Record<string, FixtureDefinition>,
+  opts: { console?: string; software?: string } = {},
+): string {
+  const consoleType = opts.console ?? 'Avolites Quartz (simulated)'
+  const software = opts.software ?? `DMXSimulatoR ${__APP_VERSION__}`
+
+  const rows = [...show.fixtures]
+    .sort((a, b) => a.universe - b.universe || a.address - b.address)
+    .map((pf, i) => {
+      const def = definitions[pf.definitionId]
+      const foot = def ? fixtureFootprint(def, pf.modeIndex) : 1
+      const last = pf.address + foot - 1
+      const mode = def?.modes[pf.modeIndex]?.name ?? '—'
+      const fixture = def ? `${def.manufacturer} ${def.model}` : pf.definitionId
+      return `<tr>
+        <td class="n">${i + 1}</td>
+        <td>${esc(fixture)}</td>
+        <td>${esc(mode)}</td>
+        <td class="n">${pf.universe}.${pf.address}</td>
+        <td class="n">${foot}</td>
+        <td class="n">${pf.universe}.${last}</td>
+        <td>${esc(pf.name)}</td>
+      </tr>`
+    })
+    .join('')
+
+  // A small fixture schedule (counts by type) under the patch table.
+  const counts = new Map<string, number>()
+  for (const pf of show.fixtures) {
+    const def = definitions[pf.definitionId]
+    const key = def ? `${def.manufacturer} ${def.model}` : pf.definitionId
+    counts.set(key, (counts.get(key) ?? 0) + 1)
+  }
+  const schedule = [...counts.entries()]
+    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+    .map(([k, v]) => `<tr><td class="n">${v}×</td><td>${esc(k)}</td></tr>`)
+    .join('')
+
+  return `<!doctype html><html lang="es"><head><meta charset="utf-8">
+<title>Patch View — ${esc(show.name)}</title>
+<style>
+  * { box-sizing: border-box; }
+  html { background: #fff; }
+  body { font: 12px/1.35 Arial, Helvetica, sans-serif; color: #111; background: #fff; margin: 24px; }
+  .head { display: flex; align-items: flex-start; gap: 18px; border-bottom: 2px solid #111; padding-bottom: 10px; }
+  .logo { font-weight: 800; font-size: 22px; letter-spacing: -.5px; white-space: nowrap; }
+  .logo .a { color: #e5352b; }
+  .meta { font-size: 12px; }
+  .meta b { display: inline-block; min-width: 132px; }
+  h1 { text-align: center; font-size: 15px; margin: 14px 0 8px; letter-spacing: .5px; }
+  table { border-collapse: collapse; width: 100%; }
+  th, td { border: 1px solid #999; padding: 3px 6px; text-align: left; vertical-align: top; }
+  th { background: #d9d9d9; font-weight: 700; }
+  td.n, th.n { text-align: center; white-space: nowrap; }
+  tbody tr:nth-child(even) { background: #f4f4f4; }
+  .sched { margin-top: 18px; width: auto; }
+  .sched caption { text-align: left; font-weight: 700; padding: 4px 0; }
+  .foot { margin-top: 16px; color: #666; font-size: 10px; }
+  @media print { body { margin: 10mm; } .noprint { display: none; } }
+  .noprint { position: fixed; top: 10px; right: 10px; }
+  .noprint button { font: 13px Arial; padding: 6px 12px; cursor: pointer; }
+</style></head><body>
+<div class="noprint"><button onclick="window.print()">Imprimir / Guardar PDF</button></div>
+<div class="head">
+  <div class="logo"><span class="a">DMX</span>Simulato<span class="a">R</span></div>
+  <div class="meta">
+    <div><b>Showname:</b> ${esc(show.name)}</div>
+    <div><b>Date:</b> ${stamp(new Date())}</div>
+    <div><b>Software Version:</b> ${esc(software)}</div>
+    <div><b>Console Type:</b> ${esc(consoleType)}</div>
+    <div><b>Universes:</b> ${show.universeCount}</div>
+  </div>
+</div>
+<h1>Patch View</h1>
+<table>
+  <thead><tr>
+    <th class="n">User no.</th><th>Fixture</th><th>Mode</th>
+    <th class="n">Address</th><th class="n">Ch</th><th class="n">Last</th><th>Legend</th>
+  </tr></thead>
+  <tbody>${rows}</tbody>
+</table>
+<table class="sched"><caption>Fixture schedule</caption>
+  <thead><tr><th class="n">Qty</th><th>Fixture</th></tr></thead>
+  <tbody>${schedule}</tbody>
+</table>
+<div class="foot">Generado por DMXSimulatoR — informe de patch con formato tipo Avolites Titan. ${show.fixtures.length} aparatos.</div>
+</body></html>`
+}
+
+/** Open the report in a new window so the user can print it / save as PDF. */
+export function openPatchReport(
+  show: Show,
+  definitions: Record<string, FixtureDefinition>,
+): void {
+  const html = buildPatchReportHTML(show, definitions)
+  const w = window.open('', '_blank')
+  if (!w) {
+    // Popup blocked — fall back to a Blob download of the HTML.
+    const url = URL.createObjectURL(new Blob([html], { type: 'text/html' }))
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `${show.name || 'patch'}-report.html`
+    a.click()
+    URL.revokeObjectURL(url)
+    return
+  }
+  w.document.write(html)
+  w.document.close()
+}
