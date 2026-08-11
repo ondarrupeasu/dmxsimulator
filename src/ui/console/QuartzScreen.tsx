@@ -175,6 +175,7 @@ export function QuartzScreen() {
       <button className="qd-cell-hit" onClick={onClick} disabled={opts.disabled} title={legend}>
         {legend}
       </button>
+      <span className="qd-ipcg">I P C G B E S FX</span>
       <button className="qd-cell-edit" onClick={onRename} title="Rename legend">✎</button>
       <button className="qd-cell-del" onClick={onDelete} title="Delete">✕</button>
     </div>
@@ -191,6 +192,7 @@ export function QuartzScreen() {
             <button className="qd-cell-hit" onClick={() => toggleSelect(pf.id)} title={pf.name}>
               {pf.name}
             </button>
+            <span className="qd-ipcg">I P C G B E S FX</span>
           </div>
         ))}
       </div>
