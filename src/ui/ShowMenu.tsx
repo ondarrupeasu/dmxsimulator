@@ -1,4 +1,4 @@
-import { useRef } from 'react'
+import { useRef, useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useShowStore } from '../store/showStore'
 import { TEMPLATES } from '../model/templates'
@@ -17,6 +17,16 @@ export function ShowMenu() {
   const setShow = useShowStore((s) => s.setShow)
   const addDefinitions = useShowStore((s) => s.addDefinitions)
   const fileRef = useRef<HTMLInputElement>(null)
+  const [exportOpen, setExportOpen] = useState(false)
+  const exportRef = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    if (!exportOpen) return
+    const onDoc = (e: MouseEvent) => {
+      if (exportRef.current && !exportRef.current.contains(e.target as Node)) setExportOpen(false)
+    }
+    document.addEventListener('mousedown', onDoc)
+    return () => document.removeEventListener('mousedown', onDoc)
+  }, [exportOpen])
 
   const onExport = () => {
     const blob = new Blob([exportShow()], { type: 'application/json' })
@@ -69,44 +79,38 @@ export function ShowMenu() {
           </option>
         ))}
       </select>
-      <button onClick={onExport}>{t('show.save')}</button>
-      <button onClick={() => fileRef.current?.click()}>{t('show.load')}</button>
       <button
-        onClick={() => {
-          const s = useShowStore.getState()
-          openPatchReport(s.show, s.definitions).catch(() => alert(t('show.invalid')))
-        }}
-        title="Patch report (Titan-style) — downloads a PDF"
+        onClick={() => fileRef.current?.click()}
+        title="Import a show (.json), an MVR rig, or a GDTF fixture"
       >
-        Report
+        ⭳ Import
       </button>
-      <button
-        onClick={() => {
-          const s = useShowStore.getState()
-          openPlot(s.show, s.definitions).catch(() => alert(t('show.invalid')))
-        }}
-        title="Lighting plot (plan with symbols, key and title block) — downloads a PDF"
-      >
-        Plot
-      </button>
-      <button
-        onClick={() => {
-          const s = useShowStore.getState()
-          exportMvr(s.show, s.definitions).catch(() => alert(t('show.invalid')))
-        }}
-        title="Export the rig as MVR (GDTF fixtures + patch + positions) for Capture / Vectorworks"
-      >
-        MVR
-      </button>
-      <button
-        onClick={() => {
-          const s = useShowStore.getState()
-          exportGltf(s.show, s.definitions).catch(() => alert(t('show.invalid')))
-        }}
-        title="Export the rig + venue as a 3D model (glTF/GLB) for Capture / Blender / SketchUp"
-      >
-        glTF
-      </button>
+      <div className="menu-wrap" ref={exportRef}>
+        <button className={exportOpen ? 'active' : ''} onClick={() => setExportOpen((o) => !o)}>
+          ⭱ Export ▾
+        </button>
+        {exportOpen && (
+          <div className="menu-pop">
+            {(() => {
+              const s = useShowStore.getState()
+              const guard = (p: Promise<void>) => p.catch(() => alert(t('show.invalid')))
+              const items: [string, string, () => void][] = [
+                ['Show file (.json)', 'The whole show, to reload here later', onExport],
+                ['Patch report (PDF)', 'Titan-style patch list', () => guard(openPatchReport(s.show, s.definitions))],
+                ['Lighting plot (PDF)', 'Plan with symbols + key', () => guard(openPlot(s.show, s.definitions))],
+                ['MVR — rig', 'Capture / Vectorworks / grandMA', () => guard(exportMvr(s.show, s.definitions))],
+                ['glTF/GLB — 3D model', 'Blender / SketchUp / Capture', () => guard(exportGltf(s.show, s.definitions))],
+              ]
+              return items.map(([label, sub, run]) => (
+                <button key={label} onClick={() => { run(); setExportOpen(false) }}>
+                  <span className="mi-label">{label}</span>
+                  <span className="mi-sub">{sub}</span>
+                </button>
+              ))
+            })()}
+          </div>
+        )}
+      </div>
       <input
         ref={fileRef}
         type="file"

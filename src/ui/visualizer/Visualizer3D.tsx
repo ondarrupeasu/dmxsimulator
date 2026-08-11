@@ -127,6 +127,7 @@ function buildHazer(): THREE.Group {
   )
   body.position.y = 0.22
   g.add(body)
+  g.userData.box = body // raycast target for click-selection
   g.add(new THREE.LineSegments(new THREE.EdgesGeometry(body.geometry, 20), new THREE.LineBasicMaterial({ color: 0x8a8b95 })).translateY(0.22))
   const nozzle = new THREE.Mesh(
     new THREE.CylinderGeometry(0.07, 0.12, 0.22, 12),
@@ -480,7 +481,10 @@ export function Visualizer3D() {
       ndc.x = ((e.clientX - rect.left) / rect.width) * 2 - 1
       ndc.y = -((e.clientY - rect.top) / rect.height) * 2 + 1
       raycaster.setFromCamera(ndc, camera)
-      const proxies = [...fxMap.values()].map((fx) => fx.hit)
+      const proxies = [
+        ...[...fxMap.values()].map((fx) => fx.hit),
+        ...[...hazerMap.values()].map((hz) => hz.userData.box as THREE.Object3D),
+      ].filter(Boolean)
       const picked = raycaster.intersectObjects(proxies, false)[0]
       const st = useShowStore.getState()
       if (!picked) {
@@ -568,6 +572,7 @@ export function Visualizer3D() {
         if (def.category === 'hazer') {
           let hz = hazerMap.get(pf.id)
           if (!hz) { hz = buildHazer(); scene.add(hz); hazerMap.set(pf.id, hz) }
+          hz.userData.fixtureId = pf.id // so a click can select it
           // Default (floor) → on the stage deck at a side; else hung on its truss.
           if (pf.floor === false) hz.position.copy(place(pf.position.x, pf.truss, trusses))
           else hz.position.set(pf.position.x * 8, STAGE_TOP, -1)

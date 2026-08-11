@@ -76,6 +76,13 @@ export function PatchView() {
   const [query, setQuery] = useState('')
   const libRef = useRef<ImperativePanelHandle>(null)
   const [libCollapsed, setLibCollapsed] = useState(false)
+  const [collapsedCats, setCollapsedCats] = useState<Set<string>>(new Set())
+  const toggleCat = (cat: string) =>
+    setCollapsedCats((s) => {
+      const n = new Set(s)
+      n.has(cat) ? n.delete(cat) : n.add(cat)
+      return n
+    })
   const library = useMemo(
     () =>
       Object.values(definitions).sort((a, b) =>
@@ -180,6 +187,20 @@ export function PatchView() {
                           </option>
                         ))}
                       </select>
+                      <button
+                        className="rig-readdress"
+                        onClick={() => {
+                          const items = [...stripFixtures].sort((a, b) => a.pf.position.x - b.pf.position.x)
+                          const n = items.length
+                          items.forEach((it, i) => {
+                            const x = n < 2 ? 0 : -0.9 + (1.8 * i) / (n - 1)
+                            setFixturePosition(it.pf.id, x, it.pf.position.y ?? 0.6)
+                          })
+                        }}
+                        title="Space the fixtures shown evenly across the truss width"
+                      >
+                        ⇹ Space
+                      </button>
                       <button className="rig-readdress" onClick={readdressByRigOrder} title={t('patch.readdressHint')}>
                         {t('patch.readdress')}
                       </button>
@@ -367,34 +388,39 @@ export function PatchView() {
                 {groups.length === 0 ? (
                   <div className="prog-empty">{t('patch.noMatch')}</div>
                 ) : (
-                  groups.map(([cat, defs]) => (
-                    <div className="lib-group" key={cat}>
-                      <div className="lib-group-title">
-                        {CATEGORY_LABELS[cat]} <span className="lib-group-n">{defs.length}</span>
-                      </div>
-                      <div className="lib-list">
-                        {defs.map((def) => {
-                          const fp = fixtureFootprint(def, 0)
-                          return (
-                            <div className="lib-item" key={def.id}>
-                              <div className="meta">
-                                <div className="name">
-                                  {def.manufacturer} {def.model}
+                  groups.map(([cat, defs]) => {
+                    const open = !collapsedCats.has(cat)
+                    return (
+                      <div className="lib-group" key={cat}>
+                        <button className="lib-group-title" onClick={() => toggleCat(cat)} aria-expanded={open}>
+                          <span className={`lib-caret${open ? ' open' : ''}`}>▸</span>
+                          {CATEGORY_LABELS[cat]} <span className="lib-group-n">{defs.length}</span>
+                        </button>
+                        {open && (
+                          <div className="lib-list">
+                            {defs.map((def) => {
+                              const fp = fixtureFootprint(def, 0)
+                              return (
+                                <div className="lib-item" key={def.id}>
+                                  <div className="meta">
+                                    <div className="name">
+                                      {def.manufacturer} {def.model}
+                                    </div>
+                                    <div className="detail">
+                                      {fp} {t('patch.channels')} · {def.modes[0]?.name}
+                                    </div>
+                                  </div>
+                                  <button className="lib-add" onClick={() => addFixture(def.id)}>
+                                    {t('patch.add')}
+                                  </button>
                                 </div>
-                                <div className="detail">
-                                  {fp} {t('patch.channels')} · {def.modes[0]?.name}
-                                </div>
-                              </div>
-                              <span className={`badge ${def.source}`}>{def.source}</span>
-                              <button className="primary" onClick={() => addFixture(def.id)}>
-                                {t('patch.add')}
-                              </button>
-                            </div>
-                          )
-                        })}
+                              )
+                            })}
+                          </div>
+                        )}
                       </div>
-                    </div>
-                  ))
+                    )
+                  })
                 )}
               </div>
             )}

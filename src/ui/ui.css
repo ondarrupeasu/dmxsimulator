@@ -410,13 +410,24 @@
 .lib-group { margin-bottom: 10px; }
 .lib-group-title {
   font-size: 10px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase;
-  color: var(--text-muted, #b8b6c0); margin: 10px 0 5px;
-  display: flex; align-items: center; gap: 6px;
+  color: var(--text-muted, #b8b6c0); margin: 10px 0 5px; padding: 2px 0;
+  display: flex; align-items: center; gap: 6px; width: 100%;
+  background: transparent; border: none; cursor: pointer;
 }
+.lib-group-title:hover { color: var(--text); }
+.lib-caret { font-size: 9px; transition: transform .12s; display: inline-block; }
+.lib-caret.open { transform: rotate(90deg); }
 .lib-group-n {
   font-size: 9px; font-weight: 600; color: var(--text-faint);
   background: var(--bg-input); border-radius: 8px; padding: 0 6px;
 }
+/* Library "Add" — quiet by default (coral text), fills coral on hover. */
+.lib-add {
+  flex: 0 0 auto; font-size: 11px; font-weight: 600; padding: 3px 10px;
+  color: var(--coral); background: transparent;
+  border: 1px solid var(--coral); border-radius: var(--radius-sm); cursor: pointer;
+}
+.lib-add:hover { background: var(--coral); color: #16131a; }
 
 /* ---- DMX monitor ---- */
 .dmx-grid {
@@ -1302,6 +1313,21 @@
   align-items: center;
   gap: 6px;
 }
+.menu-wrap { position: relative; }
+.menu-pop {
+  position: absolute; top: calc(100% + 4px); right: 0; z-index: 60;
+  min-width: 232px; display: flex; flex-direction: column; gap: 2px; padding: 4px;
+  background: var(--bg-elev); border: 1px solid var(--border);
+  border-radius: var(--radius); box-shadow: 0 10px 30px rgba(0,0,0,.45);
+}
+.menu-pop button {
+  display: flex; flex-direction: column; align-items: flex-start; gap: 1px;
+  padding: 6px 9px; text-align: left; background: transparent; border: none;
+  border-radius: var(--radius-sm); cursor: pointer; width: 100%;
+}
+.menu-pop button:hover { background: var(--bg-input); }
+.menu-pop .mi-label { font-size: 12px; color: var(--text); }
+.menu-pop .mi-sub { font-size: 10px; color: var(--text-faint); }
 
 /* ---- Console picker (topbar) ---- */
 .console-picker {

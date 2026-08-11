@@ -96,7 +96,7 @@ export function AppShell() {
               {playing ? '❚❚ Pause' : '▶ Play'}
             </button>
           )}
-          {hasHazer && (
+          {hasHazer && viewer === '3d' && (
             <button
               className={`ghost-btn${smoke ? ' active' : ''}`}
               onClick={toggleSmoke}
