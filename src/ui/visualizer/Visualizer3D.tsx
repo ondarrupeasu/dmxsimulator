@@ -133,11 +133,14 @@ function buildHazer(): THREE.Group {
   nozzle.rotation.z = Math.PI / 2
   nozzle.position.set(0.52, 0.26, 0)
   g.add(nozzle)
-  // Green "powered" status LED so the machine is easy to spot on the deck.
-  const led = new THREE.Sprite(new THREE.SpriteMaterial({ map: haloTexture(), color: 0x35e06a, transparent: true, opacity: 0.95, blending: THREE.AdditiveBlending, depthWrite: false }))
-  led.scale.setScalar(0.22)
-  led.position.set(-0.3, 0.34, 0.29)
-  g.add(led)
+  // Red selection LED (hidden until the hazer is selected) — like the other fixtures.
+  const sel = new THREE.Sprite(new THREE.SpriteMaterial({ map: haloTexture(), color: 0xff2a2a, transparent: true, opacity: 1, blending: THREE.AdditiveBlending, depthWrite: false, depthTest: false }))
+  sel.scale.setScalar(0.32)
+  sel.position.set(0, 0.6, 0)
+  sel.renderOrder = 6
+  sel.visible = false
+  g.add(sel)
+  g.userData.selLed = sel
   return g
 }
 
@@ -532,6 +535,8 @@ export function Visualizer3D() {
           // Default (floor) → on the stage deck at a side; else hung on its truss.
           if (pf.floor === false) hz.position.copy(place(pf.position.x, pf.truss, trusses))
           else hz.position.set(pf.position.x * 8, STAGE_TOP, -1)
+          const selLed = hz.userData.selLed as THREE.Sprite | undefined
+          if (selLed) selLed.visible = selSet.has(pf.id)
           continue
         }
         let fx = fxMap.get(pf.id)
@@ -542,9 +547,9 @@ export function Visualizer3D() {
           fxMap.set(pf.id, fx)
         }
         fx.group.userData.fixtureId = pf.id
-        // Name tag — only on the SELECTED fixtures (so a big rig doesn't drown in
-        // labels): name + DMX start as universe.address.
-        const showLabel = selSet.has(pf.id)
+        // Name tag — only on SELECTED fixtures AND only under work lights (so a big
+        // rig doesn't drown in labels, and the dark design view stays clean).
+        const showLabel = lit && selSet.has(pf.id)
         if (showLabel) {
           const labelText = `${pf.name}  ·  ${pf.universe}.${pf.address}`
           if (!fx.label || fx.label.userData.text !== labelText) {

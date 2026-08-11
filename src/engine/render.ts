@@ -48,8 +48,9 @@ export function computeVisualState(
   const hasColor = ['red', 'green', 'blue', 'white', 'amber'].some(
     (fn) => channels.some((c) => c.function === fn),
   )
-  // A pure dimmer (no colour channels) emits warm white.
-  if (!hasColor) {
+  // A pure dimmer emits warm white; a colour fixture with no colour picked yet also
+  // shows open white, so raising intensity alone lights it (beginner-friendly).
+  if (!hasColor || cr + cg + cb === 0) {
     cr = 255
     cg = 245
     cb = 220
