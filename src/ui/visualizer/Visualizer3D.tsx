@@ -3,7 +3,7 @@ import * as THREE from 'three'
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js'
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js'
 import { useShowStore } from '../../store/showStore'
-import { computeFixtureOutputs, mergeProgrammer } from '../../engine/dmx'
+import { computeFixtureOutputs, mergeProgrammer, computePlaybackBase } from '../../engine/dmx'
 import { applyEffects } from '../../engine/effects'
 import { computeVisualState } from '../../engine/render'
 import { TRUSSES, trussById, STAGE_TOP } from '../../model/venue'
@@ -405,7 +405,7 @@ export function Visualizer3D() {
     const animate = () => {
       raf = requestAnimationFrame(animate)
       const state = useShowStore.getState()
-      const { show, definitions, programmer, cues, activeCueId, effects, selection } = state
+      const { show, definitions, programmer, cues, playbackLevels, effects, selection } = state
       const selSet = new Set(selection)
       // House/work lights toggle: lit room + lighter background, or dark beams-only.
       const lit = state.viewLights
@@ -417,7 +417,7 @@ export function Visualizer3D() {
       const nowMs = performance.now()
       if (state.playing) clock += (nowMs - lastMs) / 1000 // freeze on Pause
       lastMs = nowMs
-      const base = cues.find((c) => c.id === activeCueId)?.values ?? {}
+      const base = computePlaybackBase(cues, playbackLevels, show, definitions)
       const merged = mergeProgrammer(base, programmer)
       const effective = applyEffects(merged, effects, show, definitions, clock)
 

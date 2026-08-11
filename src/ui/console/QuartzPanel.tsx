@@ -163,6 +163,8 @@ export function QuartzPanel() {
   const goCue = useShowStore((s) => s.goCue)
   const playbackPage = useShowStore((s) => s.playbackPage)
   const setPlaybackPage = useShowStore((s) => s.setPlaybackPage)
+  const playbackLevels = useShowStore((s) => s.playbackLevels)
+  const setPlaybackLevel = useShowStore((s) => s.setPlaybackLevel)
   const executorLabels = useShowStore((s) => s.executorLabels)
   const setExecutorLabel = useShowStore((s) => s.setExecutorLabel)
   const editExecutor = (n: number) => {
@@ -295,7 +297,7 @@ export function QuartzPanel() {
         <Frame x={38} y={448} w={624} h={116} />
         <Box x={44} y={454} w={612} h={104} cols={10} rows={2} spread>
           {Array.from({ length: 10 }, (_, i) => {
-            const gi = playbackPage * 10 + i; const cue = cues[gi]; const on = !!cue && cue.id === activeCueId
+            const gi = playbackPage * 10 + i; const cue = cues[gi]; const on = !!cue && (playbackLevels[cue.id] ?? 0) > 0
             return <Key key={`t${i}`} v="dark" narrow ledBottom on={on} disabled={!cue} title={cue ? `Go ${cue.name}` : 'Empty'} onClick={() => cue && goCue(cue.id)} />
           })}
           {Array.from({ length: 10 }, (_, i) => {
@@ -311,7 +313,13 @@ export function QuartzPanel() {
             const gi = playbackPage * 10 + i; const cue = cues[gi]
             return (
               <div className="cal-fader" key={i}>
-                <input type="range" min={0} max={255} defaultValue={cue ? 255 : 0} disabled={!cue} title={cue ? cue.name : `Fader ${gi + 1}`} />
+                <input
+                  type="range" min={0} max={255}
+                  value={cue ? playbackLevels[cue.id] ?? 0 : 0}
+                  disabled={!cue}
+                  title={cue ? `${cue.name} — ${Math.round(((playbackLevels[cue.id] ?? 0) / 255) * 100)}%` : `Fader ${gi + 1}`}
+                  onChange={(e) => cue && setPlaybackLevel(cue.id, Number(e.target.value))}
+                />
               </div>
             )
           })}

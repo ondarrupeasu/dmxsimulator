@@ -16,7 +16,7 @@ import { applyEffects } from '../engine/effects'
 import { BUILTIN_FIXTURES } from '../model/library'
 import { templateById } from '../model/templates'
 import type { ProgrammerValues } from '../engine/dmx'
-import { UNIVERSE_SIZE, mergeProgrammer } from '../engine/dmx'
+import { UNIVERSE_SIZE, mergeProgrammer, computePlaybackBase } from '../engine/dmx'
 
 export type AppMode = 'patch' | 'program' | 'run'
 
@@ -74,6 +74,9 @@ interface ShowState {
   releaseCue: () => void
   /** Rename a cue (its hand-typed legend). */
   renameCue: (id: string, name: string) => void
+  /** Per-playback fader level (cueId → 0–255) — what the desk faders control. */
+  playbackLevels: Record<string, number>
+  setPlaybackLevel: (cueId: string, value: number) => void
 
   // Groups — named, reusable selections (Titan's Groups workspace).
   groups: Group[]
@@ -249,15 +252,31 @@ export const useShowStore = create<ShowState>()(
         }),
 
       deleteCue: (id) =>
-        set((s) => ({
-          cues: s.cues.filter((c) => c.id !== id),
-          activeCueId: s.activeCueId === id ? null : s.activeCueId,
-        })),
+        set((s) => {
+          const levels = { ...s.playbackLevels }
+          delete levels[id]
+          return {
+            cues: s.cues.filter((c) => c.id !== id),
+            activeCueId: s.activeCueId === id ? null : s.activeCueId,
+            playbackLevels: levels,
+          }
+        }),
 
-      goCue: (id) => set({ activeCueId: id }),
-      releaseCue: () => set({ activeCueId: null }),
+      // Go / flash raises the playback to full and connects it; the fader can then
+      // scale it. Release drops the connected playback back to zero.
+      goCue: (id) =>
+        set((s) => ({ activeCueId: id, playbackLevels: { ...s.playbackLevels, [id]: 255 } })),
+      releaseCue: () =>
+        set((s) => {
+          const levels = { ...s.playbackLevels }
+          if (s.activeCueId) delete levels[s.activeCueId]
+          return { activeCueId: null, playbackLevels: levels }
+        }),
       renameCue: (id, name) =>
         set((s) => ({ cues: s.cues.map((c) => (c.id === id ? { ...c, name } : c)) })),
+      playbackLevels: {},
+      setPlaybackLevel: (cueId, value) =>
+        set((s) => ({ playbackLevels: { ...s.playbackLevels, [cueId]: Math.max(0, Math.min(255, value)) } })),
 
       groups: [],
       recordGroup: () =>
@@ -647,6 +666,7 @@ export const useShowStore = create<ShowState>()(
           selection: [],
           cues: [],
           activeCueId: null,
+          playbackLevels: {},
           palettes: [],
           groups: [],
           playbackPage: 0,
@@ -664,6 +684,7 @@ export const useShowStore = create<ShowState>()(
         consoleId: s.consoleId,
         cues: s.cues,
         activeCueId: s.activeCueId,
+        playbackLevels: s.playbackLevels,
         palettes: s.palettes,
         groups: s.groups,
         effects: s.effects,
@@ -680,14 +701,14 @@ export const useShowStore = create<ShowState>()(
 export function useEffectiveProgrammer(): ProgrammerValues {
   const programmer = useShowStore((s) => s.programmer)
   const cues = useShowStore((s) => s.cues)
-  const activeCueId = useShowStore((s) => s.activeCueId)
+  const playbackLevels = useShowStore((s) => s.playbackLevels)
   const effects = useShowStore((s) => s.effects)
   const show = useShowStore((s) => s.show)
   const definitions = useShowStore((s) => s.definitions)
   const now = useShowStore((s) => s.now)
   return useMemo(() => {
-    const base = cues.find((c) => c.id === activeCueId)?.values ?? {}
+    const base = computePlaybackBase(cues, playbackLevels, show, definitions)
     const merged = mergeProgrammer(base, programmer)
     return applyEffects(merged, effects, show, definitions, now)
-  }, [programmer, cues, activeCueId, effects, show, definitions, now])
+  }, [programmer, cues, playbackLevels, effects, show, definitions, now])
 }

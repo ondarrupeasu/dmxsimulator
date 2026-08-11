@@ -7,6 +7,7 @@
  * merge, so keep this side-effect free.
  */
 import type { FixtureDefinition, Show } from '../model/types'
+import type { Cue } from '../model/cue'
 
 export const UNIVERSE_SIZE = 512
 
@@ -34,6 +35,49 @@ export function mergeProgrammer(base: ProgrammerValues, top: ProgrammerValues): 
   const out: ProgrammerValues = {}
   for (const id in base) out[id] = { ...base[id] }
   for (const id in top) out[id] = { ...out[id], ...top[id] }
+  return out
+}
+
+/**
+ * Merge every playback that is up (its fader level > 0) into one base layer:
+ * intensity (dimmer) is scaled by the fader level and combined HTP (highest wins);
+ * other attributes are asserted LTP (the last raised playback, in list order, wins).
+ * This is what the faders on the desk actually control.
+ */
+export function computePlaybackBase(
+  cues: Cue[],
+  levels: Record<string, number>,
+  show: Show,
+  defsById: Record<string, FixtureDefinition>,
+): ProgrammerValues {
+  const out: ProgrammerValues = {}
+  // Which channel indices are the dimmer of each patched fixture.
+  const dimmerIdx = new Map<string, Set<number>>()
+  for (const pf of show.fixtures) {
+    const mode = defsById[pf.definitionId]?.modes[pf.modeIndex]
+    if (!mode) continue
+    const s = new Set<number>()
+    mode.channels.forEach((ch, i) => {
+      if (ch.function === 'dimmer') s.add(i)
+    })
+    dimmerIdx.set(pf.id, s)
+  }
+  for (const cue of cues) {
+    const level = levels[cue.id] ?? 0
+    if (level <= 0) continue
+    const frac = level / 255
+    for (const inst in cue.values) {
+      const dims = dimmerIdx.get(inst)
+      const edits = cue.values[inst]
+      const dst = (out[inst] ??= {})
+      for (const kStr in edits) {
+        const k = Number(kStr)
+        const v = edits[k]
+        if (dims?.has(k)) dst[k] = Math.max(dst[k] ?? 0, Math.round(v * frac)) // HTP intensity
+        else dst[k] = v // LTP for everything else
+      }
+    }
+  }
   return out
 }
 
