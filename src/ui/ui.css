@@ -248,6 +248,29 @@
   border: 1px solid var(--border); border-radius: var(--radius-sm); cursor: pointer;
 }
 .rig-readdress:hover { border-color: var(--coral); color: var(--coral); }
+/* Truss editor — add/remove trusses and set each one's depth (Z) + height (Y). */
+.truss-editor { display: flex; flex-direction: column; gap: 5px; margin-bottom: 10px; }
+.truss-row { display: flex; align-items: center; gap: 6px; }
+.truss-row .truss-name {
+  flex: 1 1 auto; min-width: 0;
+  font: inherit; font-size: 12px; padding: 3px 6px;
+  color: var(--text); background: var(--bg-input);
+  border: 1px solid var(--border); border-radius: var(--radius-sm);
+}
+.truss-row label { display: inline-flex; align-items: center; gap: 3px; font-size: 10px; color: var(--text-faint); }
+.truss-row label input {
+  width: 46px; font: inherit; font-size: 11px; padding: 2px 4px;
+  color: var(--text); background: var(--bg-input);
+  border: 1px solid var(--border); border-radius: var(--radius-sm);
+}
+.truss-del {
+  flex: 0 0 auto; width: 22px; height: 22px; padding: 0; font-size: 12px;
+  color: var(--text-faint); background: var(--bg-elev);
+  border: 1px solid var(--border); border-radius: var(--radius-sm); cursor: pointer;
+}
+.truss-del:hover:not(:disabled) { color: var(--coral); border-color: var(--coral); }
+.truss-del:disabled { opacity: 0.35; cursor: not-allowed; }
+
 /* Batch-assign bar: change truss / universe for the whole selection at once. */
 .batch-bar {
   display: flex; align-items: center; flex-wrap: wrap; gap: 8px;

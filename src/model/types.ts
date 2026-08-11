@@ -105,11 +105,22 @@ export interface PatchedFixture {
   truss?: number
 }
 
+/** A truss in the rig — a hanging bar at a depth (z) and height (y). */
+export interface TrussDef {
+  id: number
+  name: string
+  z: number // world Z (positive = toward the audience/downstage)
+  y: number // hang height in metres
+  foh?: boolean // front-of-house: hangs over the audience, aims at the stage
+}
+
 export interface Show {
   name: string
   /** Number of universes (v1 typically 1). */
   universeCount: number
   fixtures: PatchedFixture[]
+  /** The rig's trusses. Optional — when absent the default venue set is used. */
+  trusses?: TrussDef[]
 }
 
 /** DMX footprint (channel count) of a patched fixture's active mode. */

@@ -5,8 +5,9 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { useMemo } from 'react'
-import type { FixtureDefinition, PatchedFixture, Show } from '../model/types'
+import type { FixtureDefinition, PatchedFixture, Show, TrussDef } from '../model/types'
 import { fixtureFootprint } from '../model/types'
+import { DEFAULT_TRUSSES, DEFAULT_TRUSS, nextTrussId } from '../model/venue'
 import type { Cue } from '../model/cue'
 import type { Palette, PaletteKind } from '../model/palette'
 import { PALETTE_FUNCTIONS, PALETTE_LABELS } from '../model/palette'
@@ -123,6 +124,10 @@ interface ShowState {
   /** Move every selected fixture to a truss / universe at once. */
   setSelectedTruss: (truss: number) => void
   setSelectedUniverse: (universe: number) => void
+  /** Rig trusses — add one, remove one (reassigning its fixtures), or edit name/depth/height. */
+  addTruss: () => void
+  removeTruss: (id: number) => void
+  setTruss: (id: number, patch: Partial<Pick<TrussDef, 'name' | 'y' | 'z'>>) => void
   /** Move a fixture to another universe, re-addressing to a free slot there. */
   setFixtureUniverse: (instanceId: string, universe: number) => void
   /** Reorder fixtures left→right by truss position and re-assign DMX addresses in
@@ -566,6 +571,29 @@ export const useShowStore = create<ShowState>()(
           return {
             show: { ...s.show, fixtures: s.show.fixtures.map((f) => (sel.has(f.id) ? { ...f, truss } : f)) },
           }
+        }),
+
+      addTruss: () =>
+        set((s) => {
+          const trusses = s.show.trusses ?? DEFAULT_TRUSSES
+          const nt: TrussDef = { id: nextTrussId(trusses), name: `Truss ${trusses.length + 1}`, z: 0, y: 5 }
+          return { show: { ...s.show, trusses: [...trusses, nt] } }
+        }),
+      removeTruss: (id) =>
+        set((s) => {
+          const trusses = s.show.trusses ?? DEFAULT_TRUSSES
+          if (trusses.length <= 1) return {} // always keep at least one truss
+          const remaining = trusses.filter((t) => t.id !== id)
+          const fallback = remaining[0].id
+          const fixtures = s.show.fixtures.map((f) =>
+            (f.truss ?? DEFAULT_TRUSS) === id ? { ...f, truss: fallback } : f,
+          )
+          return { show: { ...s.show, trusses: remaining, fixtures } }
+        }),
+      setTruss: (id, patch) =>
+        set((s) => {
+          const trusses = s.show.trusses ?? DEFAULT_TRUSSES
+          return { show: { ...s.show, trusses: trusses.map((t) => (t.id === id ? { ...t, ...patch } : t)) } }
         }),
 
       setSelectedUniverse: (universe) =>

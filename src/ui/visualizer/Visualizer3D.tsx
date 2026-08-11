@@ -6,11 +6,12 @@ import { useShowStore } from '../../store/showStore'
 import { computeFixtureOutputs, mergeProgrammer, computePlaybackBase, resolveLevels } from '../../engine/dmx'
 import { applyEffects } from '../../engine/effects'
 import { computeVisualState } from '../../engine/render'
-import { TRUSSES, trussById, STAGE_TOP } from '../../model/venue'
+import type { TrussDef } from '../../model/types'
+import { getTrusses, trussById, STAGE_TOP } from '../../model/venue'
 
 /** World position for a fixture: x normalized (-1..1) along its assigned truss. */
-function place(x: number, truss: number | undefined): THREE.Vector3 {
-  const t = trussById(truss)
+function place(x: number, truss: number | undefined, trusses: TrussDef[]): THREE.Vector3 {
+  const t = trussById(trusses, truss)
   return new THREE.Vector3(x * 6, t.y, t.z)
 }
 
@@ -343,12 +344,6 @@ export function Visualizer3D() {
     const grid = new THREE.GridHelper(40, 40, 0x3c3c4a, 0x272730)
     grid.position.y = 0.02
     scene.add(grid)
-    // One box-truss per venue truss (three over the stage + the FOH over the audience).
-    for (const t of TRUSSES) {
-      const truss = buildTruss(18)
-      truss.position.set(0, t.y + 0.55, t.z)
-      scene.add(truss)
-    }
 
     // ---- Venue: a 1 m-high stage (tarima) with the audience flat in front ----
     // Stage deck — top surface sits STAGE_TOP metres above the floor.
@@ -412,6 +407,7 @@ export function Visualizer3D() {
 
     const fxMap = new Map<string, FxObj>()
     const hazerMap = new Map<string, THREE.Group>()
+    const trussMap = new Map<number, THREE.Mesh>()
     const down = new THREE.Vector3()
 
     const resize = () => {
@@ -490,6 +486,18 @@ export function Visualizer3D() {
         }
       }
 
+      // Reconcile the truss bars against the show's (editable) truss list.
+      const trusses = getTrusses(show)
+      const trussLive = new Set(trusses.map((t) => t.id))
+      for (const [id, m] of trussMap) {
+        if (!trussLive.has(id)) { scene.remove(m); trussMap.delete(id) }
+      }
+      for (const t of trusses) {
+        let m = trussMap.get(t.id)
+        if (!m) { m = buildTruss(18); scene.add(m); trussMap.set(t.id, m) }
+        m.position.set(0, t.y + 0.55, t.z)
+      }
+
       const outputs = computeFixtureOutputs(show, definitions, effective)
       const outById = new Map(outputs.map((o) => [o.instanceId, o.values]))
 
@@ -546,7 +554,7 @@ export function Visualizer3D() {
         } else if (fx.label) {
           fx.label.visible = false
         }
-        const home = place(pf.position.x, pf.truss)
+        const home = place(pf.position.x, pf.truss, trusses)
         fx.group.position.copy(home)
 
         // Selection — just a soft coral halo around the fixture (not the whole body).

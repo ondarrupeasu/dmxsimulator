@@ -84,8 +84,11 @@ export const TEMPLATES: ShowTemplate[] = [
   {
     id: 'empty',
     name: 'Empty universe',
-    description: 'Start from scratch.',
-    build: (defs) => builder(defs, 'Untitled show').done(),
+    description: 'Start from scratch — one truss; add more in Patch.',
+    build: (defs) => {
+      const r = builder(defs, 'Untitled show').done()
+      return { ...r, show: { ...r.show, trusses: [{ id: 0, name: 'Truss 1', z: 0, y: 5 }] } }
+    },
   },
   {
     id: 'tartanga',

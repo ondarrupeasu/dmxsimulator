@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { Panel, PanelGroup, PanelResizeHandle, type ImperativePanelHandle } from 'react-resizable-panels'
 import { useShowStore } from '../../store/showStore'
 import { fixtureFootprint, type FixtureCategory } from '../../model/types'
-import { TRUSSES, DEFAULT_TRUSS } from '../../model/venue'
+import { getTrusses, DEFAULT_TRUSS } from '../../model/venue'
 
 const UNIVERSES = [1, 2, 3, 4] // the Quartz has four DMX outputs
 
@@ -32,6 +32,10 @@ export function PatchView() {
   const setFixtureUniverse = useShowStore((s) => s.setFixtureUniverse)
   const setSelectedTruss = useShowStore((s) => s.setSelectedTruss)
   const setSelectedUniverse = useShowStore((s) => s.setSelectedUniverse)
+  const addTruss = useShowStore((s) => s.addTruss)
+  const removeTruss = useShowStore((s) => s.removeTruss)
+  const setTruss = useShowStore((s) => s.setTruss)
+  const trusses = getTrusses(show)
   const readdressByRigOrder = useShowStore((s) => s.readdressByRigOrder)
 
   // Truss strip — drag a chip to set its position along the rig (x = −1..1).
@@ -95,6 +99,40 @@ export function PatchView() {
               <h2>{t('patch.title')}</h2>
             </header>
             <div className="scroll">
+              <div className="section-label rig-label">
+                <span>{t('patch.trusses')}</span>
+                <button className="rig-readdress" onClick={addTruss} title={t('patch.addTrussHint')}>
+                  ＋ {t('patch.addTruss')}
+                </button>
+              </div>
+              <div className="truss-editor">
+                {trusses.map((tr) => (
+                  <div className="truss-row" key={tr.id}>
+                    <input
+                      className="truss-name"
+                      value={tr.name}
+                      onChange={(e) => setTruss(tr.id, { name: e.target.value })}
+                    />
+                    <label title={t('patch.trussDepth')}>
+                      <span>Z</span>
+                      <input type="number" step={0.5} value={tr.z} onChange={(e) => setTruss(tr.id, { z: Number(e.target.value) })} />
+                    </label>
+                    <label title={t('patch.trussHeight')}>
+                      <span>Y</span>
+                      <input type="number" step={0.5} min={0} value={tr.y} onChange={(e) => setTruss(tr.id, { y: Number(e.target.value) })} />
+                    </label>
+                    <button
+                      className="truss-del"
+                      onClick={() => removeTruss(tr.id)}
+                      disabled={trusses.length <= 1}
+                      title={t('patch.removeTruss')}
+                    >
+                      ✕
+                    </button>
+                  </div>
+                ))}
+              </div>
+
               {show.fixtures.length > 0 && (
                 <>
                   <div className="section-label rig-label">
@@ -107,7 +145,7 @@ export function PatchView() {
                         title={t('patch.truss')}
                       >
                         <option value="all">{t('patch.allTrusses')}</option>
-                        {TRUSSES.map((tr) => (
+                        {trusses.map((tr) => (
                           <option key={tr.id} value={tr.id}>
                             {tr.name}
                           </option>
@@ -146,7 +184,7 @@ export function PatchView() {
                     <span>{t('patch.truss')}</span>
                     <select value="" onChange={(e) => e.target.value && setSelectedTruss(Number(e.target.value))}>
                       <option value="">—</option>
-                      {TRUSSES.map((tr) => (
+                      {trusses.map((tr) => (
                         <option key={tr.id} value={tr.id}>{tr.name}</option>
                       ))}
                     </select>
@@ -190,7 +228,7 @@ export function PatchView() {
                               value={pf.truss ?? DEFAULT_TRUSS}
                               onChange={(e) => setFixtureTruss(pf.id, Number(e.target.value))}
                             >
-                              {TRUSSES.map((tr) => (
+                              {trusses.map((tr) => (
                                 <option key={tr.id} value={tr.id}>
                                   {tr.name}
                                 </option>
