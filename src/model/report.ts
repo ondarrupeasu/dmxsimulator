@@ -1,14 +1,11 @@
 /**
- * Patch report — a printable "Patch View" laid out like the Avolites Titan export
- * Miren sent, but branded as DMXSimulatoR (we describe the simulated desk in the
- * header fields; we don't reproduce Avolites' logo). Returns a self-contained HTML
- * document the caller opens in a new window and prints to PDF.
+ * Patch report — a "Patch View" laid out like the Avolites Titan export Miren sent,
+ * but branded DMXSimulatoR (we describe the simulated desk in the header; we don't
+ * reproduce Avolites' logo). Generated as a real vector PDF (jsPDF + autoTable) and
+ * downloaded straight away — no print dialog.
  */
 import type { Show, FixtureDefinition } from './types'
 import { fixtureFootprint } from './types'
-
-const esc = (s: string) =>
-  s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c] as string))
 
 /** Two-digit date/time in the same shape as the Titan report (DD/MM/YY-HH:MM). */
 function stamp(d: Date): string {
@@ -16,11 +13,15 @@ function stamp(d: Date): string {
   return `${p(d.getDate())}/${p(d.getMonth() + 1)}/${String(d.getFullYear()).slice(2)}-${p(d.getHours())}:${p(d.getMinutes())}`
 }
 
-export function buildPatchReportHTML(
+/** Build and download the patch report as a PDF. */
+export async function openPatchReport(
   show: Show,
   definitions: Record<string, FixtureDefinition>,
   opts: { console?: string; software?: string } = {},
-): string {
+): Promise<void> {
+  const { jsPDF } = await import('jspdf')
+  const { default: autoTable } = await import('jspdf-autotable')
+
   const consoleType = opts.console ?? 'Avolites Quartz (simulated)'
   const software = opts.software ?? `DMXSimulatoR ${__APP_VERSION__}`
 
@@ -29,22 +30,19 @@ export function buildPatchReportHTML(
     .map((pf, i) => {
       const def = definitions[pf.definitionId]
       const foot = def ? fixtureFootprint(def, pf.modeIndex) : 1
-      const last = pf.address + foot - 1
       const mode = def?.modes[pf.modeIndex]?.name ?? '—'
       const fixture = def ? `${def.manufacturer} ${def.model}` : pf.definitionId
-      return `<tr>
-        <td class="n">${i + 1}</td>
-        <td>${esc(fixture)}</td>
-        <td>${esc(mode)}</td>
-        <td class="n">${pf.universe}.${pf.address}</td>
-        <td class="n">${foot}</td>
-        <td class="n">${pf.universe}.${last}</td>
-        <td>${esc(pf.name)}</td>
-      </tr>`
+      return [
+        String(i + 1),
+        fixture,
+        mode,
+        `${pf.universe}.${pf.address}`,
+        String(foot),
+        `${pf.universe}.${pf.address + foot - 1}`,
+        pf.name,
+      ]
     })
-    .join('')
 
-  // A small fixture schedule (counts by type) under the patch table.
   const counts = new Map<string, number>()
   for (const pf of show.fixtures) {
     const def = definitions[pf.definitionId]
@@ -53,78 +51,70 @@ export function buildPatchReportHTML(
   }
   const schedule = [...counts.entries()]
     .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
-    .map(([k, v]) => `<tr><td class="n">${v}×</td><td>${esc(k)}</td></tr>`)
-    .join('')
+    .map(([k, v]) => [`${v}×`, k])
 
-  return `<!doctype html><html lang="en"><head><meta charset="utf-8">
-<title>Patch View — ${esc(show.name)}</title>
-<style>
-  * { box-sizing: border-box; }
-  html { background: #fff; }
-  body { font: 12px/1.35 Arial, Helvetica, sans-serif; color: #111; background: #fff; margin: 24px; }
-  .head { display: flex; align-items: flex-start; gap: 18px; border-bottom: 2px solid #111; padding-bottom: 10px; }
-  .logo { font-weight: 800; font-size: 22px; letter-spacing: -.5px; white-space: nowrap; }
-  .logo .a { color: #e5352b; }
-  .meta { font-size: 12px; }
-  .meta b { display: inline-block; min-width: 132px; }
-  h1 { text-align: center; font-size: 15px; margin: 14px 0 8px; letter-spacing: .5px; }
-  table { border-collapse: collapse; width: 100%; }
-  th, td { border: 1px solid #999; padding: 3px 6px; text-align: left; vertical-align: top; }
-  th { background: #d9d9d9; font-weight: 700; }
-  td.n, th.n { text-align: center; white-space: nowrap; }
-  tbody tr:nth-child(even) { background: #f4f4f4; }
-  .sched { margin-top: 18px; width: auto; }
-  .sched caption { text-align: left; font-weight: 700; padding: 4px 0; }
-  .foot { margin-top: 16px; color: #666; font-size: 10px; }
-  @page { size: A4 portrait; margin: 12mm; }
-  @media print { body { margin: 0; } .noprint { display: none; } }
-  .noprint { position: fixed; top: 10px; right: 10px; }
-  .noprint button { font: 13px Arial; padding: 6px 12px; cursor: pointer; }
-</style></head><body>
-<div class="noprint"><button onclick="window.print()">Print / Save as PDF</button></div>
-<div class="head">
-  <div class="logo"><span class="a">DMX</span>Simulato<span class="a">R</span></div>
-  <div class="meta">
-    <div><b>Showname:</b> ${esc(show.name)}</div>
-    <div><b>Date:</b> ${stamp(new Date())}</div>
-    <div><b>Software Version:</b> ${esc(software)}</div>
-    <div><b>Console Type:</b> ${esc(consoleType)}</div>
-    <div><b>Universes:</b> ${show.universeCount}</div>
-  </div>
-</div>
-<h1>Patch View</h1>
-<table>
-  <thead><tr>
-    <th class="n">User no.</th><th>Fixture</th><th>Mode</th>
-    <th class="n">Address</th><th class="n">Ch</th><th class="n">Last</th><th>Legend</th>
-  </tr></thead>
-  <tbody>${rows}</tbody>
-</table>
-<table class="sched"><caption>Fixture schedule</caption>
-  <thead><tr><th class="n">Qty</th><th>Fixture</th></tr></thead>
-  <tbody>${schedule}</tbody>
-</table>
-<div class="foot">Generated by DMXSimulatoR — patch report in an Avolites Titan-style layout. ${show.fixtures.length} fixtures.</div>
-</body></html>`
-}
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'pt', format: 'a4' })
+  const M = 40
 
-/** Open the report in a new window so the user can print it / save as PDF. */
-export function openPatchReport(
-  show: Show,
-  definitions: Record<string, FixtureDefinition>,
-): void {
-  const html = buildPatchReportHTML(show, definitions)
-  const w = window.open('', '_blank')
-  if (!w) {
-    // Popup blocked — fall back to a Blob download of the HTML.
-    const url = URL.createObjectURL(new Blob([html], { type: 'text/html' }))
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `${show.name || 'patch'}-report.html`
-    a.click()
-    URL.revokeObjectURL(url)
-    return
-  }
-  w.document.write(html)
-  w.document.close()
+  // Wordmark: DMX + R in red, Simulato in black.
+  doc.setFont('helvetica', 'bold').setFontSize(18)
+  let x = M
+  doc.setTextColor(229, 53, 43).text('DMX', x, 50); x += doc.getTextWidth('DMX')
+  doc.setTextColor(17, 17, 17).text('Simulato', x, 50); x += doc.getTextWidth('Simulato')
+  doc.setTextColor(229, 53, 43).text('R', x, 50)
+
+  // Header meta block.
+  doc.setFont('helvetica', 'normal').setFontSize(10).setTextColor(17, 17, 17)
+  const meta: [string, string][] = [
+    ['Showname:', show.name],
+    ['Date:', stamp(new Date())],
+    ['Software Version:', software],
+    ['Console Type:', consoleType],
+    ['Universes:', String(show.universeCount)],
+  ]
+  meta.forEach(([k, v], i) => {
+    const y = 74 + i * 15
+    doc.setFont('helvetica', 'bold').text(k, M, y)
+    doc.setFont('helvetica', 'normal').text(v, M + 110, y)
+  })
+  doc.setDrawColor(17).setLineWidth(1).line(M, 158, doc.internal.pageSize.getWidth() - M, 158)
+
+  // Title.
+  doc.setFont('helvetica', 'bold').setFontSize(14)
+    .text('Patch View', doc.internal.pageSize.getWidth() / 2, 178, { align: 'center' })
+
+  autoTable(doc, {
+    startY: 192,
+    head: [['User no.', 'Fixture', 'Mode', 'Address', 'Ch', 'Last', 'Legend']],
+    body: rows,
+    theme: 'grid',
+    styles: { fontSize: 8, cellPadding: 3, lineColor: [150, 150, 150], textColor: 20 },
+    headStyles: { fillColor: [217, 217, 217], textColor: 20, fontStyle: 'bold' },
+    alternateRowStyles: { fillColor: [244, 244, 244] },
+    columnStyles: {
+      0: { halign: 'center', cellWidth: 48 },
+      2: { cellWidth: 95 },
+      3: { halign: 'center', cellWidth: 48 },
+      4: { halign: 'center', cellWidth: 28 },
+      5: { halign: 'center', cellWidth: 48 },
+    },
+    margin: { left: M, right: M },
+  })
+
+  const afterPatch = (doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY
+  doc.setFont('helvetica', 'bold').setFontSize(11).setTextColor(17, 17, 17)
+    .text('Fixture schedule', M, afterPatch + 24)
+  autoTable(doc, {
+    startY: afterPatch + 32,
+    head: [['Qty', 'Fixture']],
+    body: schedule,
+    theme: 'grid',
+    tableWidth: 260,
+    styles: { fontSize: 9, cellPadding: 3, lineColor: [150, 150, 150], textColor: 20 },
+    headStyles: { fillColor: [217, 217, 217], textColor: 20, fontStyle: 'bold' },
+    columnStyles: { 0: { halign: 'center', cellWidth: 44 } },
+    margin: { left: M },
+  })
+
+  doc.save(`${show.name || 'patch'}-patch.pdf`)
 }

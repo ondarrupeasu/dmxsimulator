@@ -55,16 +55,22 @@ export function ShowMenu() {
       <button onClick={onExport}>{t('show.save')}</button>
       <button onClick={() => fileRef.current?.click()}>{t('show.load')}</button>
       <button
-        onClick={() => openPatchReport(useShowStore.getState().show, useShowStore.getState().definitions)}
-        title="Informe de patch (formato tipo Titan) — imprimir o guardar como PDF"
+        onClick={() => {
+          const s = useShowStore.getState()
+          openPatchReport(s.show, s.definitions).catch(() => alert(t('show.invalid')))
+        }}
+        title="Patch report (Titan-style) — downloads a PDF"
       >
-        Informe
+        Report
       </button>
       <button
-        onClick={() => openPlot(useShowStore.getState().show, useShowStore.getState().definitions)}
-        title="Plano de luces (planta con símbolos, leyenda y cajetín) — imprimir o guardar como PDF"
+        onClick={() => {
+          const s = useShowStore.getState()
+          openPlot(s.show, s.definitions).catch(() => alert(t('show.invalid')))
+        }}
+        title="Lighting plot (plan with symbols, key and title block) — downloads a PDF"
       >
-        Plano
+        Plot
       </button>
       <input
         ref={fileRef}

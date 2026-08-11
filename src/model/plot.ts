@@ -38,7 +38,7 @@ function symbol(cat: FixtureCategory, x: number, y: number, color: string): stri
   }
 }
 
-export function buildPlotHTML(
+function buildPlotSVG(
   show: Show,
   definitions: Record<string, FixtureDefinition>,
 ): string {
@@ -123,7 +123,7 @@ export function buildPlotHTML(
     + tbLine(5, 'Drawn:', `DMXSimulatoR ${__APP_VERSION__}`)
     + tbLine(6, 'Scale:', 'N.T.S.')
 
-  const svg = `<svg viewBox="0 0 1123 794" xmlns="http://www.w3.org/2000/svg" font-family="Arial, Helvetica, sans-serif">
+  return `<svg viewBox="0 0 1123 794" xmlns="http://www.w3.org/2000/svg" font-family="Arial, Helvetica, sans-serif">
     <rect x="0" y="0" width="1123" height="794" fill="#fff"/>
     <text x="${PL}" y="40" font-size="18" font-weight="800" fill="#111">Lighting Plot — ${esc(show.name)}</text>
     <text x="${KX}" y="92" font-size="13" font-weight="700" fill="#111">Key</text>
@@ -135,39 +135,35 @@ export function buildPlotHTML(
     ${keyRows}
     ${titleBlock}
   </svg>`
-
-  return `<!doctype html><html lang="en"><head><meta charset="utf-8">
-<title>Lighting Plot — ${esc(show.name)}</title>
-<style>
-  html, body { background: #fff; margin: 0; }
-  body { font-family: Arial, Helvetica, sans-serif; }
-  .noprint { position: fixed; top: 10px; right: 10px; }
-  .noprint button { font: 13px Arial; padding: 6px 12px; cursor: pointer; }
-  svg { width: 100%; height: auto; display: block; }
-  @page { size: A4 landscape; margin: 8mm; }
-  @media print { .noprint { display: none; } }
-</style></head><body>
-<div class="noprint"><button onclick="window.print()">Print / Save as PDF</button></div>
-${svg}
-</body></html>`
 }
 
-/** Open the plot in a new window so the user can print it / save as PDF. */
-export function openPlot(
+/** Build and download the lighting plot as a PDF (SVG rendered into an A4 page). */
+export async function openPlot(
   show: Show,
   definitions: Record<string, FixtureDefinition>,
-): void {
-  const html = buildPlotHTML(show, definitions)
-  const w = window.open('', '_blank')
-  if (!w) {
-    const url = URL.createObjectURL(new Blob([html], { type: 'text/html' }))
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `${show.name || 'plot'}-plan.html`
-    a.click()
-    URL.revokeObjectURL(url)
-    return
+): Promise<void> {
+  const { jsPDF } = await import('jspdf')
+  await import('svg2pdf.js') // adds doc.svg()
+
+  // svg2pdf needs a live SVG element (for text metrics), so render off-screen.
+  const holder = document.createElement('div')
+  holder.style.cssText = 'position:fixed;left:-10000px;top:0;width:1123px;height:794px'
+  holder.innerHTML = buildPlotSVG(show, definitions)
+  document.body.appendChild(holder)
+  const svgEl = holder.querySelector('svg') as SVGSVGElement
+
+  try {
+    const doc = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'a4' })
+    const pw = doc.internal.pageSize.getWidth()
+    const ph = doc.internal.pageSize.getHeight()
+    const m = 12
+    const scale = Math.min((pw - 2 * m) / 1123, (ph - 2 * m) / 794)
+    const w = 1123 * scale, h = 794 * scale
+    await (doc as unknown as {
+      svg: (el: Element, o: { x: number; y: number; width: number; height: number }) => Promise<void>
+    }).svg(svgEl, { x: (pw - w) / 2, y: (ph - h) / 2, width: w, height: h })
+    doc.save(`${show.name || 'plot'}-plot.pdf`)
+  } finally {
+    document.body.removeChild(holder)
   }
-  w.document.write(html)
-  w.document.close()
 }
