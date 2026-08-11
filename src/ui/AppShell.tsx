@@ -38,16 +38,22 @@ export function AppShell() {
   const [monitorCollapsed, setMonitorCollapsed] = useState(false)
 
   // Animation clock for the 2D view + monitor (the 3D view self-clocks). Advances
-  // only while effects exist and playback isn't paused.
+  // while effects run (and not paused) OR a Go fade is in progress.
   const effectsCount = useShowStore((s) => s.effects.length)
   const playing = useShowStore((s) => s.playing)
   const setPlaying = useShowStore((s) => s.setPlaying)
   const tickClock = useShowStore((s) => s.tickClock)
+  const fadeCount = useShowStore((s) => Object.keys(s.fades).length)
+  const settleFades = useShowStore((s) => s.settleFades)
   useEffect(() => {
-    if (effectsCount === 0 || !playing) return
-    const iv = setInterval(() => tickClock(0.05), 50)
+    const effectsRun = effectsCount > 0 && playing
+    if (!effectsRun && fadeCount === 0) return
+    const iv = setInterval(() => {
+      tickClock(0.05)
+      settleFades()
+    }, 50)
     return () => clearInterval(iv)
-  }, [effectsCount, playing, tickClock])
+  }, [effectsCount, playing, fadeCount, tickClock, settleFades])
 
   const Surface = consoleById(consoleId).Surface
   // The faithful Quartz desk docks wide at the bottom; other surfaces sit at left.

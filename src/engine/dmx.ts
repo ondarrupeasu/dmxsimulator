@@ -38,6 +38,29 @@ export function mergeProgrammer(base: ProgrammerValues, top: ProgrammerValues): 
   return out
 }
 
+/** An in-progress crossfade of a playback level (0–255) over `dur` seconds. */
+export interface Fade {
+  from: number
+  to: number
+  start: number // clock time (store `now`) when the fade began
+  dur: number // seconds
+}
+
+/** The live level of one playback, interpolating an in-progress fade against `now`. */
+export function resolveLevel(id: string, levels: Record<string, number>, fades: Record<string, Fade>, now: number): number {
+  const f = fades[id]
+  if (!f) return levels[id] ?? 0
+  const t = f.dur <= 0 ? 1 : Math.min(1, Math.max(0, (now - f.start) / f.dur))
+  return Math.round(f.from + (f.to - f.from) * t)
+}
+
+/** The live level of every playback (settled levels + any in-progress fades). */
+export function resolveLevels(levels: Record<string, number>, fades: Record<string, Fade>, now: number): Record<string, number> {
+  const out: Record<string, number> = { ...levels }
+  for (const id in fades) out[id] = resolveLevel(id, levels, fades, now)
+  return out
+}
+
 /**
  * Merge every playback that is up (its fader level > 0) into one base layer:
  * intensity (dimmer) is scaled by the fader level and combined HTP (highest wins);

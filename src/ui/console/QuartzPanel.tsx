@@ -169,6 +169,10 @@ export function QuartzPanel() {
   const setPlaybackPage = useShowStore((s) => s.setPlaybackPage)
   const playbackLevels = useShowStore((s) => s.playbackLevels)
   const setPlaybackLevel = useShowStore((s) => s.setPlaybackLevel)
+  const fades = useShowStore((s) => s.fades)
+  const killPlayback = useShowStore((s) => s.killPlayback)
+  const playbackFade = useShowStore((s) => s.playbackFade)
+  const setPlaybackFade = useShowStore((s) => s.setPlaybackFade)
   const executorLabels = useShowStore((s) => s.executorLabels)
   const setExecutorLabel = useShowStore((s) => s.setExecutorLabel)
   const executorCues = useShowStore((s) => s.executorCues)
@@ -180,13 +184,15 @@ export function QuartzPanel() {
     if (v !== null) setExecutorLabel(n, v)
   }
   const hasProgrammer = useShowStore((s) => Object.keys(s.programmer).length > 0)
+  // A playback is "up" if its level is above 0 or a fade is taking it up.
+  const isUp = (id: string) => (playbackLevels[id] ?? 0) > 0 || !!(fades[id] && fades[id].to > 0)
   // Executor click: fire/kill its bound cue, or capture the current look, or label it.
   const boundCue = (n: number) => cues.find((c) => c.id === executorCues[n])
   const execCaption = (n: number) => boundCue(n)?.name ?? executorLabels[n]
   const onExecutor = (n: number) => {
     const cue = boundCue(n)
     if (cue) {
-      if ((playbackLevels[cue.id] ?? 0) > 0) setPlaybackLevel(cue.id, 0)
+      if (isUp(cue.id)) killPlayback(cue.id)
       else goCue(cue.id)
     } else if (hasProgrammer) {
       recordExecutor(n)
@@ -227,7 +233,10 @@ export function QuartzPanel() {
   const goRel = (dir: 1 | -1) => {
     if (!cues.length) return
     const idx = cues.findIndex((c) => c.id === activeCueId)
-    goCue(cues[idx < 0 ? (dir > 0 ? 0 : cues.length - 1) : (idx + dir + cues.length) % cues.length].id)
+    const nextId = cues[idx < 0 ? (dir > 0 ? 0 : cues.length - 1) : (idx + dir + cues.length) % cues.length].id
+    // Crossfade: fade the previous cue out as the new one fades in.
+    if (activeCueId && activeCueId !== nextId) killPlayback(activeCueId)
+    goCue(nextId)
   }
 
   return (
@@ -268,7 +277,7 @@ export function QuartzPanel() {
             if (n <= 10 || n >= 19) {
               const cue = boundCue(n)
               const caption = execCaption(n)
-              const lit = !!cue && (playbackLevels[cue.id] ?? 0) > 0
+              const lit = !!cue && isUp(cue.id)
               const title = cue
                 ? `Executor ${n}: ${cue.name} — clic para disparar/apagar (clic derecho: liberar)`
                 : hasProgrammer
@@ -338,7 +347,7 @@ export function QuartzPanel() {
         <Frame x={38} y={448} w={624} h={116} />
         <Box x={44} y={454} w={612} h={104} cols={10} rows={2} spread>
           {Array.from({ length: 10 }, (_, i) => {
-            const gi = playbackPage * 10 + i; const cue = cues[gi]; const on = !!cue && (playbackLevels[cue.id] ?? 0) > 0
+            const gi = playbackPage * 10 + i; const cue = cues[gi]; const on = !!cue && isUp(cue.id)
             return <Key key={`t${i}`} v="dark" narrow ledBottom on={on} disabled={!cue} title={cue ? `Go ${cue.name}` : 'Empty'} onClick={() => cue && goCue(cue.id)} />
           })}
           {Array.from({ length: 10 }, (_, i) => {
@@ -398,7 +407,7 @@ export function QuartzPanel() {
           <Key v="dark" title="Palettes" onClick={() => { setScreen('colour'); setMenu('palette') }} />
           <Key v="dark" disabled title="Macro" /><Key v="dark" title="Group — workspace de grupos" onClick={() => { setScreen('groups'); setMenu('group') }} />
           <Key v="white" led={false} text="1" title="1" onClick={dig('1')} /><Key v="white" led={false} text="2" title="2" onClick={dig('2')} /><Key v="white" led={false} text="3" title="3" onClick={dig('3')} /><Key v="white" on={shift} text="Avo" title="Avo — activa/desactiva las segundas funciones" onClick={() => setShift((s) => !s)} />
-          <Key v="white" led={false} text="4" title="4" onClick={dig('4')} /><Key v="white" led={false} text="5" title="5" onClick={dig('5')} /><Key v="white" led={false} text="6" title="6" onClick={dig('6')} /><Key v="white" ledColor="blue" disabled text="TIME" title="Time" />
+          <Key v="white" led={false} text="4" title="4" onClick={dig('4')} /><Key v="white" led={false} text="5" title="5" onClick={dig('5')} /><Key v="white" led={false} text="6" title="6" onClick={dig('6')} /><Key v="white" ledColor="blue" on={playbackFade > 0} text="TIME" title={`Time — fundido de Go: ${playbackFade}s (clic para cambiar; 0 = Snap)`} onClick={() => { const v = window.prompt('Tiempo de fundido en Go (segundos):', String(playbackFade)); if (v !== null) setPlaybackFade(Number(v.replace(',', '.')) || 0) }} />
           <Key v="white" led={false} text="7" title="7" onClick={dig('7')} /><Key v="white" led={false} text="8" title="8" onClick={dig('8')} /><Key v="white" led={false} text="9" title="9" onClick={dig('9')} /><Key v="white" ledColor="red" on={hasProgrammer} text="CLEAR" title="Clear the programmer" onClick={clearProgrammer} />
           <Key v="white" led={false} text="EXIT" title="Exit — salir al menú raíz / vaciar la línea" onClick={() => { cmdClear(); setMenu('root') }} /><Key v="white" led={false} text="0" title="0" onClick={dig('0')} /><Key v="white" led={false} text="ENTER" title="Enter — ejecutar la línea de comandos" onClick={commitCommand} /><Key v="white" led={false} disabled text="." title="." />
           <Key v="dark" led={false} title="Back — borrar" onClick={cmdBackspace} /><Key v="dark" led={false} disabled={noFx} title="Through — rango" onClick={() => cmdAppend(' Through ')} /><Key v="dark" led={false} disabled={noFx} title="And — añadir" onClick={() => cmdAppend(' And ')} /><Key v="dark" led={false} disabled={noSel && noFx} title="@ — intensidad (@ @ = full)" onClick={() => cmdAppend(' @ ')} />

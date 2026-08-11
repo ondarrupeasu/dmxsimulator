@@ -16,7 +16,8 @@ import { applyEffects } from '../engine/effects'
 import { BUILTIN_FIXTURES } from '../model/library'
 import { templateById } from '../model/templates'
 import type { ProgrammerValues } from '../engine/dmx'
-import { UNIVERSE_SIZE, mergeProgrammer, computePlaybackBase } from '../engine/dmx'
+import type { Fade } from '../engine/dmx'
+import { UNIVERSE_SIZE, mergeProgrammer, computePlaybackBase, resolveLevel, resolveLevels } from '../engine/dmx'
 
 export type AppMode = 'patch' | 'program' | 'run'
 
@@ -83,6 +84,15 @@ interface ShowState {
   /** Per-playback fader level (cueId → 0–255) — what the desk faders control. */
   playbackLevels: Record<string, number>
   setPlaybackLevel: (cueId: string, value: number) => void
+  /** In-progress Go crossfades (cueId → fade), interpolated against `now`. */
+  fades: Record<string, Fade>
+  /** Fade time (seconds) used by the next Go / Release. The TIME key sets it. */
+  playbackFade: number
+  setPlaybackFade: (seconds: number) => void
+  /** Fade a playback out to 0 over the fade time. */
+  killPlayback: (cueId: string) => void
+  /** Land completed fades into playbackLevels and drop them (called by the clock). */
+  settleFades: () => void
 
   // Groups — named, reusable selections (Titan's Groups workspace).
   groups: Group[]
@@ -269,28 +279,85 @@ export const useShowStore = create<ShowState>()(
         set((s) => {
           const levels = { ...s.playbackLevels }
           delete levels[id]
+          const fades = { ...s.fades }
+          delete fades[id]
           return {
             cues: s.cues.filter((c) => c.id !== id),
             activeCueId: s.activeCueId === id ? null : s.activeCueId,
             playbackLevels: levels,
+            fades,
           }
         }),
 
-      // Go / flash raises the playback to full and connects it; the fader can then
-      // scale it. Release drops the connected playback back to zero.
+      // Go / flash fades the playback up to full over the fade time and connects it;
+      // the fader can then scale it. Release fades the connected playback back out.
       goCue: (id) =>
-        set((s) => ({ activeCueId: id, playbackLevels: { ...s.playbackLevels, [id]: 255 } })),
+        set((s) => {
+          const from = resolveLevel(id, s.playbackLevels, s.fades, s.now)
+          if (s.playbackFade <= 0) {
+            const fades = { ...s.fades }
+            delete fades[id]
+            return { activeCueId: id, playbackLevels: { ...s.playbackLevels, [id]: 255 }, fades }
+          }
+          return { activeCueId: id, fades: { ...s.fades, [id]: { from, to: 255, start: s.now, dur: s.playbackFade } } }
+        }),
+      killPlayback: (id) =>
+        set((s) => {
+          const from = resolveLevel(id, s.playbackLevels, s.fades, s.now)
+          if (s.playbackFade <= 0) {
+            const levels = { ...s.playbackLevels }
+            delete levels[id]
+            const fades = { ...s.fades }
+            delete fades[id]
+            return { playbackLevels: levels, fades }
+          }
+          return { fades: { ...s.fades, [id]: { from, to: 0, start: s.now, dur: s.playbackFade } } }
+        }),
       releaseCue: () =>
         set((s) => {
-          const levels = { ...s.playbackLevels }
-          if (s.activeCueId) delete levels[s.activeCueId]
-          return { activeCueId: null, playbackLevels: levels }
+          if (!s.activeCueId) return s
+          const id = s.activeCueId
+          const from = resolveLevel(id, s.playbackLevels, s.fades, s.now)
+          if (s.playbackFade <= 0) {
+            const levels = { ...s.playbackLevels }
+            delete levels[id]
+            const fades = { ...s.fades }
+            delete fades[id]
+            return { activeCueId: null, playbackLevels: levels, fades }
+          }
+          return { activeCueId: null, fades: { ...s.fades, [id]: { from, to: 0, start: s.now, dur: s.playbackFade } } }
         }),
       renameCue: (id, name) =>
         set((s) => ({ cues: s.cues.map((c) => (c.id === id ? { ...c, name } : c)) })),
       playbackLevels: {},
+      // Faders are manual: set the level directly and cancel any fade on that playback.
       setPlaybackLevel: (cueId, value) =>
-        set((s) => ({ playbackLevels: { ...s.playbackLevels, [cueId]: Math.max(0, Math.min(255, value)) } })),
+        set((s) => {
+          const fades = { ...s.fades }
+          delete fades[cueId]
+          return { playbackLevels: { ...s.playbackLevels, [cueId]: Math.max(0, Math.min(255, value)) }, fades }
+        }),
+      fades: {},
+      playbackFade: 3,
+      setPlaybackFade: (seconds) => set({ playbackFade: Math.max(0, Math.min(60, seconds)) }),
+      settleFades: () =>
+        set((s) => {
+          const ids = Object.keys(s.fades)
+          if (ids.length === 0) return s
+          const fades = { ...s.fades }
+          const levels = { ...s.playbackLevels }
+          let changed = false
+          for (const id of ids) {
+            const f = s.fades[id]
+            if (s.now >= f.start + f.dur) {
+              if (f.to <= 0) delete levels[id]
+              else levels[id] = f.to
+              delete fades[id]
+              changed = true
+            }
+          }
+          return changed ? { fades, playbackLevels: levels } : s
+        }),
 
       groups: [],
       recordGroup: () =>
@@ -740,6 +807,7 @@ export const useShowStore = create<ShowState>()(
           cues: [],
           activeCueId: null,
           playbackLevels: {},
+          fades: {},
           executorCues: {},
           palettes: [],
           groups: [],
@@ -759,6 +827,7 @@ export const useShowStore = create<ShowState>()(
         cues: s.cues,
         activeCueId: s.activeCueId,
         playbackLevels: s.playbackLevels,
+        playbackFade: s.playbackFade,
         palettes: s.palettes,
         groups: s.groups,
         effects: s.effects,
@@ -782,14 +851,16 @@ export function useEffectiveProgrammer(respectBlind = false): ProgrammerValues {
   const programmer = useShowStore((s) => s.programmer)
   const cues = useShowStore((s) => s.cues)
   const playbackLevels = useShowStore((s) => s.playbackLevels)
+  const fades = useShowStore((s) => s.fades)
   const effects = useShowStore((s) => s.effects)
   const show = useShowStore((s) => s.show)
   const definitions = useShowStore((s) => s.definitions)
   const now = useShowStore((s) => s.now)
   const blind = useShowStore((s) => s.blind)
   return useMemo(() => {
-    const base = computePlaybackBase(cues, playbackLevels, show, definitions)
+    const levels = resolveLevels(playbackLevels, fades, now)
+    const base = computePlaybackBase(cues, levels, show, definitions)
     const merged = respectBlind && blind ? base : mergeProgrammer(base, programmer)
     return applyEffects(merged, effects, show, definitions, now)
-  }, [programmer, cues, playbackLevels, effects, show, definitions, now, blind, respectBlind])
+  }, [programmer, cues, playbackLevels, fades, effects, show, definitions, now, blind, respectBlind])
 }
