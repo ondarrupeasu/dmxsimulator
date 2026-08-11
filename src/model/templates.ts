@@ -23,6 +23,7 @@ function builder(defsById: Record<string, FixtureDefinition>, showName: string) 
   const fixtures: PatchedFixture[] = []
   const programmer: ProgrammerValues = {}
   let address = 1
+  let universe = 1
   let n = 0
   function add(
     definitionId: string,
@@ -35,26 +36,28 @@ function builder(defsById: Record<string, FixtureDefinition>, showName: string) 
   ): string {
     const def = defsById[definitionId]
     if (!def) return ''
+    const foot = fixtureFootprint(def, modeIndex)
     const id = `tmpl-${n++}`
     if (addr !== undefined) address = addr
+    else if (address + foot - 1 > 512) { universe++; address = 1 } // roll to next universe
     fixtures.push({
       id,
       definitionId,
       modeIndex,
       name,
-      universe: 1,
+      universe,
       address,
       position: { x, y: 0.6, z: 0 },
       truss,
     })
-    address += fixtureFootprint(def, modeIndex)
+    address += foot
     if (look) programmer[id] = look
     return id
   }
   return {
     add,
     done: (): { show: Show; programmer: ProgrammerValues } => ({
-      show: { name: showName, universeCount: 1, fixtures },
+      show: { name: showName, universeCount: universe, fixtures },
       programmer,
     }),
   }
@@ -75,6 +78,11 @@ const ML56 = 'eurolite-ml-56-rgba'
 const AURO = 'cameo-auro-spot-z300'
 const BLINDER2L = 'mark-blinder-2l'
 const HAZER = 'cameo-phantom-h2'
+// Avolites Titan training rig (see model/fixtures-avolites.ts).
+const BMFL = 'robe-robin-bmfl-blade'
+const LEDBEAM = 'robe-robin-100-ledbeam'
+const COLORSTROBE = 'robe-robin-colorstrobe'
+const ATOMIC = 'martin-atomic-3000'
 
 // Truss indices (see model/venue.ts): 0 Front, 1 Mid, 2 Back, 3 FOH.
 const FRONT = 0, MID = 1, BACK = 2, FOH = 3, CYC = 4
@@ -98,6 +106,21 @@ export const TEMPLATES: ShowTemplate[] = [
     build: (defs) => {
       const r = builder(defs, 'Untitled show').done()
       return { ...r, show: { ...r.show, trusses: [{ id: 0, name: 'Truss 1', z: 0, y: 5 }] } }
+    },
+  },
+  {
+    id: 'avolites-training',
+    name: 'Avolites Titan training',
+    description: "The official Avolites Titan training rig (from their 'Titan training v10' show): 14 Robe Robin BMFL Blade, 13 Robin 100 LEDBeam, 10 Robin ColorStrobe and 11 Atomic 3000 strobes, auto-addressed across universes.",
+    build: (defs) => {
+      const b = builder(defs, 'Titan training')
+      const spread = (i: number, n: number, w = 0.9) => (n < 2 ? 0 : -w + (2 * w * i) / (n - 1))
+      // BMFL spots on the mid truss, LEDBeams behind, ColorStrobe wash up front, Atomics on FOH.
+      for (let i = 0; i < 13; i++) b.add(LEDBEAM, 0, `LEDBeam ${i + 1}`, spread(i, 13), undefined, BACK)
+      for (let i = 0; i < 14; i++) b.add(BMFL, 0, `BMFL ${i + 1}`, spread(i, 14), undefined, MID)
+      for (let i = 0; i < 10; i++) b.add(COLORSTROBE, 0, `ColorStrobe ${i + 1}`, spread(i, 10), undefined, FRONT)
+      for (let i = 0; i < 11; i++) b.add(ATOMIC, 0, `Atomic ${i + 1}`, spread(i, 11), undefined, FOH)
+      return b.done()
     },
   },
   {
