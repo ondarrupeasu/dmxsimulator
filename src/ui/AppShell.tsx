@@ -32,6 +32,15 @@ export function AppShell() {
   const hasHazer = useShowStore((s) =>
     s.show.fixtures.some((f) => s.definitions[f.definitionId]?.category === 'hazer'),
   )
+  const venueName = useShowStore((s) => s.venueName)
+  const setVenue = useShowStore((s) => s.setVenue)
+  const clearVenue = useShowStore((s) => s.clearVenue)
+  const venueRef = useRef<HTMLInputElement>(null)
+  const onVenueFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    e.target.value = ''
+    if (file) setVenue(URL.createObjectURL(file), file.name)
+  }
   const [viewer, setViewer] = useState<'2d' | '3d'>('3d')
 
   // Collapsible secondary panes: folding the Fixtures window maximises the desk,
@@ -88,6 +97,24 @@ export function AppShell() {
             >
               🌫 {smoke ? 'Humo ON' : 'Humo'}
             </button>
+          )}
+          {viewer === '3d' && (
+            <>
+              <input
+                ref={venueRef}
+                type="file"
+                accept=".glb,.gltf,model/gltf-binary,model/gltf+json"
+                style={{ display: 'none' }}
+                onChange={onVenueFile}
+              />
+              <button
+                className={`ghost-btn${venueName ? ' active' : ''}`}
+                onClick={() => (venueName ? clearVenue() : venueRef.current?.click())}
+                title={venueName ? `Venue: ${venueName} — click to remove` : 'Load a 3D venue model (glTF / GLB) behind the rig'}
+              >
+                🏛 {venueName ? 'Venue ✕' : 'Venue'}
+              </button>
+            </>
           )}
           {viewer === '3d' && (
             <button

@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react'
 import * as THREE from 'three'
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js'
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js'
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js'
 import { useShowStore } from '../../store/showStore'
 import { computeFixtureOutputs, mergeProgrammer, computePlaybackBase, resolveLevels } from '../../engine/dmx'
 import { applyEffects } from '../../engine/effects'
@@ -353,6 +354,40 @@ export function Visualizer3D() {
     grid.position.y = 0.02
     scene.add(grid)
 
+    // Optional venue model (glTF/GLB): loaded into this holder, auto-fitted to the
+    // stage, and reconciled in the loop when the store's venueUrl changes. The default
+    // stage/floor stay put underneath (a real venue model usually replaces them visually).
+    const venueGroup = new THREE.Group()
+    scene.add(venueGroup)
+    const gltfLoader = new GLTFLoader()
+    let venueUrl: string | null = null
+    let venueLoading = false
+    const loadVenue = (url: string | null) => {
+      venueUrl = url
+      venueLoading = !!url
+      venueGroup.clear()
+      if (!url) return
+      gltfLoader.load(
+        url,
+        (gltf) => {
+          venueLoading = false
+          if (venueUrl !== url) return // superseded while loading
+          const model = gltf.scene
+          // Auto-fit: centre on X/Z, sit the base on the floor, scale to ~16 u wide.
+          const box = new THREE.Box3().setFromObject(model)
+          const size = new THREE.Vector3(); box.getSize(size)
+          const centre = new THREE.Vector3(); box.getCenter(centre)
+          const span = Math.max(size.x, size.z) || 1
+          const scale = 16 / span
+          model.scale.setScalar(scale)
+          model.position.set(-centre.x * scale, -box.min.y * scale, -centre.z * scale)
+          venueGroup.add(model)
+        },
+        undefined,
+        () => { venueLoading = false }, // load error → leave the default stage
+      )
+    }
+
     // ---- Venue: a 1 m-high stage (tarima) with the audience flat in front ----
     // Stage deck — top surface sits STAGE_TOP metres above the floor.
     const stage = new THREE.Mesh(
@@ -470,6 +505,8 @@ export function Visualizer3D() {
       const state = useShowStore.getState()
       const { show, definitions, programmer, cues, playbackLevels, fades, effects, selection } = state
       const selSet = new Set(selection)
+      // Reconcile the optional venue model when it changes.
+      if (state.venueUrl !== venueUrl && !venueLoading) loadVenue(state.venueUrl)
       // House/work lights toggle: lit room + lighter background, or dark beams-only.
       const lit = state.viewLights
       workHemi.intensity = lit ? 1.6 : 0

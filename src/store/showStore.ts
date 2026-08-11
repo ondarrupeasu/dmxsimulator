@@ -164,6 +164,13 @@ interface ShowState {
   viewLights: boolean
   setViewLights: (v: boolean) => void
 
+  // Optional venue model (a loaded glTF/GLB) drawn behind the rig. Transient — the
+  // object URL dies on reload, so it isn't persisted.
+  venueUrl: string | null
+  venueName: string | null
+  setVenue: (url: string, name: string) => void
+  clearVenue: () => void
+
   // Blind: program without the live programmer reaching the real DMX output.
   blind: boolean
   setBlind: (v: boolean) => void
@@ -781,6 +788,19 @@ export const useShowStore = create<ShowState>()(
       viewLights: false,
       setViewLights: (v) => set({ viewLights: v }),
 
+      venueUrl: null,
+      venueName: null,
+      setVenue: (url, name) =>
+        set((s) => {
+          if (s.venueUrl) URL.revokeObjectURL(s.venueUrl)
+          return { venueUrl: url, venueName: name }
+        }),
+      clearVenue: () =>
+        set((s) => {
+          if (s.venueUrl) URL.revokeObjectURL(s.venueUrl)
+          return { venueUrl: null, venueName: null }
+        }),
+
       blind: false,
       setBlind: (v) => set({ blind: v }),
 
@@ -968,6 +988,10 @@ export const useShowStore = create<ShowState>()(
     },
   ),
 )
+
+// Dev aid: expose the live store on window so it can be driven from the console/tests
+// (bare `import()` in the console gets a different HMR module instance).
+if (import.meta.env.DEV) (window as unknown as { __showStore?: unknown }).__showStore = useShowStore
 
 /**
  * Effective output values = the active playback cue with the live programmer laid
