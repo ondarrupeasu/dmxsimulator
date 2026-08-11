@@ -4,6 +4,7 @@ import { useShowStore } from '../store/showStore'
 import { TEMPLATES } from '../model/templates'
 import { openPatchReport } from '../model/report'
 import { openPlot } from '../model/plot'
+import { exportMvr } from '../model/mvr'
 
 /** Topbar show controls: load a template, save to file, load from file. */
 export function ShowMenu() {
@@ -71,6 +72,15 @@ export function ShowMenu() {
         title="Lighting plot (plan with symbols, key and title block) — downloads a PDF"
       >
         Plot
+      </button>
+      <button
+        onClick={() => {
+          const s = useShowStore.getState()
+          exportMvr(s.show, s.definitions).catch(() => alert(t('show.invalid')))
+        }}
+        title="Export the rig as MVR (GDTF fixtures + patch + positions) for Capture / Vectorworks"
+      >
+        MVR
       </button>
       <input
         ref={fileRef}
