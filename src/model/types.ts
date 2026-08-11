@@ -31,6 +31,7 @@ export type ChannelFunction =
   | 'strobe'
   | 'shutter'
   | 'control'
+  | 'haze'
   | 'generic'
 
 /** A labelled DMX value range within a channel (e.g. "Gobo 1", "Strobe slow→fast"). */

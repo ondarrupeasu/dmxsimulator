@@ -215,8 +215,8 @@ export const COMMON_FIXTURES: FixtureDefinition[] = [
       {
         name: '2-channel',
         channels: [
-          { name: 'Haze', function: 'generic', defaultValue: 0 },
-          { name: 'Fan', function: 'generic', defaultValue: 0 },
+          { name: 'Haze', function: 'haze', defaultValue: 0, highlightValue: 255 },
+          { name: 'Fan', function: 'control', defaultValue: 160 },
         ],
       },
     ],

@@ -98,6 +98,43 @@ function makeBeamGeometry(): THREE.ConeGeometry {
   return geo
 }
 
+/** Soft round blob texture for the drifting haze puffs (created once). */
+let _hazeTex: THREE.CanvasTexture | null = null
+function hazeTexture(): THREE.CanvasTexture {
+  if (_hazeTex) return _hazeTex
+  const c = document.createElement('canvas')
+  c.width = c.height = 128
+  const ctx = c.getContext('2d')!
+  const g = ctx.createRadialGradient(64, 64, 0, 64, 64, 64)
+  g.addColorStop(0, 'rgba(255,255,255,0.55)')
+  g.addColorStop(0.5, 'rgba(255,255,255,0.18)')
+  g.addColorStop(1, 'rgba(255,255,255,0)')
+  ctx.fillStyle = g
+  ctx.fillRect(0, 0, 128, 128)
+  _hazeTex = new THREE.CanvasTexture(c)
+  return _hazeTex
+}
+
+/** A haze/smoke machine sitting on the floor (box + output nozzle). */
+function buildHazer(): THREE.Group {
+  const g = new THREE.Group()
+  const body = new THREE.Mesh(
+    new THREE.BoxGeometry(0.62, 0.34, 0.42),
+    new THREE.MeshStandardMaterial({ color: 0x24252b, metalness: 0.55, roughness: 0.5 }),
+  )
+  body.position.y = 0.17
+  g.add(body)
+  g.add(new THREE.LineSegments(new THREE.EdgesGeometry(body.geometry, 20), new THREE.LineBasicMaterial({ color: 0x5a5b64 })).translateY(0.17))
+  const nozzle = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.05, 0.09, 0.16, 12),
+    new THREE.MeshStandardMaterial({ color: 0x15151a, metalness: 0.6, roughness: 0.4 }),
+  )
+  nozzle.rotation.z = Math.PI / 2
+  nozzle.position.set(0.36, 0.2, 0)
+  g.add(nozzle)
+  return g
+}
+
 /** A cylinder between two points — the building block of the truss lattice. */
 function tube(a: THREE.Vector3, b: THREE.Vector3, r: number): THREE.BufferGeometry {
   const dir = new THREE.Vector3().subVectors(b, a)
@@ -352,7 +389,25 @@ export function Visualizer3D() {
     seats.instanceMatrix.needsUpdate = true
     scene.add(seats)
 
+    // Drifting haze puffs — invisible until a hazer is up, then they billow across
+    // the stage and make the beams read as volumetric shafts of light.
+    const hazeSprites: THREE.Sprite[] = []
+    const hazeSeed: { x0: number; y0: number; z0: number; spd: number; phase: number }[] = []
+    for (let i = 0; i < 18; i++) {
+      const mat = new THREE.SpriteMaterial({ map: hazeTexture(), color: 0xb4bcc8, transparent: true, opacity: 0, depthWrite: false })
+      const s = new THREE.Sprite(mat)
+      const sc = 3.2 + (i % 3) * 1.4
+      s.scale.set(sc, sc, 1)
+      const seed = { x0: (i / 18) * 16 - 8, y0: 0.6 + (i % 4) * 0.7, z0: ((i * 3.7) % 11) - 5, spd: 0.12 + (i % 5) * 0.03, phase: i * 0.9 }
+      s.position.set(seed.x0, seed.y0, seed.z0)
+      s.visible = false
+      scene.add(s)
+      hazeSprites.push(s)
+      hazeSeed.push(seed)
+    }
+
     const fxMap = new Map<string, FxObj>()
+    const hazerMap = new Map<string, THREE.Group>()
     const down = new THREE.Vector3()
 
     const resize = () => {
@@ -434,9 +489,32 @@ export function Visualizer3D() {
       const outputs = computeFixtureOutputs(show, definitions, effective)
       const outById = new Map(outputs.map((o) => [o.instanceId, o.values]))
 
+      // Haze level (0..1) = the strongest hazer output; it thickens the air + beams.
+      let hazeLevel = 0
+      for (const pf of show.fixtures) {
+        const def = definitions[pf.definitionId]
+        if (def?.category !== 'hazer') continue
+        const vals = outById.get(pf.id)
+        const chans = def.modes[pf.modeIndex]?.channels ?? []
+        const hi = chans.findIndex((c) => c.function === 'haze')
+        if (vals && hi >= 0) hazeLevel = Math.max(hazeLevel, (vals[hi] ?? 0) / 255)
+      }
+      ;(scene.fog as THREE.FogExp2).density = (lit ? 0.006 : 0.022) + hazeLevel * 0.012
+      // Remove hazer machines whose fixture is gone.
+      for (const [id, g] of hazerMap) {
+        if (!live.has(id)) { scene.remove(g); hazerMap.delete(id) }
+      }
+
       for (const pf of show.fixtures) {
         const def = definitions[pf.definitionId]
         if (!def) continue
+        // Hazers are floor machines, not truss fixtures — no beam, just the box.
+        if (def.category === 'hazer') {
+          let hz = hazerMap.get(pf.id)
+          if (!hz) { hz = buildHazer(); scene.add(hz); hazerMap.set(pf.id, hz) }
+          hz.position.set(pf.position.x * 9, 0, 2.6)
+          continue
+        }
         let fx = fxMap.get(pf.id)
         if (!fx) {
           fx = buildFixture(def.category === 'movingHead')
@@ -492,7 +570,8 @@ export function Visualizer3D() {
         fx.beam.visible = on
         if (on) {
           fx.beamMat.color.copy(col)
-          fx.beamMat.opacity = vs.intensity * (vs.strobing ? 0.25 : 0.55)
+          // Haze makes the shaft of light visible in the air — beams get more opaque.
+          fx.beamMat.opacity = Math.min(0.95, vs.intensity * (vs.strobing ? 0.25 : 0.55) * (1 + 1.4 * hazeLevel))
         }
 
         // Pool where the beam meets the floor — an ellipse (a tilted beam cuts the
@@ -513,6 +592,22 @@ export function Visualizer3D() {
         // Body stays dark so only the beam carries colour — but lift it a touch under
         // work lights so you can clearly see each fixture on the truss.
         ;(fx.body.material as THREE.MeshStandardMaterial).emissive.setHex(lit ? 0x15151b : 0x000000)
+      }
+
+      // Drift the haze puffs (they slowly billow + rise) while a hazer is up. Uses
+      // real time so the haze keeps moving even with the effect clock paused.
+      const hazeVisible = hazeLevel > 0.01
+      const th = nowMs / 1000
+      for (let i = 0; i < hazeSprites.length; i++) {
+        const s = hazeSprites[i]
+        s.visible = hazeVisible
+        if (!hazeVisible) continue
+        const u = hazeSeed[i]
+        const t = th * u.spd + u.phase
+        s.position.x = u.x0 + Math.sin(t) * 2.6
+        s.position.z = u.z0 + Math.cos(t * 0.7) * 1.8
+        s.position.y = u.y0 + ((th * 0.1 + u.phase) % 2.4)
+        ;(s.material as THREE.SpriteMaterial).opacity = hazeLevel * 0.34
       }
 
       controls.update()
