@@ -14,7 +14,7 @@ export function FixturesWindow() {
   const noFx = show.fixtures.length === 0
 
   return (
-    <div className="panel">
+    <div className="panel" data-tour="fixtures">
       <header>
         <h2>{t('fixturesWindow.title')}</h2>
         <div className="vh-tools">

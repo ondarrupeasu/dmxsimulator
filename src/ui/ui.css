@@ -149,6 +149,43 @@
 .ghost-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 .ghost-btn.active { background: var(--coral); border-color: var(--coral); color: #16131a; font-weight: 600; }
 
+/* ---- Guided tour ---- */
+.tour-start {
+  font-size: 12px; padding: 5px 10px; border-radius: var(--radius-sm);
+  background: var(--coral-soft); border: 1px solid var(--coral); color: var(--text);
+  white-space: nowrap;
+}
+.tour-start:hover { background: var(--coral); color: #16131a; }
+.tour-root { position: fixed; inset: 0; z-index: 1000; }
+/* Spotlight: a transparent window with a huge shadow dimming everything else.
+   pointer-events:none so the highlighted control stays clickable. */
+.tour-hole {
+  position: fixed;
+  border-radius: 8px;
+  box-shadow: 0 0 0 4px var(--coral), 0 0 0 9999px rgba(6, 6, 10, 0.72);
+  pointer-events: none;
+  transition: top 0.18s ease, left 0.18s ease, width 0.18s ease, height 0.18s ease;
+}
+.tour-dim { position: fixed; inset: 0; background: rgba(6, 6, 10, 0.72); }
+.tour-callout {
+  position: fixed;
+  background: var(--bg-elev, #1b1b22);
+  border: 1px solid var(--coral);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+  color: var(--text);
+}
+.tour-callout h3 { margin: 4px 0 6px; font-size: 15px; }
+.tour-callout p { margin: 0 0 12px; font-size: 13px; line-height: 1.45; color: var(--text-muted, #cfcdd6); }
+.tour-step-n { font-size: 10px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; color: var(--coral); }
+.tour-actions { display: flex; align-items: center; gap: 8px; }
+.tour-spacer { flex: 1; }
+.tour-actions button { font-size: 12px; padding: 5px 12px; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--bg-input); color: var(--text); }
+.tour-skip { color: var(--text-faint); }
+.tour-next { background: var(--coral); border-color: var(--coral); color: #16131a; font-weight: 600; }
+.tour-next:hover, .tour-actions button:hover { filter: brightness(1.08); }
+
 /* Truss + universe selectors on each patched-fixture row. */
 .patch-assign { display: flex; gap: 6px; align-items: center; margin-right: 8px; }
 .patch-assign label { display: inline-flex; align-items: center; gap: 3px; font-size: 10px; color: var(--text-faint); }

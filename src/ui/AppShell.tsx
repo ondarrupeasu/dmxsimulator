@@ -13,6 +13,8 @@ import { QuartzScreen } from './console/QuartzScreen'
 import { QuartzPanel } from './console/QuartzPanel'
 import { FixturesWindow } from './console/FixturesWindow'
 import { ShowMenu } from './ShowMenu'
+import { TourOverlay } from './TourOverlay'
+import { useTour } from '../store/tourStore'
 import './ui.css'
 
 const MODES = ['patch', 'program', 'run'] as const
@@ -21,6 +23,7 @@ export function AppShell() {
   const { t, i18n } = useTranslation()
   const mode = useShowStore((s) => s.mode)
   const setMode = useShowStore((s) => s.setMode)
+  const startTour = useTour((t) => t.start)
   const consoleId = useShowStore((s) => s.consoleId)
   const setConsole = useShowStore((s) => s.setConsole)
   const [viewer, setViewer] = useState<'2d' | '3d'>('3d')
@@ -51,7 +54,7 @@ export function AppShell() {
     mode === 'patch' ? <PatchView /> : mode === 'run' ? <RunView /> : <Surface />
 
   const visualizerPanel = (
-    <div className="panel">
+    <div className="panel" data-tour="visualizer">
       <header>
         <h2>{t('visualizer.title')}</h2>
         <div className="vh-tools">
@@ -97,7 +100,7 @@ export function AppShell() {
 
         <div className="mode-tabs">
           {MODES.map((m) => (
-            <button key={m} className={mode === m ? 'active' : ''} onClick={() => setMode(m)}>
+            <button key={m} data-tour={`mode-${m}`} className={mode === m ? 'active' : ''} onClick={() => setMode(m)}>
               {t(`modes.${m}`)}
             </button>
           ))}
@@ -118,6 +121,10 @@ export function AppShell() {
         </label>
 
         <ShowMenu />
+
+        <button className="tour-start" onClick={startTour} title="Tutorial guiado paso a paso">
+          🎓 Tutorial
+        </button>
 
         <select
           value={i18n.language}
@@ -217,6 +224,7 @@ export function AppShell() {
           </PanelGroup>
         )}
       </div>
+      <TourOverlay />
     </div>
   )
 }

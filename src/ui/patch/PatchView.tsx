@@ -80,7 +80,7 @@ export function PatchView() {
         <h2>{t('patch.title')}</h2>
       </header>
       <div className="scroll">
-        <div className="section-label lib-head">
+        <div className="section-label lib-head" data-tour="library">
           <span>{t('patch.library')}</span>
           <input
             className="lib-search"
