@@ -6,7 +6,18 @@
       "WebFetch(domain:github.com)",
       "WebFetch(domain:raw.githubusercontent.com)",
       "WebFetch(domain:manual.avolites.com)",
-      "mcp__firecrawl-mcp-server__firecrawl_scrape"
+      "mcp__firecrawl-mcp-server__firecrawl_scrape",
+      "WebFetch(domain:adjmedia.s3-website-eu-west-1.amazonaws.com)",
+      "WebFetch(domain:gzhls.at)",
+      "WebFetch(domain:www.manualslib.com)",
+      "WebFetch(domain:www.adj.eu)",
+      "WebFetch(domain:www.manua.ls)",
+      "WebFetch(domain:www.cameolight.com)",
+      "WebFetch(domain:briteq-lighting.com)",
+      "WebFetch(domain:avofixturefinder.com)",
+      "WebFetch(domain:products.equipson.es)",
+      "WebFetch(domain:www.equipson.es)",
+      "WebFetch(domain:media.equipson.es)"
     ]
   }
 }

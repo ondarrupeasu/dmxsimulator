@@ -31,10 +31,12 @@ function builder(defsById: Record<string, FixtureDefinition>, showName: string) 
     x: number,
     look?: Record<number, number>,
     truss = 1,
+    addr?: number,
   ): string {
     const def = defsById[definitionId]
     if (!def) return ''
     const id = `tmpl-${n++}`
+    if (addr !== undefined) address = addr
     fixtures.push({
       id,
       definitionId,
@@ -65,6 +67,14 @@ const ROGUE = 'chauvet-rogue-r2-wash'
 const AURA = 'martin-mac-aura-xb'
 const PROFILE = 'generic-profile-spot'
 const BLINDER = 'generic-blinder-2'
+// Real Tartanga models (see model/fixtures-tartanga.ts).
+const DIMMER = 'generic-dimmer'
+const CPAR = 'cameo-par64-can-rgb-3w'
+const FOCUSFLEX = 'adj-focus-flex'
+const ML56 = 'eurolite-ml-56-rgba'
+const AURO = 'cameo-auro-spot-z300'
+const BLINDER2L = 'mark-blinder-2l'
+const HAZER = 'cameo-phantom-h2'
 
 // Truss indices (see model/venue.ts): 0 Front, 1 Mid, 2 Back, 3 FOH.
 const FRONT = 0, MID = 1, BACK = 2, FOH = 3
@@ -92,16 +102,31 @@ export const TEMPLATES: ShowTemplate[] = [
   },
   {
     id: 'tartanga',
-    name: 'Tartanga rig',
-    description: '4 Phantom spots + 2 PAR fills, no look programmed.',
+    name: 'Tartanga (real)',
+    description: 'The actual CIFP Tartanga rig from their Quartz patch: 20 dimmers, 7 Cameo PAR 64, 5 ADJ Focus Flex, 4 Eurolite ML-56, 2 Cameo Auro Spot Z300, a MARK Blinder 2L and a Cameo Phantom H2 hazer — exact DMX addresses.',
     build: (defs) => {
-      const b = builder(defs, 'Tartanga rig')
-      b.add(PHANTOM, 0, 'Phantom 1', -0.6)
-      b.add(PHANTOM, 0, 'Phantom 2', -0.2)
-      b.add(PHANTOM, 0, 'Phantom 3', 0.2)
-      b.add(PHANTOM, 0, 'Phantom 4', 0.6)
-      b.add(PAR, 0, 'PAR 1', -0.4)
-      b.add(PAR, 0, 'PAR 2', 0.4)
+      const b = builder(defs, 'pae')
+      // Layout across the trusses (physical positions are ours — the patch only
+      // carried DMX addresses). Addresses below are exactly Miren's patch export.
+      const spread = (i: number, n: number) => -0.85 + (1.7 * i) / (n - 1)
+      // 20 generic dimmers → front light on the FRONT truss, addr 1–20.
+      for (let i = 0; i < 20; i++) b.add(DIMMER, 0, `Dim ${i + 1}`, spread(i, 20), undefined, FRONT, i + 1)
+      // 5 ADJ Focus Flex movers → MID truss.
+      const ffAddr = [49, 75, 100, 400, 425]
+      ffAddr.forEach((a, i) => b.add(FOCUSFLEX, 0, `Focus Flex ${i + 1}`, spread(i, 5), undefined, MID, a))
+      // 7 Cameo PAR 64 RGB → BACK truss colour wash (addresses are scattered).
+      const parAddr = [126, 132, 138, 144, 216, 222, 208]
+      parAddr.forEach((a, i) => b.add(CPAR, 0, `PAR 64 · ${i + 1}`, spread(i, 7), undefined, BACK, a))
+      // 4 Eurolite ML-56 RGBA → BACK truss too (lower row), addr 150–168.
+      const mlAddr = [150, 156, 162, 168]
+      mlAddr.forEach((a, i) => b.add(ML56, 0, `ML-56 · ${i + 1}`, spread(i, 4), undefined, BACK, a))
+      // 2 Cameo Auro Spot Z300 → FOH truss (front-of-house spots), addr 174 & 191.
+      b.add(AURO, 0, 'Auro Spot 1', -0.35, undefined, FOH, 174)
+      b.add(AURO, 0, 'Auro Spot 2', 0.35, undefined, FOH, 191)
+      // MARK Blinder 2L → FRONT truss centre, addr 502.
+      b.add(BLINDER2L, 0, 'Blinder 2L', 0, undefined, FRONT, 502)
+      // Cameo Phantom H2 hazer → stage floor, stage-right, addr 214.
+      b.add(HAZER, 0, 'Phantom H2', 0.85, undefined, MID, 214)
       return b.done()
     },
   },
