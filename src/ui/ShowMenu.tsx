@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { useShowStore } from '../store/showStore'
 import { TEMPLATES } from '../model/templates'
 import { openPatchReport } from '../model/report'
+import { openPlot } from '../model/plot'
 
 /** Topbar show controls: load a template, save to file, load from file. */
 export function ShowMenu() {
@@ -58,6 +59,12 @@ export function ShowMenu() {
         title="Informe de patch (formato tipo Titan) — imprimir o guardar como PDF"
       >
         Informe
+      </button>
+      <button
+        onClick={() => openPlot(useShowStore.getState().show, useShowStore.getState().definitions)}
+        title="Plano de luces (planta con símbolos, leyenda y cajetín) — imprimir o guardar como PDF"
+      >
+        Plano
       </button>
       <input
         ref={fileRef}

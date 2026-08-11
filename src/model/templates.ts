@@ -77,7 +77,7 @@ const BLINDER2L = 'mark-blinder-2l'
 const HAZER = 'cameo-phantom-h2'
 
 // Truss indices (see model/venue.ts): 0 Front, 1 Mid, 2 Back, 3 FOH.
-const FRONT = 0, MID = 1, BACK = 2, FOH = 3
+const FRONT = 0, MID = 1, BACK = 2, FOH = 3, CYC = 4
 
 // RGBW PAR channel indices: 0 Dimmer, 1 R, 2 G, 3 B, 4 W.
 const parLook = (r: number, g: number, b: number, w = 0) => ({ 0: 255, 1: r, 2: g, 3: b, 4: w })
@@ -108,26 +108,36 @@ export const TEMPLATES: ShowTemplate[] = [
       const b = builder(defs, 'pae')
       // Layout across the trusses (physical positions are ours — the patch only
       // carried DMX addresses). Addresses below are exactly Miren's patch export.
-      const spread = (i: number, n: number) => -0.85 + (1.7 * i) / (n - 1)
+      // Each group gets its own truss row so the plot/3D read cleanly.
+      const spread = (i: number, n: number, w = 0.85) => (n < 2 ? 0 : -w + (2 * w * i) / (n - 1))
       // 20 generic dimmers → front light on the FRONT truss, addr 1–20.
       for (let i = 0; i < 20; i++) b.add(DIMMER, 0, `Dim ${i + 1}`, spread(i, 20), undefined, FRONT, i + 1)
       // 5 ADJ Focus Flex movers → MID truss.
       const ffAddr = [49, 75, 100, 400, 425]
-      ffAddr.forEach((a, i) => b.add(FOCUSFLEX, 0, `Focus Flex ${i + 1}`, spread(i, 5), undefined, MID, a))
+      ffAddr.forEach((a, i) => b.add(FOCUSFLEX, 0, `Focus Flex ${i + 1}`, spread(i, 5, 0.7), undefined, MID, a))
       // 7 Cameo PAR 64 RGB → BACK truss colour wash (addresses are scattered).
       const parAddr = [126, 132, 138, 144, 216, 222, 208]
       parAddr.forEach((a, i) => b.add(CPAR, 0, `PAR 64 · ${i + 1}`, spread(i, 7), undefined, BACK, a))
-      // 4 Eurolite ML-56 RGBA → BACK truss too (lower row), addr 150–168.
+      // 4 Eurolite ML-56 RGBA → their own upstage CYC truss, addr 150–168.
       const mlAddr = [150, 156, 162, 168]
-      mlAddr.forEach((a, i) => b.add(ML56, 0, `ML-56 · ${i + 1}`, spread(i, 4), undefined, BACK, a))
+      mlAddr.forEach((a, i) => b.add(ML56, 0, `ML-56 · ${i + 1}`, spread(i, 4, 0.7), undefined, CYC, a))
       // 2 Cameo Auro Spot Z300 → FOH truss (front-of-house spots), addr 174 & 191.
       b.add(AURO, 0, 'Auro Spot 1', -0.35, undefined, FOH, 174)
       b.add(AURO, 0, 'Auro Spot 2', 0.35, undefined, FOH, 191)
-      // MARK Blinder 2L → FRONT truss centre, addr 502.
-      b.add(BLINDER2L, 0, 'Blinder 2L', 0, undefined, FRONT, 502)
+      // MARK Blinder 2L → FRONT truss, stage-right edge (clear of the dimmers).
+      b.add(BLINDER2L, 0, 'Blinder 2L', 0.98, undefined, FRONT, 502)
       // Cameo Phantom H2 hazer → stage floor, stage-right, addr 214.
-      b.add(HAZER, 0, 'Phantom H2', 0.85, undefined, MID, 214)
-      return b.done()
+      b.add(HAZER, 0, 'Phantom H2', 0.92, undefined, MID, 214)
+      const r = b.done()
+      // A dedicated CYC truss (id 4) sits just upstage of Back for the ML-56 row.
+      const trusses = [
+        { id: 0, name: 'Front', z: 4, y: 5 },
+        { id: 1, name: 'Mid', z: 0, y: 5 },
+        { id: 2, name: 'Back', z: -4, y: 5 },
+        { id: 4, name: 'Cyc', z: -6, y: 5 },
+        { id: 3, name: 'FOH', z: 9, y: 7, foh: true },
+      ]
+      return { ...r, show: { ...r.show, trusses } }
     },
   },
   {
