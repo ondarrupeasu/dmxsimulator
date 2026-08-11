@@ -440,15 +440,18 @@ export const useShowStore = create<ShowState>()(
           const fixtures = s.show.fixtures
           const raw = s.cmd.trim()
           if (!raw) return { cmd: '' }
-          // Split the selection expression from an optional "@ <level>".
-          const atSplit = raw.split('@')
-          const toks = atSplit[0].trim().split(/\s+/).filter(Boolean)
-          const atVal = atSplit[1]?.trim()
-          // Resolve fixture user-numbers (1-based order) with THRU ranges + AND (+).
+          // Titan command line: "<selection> @ <level>". "@ @" (or a bare @) = full,
+          // "@ <n>" = n%. Keywords Through / Thru / > and And, case-insensitive.
+          const hasAt = raw.includes('@')
+          const atIdx = raw.indexOf('@')
+          const selPart = hasAt ? raw.slice(0, atIdx) : raw
+          const atRaw = hasAt ? raw.slice(atIdx).replace(/@/g, '').trim() : undefined
+          const toks = selPart.trim().split(/\s+/).filter(Boolean).map((t) => t.toUpperCase())
+          const isRange = (t?: string) => t === 'THROUGH' || t === 'THRU' || t === '>'
           const nums = new Set<number>()
           for (let i = 0; i < toks.length; ) {
             if (/^\d+$/.test(toks[i])) {
-              if ((toks[i + 1] === 'THRU' || toks[i + 1] === '>') && /^\d+$/.test(toks[i + 2] ?? '')) {
+              if (isRange(toks[i + 1]) && /^\d+$/.test(toks[i + 2] ?? '')) {
                 const a = +toks[i], b = +toks[i + 2]
                 for (let n = Math.min(a, b); n <= Math.max(a, b); n++) nums.add(n)
                 i += 3
@@ -456,14 +459,14 @@ export const useShowStore = create<ShowState>()(
                 nums.add(+toks[i])
                 i += 1
               }
-            } else i += 1
+            } else i += 1 // skip And / stray keywords
           }
           const ids = [...nums].filter((n) => n >= 1 && n <= fixtures.length).map((n) => fixtures[n - 1].id)
           const selection = ids.length ? ids : s.selection
           let programmer = s.programmer
-          if (atVal !== undefined && atVal !== '') {
-            const pct = Math.max(0, Math.min(100, +atVal || 0))
-            const value = Math.round((pct / 100) * 255)
+          if (hasAt) {
+            // Empty (@ @ or bare @) → full; otherwise clamp the typed percentage.
+            const value = atRaw === '' ? 255 : Math.round((Math.max(0, Math.min(100, +atRaw! || 0)) / 100) * 255)
             programmer = { ...programmer }
             for (const id of selection) {
               const pf = fixtures.find((f) => f.id === id)
