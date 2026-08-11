@@ -1,10 +1,21 @@
-import { useMemo, useRef } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useShowStore } from '../../store/showStore'
-import { fixtureFootprint } from '../../model/types'
+import { fixtureFootprint, type FixtureCategory } from '../../model/types'
 import { TRUSSES, DEFAULT_TRUSS } from '../../model/venue'
 
 const UNIVERSES = [1, 2, 3, 4] // the Quartz has four DMX outputs
+
+// Library grouping — display order + section labels by fixture category.
+const CATEGORY_ORDER: FixtureCategory[] = ['movingHead', 'par', 'dimmer', 'strobe', 'hazer', 'other']
+const CATEGORY_LABELS: Record<FixtureCategory, string> = {
+  movingHead: 'Moving heads',
+  par: 'PAR / LED',
+  dimmer: 'Dimmers',
+  strobe: 'Strobes',
+  hazer: 'Haze / Fog',
+  other: 'Conventionals',
+}
 
 export function PatchView() {
   const { t } = useTranslation()
@@ -46,6 +57,7 @@ export function PatchView() {
     window.addEventListener('pointerup', up)
   }
 
+  const [query, setQuery] = useState('')
   const library = useMemo(
     () =>
       Object.values(definitions).sort((a, b) =>
@@ -53,6 +65,14 @@ export function PatchView() {
       ),
     [definitions],
   )
+  // Filter by manufacturer / model / category, then group by category for display.
+  const groups = useMemo(() => {
+    const q = query.trim().toLowerCase()
+    const matches = library.filter((d) => !q || `${d.manufacturer} ${d.model}`.toLowerCase().includes(q))
+    return CATEGORY_ORDER.map((cat) => [cat, matches.filter((d) => d.category === cat)] as const).filter(
+      ([, defs]) => defs.length > 0,
+    )
+  }, [library, query])
 
   return (
     <div className="panel">
@@ -60,28 +80,48 @@ export function PatchView() {
         <h2>{t('patch.title')}</h2>
       </header>
       <div className="scroll">
-        <div className="section-label">{t('patch.library')}</div>
-        <div className="lib-list">
-          {library.map((def) => {
-            const fp = fixtureFootprint(def, 0)
-            return (
-              <div className="lib-item" key={def.id}>
-                <div className="meta">
-                  <div className="name">
-                    {def.manufacturer} {def.model}
-                  </div>
-                  <div className="detail">
-                    {fp} {t('patch.channels')} · {def.modes[0]?.name}
-                  </div>
-                </div>
-                <span className={`badge ${def.source}`}>{def.source}</span>
-                <button className="primary" onClick={() => addFixture(def.id)}>
-                  {t('patch.add')}
-                </button>
-              </div>
-            )
-          })}
+        <div className="section-label lib-head">
+          <span>{t('patch.library')}</span>
+          <input
+            className="lib-search"
+            type="search"
+            placeholder={t('patch.search')}
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+          />
         </div>
+        {groups.length === 0 ? (
+          <div className="prog-empty">{t('patch.noMatch')}</div>
+        ) : (
+          groups.map(([cat, defs]) => (
+            <div className="lib-group" key={cat}>
+              <div className="lib-group-title">
+                {CATEGORY_LABELS[cat]} <span className="lib-group-n">{defs.length}</span>
+              </div>
+              <div className="lib-list">
+                {defs.map((def) => {
+                  const fp = fixtureFootprint(def, 0)
+                  return (
+                    <div className="lib-item" key={def.id}>
+                      <div className="meta">
+                        <div className="name">
+                          {def.manufacturer} {def.model}
+                        </div>
+                        <div className="detail">
+                          {fp} {t('patch.channels')} · {def.modes[0]?.name}
+                        </div>
+                      </div>
+                      <span className={`badge ${def.source}`}>{def.source}</span>
+                      <button className="primary" onClick={() => addFixture(def.id)}>
+                        {t('patch.add')}
+                      </button>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          ))
+        )}
 
         {show.fixtures.length > 0 && (
           <>

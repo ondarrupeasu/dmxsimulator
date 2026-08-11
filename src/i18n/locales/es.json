@@ -23,6 +23,8 @@
   "patch": {
     "title": "Patch",
     "library": "Librería de fixtures",
+    "search": "Buscar marca / modelo…",
+    "noMatch": "Ningún fixture coincide con la búsqueda.",
     "patched": "Fixtures asignados",
     "rig": "Distribución en el truss — arrastra para colocar",
     "readdress": "Re-direccionar por orden de rig",

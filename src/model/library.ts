@@ -7,6 +7,7 @@
  * pull them from OFL/GDTF).
  */
 import type { FixtureDefinition } from './types'
+import { COMMON_FIXTURES } from './fixtures-common'
 
 // Colour-wheel slots shared by both Phantom modes (from the MKII manual).
 const PHANTOM_COLOR_CAPS = [
@@ -214,6 +215,7 @@ export const BUILTIN_FIXTURES: FixtureDefinition[] = [
       },
     ],
   },
+  ...COMMON_FIXTURES,
 ]
 
 /** Index the built-in library by definition id for O(1) lookup. */

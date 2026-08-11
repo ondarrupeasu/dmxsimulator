@@ -291,6 +291,25 @@
 .section-label:not(:first-child) {
   margin-top: 18px;
 }
+/* Library search + category grouping */
+.section-label.lib-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.lib-search {
+  flex: 1 1 auto; min-width: 0; max-width: 60%;
+  font-size: 11px; text-transform: none; letter-spacing: 0;
+  padding: 4px 8px; border-radius: var(--radius-sm);
+  background: var(--bg-input); border: 1px solid var(--border); color: var(--text);
+}
+.lib-search:focus { outline: none; border-color: var(--coral); }
+.lib-group { margin-bottom: 10px; }
+.lib-group-title {
+  font-size: 10px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase;
+  color: var(--text-muted, #b8b6c0); margin: 10px 0 5px;
+  display: flex; align-items: center; gap: 6px;
+}
+.lib-group-n {
+  font-size: 9px; font-weight: 600; color: var(--text-faint);
+  background: var(--bg-input); border-radius: 8px; padding: 0 6px;
+}
 
 /* ---- DMX monitor ---- */
 .dmx-grid {
