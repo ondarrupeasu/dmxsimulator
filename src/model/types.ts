@@ -118,6 +118,10 @@ export interface TrussDef {
 
 export interface Show {
   name: string
+  /** Venue / room name — shown on the plot title block. */
+  venue?: string
+  /** Lighting designer / drawn-by — shown on the plot title block. */
+  designer?: string
   /** Number of universes (v1 typically 1). */
   universeCount: number
   fixtures: PatchedFixture[]

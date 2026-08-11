@@ -117,11 +117,12 @@ function buildPlotSVG(
     + `<line x1="${TB_X}" y1="${TB_Y + 36}" x2="${TB_X + TB_W}" y2="${TB_Y + 36}" stroke="#111"/>`
     + `<text x="${TB_X + 12}" y="${TB_Y + 24}" font-size="14" font-weight="800" fill="#111">LIGHTING PLOT</text>`
     + tbLine(1, 'Show:', show.name)
-    + tbLine(2, 'Universes:', String(show.universeCount))
-    + tbLine(3, 'Fixtures:', String(show.fixtures.length))
-    + tbLine(4, 'Date:', date)
-    + tbLine(5, 'Drawn:', `DMXSimulatoR ${__APP_VERSION__}`)
-    + tbLine(6, 'Scale:', 'N.T.S.')
+    + tbLine(2, 'Venue:', show.venue || '—')
+    + tbLine(3, 'Universes:', String(show.universeCount))
+    + tbLine(4, 'Fixtures:', String(show.fixtures.length))
+    + tbLine(5, 'Date:', date)
+    + tbLine(6, 'Drawn:', show.designer || `DMXSimulatoR ${__APP_VERSION__}`)
+    + tbLine(7, 'Scale:', 'N.T.S.')
 
   return `<svg viewBox="0 0 1123 794" xmlns="http://www.w3.org/2000/svg" font-family="Arial, Helvetica, sans-serif">
     <rect x="0" y="0" width="1123" height="794" fill="#fff"/>

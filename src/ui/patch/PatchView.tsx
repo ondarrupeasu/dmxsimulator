@@ -38,6 +38,7 @@ export function PatchView() {
   const setTruss = useShowStore((s) => s.setTruss)
   const trusses = getTrusses(show)
   const readdressByRigOrder = useShowStore((s) => s.readdressByRigOrder)
+  const setShowMeta = useShowStore((s) => s.setShowMeta)
 
   // Truss strip — drag a chip to set its position along the rig (x = −1..1).
   const stripRef = useRef<HTMLDivElement>(null)
@@ -100,6 +101,33 @@ export function PatchView() {
               <h2>{t('patch.title')}</h2>
             </header>
             <div className="scroll">
+              <div className="section-label">Show</div>
+              <div className="show-meta">
+                <label>
+                  <span>Name</span>
+                  <input
+                    value={show.name}
+                    placeholder="Untitled show"
+                    onChange={(e) => setShowMeta({ name: e.target.value })}
+                  />
+                </label>
+                <label>
+                  <span>Venue</span>
+                  <input
+                    value={show.venue ?? ''}
+                    placeholder="e.g. CIFP Tartanga"
+                    onChange={(e) => setShowMeta({ venue: e.target.value })}
+                  />
+                </label>
+                <label>
+                  <span>Designer</span>
+                  <input
+                    value={show.designer ?? ''}
+                    placeholder="Drawn by…"
+                    onChange={(e) => setShowMeta({ designer: e.target.value })}
+                  />
+                </label>
+              </div>
               <div className="section-label rig-label">
                 <span>{t('patch.trusses')}</span>
                 <button className="rig-readdress" onClick={addTruss} title={t('patch.addTrussHint')}>
