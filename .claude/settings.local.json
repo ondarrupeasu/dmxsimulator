@@ -4,7 +4,9 @@
       "WebSearch",
       "WebFetch(domain:assets.highlite.com)",
       "WebFetch(domain:github.com)",
-      "WebFetch(domain:raw.githubusercontent.com)"
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "WebFetch(domain:manual.avolites.com)",
+      "mcp__firecrawl-mcp-server__firecrawl_scrape"
     ]
   }
 }

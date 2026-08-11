@@ -9,6 +9,12 @@
     "language": "Hizkuntza",
     "reset": "Berrezarri show-a"
   },
+  "fixturesWindow": {
+    "title": "Fixture-ak",
+    "all": "Dena",
+    "clear": "Garbitu",
+    "empty": "Patcheatu fixture-ak lehenik."
+  },
   "modes": {
     "patch": "Patch",
     "program": "Programatu",

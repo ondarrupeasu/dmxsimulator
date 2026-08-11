@@ -10,6 +10,8 @@ import { computeVisualState } from '../../engine/render'
 const TRUSS_Y = 5
 const STAGE_TOP = 1 // stage deck (tarima) height above the floor, in metres
 const TRUSS_ROWS_Z = [-4, 0, 4] // three truss rows, front ↔ back over the stage
+const FOH_TRUSS_Z = 9 // front-of-house truss over the audience, aimed at the stage
+const FOH_TRUSS_Y = 7 // it hangs a little higher than the stage trusses
 
 /** World position for a fixture on the truss (x normalized -1..1). */
 function place(x: number): THREE.Vector3 {
@@ -271,6 +273,10 @@ export function Visualizer3D() {
       truss.position.set(0, TRUSS_Y + 0.55, tz)
       scene.add(truss)
     }
+    // Front-of-house truss over the audience (fixtures on it face back to the stage).
+    const fohTruss = buildTruss(18)
+    fohTruss.position.set(0, FOH_TRUSS_Y + 0.55, FOH_TRUSS_Z)
+    scene.add(fohTruss)
 
     // ---- Venue: a 1 m-high stage (tarima) with the audience flat in front ----
     // Stage deck — top surface sits STAGE_TOP metres above the floor.

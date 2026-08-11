@@ -9,6 +9,12 @@
     "language": "Idioma",
     "reset": "Reiniciar show"
   },
+  "fixturesWindow": {
+    "title": "Fixtures",
+    "all": "Todo",
+    "clear": "Limpiar",
+    "empty": "Patchea fixtures primero."
+  },
   "modes": {
     "patch": "Patch",
     "program": "Programar",

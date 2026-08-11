@@ -11,6 +11,7 @@ import { Visualizer3D } from './visualizer/Visualizer3D'
 import { RunView } from './run/RunView'
 import { QuartzScreen } from './console/QuartzScreen'
 import { QuartzPanel } from './console/QuartzPanel'
+import { FixturesWindow } from './console/FixturesWindow'
 import { ShowMenu } from './ShowMenu'
 import './ui.css'
 
@@ -79,6 +80,7 @@ export function AppShell() {
     </div>
   )
   const monitorPanel = <DmxMonitor universe={1} />
+  const fixturesPanel = <FixturesWindow />
 
   return (
     <div className="shell">
@@ -166,14 +168,18 @@ export function AppShell() {
                Needs an explicit defaultSize too — with only one side sized,
                react-resizable-panels collapses the console to its minSize. */}
             <Panel id="quartz-right" order={2} defaultSize={38} minSize={24}>
-              <PanelGroup direction="vertical" autoSaveId="dmxsim-quartz-right">
-                <Panel defaultSize={64} minSize={30}>
+              <PanelGroup direction="vertical" autoSaveId="dmxsim-quartz-right-v2">
+                <Panel defaultSize={50} minSize={24}>
                   <div className="pane">{visualizerPanel}</div>
+                </Panel>
+                <PanelResizeHandle className="rz rz-h" />
+                <Panel defaultSize={22} minSize={12}>
+                  <div className="pane">{fixturesPanel}</div>
                 </Panel>
                 <PanelResizeHandle className="rz rz-h" />
                 <Panel
                   ref={monitorRef} collapsible collapsedSize={4}
-                  defaultSize={36} minSize={14}
+                  defaultSize={28} minSize={14}
                   onCollapse={() => setMonitorCollapsed(true)}
                   onExpand={() => setMonitorCollapsed(false)}
                 >
