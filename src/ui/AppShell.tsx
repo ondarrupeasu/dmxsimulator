@@ -60,8 +60,9 @@ export function AppShell() {
   }, [effectsCount, playing, fadeCount, tickClock, settleFades])
 
   const Surface = consoleById(consoleId).Surface
-  // The faithful Quartz desk docks wide at the bottom; other surfaces sit at left.
-  const quartzDocked = consoleId === 'avolites-quartz' && mode !== 'patch'
+  // The faithful Quartz desk fills the Program workspace. Patch and Run (a stripped
+  // "show / operator" view) use the compact left-panel layout with a big visualiser.
+  const quartzDocked = consoleId === 'avolites-quartz' && mode === 'program'
   const leftPanel =
     mode === 'patch' ? <PatchView /> : mode === 'run' ? <RunView /> : <Surface />
 
