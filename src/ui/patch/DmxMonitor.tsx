@@ -8,6 +8,7 @@ import { fixtureFootprint } from '../../model/types'
 // so clicking a channel jumps the desk straight to the right control.
 const FN_ATTR: Record<string, { attr: string; screen?: string }> = {
   dimmer: { attr: 'Intensity', screen: 'intensity' },
+  haze: { attr: 'Intensity', screen: 'intensity' },
   strobe: { attr: 'Intensity', screen: 'intensity' },
   pan: { attr: 'Position', screen: 'position' },
   panFine: { attr: 'Position', screen: 'position' },

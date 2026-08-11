@@ -19,7 +19,7 @@ const T = (px: number) => `${(px / IMG_H) * 100}%`
 const clamp = (v: number) => Math.max(0, Math.min(255, v))
 
 const ATTRIBUTES: { name: string; wheels: string[][] }[] = [
-  { name: 'Intensity', wheels: [['dimmer']] },
+  { name: 'Intensity', wheels: [['dimmer', 'haze']] },
   { name: 'Position', wheels: [['pan'], ['tilt']] },
   { name: 'Colour', wheels: [['red', 'colorWheel'], ['green'], ['blue', 'white']] },
   { name: 'Gobo', wheels: [['gobo'], ['goboRotation']] },
