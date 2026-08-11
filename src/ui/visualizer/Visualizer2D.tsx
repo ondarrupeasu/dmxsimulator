@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useRef, useEffect } from 'react'
 import { useShowStore, useEffectiveProgrammer } from '../../store/showStore'
 import { computeFixtureOutputs } from '../../engine/dmx'
 import { computeVisualState } from '../../engine/render'
@@ -35,6 +35,51 @@ export function Visualizer2D() {
   const [fromRight, setFromRight] = useState(false)
   const ex = (z: number) => ELEV.left + ((fromRight ? Z_MAX - z : z - Z_MIN) / (Z_MAX - Z_MIN)) * ELEV.w
 
+  // Pan + zoom via the SVG viewBox.
+  const svgRef = useRef<SVGSVGElement>(null)
+  const [vb, setVb] = useState({ x: 0, y: 0, w: W, h: H })
+  const zoomed = vb.w !== W || vb.x !== 0 || vb.y !== 0
+  const drag = useRef<{ x: number; y: number; vx: number; vy: number } | null>(null)
+  const moved = useRef(false)
+  useEffect(() => {
+    const el = svgRef.current
+    if (!el) return
+    const onWheel = (e: WheelEvent) => {
+      e.preventDefault()
+      const rect = el.getBoundingClientRect()
+      setVb((v) => {
+        const k = e.deltaY > 0 ? 1.12 : 1 / 1.12
+        const nw = Math.max(W * 0.15, Math.min(W * 2.5, v.w * k))
+        const r = nw / v.w
+        // Zoom toward the cursor; fall back to the viewBox centre if it's unavailable.
+        const px = rect.width ? v.x + ((e.clientX - rect.left) / rect.width) * v.w : NaN
+        const py = rect.height ? v.y + ((e.clientY - rect.top) / rect.height) * v.h : NaN
+        const cx = Number.isFinite(px) ? px : v.x + v.w / 2
+        const cy = Number.isFinite(py) ? py : v.y + v.h / 2
+        return { x: cx - (cx - v.x) * r, y: cy - (cy - v.y) * r, w: nw, h: v.h * r }
+      })
+    }
+    el.addEventListener('wheel', onWheel, { passive: false })
+    return () => el.removeEventListener('wheel', onWheel)
+  }, [])
+  const onPanDown = (e: React.PointerEvent) => {
+    drag.current = { x: e.clientX, y: e.clientY, vx: vb.x, vy: vb.y }
+    moved.current = false
+  }
+  const onPanMove = (e: React.PointerEvent) => {
+    const d = drag.current
+    if (!d || !svgRef.current) return
+    const rect = svgRef.current.getBoundingClientRect()
+    if (Math.abs(e.clientX - d.x) > 3 || Math.abs(e.clientY - d.y) > 3) moved.current = true
+    setVb((v) => ({
+      ...v,
+      x: d.vx - ((e.clientX - d.x) / rect.width) * v.w,
+      y: d.vy - ((e.clientY - d.y) / rect.height) * v.h,
+    }))
+  }
+  const onPanUp = () => { drag.current = null }
+  const resetView = () => setVb({ x: 0, y: 0, w: W, h: H })
+
   const outputs = useMemo(
     () => computeFixtureOutputs(show, definitions, effective),
     [show, definitions, effective],
@@ -53,7 +98,16 @@ export function Visualizer2D() {
 
   return (
     <div className="stage">
-      <svg viewBox={`0 0 ${W} ${H}`} onClick={() => select([])}>
+      <svg
+        ref={svgRef}
+        viewBox={`${vb.x} ${vb.y} ${vb.w} ${vb.h}`}
+        style={{ cursor: 'grab', touchAction: 'none' }}
+        onPointerDown={onPanDown}
+        onPointerMove={onPanMove}
+        onPointerUp={onPanUp}
+        onPointerLeave={onPanUp}
+        onClick={() => { if (!moved.current) select([]) }}
+      >
         <defs>
           <radialGradient id="v2glow" cx="50%" cy="50%" r="50%">
             <stop offset="0%" stopColor="white" stopOpacity="0.85" />
@@ -164,6 +218,11 @@ export function Visualizer2D() {
       >
         {fromRight ? 'Alzado: desde la dcha ▶' : '◀ Alzado: desde la izq'}
       </button>
+      {zoomed && (
+        <button className="v2-reset" onClick={resetView} title="Reset zoom / pan">
+          ⤢ Reset view
+        </button>
+      )}
     </div>
   )
 }

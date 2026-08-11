@@ -1,8 +1,11 @@
+import { useMemo, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useShowStore } from '../../store/showStore'
+import type { PatchedFixture } from '../../model/types'
 
 /** The Fixtures / Groups workspace, docked on the right next to the visualiser.
- *  Selecting here drives the desk exactly as selecting on the touchscreen does. */
+ *  Selecting here drives the desk exactly as selecting on the touchscreen does.
+ *  Grouped by universe (when there's more than one); shift-click selects a range. */
 export function FixturesWindow() {
   const { t } = useTranslation()
   const show = useShowStore((s) => s.show)
@@ -12,46 +15,74 @@ export function FixturesWindow() {
   const select = useShowStore((s) => s.select)
   const clearSelection = useShowStore((s) => s.clearSelection)
   const noFx = show.fixtures.length === 0
+  const anchor = useRef<number | null>(null)
 
+  // Group by universe, sorted by address within each; single universe → one plain list.
+  const groups = useMemo(() => {
+    const m = new Map<number, PatchedFixture[]>()
+    for (const pf of show.fixtures) {
+      const arr = m.get(pf.universe) ?? []
+      arr.push(pf)
+      m.set(pf.universe, arr)
+    }
+    const unis = [...m.keys()].sort((a, b) => a - b)
+    unis.forEach((u) => m.get(u)!.sort((a, b) => a.address - b.address))
+    return unis.map((u) => [u, m.get(u)!] as const)
+  }, [show.fixtures])
+  const multi = groups.length > 1
+  const flatIds = useMemo(() => groups.flatMap(([, fx]) => fx.map((f) => f.id)), [groups])
+
+  const onFxClick = (e: React.MouseEvent, id: string, index: number) => {
+    if (e.shiftKey && anchor.current !== null) {
+      const [a, b] = [anchor.current, index].sort((x, y) => x - y)
+      select([...new Set([...selection, ...flatIds.slice(a, b + 1)])])
+    } else {
+      toggleSelect(id)
+      anchor.current = index
+    }
+  }
+
+  let idx = -1
   return (
     <div className="panel" data-tour="fixtures">
       <header>
         <h2>{t('fixturesWindow.title')}</h2>
         <div className="vh-tools">
-          <button
-            className="ghost-btn"
-            disabled={noFx}
-            onClick={() => select(show.fixtures.map((f) => f.id))}
-          >
+          <button className="ghost-btn" disabled={noFx} onClick={() => select(show.fixtures.map((f) => f.id))}>
             {t('fixturesWindow.all')}
           </button>
-          <button
-            className="ghost-btn"
-            disabled={selection.length === 0}
-            onClick={clearSelection}
-          >
+          <button className="ghost-btn" disabled={selection.length === 0} onClick={clearSelection}>
             {t('fixturesWindow.clear')}
           </button>
         </div>
       </header>
       <div className="scroll">
-        <div className="qd-fixtures">
-          {noFx ? (
-            <span className="qd-muted">{t('fixturesWindow.empty')}</span>
-          ) : (
-            show.fixtures.map((pf) => (
-              <button
-                key={pf.id}
-                className={`qd-fx${selection.includes(pf.id) ? ' sel' : ''}`}
-                onClick={() => toggleSelect(pf.id)}
-                title={`${pf.name} · ${definitions[pf.definitionId]?.model} · @${pf.address}`}
-              >
-                <span className="qd-fx-name">{pf.name}</span>
-                <span className="qd-fx-def">{definitions[pf.definitionId]?.model}</span>
-              </button>
-            ))
-          )}
-        </div>
+        {noFx ? (
+          <span className="qd-muted">{t('fixturesWindow.empty')}</span>
+        ) : (
+          groups.map(([uni, fx]) => (
+            <div key={uni}>
+              {multi && <div className="section-label">Universe {uni}</div>}
+              <div className="qd-fixtures">
+                {fx.map((pf) => {
+                  idx++
+                  const index = idx
+                  return (
+                    <button
+                      key={pf.id}
+                      className={`qd-fx${selection.includes(pf.id) ? ' sel' : ''}`}
+                      onClick={(e) => onFxClick(e, pf.id, index)}
+                      title={`${pf.name} · ${definitions[pf.definitionId]?.model} · U${pf.universe}.${pf.address}  (shift-clic: rango)`}
+                    >
+                      <span className="qd-fx-name">{pf.name}</span>
+                      <span className="qd-fx-def">{definitions[pf.definitionId]?.model}</span>
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+          ))
+        )}
       </div>
     </div>
   )

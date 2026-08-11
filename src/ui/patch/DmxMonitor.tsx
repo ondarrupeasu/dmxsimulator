@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useShowStore, useEffectiveProgrammer } from '../../store/showStore'
 import { computeUniverse, UNIVERSE_SIZE } from '../../engine/dmx'
@@ -27,7 +27,7 @@ const FN_ATTR: Record<string, { attr: string; screen?: string }> = {
   focus: { attr: 'Beam', screen: 'beam' },
 }
 
-type Owner = { id: string; name: string; fn: string; chLabel: string }
+type Owner = { id: string; name: string; fn: string; chLabel: string; chIndex: number }
 
 /** Live grid of all 512 channel values for a universe. Clicking a patched channel
  *  selects its fixture and jumps the desk to the matching attribute. */
@@ -39,6 +39,8 @@ export function DmxMonitor({ universe = 1 }: { universe?: number }) {
   const select = useShowStore((s) => s.select)
   const setDeskAttr = useShowStore((s) => s.setDeskAttr)
   const setDeskScreen = useShowStore((s) => s.setDeskScreen)
+  const setChannel = useShowStore((s) => s.setChannel)
+  const drag = useRef<{ moved: boolean } | null>(null)
   const blind = useShowStore((s) => s.blind)
   const effective = useEffectiveProgrammer(true) // real output — withholds programmer in blind
   const [uni, setUni] = useState(universe)
@@ -64,6 +66,7 @@ export function DmxMonitor({ universe = 1 }: { universe?: number }) {
           name: pf.name,
           fn,
           chLabel: channels[k]?.name ?? fn,
+          chIndex: k,
         })
       }
     }
@@ -94,6 +97,29 @@ export function DmxMonitor({ universe = 1 }: { universe?: number }) {
     }
   }
 
+  // Drag a patched cell up/down to set its channel 0–255 (quick value entry); a plain
+  // click (no drag) just selects the fixture + jumps the desk to its attribute.
+  const onCellDown = (e: React.PointerEvent, o: Owner, startVal: number) => {
+    e.preventDefault()
+    drag.current = { moved: false }
+    select([o.id])
+    const startY = e.clientY
+    const move = (ev: PointerEvent) => {
+      if (!drag.current) return
+      const dy = startY - ev.clientY
+      if (Math.abs(dy) > 2) drag.current.moved = true
+      setChannel(o.id, o.chIndex, Math.max(0, Math.min(255, Math.round(startVal + dy * 1.6))))
+    }
+    const up = () => {
+      if (drag.current && !drag.current.moved) onChannel(o)
+      drag.current = null
+      window.removeEventListener('pointermove', move)
+      window.removeEventListener('pointerup', up)
+    }
+    window.addEventListener('pointermove', move)
+    window.addEventListener('pointerup', up)
+  }
+
   return (
     <div className="panel">
       <header>
@@ -121,14 +147,15 @@ export function DmxMonitor({ universe = 1 }: { universe?: number }) {
             const pct = (v / 255) * 100
             const owner = owners.get(i)
             const title = owner
-              ? `Channel ${i + 1} · ${owner.name} — ${owner.chLabel}: ${v}  (clic para controlar)`
+              ? `Channel ${i + 1} · ${owner.name} — ${owner.chLabel}: ${v}  (clic: seleccionar · arrastra ↕ para fijar valor)`
               : `Channel ${i + 1}: ${v}`
             return (
               <div
                 key={i}
                 className={`dmx-cell${v > 0 ? ' active' : ''}${owned.has(i) ? ' owned' : ''}${owner ? ' patched' : ''}`}
                 title={title}
-                onClick={owner ? () => onChannel(owner) : undefined}
+                onPointerDown={owner ? (e) => onCellDown(e, owner, v) : undefined}
+                style={owner ? { touchAction: 'none' } : undefined}
                 role={owner ? 'button' : undefined}
               >
                 {v > 0 && <span className="fill" style={{ height: `${pct}%` }} />}

@@ -140,9 +140,9 @@ const ZONES: { name: string; x: number; y: number; w: number; h: number; c: stri
   { name: 'Program', x: 648, y: 246, w: 400, h: 156, c: '#ff5a4d' },
   { name: 'Windows', x: 1066, y: 246, w: 136, h: 156, c: '#e0c341' },
   { name: 'Page', x: 706, y: 440, w: 146, h: 130, c: '#4ad6d6' },
-  { name: 'Playback faders', x: 36, y: 444, w: 628, h: 460, c: '#7d8cff' },
-  { name: 'Playbacks / Go', x: 644, y: 592, w: 268, h: 306, c: '#ff77b0' },
-  { name: 'Keypad · command line', x: 906, y: 456, w: 372, h: 442, c: '#9be14a' },
+  { name: 'Playback faders', x: 36, y: 444, w: 628, h: 388, c: '#7d8cff' },
+  { name: 'Playbacks / Go', x: 644, y: 592, w: 268, h: 250, c: '#ff77b0' },
+  { name: 'Keypad · command line', x: 906, y: 456, w: 372, h: 386, c: '#9be14a' },
 ]
 
 export function QuartzPanel() {
