@@ -274,17 +274,21 @@ function buildFixture(movingHead: boolean): FxObj {
 
   // Selection indicator — a small, soft red glow on the body (subtle, like a status
   // light), shown only when selected.
+  // Selection indicator — a small, bright LED-like dot on the fixture (like a status
+  // light lit up), not a big halo. Additive blending makes it glow.
   const halo = new THREE.Sprite(
     new THREE.SpriteMaterial({
       map: haloTexture(),
-      color: 0xff1e1e,
+      color: 0xff2a2a,
       transparent: true,
-      opacity: 0.7,
+      opacity: 1,
       blending: THREE.AdditiveBlending,
       depthWrite: false,
+      depthTest: false,
     }),
   )
-  halo.scale.setScalar(0.8)
+  halo.renderOrder = 6
+  halo.scale.setScalar(0.3)
   halo.position.y = movingHead ? -0.34 : -0.1 // sit on the lamp body
   halo.visible = false
   group.add(halo)
@@ -523,8 +527,10 @@ export function Visualizer3D() {
           fxMap.set(pf.id, fx)
         }
         fx.group.userData.fixtureId = pf.id
-        // Name tag (only under work lights) — name + DMX start as universe.address.
-        if (lit) {
+        // Name tag — only on the SELECTED fixtures (so a big rig doesn't drown in
+        // labels): name + DMX start as universe.address.
+        const showLabel = selSet.has(pf.id)
+        if (showLabel) {
           const labelText = `${pf.name}  ·  ${pf.universe}.${pf.address}`
           if (!fx.label || fx.label.userData.text !== labelText) {
             if (fx.label) {
