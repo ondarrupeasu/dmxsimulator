@@ -41,6 +41,12 @@ interface ShowState {
   /** User labels for the assignable executors 1–10 (handwritten-tape style). */
   executorLabels: Record<number, string>
   setExecutorLabel: (n: number, label: string) => void
+  /** Cue bound to each executor button (executor number → cueId). */
+  executorCues: Record<number, string>
+  /** Record the current programmer as a cue and bind it to executor n. */
+  recordExecutor: (n: number) => void
+  /** Unbind an executor (its cue stays in the cue list). */
+  clearExecutor: (n: number) => void
   /** Running effects (movement/colour animation). Set by templates for now. */
   effects: Effect[]
   /** Animation clock in seconds (driven while effects run), for 2D/monitor. */
@@ -358,6 +364,24 @@ export const useShowStore = create<ShowState>()(
           else delete next[n]
           return { executorLabels: next }
         }),
+      executorCues: {},
+      recordExecutor: (n) =>
+        set((s) => {
+          if (Object.keys(s.programmer).length === 0) return s
+          const values: ProgrammerValues = {}
+          for (const inst in s.programmer) values[inst] = { ...s.programmer[inst] }
+          const cue: Cue = { id: nextInstanceId(), name: s.executorLabels[n] ?? `Exec ${n}`, values }
+          return {
+            cues: [...s.cues, cue],
+            executorCues: { ...s.executorCues, [n]: cue.id },
+          }
+        }),
+      clearExecutor: (n) =>
+        set((s) => {
+          const next = { ...s.executorCues }
+          delete next[n]
+          return { executorCues: next }
+        }),
 
       findFreeAddress: (footprint, universe) => {
         const occupied = new Uint8Array(UNIVERSE_SIZE + 1) // 1-based
@@ -667,6 +691,7 @@ export const useShowStore = create<ShowState>()(
           cues: [],
           activeCueId: null,
           playbackLevels: {},
+          executorCues: {},
           palettes: [],
           groups: [],
           playbackPage: 0,
@@ -689,6 +714,7 @@ export const useShowStore = create<ShowState>()(
         groups: s.groups,
         effects: s.effects,
         executorLabels: s.executorLabels,
+        executorCues: s.executorCues,
       }),
     },
   ),

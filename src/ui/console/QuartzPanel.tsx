@@ -30,15 +30,16 @@ const ATTRIBUTES: { name: string; wheels: string[][] }[] = [
 
 type V = 'white' | 'dark' | 'blue' | 'red'
 function Key({
-  v = 'dark', led = true, ledColor, ledBottom, on, text, narrow, assignable, disabled, title, onClick, tour,
+  v = 'dark', led = true, ledColor, ledBottom, on, text, narrow, assignable, disabled, title, onClick, onContextMenu, tour,
 }: {
   v?: V; led?: boolean; ledColor?: 'red' | 'blue'; ledBottom?: boolean; on?: boolean
-  text?: string; narrow?: boolean; assignable?: boolean; disabled?: boolean; title?: string; onClick?: () => void; tour?: string
+  text?: string; narrow?: boolean; assignable?: boolean; disabled?: boolean; title?: string
+  onClick?: () => void; onContextMenu?: (e: React.MouseEvent) => void; tour?: string
 }) {
   return (
     <button
       className={`ck ck-${v}${ledBottom ? ' ledb' : ''}${narrow ? ' narrow' : ''}${assignable ? ' assignable' : ''}`}
-      disabled={disabled} title={title} onClick={onClick} data-tour={tour}
+      disabled={disabled} title={title} onClick={onClick} onContextMenu={onContextMenu} data-tour={tour}
     >
       {led && <span className={`ckled${on ? ' on' : ''}${ledColor ? ' ' + ledColor : ''}`} />}
       {text != null && <span className="cktext">{text}</span>}
@@ -167,12 +168,29 @@ export function QuartzPanel() {
   const setPlaybackLevel = useShowStore((s) => s.setPlaybackLevel)
   const executorLabels = useShowStore((s) => s.executorLabels)
   const setExecutorLabel = useShowStore((s) => s.setExecutorLabel)
+  const executorCues = useShowStore((s) => s.executorCues)
+  const recordExecutor = useShowStore((s) => s.recordExecutor)
+  const clearExecutor = useShowStore((s) => s.clearExecutor)
   const editExecutor = (n: number) => {
     const cur = executorLabels[n] ?? ''
     const v = window.prompt(`Executor ${n} — escribe su etiqueta (vacío para borrar)`, cur)
     if (v !== null) setExecutorLabel(n, v)
   }
   const hasProgrammer = useShowStore((s) => Object.keys(s.programmer).length > 0)
+  // Executor click: fire/kill its bound cue, or capture the current look, or label it.
+  const boundCue = (n: number) => cues.find((c) => c.id === executorCues[n])
+  const execCaption = (n: number) => boundCue(n)?.name ?? executorLabels[n]
+  const onExecutor = (n: number) => {
+    const cue = boundCue(n)
+    if (cue) {
+      if ((playbackLevels[cue.id] ?? 0) > 0) setPlaybackLevel(cue.id, 0)
+      else goCue(cue.id)
+    } else if (hasProgrammer) {
+      recordExecutor(n)
+    } else {
+      editExecutor(n)
+    }
+  }
   const present = useSelectionFunctions()
   const fixtures = useShowStore((s) => s.show.fixtures)
   const select = useShowStore((s) => s.select)
@@ -232,25 +250,33 @@ export function QuartzPanel() {
             caption (outside the button), like the printed 11–18 functions. */}
         <Frame x={642} y={48} w={652} h={124} />
         <GridLabels x={648} y={52} w={640} cols={10} small above
-          items={Array.from({ length: 10 }, (_, i) => (executorLabels[i + 1] ? `${executorLabels[i + 1]}\n${i + 1}` : String(i + 1)))} />
+          items={Array.from({ length: 10 }, (_, i) => (execCaption(i + 1) ? `${execCaption(i + 1)}\n${i + 1}` : String(i + 1)))} />
         <Box x={648} y={54} w={640} h={112} cols={10} rows={2} spread>
           {Array.from({ length: 20 }, (_, i) => {
             const n = i + 1
-            // 1–10 (top) and 19–20 are blank/assignable; 11–18 have fixed functions.
+            // 1–10 (top) and 19–20 are blank/assignable (bind a cue); 11–18 are fixed.
             if (n <= 10 || n >= 19) {
-              const label = executorLabels[n]
+              const cue = boundCue(n)
+              const caption = execCaption(n)
+              const lit = !!cue && (playbackLevels[cue.id] ?? 0) > 0
+              const title = cue
+                ? `Executor ${n}: ${cue.name} — clic para disparar/apagar (clic derecho: liberar)`
+                : hasProgrammer
+                  ? `Executor ${n} — clic para grabar el look actual aquí`
+                  : `Executor ${n} — clic para etiquetar`
               return (
                 <Key
-                  key={i} v="dark" narrow assignable={!label}
-                  title={label ? `Executor ${n}: ${label}` : `Executor ${n} — clic para etiquetar`}
-                  onClick={() => editExecutor(n)}
+                  key={i} v="dark" narrow assignable={!caption} ledColor="red" on={lit}
+                  title={title}
+                  onClick={() => onExecutor(n)}
+                  onContextMenu={(e) => { e.preventDefault(); if (cue) clearExecutor(n) }}
                 />
               )
             }
             return <Key key={i} v="dark" narrow disabled title={`Executor ${n}`} />
           })}
         </Box>
-        <GridLabels x={648} y={172} w={640} cols={10} small items={['11\nAttribute\nEditor', '12\nShow\nLibrary', '13\nPlaybacks', '14\nChannel\nGrid', '15\nVisualiser', '16\nGroups +\nPalettes', '17\nFixtures\n+ Groups', '18\nSnap', executorLabels[19] ? `19\n${executorLabels[19]}` : '19', executorLabels[20] ? `20\n${executorLabels[20]}` : '20']} />
+        <GridLabels x={648} y={172} w={640} cols={10} small items={['11\nAttribute\nEditor', '12\nShow\nLibrary', '13\nPlaybacks', '14\nChannel\nGrid', '15\nVisualiser', '16\nGroups +\nPalettes', '17\nFixtures\n+ Groups', '18\nSnap', execCaption(19) ? `19\n${execCaption(19)}` : '19', execCaption(20) ? `20\n${execCaption(20)}` : '20']} />
 
         {/* Fix / All / HiLight */}
         <GridLabels x={40} y={270} w={100} cols={2} items={['Fix −1', 'Fix +1']} above />
