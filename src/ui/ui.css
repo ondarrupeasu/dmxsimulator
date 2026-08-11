@@ -732,6 +732,14 @@
   font-size: 11px; font-weight: 600; line-height: 1.1;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0;
 }
+/* Reference-only menu labels (real Titan option, no backing feature yet). */
+.qsk.info { cursor: default; }
+.qsk.info .qsk-lbl { font-weight: 500; color: var(--text-muted, #b8b6c0); }
+.qsk.info:hover { border-color: var(--border); }
+.qsk-opt {
+  display: block; font-size: 9px; font-weight: 600;
+  color: var(--coral); margin-top: 1px;
+}
 
 /* Command line footer. */
 .qscreen-cmd {

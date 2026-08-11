@@ -103,6 +103,10 @@ interface ShowState {
   locateSelected: () => void
   clearProgrammer: () => void
 
+  // Active softkey menu context (Titan: root / record / group / patch / palette / ml)
+  deskMenu: string
+  setDeskMenu: (m: string) => void
+
   // Command line (Titan-style keypad syntax, e.g. "1 THRU 4 @ 50")
   cmd: string
   cmdAppend: (token: string) => void
@@ -430,6 +434,9 @@ export const useShowStore = create<ShowState>()(
         }),
 
       clearProgrammer: () => set({ programmer: {} }),
+
+      deskMenu: 'root',
+      setDeskMenu: (m) => set({ deskMenu: m }),
 
       cmd: '',
       cmdAppend: (token) => set((s) => ({ cmd: s.cmd + token })),

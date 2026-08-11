@@ -147,6 +147,7 @@ export function QuartzPanel() {
   const attr = useShowStore((s) => s.deskAttr)
   const setAttr = useShowStore((s) => s.setDeskAttr)
   const setScreen = useShowStore((s) => s.setDeskScreen)
+  const setMenu = useShowStore((s) => s.setDeskMenu)
   const selection = useShowStore((s) => s.selection)
   const locateSelected = useShowStore((s) => s.locateSelected)
   const clearProgrammer = useShowStore((s) => s.clearProgrammer)
@@ -172,7 +173,6 @@ export function QuartzPanel() {
   const fixtures = useShowStore((s) => s.show.fixtures)
   const select = useShowStore((s) => s.select)
   const setByFn = useShowStore((s) => s.setSelectedByFunction)
-  const setMode = useShowStore((s) => s.setMode)
   const cmdAppend = useShowStore((s) => s.cmdAppend)
   const cmdBackspace = useShowStore((s) => s.cmdBackspace)
   const cmdClear = useShowStore((s) => s.cmdClear)
@@ -263,7 +263,7 @@ export function QuartzPanel() {
         <Box x={178} y={272} w={452} h={118} cols={7} rows={2}>
           {ATTRIBUTES.map((a) => <Key key={a.name} v="white" on={a.name === attr} title={a.name} onClick={() => setAttr(a.name)} />)}
           <Key v="white" title="Shape → Shapes" onClick={() => setScreen('effects')} />
-          <Key v="white" disabled title="ML Menu" /><Key v="white" disabled title="Blind" /><Key v="white" disabled title="Off" />
+          <Key v="white" title="ML Menu — menú Moving Light" onClick={() => setMenu('ml')} /><Key v="white" disabled title="Blind" /><Key v="white" disabled title="Off" />
           <Key v="white" disabled title="Fan" /><Key v="white" disabled title="Options" /><Key v="dark" disabled title="Latch Menu" />
         </Box>
         <GridLabels x={178} y={392} w={452} cols={7} items={['Shape', 'ML\nMenu', 'Blind', 'Off', 'Fan', 'Options', 'Latch\nMenu']} />
@@ -271,9 +271,9 @@ export function QuartzPanel() {
         {/* Program keys 6×2 */}
         <GridLabels x={658} y={270} w={386} cols={6} items={['Record', 'Update', 'Edit', 'Select\nIf', 'Patch', 'Disk']} subs={['', '', '', '', '', 'Setup']} above />
         <Box x={658} y={272} w={386} h={118} cols={6} rows={2}>
-          <Key v="dark" ledColor="red" on={hasProgrammer} disabled={!hasProgrammer} title="Record" onClick={recordCue} />
+          <Key v="dark" ledColor="red" on={hasProgrammer} title="Record — abre el menú Record" onClick={() => { setMenu('record'); if (hasProgrammer) recordCue() }} />
           <Key v="white" led={false} disabled={!hasActive || !hasProgrammer} title="Update" onClick={() => activeCueId && updateCue(activeCueId)} />
-          <Key v="white" led={false} disabled title="Edit" /><Key v="white" led={false} disabled title="Select If" /><Key v="white" led={false} title="Patch — ir a la vista de patch" onClick={() => setMode('patch')} /><Key v="white" led={false} disabled title="Disk" />
+          <Key v="white" led={false} disabled title="Edit" /><Key v="white" led={false} disabled title="Select If" /><Key v="white" led={false} title="Patch — abre el menú Patch" onClick={() => setMenu('patch')} /><Key v="white" led={false} disabled title="Disk" />
           <Key v="white" led={false} disabled={!hasActive} title="Delete" onClick={() => activeCueId && deleteCue(activeCueId)} />
           <Key v="white" led={false} disabled={!hasActive} title="Copy" onClick={() => activeCueId && copyCue(activeCueId)} />
           <Key v="white" led={false} disabled title="Move" /><Key v="white" led={false} disabled title="Unfold" /><Key v="white" led={false} disabled title="Include" />
@@ -343,13 +343,13 @@ export function QuartzPanel() {
         {/* Keypad — one 6×4 grid so every row is evenly spaced */}
         <GridLabels x={916} y={548} w={258} cols={4} items={['Fixture', 'Palette', 'Macro', 'Group']} above />
         <Box x={916} y={558} w={258} h={330} cols={4} rows={6}>
-          <Key v="dark" title="Fixtures" onClick={() => setScreen('fixtures')} />
-          <Key v="dark" title="Palettes" onClick={() => setScreen('colour')} />
-          <Key v="dark" disabled title="Macro" /><Key v="dark" disabled title="Group" />
+          <Key v="dark" title="Fixtures" onClick={() => { setScreen('fixtures'); setMenu('root') }} />
+          <Key v="dark" title="Palettes" onClick={() => { setScreen('colour'); setMenu('palette') }} />
+          <Key v="dark" disabled title="Macro" /><Key v="dark" title="Group — menú Group" onClick={() => setMenu('group')} />
           <Key v="white" led={false} text="1" title="1" onClick={dig('1')} /><Key v="white" led={false} text="2" title="2" onClick={dig('2')} /><Key v="white" led={false} text="3" title="3" onClick={dig('3')} /><Key v="white" on={shift} text="Avo" title="Avo — activa/desactiva las segundas funciones" onClick={() => setShift((s) => !s)} />
           <Key v="white" led={false} text="4" title="4" onClick={dig('4')} /><Key v="white" led={false} text="5" title="5" onClick={dig('5')} /><Key v="white" led={false} text="6" title="6" onClick={dig('6')} /><Key v="white" ledColor="blue" disabled text="TIME" title="Time" />
           <Key v="white" led={false} text="7" title="7" onClick={dig('7')} /><Key v="white" led={false} text="8" title="8" onClick={dig('8')} /><Key v="white" led={false} text="9" title="9" onClick={dig('9')} /><Key v="white" ledColor="red" on={hasProgrammer} text="CLEAR" title="Clear the programmer" onClick={clearProgrammer} />
-          <Key v="white" led={false} text="EXIT" title="Exit — vaciar la línea de comandos" onClick={cmdClear} /><Key v="white" led={false} text="0" title="0" onClick={dig('0')} /><Key v="white" led={false} text="ENTER" title="Enter — ejecutar la línea de comandos" onClick={commitCommand} /><Key v="white" led={false} disabled text="." title="." />
+          <Key v="white" led={false} text="EXIT" title="Exit — salir al menú raíz / vaciar la línea" onClick={() => { cmdClear(); setMenu('root') }} /><Key v="white" led={false} text="0" title="0" onClick={dig('0')} /><Key v="white" led={false} text="ENTER" title="Enter — ejecutar la línea de comandos" onClick={commitCommand} /><Key v="white" led={false} disabled text="." title="." />
           <Key v="dark" led={false} title="Back — borrar" onClick={cmdBackspace} /><Key v="dark" led={false} disabled={noFx} title="Through — rango" onClick={() => cmdAppend(' Through ')} /><Key v="dark" led={false} disabled={noFx} title="And — añadir" onClick={() => cmdAppend(' And ')} /><Key v="dark" led={false} disabled={noSel && noFx} title="@ — intensidad (@ @ = full)" onClick={() => cmdAppend(' @ ')} />
         </Box>
         <GridLabels x={916} y={892} w={258} cols={4} items={['Back', 'Through', 'And', '@']} subs={['Undo', '−%', '+%', 'Redo']} />
