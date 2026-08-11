@@ -535,6 +535,8 @@ export function Visualizer3D() {
           // Default (floor) → on the stage deck at a side; else hung on its truss.
           if (pf.floor === false) hz.position.copy(place(pf.position.x, pf.truss, trusses))
           else hz.position.set(pf.position.x * 8, STAGE_TOP, -1)
+          // Aim the output nozzle toward stage centre (flip when placed on the right).
+          hz.rotation.y = pf.position.x > 0.1 ? Math.PI : 0
           const selLed = hz.userData.selLed as THREE.Sprite | undefined
           if (selLed) selLed.visible = selSet.has(pf.id)
           continue

@@ -7,6 +7,7 @@ import { TEMPLATES } from '../model/templates'
 export function ShowMenu() {
   const { t } = useTranslation()
   const loadTemplate = useShowStore((s) => s.loadTemplate)
+  const templateId = useShowStore((s) => s.templateId)
   const exportShow = useShowStore((s) => s.exportShow)
   const importShow = useShowStore((s) => s.importShow)
   const fileRef = useRef<HTMLInputElement>(null)
@@ -36,7 +37,7 @@ export function ShowMenu() {
   return (
     <div className="show-menu">
       <select
-        value=""
+        value={templateId}
         title={t('show.templates')}
         onChange={(e) => {
           if (e.target.value) loadTemplate(e.target.value)

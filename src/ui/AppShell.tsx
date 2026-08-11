@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { Panel, PanelGroup, PanelResizeHandle, type ImperativePanelHandle } from 'react-resizable-panels'
 import { useShowStore } from '../store/showStore'
 import { setLanguage } from '../i18n'
-import { CONSOLES, consoleById } from '../console/registry'
+import { consoleById } from '../console/registry'
 import { PatchView } from './patch/PatchView'
 import { DmxMonitor } from './patch/DmxMonitor'
 import { Visualizer2D } from './visualizer/Visualizer2D'
@@ -27,7 +27,6 @@ export function AppShell() {
   const setViewLights = useShowStore((s) => s.setViewLights)
   const startTour = useTour((t) => t.start)
   const consoleId = useShowStore((s) => s.consoleId)
-  const setConsole = useShowStore((s) => s.setConsole)
   const [viewer, setViewer] = useState<'2d' | '3d'>('3d')
 
   // Collapsible secondary panes: folding the Fixtures window maximises the desk,
@@ -125,18 +124,6 @@ export function AppShell() {
         </div>
 
         <div className="spacer" />
-
-        <label className="console-picker" title="Console">
-          <span>Console</span>
-          <select value={consoleId} onChange={(e) => setConsole(e.target.value)}>
-            {CONSOLES.map((c) => (
-              <option key={c.id} value={c.id} disabled={c.status === 'planned'}>
-                {c.brand} {c.model}
-                {c.status === 'wip' ? ' (WIP)' : ''}
-              </option>
-            ))}
-          </select>
-        </label>
 
         <ShowMenu />
 

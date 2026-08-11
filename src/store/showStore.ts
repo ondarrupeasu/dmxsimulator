@@ -30,6 +30,8 @@ interface ShowState {
   mode: AppMode
   /** Selected control surface (which console the student is practising on). */
   consoleId: string
+  /** Last loaded template id (so the picker shows which rig you're on). */
+  templateId: string
   /** Instance ids currently selected in the programmer. */
   selection: string[]
   /** Recorded cues (the show's playback stack). */
@@ -234,6 +236,7 @@ export const useShowStore = create<ShowState>()(
       programmer: {},
       mode: 'patch',
       consoleId: 'avolites-quartz',
+      templateId: '',
       selection: [],
       cues: [],
       activeCueId: null,
@@ -837,6 +840,7 @@ export const useShowStore = create<ShowState>()(
           activeCueId: null,
           palettes: [],
           playbackPage: 0,
+          templateId,
         })
       },
 
@@ -884,6 +888,7 @@ export const useShowStore = create<ShowState>()(
           cues: [],
           activeCueId: null,
           playbackPage: 0,
+          templateId: '',
         })
         return true
       },
@@ -903,6 +908,7 @@ export const useShowStore = create<ShowState>()(
           playbackPage: 0,
           effects: [],
           now: 0,
+          templateId: '',
         })),
     }),
     {
@@ -913,6 +919,7 @@ export const useShowStore = create<ShowState>()(
         show: s.show,
         programmer: s.programmer,
         consoleId: s.consoleId,
+        templateId: s.templateId,
         cues: s.cues,
         activeCueId: s.activeCueId,
         playbackLevels: s.playbackLevels,
