@@ -11,7 +11,9 @@ import { useSelectedValue, useSelectionFunctions } from './useSelectedValue'
  */
 
 const IMG_W = 1306
-const IMG_H = 919
+// Trace height was 919 (the desk photo). We shortened the faders and pulled the whole
+// bottom cluster up, so the readable desk now fits in a shorter canvas → less height.
+const IMG_H = 859
 const L = (px: number) => `${(px / IMG_W) * 100}%`
 const T = (px: number) => `${(px / IMG_H) * 100}%`
 const clamp = (v: number) => Math.max(0, Math.min(255, v))
@@ -303,8 +305,8 @@ export function QuartzPanel() {
         </Box>
 
         {/* Fader numbers + faders (shorter travel, bottom still aligned at 888) */}
-        <GridLabels x={44} y={648} w={612} cols={10} items={['1', '2', '3', '4', '5', '6', '7', '8', '9', '10']} />
-        <div className="cal-faders" data-tour="desk-fader" style={{ left: L(44), top: T(668), width: L(612), height: T(220) }}>
+        <GridLabels x={44} y={588} w={612} cols={10} items={['1', '2', '3', '4', '5', '6', '7', '8', '9', '10']} />
+        <div className="cal-faders" data-tour="desk-fader" style={{ left: L(44), top: T(608), width: L(612), height: T(220) }}>
           {Array.from({ length: 10 }, (_, i) => {
             const gi = playbackPage * 10 + i; const cue = cues[gi]
             return (
@@ -326,23 +328,23 @@ export function QuartzPanel() {
         <Label x={712} y={566} w={62} text={`− Page · ${playbackPage + 1}`} />
 
         {/* Transport 2×3 + Go — dropped down to sit right on top of Go */}
-        <Label x={654} y={668} w={56} text={'Live\nTime'} sub="Review" align="right" /><Label x={848} y={668} w={56} text={'Next\nTime'} sub="Snap Back" align="left" />
-        <Label x={654} y={732} w={56} text={'Prev\nCue'} align="right" /><Label x={848} y={732} w={56} text={'Next\nCue'} align="left" />
-        <Label x={652} y={796} w={58} text={'Connect\n/Cue'} align="right" /><Label x={848} y={796} w={56} text="Stop" align="left" />
-        <Box x={714} y={654} w={130} h={178} cols={2} rows={3}>
+        <Label x={654} y={608} w={56} text={'Live\nTime'} sub="Review" align="right" /><Label x={848} y={608} w={56} text={'Next\nTime'} sub="Snap Back" align="left" />
+        <Label x={654} y={672} w={56} text={'Prev\nCue'} align="right" /><Label x={848} y={672} w={56} text={'Next\nCue'} align="left" />
+        <Label x={652} y={736} w={58} text={'Connect\n/Cue'} align="right" /><Label x={848} y={736} w={56} text="Stop" align="left" />
+        <Box x={714} y={594} w={130} h={178} cols={2} rows={3}>
           <Key v="white" led={false} disabled title="Live Time" /><Key v="white" led={false} disabled title="Next Time" />
           <Key v="white" led={false} disabled={!cues.length} title="Prev Cue" onClick={() => goRel(-1)} />
           <Key v="white" led={false} disabled={!cues.length} title="Next Cue" onClick={() => goRel(1)} />
           <Key v="dark" disabled title="Connect/Cue" /><Key v="dark" disabled title="Stop" />
         </Box>
-        <Box x={749} y={826} w={60} h={62} cols={1} rows={1}>
+        <Box x={749} y={766} w={60} h={62} cols={1} rows={1}>
           <Key v="red" ledColor="red" on={cues.length > 0} disabled={!cues.length} title="Go" onClick={() => goRel(1)} />
         </Box>
-        <Label x={725} y={892} w={108} text="Go" />
+        <Label x={725} y={832} w={108} text="Go" />
 
         {/* Keypad — one 6×4 grid so every row is evenly spaced */}
-        <GridLabels x={916} y={548} w={258} cols={4} items={['Fixture', 'Palette', 'Macro', 'Group']} above />
-        <Box x={916} y={558} w={258} h={330} cols={4} rows={6}>
+        <GridLabels x={916} y={488} w={258} cols={4} items={['Fixture', 'Palette', 'Macro', 'Group']} above />
+        <Box x={916} y={498} w={258} h={330} cols={4} rows={6}>
           <Key v="dark" title="Fixtures" onClick={() => { setScreen('fixtures'); setMenu('root') }} />
           <Key v="dark" title="Palettes" onClick={() => { setScreen('colour'); setMenu('palette') }} />
           <Key v="dark" disabled title="Macro" /><Key v="dark" title="Group — menú Group" onClick={() => setMenu('group')} />
@@ -352,13 +354,13 @@ export function QuartzPanel() {
           <Key v="white" led={false} text="EXIT" title="Exit — salir al menú raíz / vaciar la línea" onClick={() => { cmdClear(); setMenu('root') }} /><Key v="white" led={false} text="0" title="0" onClick={dig('0')} /><Key v="white" led={false} text="ENTER" title="Enter — ejecutar la línea de comandos" onClick={commitCommand} /><Key v="white" led={false} disabled text="." title="." />
           <Key v="dark" led={false} title="Back — borrar" onClick={cmdBackspace} /><Key v="dark" led={false} disabled={noFx} title="Through — rango" onClick={() => cmdAppend(' Through ')} /><Key v="dark" led={false} disabled={noFx} title="And — añadir" onClick={() => cmdAppend(' And ')} /><Key v="dark" led={false} disabled={noSel && noFx} title="@ — intensidad (@ @ = full)" onClick={() => cmdAppend(' @ ')} />
         </Box>
-        <GridLabels x={916} y={892} w={258} cols={4} items={['Back', 'Through', 'And', '@']} subs={['Undo', '−%', '+%', 'Redo']} />
+        <GridLabels x={916} y={832} w={258} cols={4} items={['Back', 'Through', 'And', '@']} subs={['Undo', '−%', '+%', 'Redo']} />
 
         {/* Locate */}
-        <Box x={1210} y={778} w={60} h={58} cols={1} rows={1}>
+        <Box x={1210} y={718} w={60} h={58} cols={1} rows={1}>
           <Key v="red" ledColor="red" on={!noSel} disabled={noSel} title="Locate selected" onClick={locateSelected} tour="desk-locate" />
         </Box>
-        <Label x={1190} y={840} w={100} text="Locate" />
+        <Label x={1190} y={780} w={100} text="Locate" />
       </div>
     </div>
   )

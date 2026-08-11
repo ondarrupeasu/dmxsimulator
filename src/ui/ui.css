@@ -851,13 +851,13 @@
 }
 .qcal {
   position: relative;
-  /* Fit the whole desk inside the pane: limited by width (100%) OR height (141cqh
-     keeps the 1306:919 ratio against the pane height), whichever is smaller.
+  /* Fit the whole desk inside the pane: limited by width (100%) OR height (152cqh
+     keeps the 1306:859 ratio against the pane height), whichever is smaller.
      No max width — it's all vector, so on a big/ultrawide screen the desk scales
      up to fill the pane (widen the console pane to make it nearly full-screen). */
-  width: min(100%, 141cqh);
+  width: min(100%, 152cqh);
   min-width: 620px; /* never shrink below a readable size */
-  aspect-ratio: 1306 / 919;
+  aspect-ratio: 1306 / 859;
   background: #17181d;
   border: 1px solid #2a2b31;
   border-radius: 10px;
