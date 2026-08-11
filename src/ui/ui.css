@@ -478,6 +478,21 @@
 }
 .stage svg { width: 100%; height: 100%; display: block; }
 
+/* 2D plan + elevation views */
+.v2-title { fill: var(--text-dim); font-size: 15px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; }
+.v2-stage { fill: #191922; stroke: #33343e; stroke-width: 1; }
+.v2-zone { fill: #55565f; font-size: 12px; letter-spacing: 1px; }
+.v2-lip { stroke: #6a6b74; stroke-width: 2; }
+.v2-floor { stroke: #33343e; stroke-width: 1.5; }
+.v2-truss { stroke: #565761; stroke-width: 2; }
+.v2-truss.foh { stroke: #7a6bb0; stroke-dasharray: 6 4; }
+.v2-truss-bar { fill: #4a4b55; stroke: #2a2b31; }
+.v2-truss-bar.foh { fill: #5a4f7e; }
+.v2-trusslbl { fill: var(--text-faint); font-size: 11px; font-weight: 600; }
+.v2-fx { cursor: pointer; }
+.v2-fxlbl { font-size: 12px; }
+.v2-fxlbl.sel { fill: var(--coral); font-weight: 600; }
+
 /* ---- Programmer ---- */
 .prog-empty {
   color: var(--text-faint);
