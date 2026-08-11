@@ -6,16 +6,12 @@ import { useShowStore } from '../../store/showStore'
 import { computeFixtureOutputs, mergeProgrammer } from '../../engine/dmx'
 import { applyEffects } from '../../engine/effects'
 import { computeVisualState } from '../../engine/render'
+import { TRUSSES, trussById, STAGE_TOP } from '../../model/venue'
 
-const TRUSS_Y = 5
-const STAGE_TOP = 1 // stage deck (tarima) height above the floor, in metres
-const TRUSS_ROWS_Z = [-4, 0, 4] // three truss rows, front ↔ back over the stage
-const FOH_TRUSS_Z = 9 // front-of-house truss over the audience, aimed at the stage
-const FOH_TRUSS_Y = 7 // it hangs a little higher than the stage trusses
-
-/** World position for a fixture on the truss (x normalized -1..1). */
-function place(x: number): THREE.Vector3 {
-  return new THREE.Vector3(x * 6, TRUSS_Y, 0)
+/** World position for a fixture: x normalized (-1..1) along its assigned truss. */
+function place(x: number, truss: number | undefined): THREE.Vector3 {
+  const t = trussById(truss)
+  return new THREE.Vector3(x * 6, t.y, t.z)
 }
 
 interface FxObj {
@@ -266,17 +262,12 @@ export function Visualizer3D() {
     const grid = new THREE.GridHelper(40, 40, 0x3c3c4a, 0x272730)
     grid.position.y = 0.02
     scene.add(grid)
-    // Three truss rows front ↔ back. Fixtures currently hang on the middle row;
-    // the outer rows are there for the upcoming multi-truss / multi-universe work.
-    for (const tz of TRUSS_ROWS_Z) {
+    // One box-truss per venue truss (three over the stage + the FOH over the audience).
+    for (const t of TRUSSES) {
       const truss = buildTruss(18)
-      truss.position.set(0, TRUSS_Y + 0.55, tz)
+      truss.position.set(0, t.y + 0.55, t.z)
       scene.add(truss)
     }
-    // Front-of-house truss over the audience (fixtures on it face back to the stage).
-    const fohTruss = buildTruss(18)
-    fohTruss.position.set(0, FOH_TRUSS_Y + 0.55, FOH_TRUSS_Z)
-    scene.add(fohTruss)
 
     // ---- Venue: a 1 m-high stage (tarima) with the audience flat in front ----
     // Stage deck — top surface sits STAGE_TOP metres above the floor.
@@ -406,7 +397,8 @@ export function Visualizer3D() {
           fxMap.set(pf.id, fx)
         }
         fx.group.userData.fixtureId = pf.id
-        fx.group.position.copy(place(pf.position.x))
+        const home = place(pf.position.x, pf.truss)
+        fx.group.position.copy(home)
 
         // Selection — just a soft coral halo around the fixture (not the whole body).
         fx.halo.visible = selSet.has(pf.id)
@@ -425,8 +417,8 @@ export function Visualizer3D() {
         let length = 16
         let hitsFloor = false
         if (down.y < -0.02) {
-          // Reach the stage deck (1 m above the floor), not the floor itself.
-          length = Math.min(24, (TRUSS_Y - STAGE_TOP) / -down.y)
+          // Reach the stage deck (1 m above the floor) from this truss's height.
+          length = Math.min(24, (home.y - STAGE_TOP) / -down.y)
           hitsFloor = true
         }
         fx.beam.scale.setScalar(length)
@@ -442,7 +434,7 @@ export function Visualizer3D() {
         // floor obliquely), oriented and stretched along the beam's ground track.
         if (on && hitsFloor) {
           fx.pool.visible = true
-          fx.pool.position.set(pf.position.x * 6 + down.x * length, STAGE_TOP + 0.02, down.z * length)
+          fx.pool.position.set(home.x + down.x * length, STAGE_TOP + 0.02, home.z + down.z * length)
           const vert = Math.max(0.2, -down.y) // cos of angle from vertical
           const floorAngle = Math.atan2(down.z, down.x)
           fx.pool.rotation.set(-Math.PI / 2, 0, -floorAngle)

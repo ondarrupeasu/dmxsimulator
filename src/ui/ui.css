@@ -147,6 +147,15 @@
 }
 .ghost-btn:hover:not(:disabled) { border-color: var(--coral); }
 .ghost-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.ghost-btn.active { background: var(--coral); border-color: var(--coral); color: #16131a; font-weight: 600; }
+
+/* Truss + universe selectors on each patched-fixture row. */
+.patch-assign { display: flex; gap: 6px; align-items: center; margin-right: 8px; }
+.patch-assign label { display: inline-flex; align-items: center; gap: 3px; font-size: 10px; color: var(--text-faint); }
+.patch-assign select {
+  font-size: 11px; padding: 2px 4px; border-radius: var(--radius-sm);
+  background: var(--bg-input); border: 1px solid var(--border); color: var(--text);
+}
 .play-toggle {
   font-size: 11px;
   padding: 3px 10px;

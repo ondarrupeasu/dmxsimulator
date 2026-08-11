@@ -2,6 +2,9 @@ import { useMemo, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useShowStore } from '../../store/showStore'
 import { fixtureFootprint } from '../../model/types'
+import { TRUSSES, DEFAULT_TRUSS } from '../../model/venue'
+
+const UNIVERSES = [1, 2, 3, 4] // the Quartz has four DMX outputs
 
 export function PatchView() {
   const { t } = useTranslation()
@@ -13,6 +16,8 @@ export function PatchView() {
   const toggleSelect = useShowStore((s) => s.toggleSelect)
   const select = useShowStore((s) => s.select)
   const setFixturePosition = useShowStore((s) => s.setFixturePosition)
+  const setFixtureTruss = useShowStore((s) => s.setFixtureTruss)
+  const setFixtureUniverse = useShowStore((s) => s.setFixtureUniverse)
   const readdressByRigOrder = useShowStore((s) => s.readdressByRigOrder)
 
   // Truss strip — drag a chip to set its position along the rig (x = −1..1).
@@ -125,8 +130,36 @@ export function PatchView() {
                   <div className="meta">
                     <div className="name">{pf.name}</div>
                     <div className="detail">
-                      {def?.model} · {t('patch.address')} {pf.address}–{end} · U{pf.universe}
+                      {def?.model} · {t('patch.address')} {pf.address}–{end}
                     </div>
+                  </div>
+                  <div className="patch-assign" onClick={(e) => e.stopPropagation()}>
+                    <label title={t('patch.truss')}>
+                      <span>{t('patch.truss')}</span>
+                      <select
+                        value={pf.truss ?? DEFAULT_TRUSS}
+                        onChange={(e) => setFixtureTruss(pf.id, Number(e.target.value))}
+                      >
+                        {TRUSSES.map((tr) => (
+                          <option key={tr.id} value={tr.id}>
+                            {tr.name}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                    <label title={t('patch.universe')}>
+                      <span>U</span>
+                      <select
+                        value={pf.universe}
+                        onChange={(e) => setFixtureUniverse(pf.id, Number(e.target.value))}
+                      >
+                        {UNIVERSES.map((u) => (
+                          <option key={u} value={u}>
+                            {u}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
                   </div>
                   <button
                     onClick={(e) => {

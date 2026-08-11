@@ -99,6 +99,9 @@ export interface PatchedFixture {
   address: number
   /** Normalized stage position for the visualizer, each axis roughly -1..1. */
   position: { x: number; y: number; z: number }
+  /** Which truss the fixture hangs on (index into venue TRUSSES). Defaults to the
+   *  middle stage truss when absent (older shows). */
+  truss?: number
 }
 
 export interface Show {

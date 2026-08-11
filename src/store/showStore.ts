@@ -87,6 +87,10 @@ interface ShowState {
   removeFixture: (instanceId: string) => void
   renameFixture: (instanceId: string, name: string) => void
   setFixturePosition: (instanceId: string, x: number, y: number) => void
+  /** Move a fixture to another truss (index into venue TRUSSES). */
+  setFixtureTruss: (instanceId: string, truss: number) => void
+  /** Move a fixture to another universe, re-addressing to a free slot there. */
+  setFixtureUniverse: (instanceId: string, universe: number) => void
   /** Reorder fixtures left→right by truss position and re-assign DMX addresses in
    *  that order — the way a rig is usually patched (address follows the cable run). */
   readdressByRigOrder: () => void
@@ -383,6 +387,42 @@ export const useShowStore = create<ShowState>()(
             ),
           },
         })),
+
+      setFixtureTruss: (instanceId, truss) =>
+        set((s) => ({
+          show: {
+            ...s.show,
+            fixtures: s.show.fixtures.map((f) => (f.id === instanceId ? { ...f, truss } : f)),
+          },
+        })),
+
+      setFixtureUniverse: (instanceId, universe) =>
+        set((s) => {
+          const pf = s.show.fixtures.find((f) => f.id === instanceId)
+          if (!pf || pf.universe === universe) return {}
+          const fp = fixtureFootprint(s.definitions[pf.definitionId], pf.modeIndex)
+          // Find a free block in the target universe (ignoring this fixture's own).
+          const occupied = new Uint8Array(UNIVERSE_SIZE + 1)
+          for (const o of s.show.fixtures) {
+            if (o.universe !== universe || o.id === instanceId) continue
+            const ofp = fixtureFootprint(s.definitions[o.definitionId], o.modeIndex)
+            for (let a = o.address; a < o.address + ofp && a <= UNIVERSE_SIZE; a++) occupied[a] = 1
+          }
+          let address: number | null = null
+          for (let start = 1; start + fp - 1 <= UNIVERSE_SIZE; start++) {
+            let free = true
+            for (let a = start; a < start + fp; a++) if (occupied[a]) { free = false; break }
+            if (free) { address = start; break }
+          }
+          if (address == null) return {} // target universe full — leave as-is
+          return {
+            show: {
+              ...s.show,
+              universeCount: Math.max(s.show.universeCount, universe),
+              fixtures: s.show.fixtures.map((f) => (f.id === instanceId ? { ...f, universe, address } : f)),
+            },
+          }
+        }),
 
       select: (instanceIds) => set({ selection: instanceIds }),
       toggleSelect: (instanceId) =>

@@ -31,6 +31,7 @@
     "remove": "Remove",
     "address": "Address",
     "universe": "Universe",
+    "truss": "Truss",
     "mode": "Mode",
     "channels": "ch",
     "empty": "No fixtures yet — add one from the library.",

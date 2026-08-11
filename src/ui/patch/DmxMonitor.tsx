@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useShowStore, useEffectiveProgrammer } from '../../store/showStore'
 import { computeUniverse, UNIVERSE_SIZE } from '../../engine/dmx'
@@ -39,17 +39,18 @@ export function DmxMonitor({ universe = 1 }: { universe?: number }) {
   const setDeskAttr = useShowStore((s) => s.setDeskAttr)
   const setDeskScreen = useShowStore((s) => s.setDeskScreen)
   const effective = useEffectiveProgrammer()
+  const [uni, setUni] = useState(universe)
 
   const values = useMemo(
-    () => computeUniverse(show, definitions, effective, universe),
-    [show, definitions, effective, universe],
+    () => computeUniverse(show, definitions, effective, uni),
+    [show, definitions, effective, uni],
   )
 
   // Reverse map: channel index (0-based) → the fixture + function that owns it.
   const owners = useMemo(() => {
     const map = new Map<number, Owner>()
     for (const pf of show.fixtures) {
-      if (pf.universe !== universe) continue
+      if (pf.universe !== uni) continue
       const def = definitions[pf.definitionId]
       if (!def) continue
       const channels = def.modes[pf.modeIndex]?.channels ?? []
@@ -65,7 +66,14 @@ export function DmxMonitor({ universe = 1 }: { universe?: number }) {
       }
     }
     return map
-  }, [show, definitions, universe])
+  }, [show, definitions, uni])
+
+  // Universes that actually have fixtures patched, so the switcher only offers real ones.
+  const universes = useMemo(() => {
+    const set = new Set<number>([1])
+    for (const pf of show.fixtures) set.add(pf.universe)
+    return [...set].sort((a, b) => a - b)
+  }, [show.fixtures])
 
   // Channels owned by the current selection — highlighted with a coral ring.
   const owned = useMemo(() => {
@@ -88,7 +96,20 @@ export function DmxMonitor({ universe = 1 }: { universe?: number }) {
     <div className="panel">
       <header>
         <h2>{t('monitor.title')}</h2>
-        <span className="sub">{t('monitor.subtitle', { universe })}</span>
+        <span className="sub">{t('monitor.subtitle', { universe: uni })}</span>
+        {universes.length > 1 && (
+          <div className="vh-tools">
+            {universes.map((u) => (
+              <button
+                key={u}
+                className={`ghost-btn${u === uni ? ' active' : ''}`}
+                onClick={() => setUni(u)}
+              >
+                U{u}
+              </button>
+            ))}
+          </div>
+        )}
       </header>
       <div className="scroll">
         <div className="dmx-grid">
