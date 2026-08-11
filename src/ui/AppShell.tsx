@@ -27,6 +27,11 @@ export function AppShell() {
   const setViewLights = useShowStore((s) => s.setViewLights)
   const startTour = useTour((t) => t.start)
   const consoleId = useShowStore((s) => s.consoleId)
+  const smoke = useShowStore((s) => s.smoke)
+  const toggleSmoke = useShowStore((s) => s.toggleSmoke)
+  const hasHazer = useShowStore((s) =>
+    s.show.fixtures.some((f) => s.definitions[f.definitionId]?.category === 'hazer'),
+  )
   const [viewer, setViewer] = useState<'2d' | '3d'>('3d')
 
   // Collapsible secondary panes: folding the Fixtures window maximises the desk,
@@ -72,6 +77,15 @@ export function AppShell() {
               title={playing ? 'Pause effects' : 'Play effects'}
             >
               {playing ? '❚❚ Pause' : '▶ Play'}
+            </button>
+          )}
+          {hasHazer && (
+            <button
+              className={`ghost-btn${smoke ? ' active' : ''}`}
+              onClick={toggleSmoke}
+              title="Disparar humo (abre la válvula de todas las máquinas de humo; pulsa otra vez para cerrar)"
+            >
+              🌫 {smoke ? 'Humo ON' : 'Humo'}
             </button>
           )}
           {viewer === '3d' && (

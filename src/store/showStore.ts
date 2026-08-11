@@ -166,6 +166,12 @@ interface ShowState {
   blind: boolean
   setBlind: (v: boolean) => void
 
+  // Smoke trigger: a fog/haze machine has no real dimmer — you open or close its
+  // valve. This latches every patched hazer's haze channel fully on/off at once,
+  // like the dedicated smoke button on the desk.
+  smoke: boolean
+  toggleSmoke: () => void
+
   // Command line (Titan-style keypad syntax, e.g. "1 THRU 4 @ 50")
   cmd: string
   cmdAppend: (token: string) => void
@@ -763,7 +769,7 @@ export const useShowStore = create<ShowState>()(
           return { programmer }
         }),
 
-      clearProgrammer: () => set({ programmer: {} }),
+      clearProgrammer: () => set({ programmer: {}, smoke: false }),
 
       deskMenu: 'root',
       setDeskMenu: (m) => set({ deskMenu: m }),
@@ -773,6 +779,27 @@ export const useShowStore = create<ShowState>()(
 
       blind: false,
       setBlind: (v) => set({ blind: v }),
+
+      smoke: false,
+      toggleSmoke: () =>
+        set((s) => {
+          const on = !s.smoke
+          const programmer = { ...s.programmer }
+          for (const pf of s.show.fixtures) {
+            const def = s.definitions[pf.definitionId]
+            if (def?.category !== 'hazer') continue
+            const channels = def.modes[pf.modeIndex]?.channels ?? []
+            const edits = { ...programmer[pf.id] }
+            channels.forEach((ch, i) => {
+              // Open the haze valve full, and spin the fan so it actually comes out.
+              if (ch.function === 'haze') on ? (edits[i] = 255) : delete edits[i]
+              else if (ch.function === 'control' && on) edits[i] = 255
+            })
+            if (Object.keys(edits).length) programmer[pf.id] = edits
+            else delete programmer[pf.id]
+          }
+          return { smoke: on, programmer }
+        }),
 
       cmd: '',
       cmdAppend: (token) => set((s) => ({ cmd: s.cmd + token })),
@@ -841,6 +868,7 @@ export const useShowStore = create<ShowState>()(
           palettes: [],
           playbackPage: 0,
           templateId,
+          smoke: false,
         })
       },
 
@@ -855,6 +883,7 @@ export const useShowStore = create<ShowState>()(
           activeCueId: null,
           palettes: [],
           playbackPage: 0,
+          smoke: false,
         }),
 
       exportShow: () => {
@@ -889,6 +918,7 @@ export const useShowStore = create<ShowState>()(
           activeCueId: null,
           playbackPage: 0,
           templateId: '',
+          smoke: false,
         })
         return true
       },
@@ -897,6 +927,7 @@ export const useShowStore = create<ShowState>()(
         set((s) => ({
           show: makeDemoShow(s.definitions),
           programmer: {},
+          smoke: false,
           selection: [],
           cues: [],
           activeCueId: null,
