@@ -13,6 +13,8 @@ export function ShowMenu() {
   const templateId = useShowStore((s) => s.templateId)
   const exportShow = useShowStore((s) => s.exportShow)
   const importShow = useShowStore((s) => s.importShow)
+  const setShow = useShowStore((s) => s.setShow)
+  const addDefinitions = useShowStore((s) => s.addDefinitions)
   const fileRef = useRef<HTMLInputElement>(null)
 
   const onExport = () => {
@@ -29,9 +31,22 @@ export function ShowMenu() {
     const file = e.target.files?.[0]
     e.target.value = '' // allow re-importing the same file
     if (!file) return
+    const ext = file.name.toLowerCase().split('.').pop()
     try {
-      const data: unknown = JSON.parse(await file.text())
-      if (!importShow(data)) alert(t('show.invalid'))
+      if (ext === 'mvr') {
+        const { importMvrFile } = await import('../model/mvr-import')
+        const { show, definitions } = await importMvrFile(await file.arrayBuffer())
+        addDefinitions(definitions)
+        setShow(show)
+      } else if (ext === 'gdtf') {
+        const { importGdtfFile } = await import('../model/gdtf-import')
+        const def = await importGdtfFile(await file.arrayBuffer())
+        addDefinitions([def])
+        alert(`Fixture added to the library: ${def.manufacturer} ${def.model}`)
+      } else {
+        const data: unknown = JSON.parse(await file.text())
+        if (!importShow(data)) alert(t('show.invalid'))
+      }
     } catch {
       alert(t('show.invalid'))
     }
@@ -85,7 +100,7 @@ export function ShowMenu() {
       <input
         ref={fileRef}
         type="file"
-        accept="application/json,.json"
+        accept=".json,.mvr,.gdtf,application/json"
         style={{ display: 'none' }}
         onChange={onImportFile}
       />
