@@ -103,6 +103,8 @@ export interface PatchedFixture {
   /** Which truss the fixture hangs on (index into venue TRUSSES). Defaults to the
    *  middle stage truss when absent (older shows). */
   truss?: number
+  /** Floor-standing (e.g. a hazer on the stage deck) instead of hung on a truss. */
+  floor?: boolean
 }
 
 /** A truss in the rig — a hanging bar at a depth (z) and height (y). */

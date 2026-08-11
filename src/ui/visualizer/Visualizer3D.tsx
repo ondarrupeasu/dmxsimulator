@@ -116,23 +116,28 @@ function hazeTexture(): THREE.CanvasTexture {
   return _hazeTex
 }
 
-/** A haze/smoke machine sitting on the floor (box + output nozzle). */
+/** A haze/smoke machine on the stage floor (box + output nozzle + status LED). */
 function buildHazer(): THREE.Group {
   const g = new THREE.Group()
   const body = new THREE.Mesh(
-    new THREE.BoxGeometry(0.62, 0.34, 0.42),
-    new THREE.MeshStandardMaterial({ color: 0x24252b, metalness: 0.55, roughness: 0.5 }),
+    new THREE.BoxGeometry(0.9, 0.44, 0.56),
+    new THREE.MeshStandardMaterial({ color: 0x44454e, metalness: 0.55, roughness: 0.45, emissive: 0x0c0c10 }),
   )
-  body.position.y = 0.17
+  body.position.y = 0.22
   g.add(body)
-  g.add(new THREE.LineSegments(new THREE.EdgesGeometry(body.geometry, 20), new THREE.LineBasicMaterial({ color: 0x5a5b64 })).translateY(0.17))
+  g.add(new THREE.LineSegments(new THREE.EdgesGeometry(body.geometry, 20), new THREE.LineBasicMaterial({ color: 0x8a8b95 })).translateY(0.22))
   const nozzle = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.05, 0.09, 0.16, 12),
+    new THREE.CylinderGeometry(0.07, 0.12, 0.22, 12),
     new THREE.MeshStandardMaterial({ color: 0x15151a, metalness: 0.6, roughness: 0.4 }),
   )
   nozzle.rotation.z = Math.PI / 2
-  nozzle.position.set(0.36, 0.2, 0)
+  nozzle.position.set(0.52, 0.26, 0)
   g.add(nozzle)
+  // Green "powered" status LED so the machine is easy to spot on the deck.
+  const led = new THREE.Sprite(new THREE.SpriteMaterial({ map: haloTexture(), color: 0x35e06a, transparent: true, opacity: 0.95, blending: THREE.AdditiveBlending, depthWrite: false }))
+  led.scale.setScalar(0.22)
+  led.position.set(-0.3, 0.34, 0.29)
+  g.add(led)
   return g
 }
 
@@ -524,7 +529,9 @@ export function Visualizer3D() {
         if (def.category === 'hazer') {
           let hz = hazerMap.get(pf.id)
           if (!hz) { hz = buildHazer(); scene.add(hz); hazerMap.set(pf.id, hz) }
-          hz.position.set(pf.position.x * 9, 0, 2.6)
+          // Default (floor) → on the stage deck at a side; else hung on its truss.
+          if (pf.floor === false) hz.position.copy(place(pf.position.x, pf.truss, trusses))
+          else hz.position.set(pf.position.x * 8, STAGE_TOP, -1)
           continue
         }
         let fx = fxMap.get(pf.id)

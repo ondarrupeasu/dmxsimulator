@@ -492,6 +492,13 @@
 .v2-fx { cursor: pointer; }
 .v2-fxlbl { font-size: 12px; }
 .v2-fxlbl.sel { fill: var(--coral); font-weight: 600; }
+.v2-sidetoggle {
+  position: absolute; right: 10px; bottom: 10px; z-index: 5;
+  font-size: 11px; padding: 3px 9px;
+  color: var(--text); background: var(--bg-elev);
+  border: 1px solid var(--border); border-radius: var(--radius-sm); cursor: pointer;
+}
+.v2-sidetoggle:hover { border-color: var(--coral); }
 
 /* ---- Programmer ---- */
 .prog-empty {

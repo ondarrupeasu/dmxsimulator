@@ -29,6 +29,7 @@ export function PatchView() {
   const select = useShowStore((s) => s.select)
   const setFixturePosition = useShowStore((s) => s.setFixturePosition)
   const setFixtureTruss = useShowStore((s) => s.setFixtureTruss)
+  const setFixtureFloor = useShowStore((s) => s.setFixtureFloor)
   const setFixtureUniverse = useShowStore((s) => s.setFixtureUniverse)
   const setSelectedTruss = useShowStore((s) => s.setSelectedTruss)
   const setSelectedUniverse = useShowStore((s) => s.setSelectedUniverse)
@@ -222,19 +223,52 @@ export function PatchView() {
                           </div>
                         </div>
                         <div className="patch-assign" onClick={(e) => e.stopPropagation()}>
-                          <label title={t('patch.truss')}>
-                            <span>{t('patch.truss')}</span>
-                            <select
-                              value={pf.truss ?? DEFAULT_TRUSS}
-                              onChange={(e) => setFixtureTruss(pf.id, Number(e.target.value))}
-                            >
-                              {trusses.map((tr) => (
-                                <option key={tr.id} value={tr.id}>
-                                  {tr.name}
-                                </option>
-                              ))}
-                            </select>
-                          </label>
+                          {def?.category === 'hazer' ? (
+                            <label title={t('patch.mount')}>
+                              <span>{t('patch.mount')}</span>
+                              <select
+                                value={
+                                  pf.floor === false
+                                    ? `t:${pf.truss ?? DEFAULT_TRUSS}`
+                                    : `f:${pf.position.x < -0.25 ? 'l' : pf.position.x > 0.25 ? 'r' : 'c'}`
+                                }
+                                onChange={(e) => {
+                                  const v = e.target.value
+                                  if (v.startsWith('t:')) setFixtureTruss(pf.id, Number(v.slice(2)))
+                                  else {
+                                    setFixtureFloor(pf.id, true)
+                                    const side = v.slice(2)
+                                    setFixturePosition(pf.id, side === 'l' ? -0.75 : side === 'r' ? 0.75 : 0, pf.position.y)
+                                  }
+                                }}
+                              >
+                                <optgroup label={t('patch.floor')}>
+                                  <option value="f:l">{t('patch.floor')} · {t('patch.sideLeft')}</option>
+                                  <option value="f:c">{t('patch.floor')} · {t('patch.sideCenter')}</option>
+                                  <option value="f:r">{t('patch.floor')} · {t('patch.sideRight')}</option>
+                                </optgroup>
+                                <optgroup label={t('patch.trusses')}>
+                                  {trusses.map((tr) => (
+                                    <option key={tr.id} value={`t:${tr.id}`}>{tr.name}</option>
+                                  ))}
+                                </optgroup>
+                              </select>
+                            </label>
+                          ) : (
+                            <label title={t('patch.truss')}>
+                              <span>{t('patch.truss')}</span>
+                              <select
+                                value={pf.truss ?? DEFAULT_TRUSS}
+                                onChange={(e) => setFixtureTruss(pf.id, Number(e.target.value))}
+                              >
+                                {trusses.map((tr) => (
+                                  <option key={tr.id} value={tr.id}>
+                                    {tr.name}
+                                  </option>
+                                ))}
+                              </select>
+                            </label>
+                          )}
                           <label title={t('patch.universe')}>
                             <span>U</span>
                             <select

@@ -121,6 +121,8 @@ interface ShowState {
   setFixturePosition: (instanceId: string, x: number, y: number) => void
   /** Move a fixture to another truss (index into venue TRUSSES). */
   setFixtureTruss: (instanceId: string, truss: number) => void
+  /** Toggle a fixture between floor-standing and truss-hung. */
+  setFixtureFloor: (instanceId: string, floor: boolean) => void
   /** Move every selected fixture to a truss / universe at once. */
   setSelectedTruss: (truss: number) => void
   setSelectedUniverse: (universe: number) => void
@@ -560,7 +562,15 @@ export const useShowStore = create<ShowState>()(
         set((s) => ({
           show: {
             ...s.show,
-            fixtures: s.show.fixtures.map((f) => (f.id === instanceId ? { ...f, truss } : f)),
+            fixtures: s.show.fixtures.map((f) => (f.id === instanceId ? { ...f, truss, floor: false } : f)),
+          },
+        })),
+
+      setFixtureFloor: (instanceId, floor) =>
+        set((s) => ({
+          show: {
+            ...s.show,
+            fixtures: s.show.fixtures.map((f) => (f.id === instanceId ? { ...f, floor } : f)),
           },
         })),
 

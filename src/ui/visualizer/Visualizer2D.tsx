@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { useShowStore, useEffectiveProgrammer } from '../../store/showStore'
 import { computeFixtureOutputs } from '../../engine/dmx'
 import { computeVisualState } from '../../engine/render'
@@ -21,7 +21,6 @@ const ELEV = { top: 420, h: 280, left: 70, w: W - 140 }
 
 const planX = (x: number) => PLAN.left + (x * 0.5 + 0.5) * PLAN.w
 const planY = (z: number) => PLAN.top + ((z - Z_MIN) / (Z_MAX - Z_MIN)) * PLAN.h
-const elevX = (z: number) => ELEV.left + ((z - Z_MIN) / (Z_MAX - Z_MIN)) * ELEV.w
 const elevY = (y: number) => ELEV.top + ELEV.h - (y / Y_MAX) * ELEV.h
 
 export function Visualizer2D() {
@@ -32,6 +31,9 @@ export function Visualizer2D() {
   const toggleSelect = useShowStore((s) => s.toggleSelect)
   const select = useShowStore((s) => s.select)
   const trusses = getTrusses(show)
+  // Which wing the elevation is viewed from (flips the depth axis).
+  const [fromRight, setFromRight] = useState(false)
+  const ex = (z: number) => ELEV.left + ((fromRight ? Z_MAX - z : z - Z_MIN) / (Z_MAX - Z_MIN)) * ELEV.w
 
   const outputs = useMemo(
     () => computeFixtureOutputs(show, definitions, effective),
@@ -77,8 +79,9 @@ export function Visualizer2D() {
 
         {/* Fixtures — top view: X = stage width, Y = depth (which truss) */}
         {fixtures.map(({ pf, vs, t, hazer }) => {
+          const onFloor = pf.floor !== false
           const cx = planX(pf.position.x)
-          const cy = planY(t.z)
+          const cy = hazer && onFloor ? planY(-1) : planY(t.z)
           const selected = selection.includes(pf.id)
           if (hazer || !vs) {
             return (
@@ -106,28 +109,28 @@ export function Visualizer2D() {
         <text x={ELEV.left} y={ELEV.top - 12} className="v2-title">ALZADO · vista lateral</text>
         {/* Floor + stage deck */}
         <line x1={ELEV.left} y1={elevY(0)} x2={ELEV.left + ELEV.w} y2={elevY(0)} className="v2-floor" />
-        <rect x={elevX(STAGE_BACK)} y={elevY(STAGE_TOP)} width={elevX(STAGE_FRONT) - elevX(STAGE_BACK)} height={elevY(0) - elevY(STAGE_TOP)} className="v2-stage" />
-        <text x={elevX((STAGE_BACK + STAGE_FRONT) / 2)} y={elevY(STAGE_TOP) + 18} className="v2-zone" textAnchor="middle">ESCENARIO</text>
-        <text x={elevX(AUD_FRONT + 3)} y={elevY(0) - 6} className="v2-zone" textAnchor="middle">PÚBLICO</text>
+        <rect x={ex(STAGE_BACK)} y={elevY(STAGE_TOP)} width={ex(STAGE_FRONT) - ex(STAGE_BACK)} height={elevY(0) - elevY(STAGE_TOP)} className="v2-stage" />
+        <text x={ex((STAGE_BACK + STAGE_FRONT) / 2)} y={elevY(STAGE_TOP) + 18} className="v2-zone" textAnchor="middle">ESCENARIO</text>
+        <text x={ex(AUD_FRONT + 3)} y={elevY(0) - 6} className="v2-zone" textAnchor="middle">PÚBLICO</text>
 
         {/* Trusses at their hang height; a beam drops to the deck */}
         {trusses.map((t) => (
           <g key={`et${t.id}`}>
-            <rect x={elevX(t.z) - 16} y={elevY(t.y) - 5} width={32} height={10} rx={2} className={`v2-truss-bar${t.foh ? ' foh' : ''}`} />
-            <text x={elevX(t.z)} y={elevY(t.y) - 10} className="v2-trusslbl" textAnchor="middle">{t.name}</text>
+            <rect x={ex(t.z) - 16} y={elevY(t.y) - 5} width={32} height={10} rx={2} className={`v2-truss-bar${t.foh ? ' foh' : ''}`} />
+            <text x={ex(t.z)} y={elevY(t.y) - 10} className="v2-trusslbl" textAnchor="middle">{t.name}</text>
           </g>
         ))}
 
         {/* Fixtures — side view: X = depth, Y = hang height; beam drops down */}
         {fixtures.map(({ pf, vs, t, hazer }) => {
-          const cx = elevX(t.z)
-          const cy = elevY(t.y)
+          const onFloor = pf.floor !== false
+          const cx = hazer && onFloor ? ex(-1) : ex(t.z)
+          const cy = hazer && onFloor ? elevY(0) : elevY(t.y)
           const selected = selection.includes(pf.id)
           if (hazer || !vs) {
-            const hx = elevX(t.z)
             return (
               <g key={`ef${pf.id}`} className="v2-fx" onClick={(e) => { e.stopPropagation(); toggleSelect(pf.id) }}>
-                <rect x={hx - 9} y={elevY(0) - 12} width={18} height={12} rx={2} fill="#2b2c33" stroke={selected ? 'var(--coral)' : '#4a4a58'} strokeWidth={selected ? 2.5 : 1.4} />
+                <rect x={cx - 9} y={cy - 12} width={18} height={12} rx={2} fill="#2b2c33" stroke={selected ? 'var(--coral)' : '#4a4a58'} strokeWidth={selected ? 2.5 : 1.4} />
               </g>
             )
           }
@@ -135,7 +138,7 @@ export function Visualizer2D() {
           const rgb = `rgb(${r},${g},${b})`
           const lit = vs.intensity > 0.01
           // Beam drops from the truss to the stage deck, tilted a touch by tilt value.
-          const tiltShift = vs.tilt !== undefined ? ((vs.tilt - 0) / 90) * (elevX(STAGE_FRONT) - elevX(STAGE_BACK)) * 0.18 : 0
+          const tiltShift = vs.tilt !== undefined ? ((vs.tilt - 0) / 90) * (ex(STAGE_FRONT) - ex(STAGE_BACK)) * 0.18 : 0
           const bx = cx + tiltShift
           const by = elevY(t.foh ? 0 : STAGE_TOP)
           return (
@@ -154,6 +157,13 @@ export function Visualizer2D() {
           )
         })}
       </svg>
+      <button
+        className="v2-sidetoggle"
+        onClick={() => setFromRight((v) => !v)}
+        title="Alzado: lado desde el que se mira"
+      >
+        {fromRight ? 'Alzado: desde la dcha ▶' : '◀ Alzado: desde la izq'}
+      </button>
     </div>
   )
 }
