@@ -289,12 +289,15 @@
 .patched-item {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 10px;
+  row-gap: 8px;
   padding: 8px 10px;
   background: var(--bg-elev);
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
 }
+.patched-item .patch-assign { margin-right: auto; }
 .patched-item.selected {
   border-color: var(--coral);
   background: var(--coral-soft);
@@ -304,6 +307,8 @@
   flex: 1;
   min-width: 0;
 }
+/* Name/detail take the whole first line; truss + universe + Remove flow onto the next. */
+.patched-item .meta { flex: 1 1 100%; }
 .lib-item .name,
 .patched-item .name {
   font-size: 13px;
