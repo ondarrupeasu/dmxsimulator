@@ -352,7 +352,7 @@ export function QuartzPanel() {
           })}
           {Array.from({ length: 10 }, (_, i) => {
             const gi = playbackPage * 10 + i; const cue = cues[gi]
-            return <Key key={`b${i}`} v="blue" narrow led={false} disabled={!cue} title={cue ? `Flash ${cue.name}` : 'Empty'} onClick={() => cue && goCue(cue.id)} />
+            return <Key key={`b${i}`} v="dark" narrow led={false} disabled={!cue} title={cue ? `Flash ${cue.name}` : 'Empty'} onClick={() => cue && goCue(cue.id)} />
           })}
         </Box>
 
