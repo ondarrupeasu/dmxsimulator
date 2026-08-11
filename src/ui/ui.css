@@ -148,6 +148,12 @@
 .ghost-btn:hover:not(:disabled) { border-color: var(--coral); }
 .ghost-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 .ghost-btn.active { background: var(--coral); border-color: var(--coral); color: #16131a; font-weight: 600; }
+.venue-select {
+  font-size: 11px; padding: 3px 6px; max-width: 150px;
+  border-radius: var(--radius-sm); background: var(--bg-input);
+  border: 1px solid var(--border); color: var(--text); cursor: pointer;
+}
+.venue-select:hover { border-color: var(--coral); }
 
 /* ---- Guided tour ---- */
 .tour-start {

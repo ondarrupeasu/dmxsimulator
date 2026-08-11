@@ -15,6 +15,7 @@ import { FixturesWindow } from './console/FixturesWindow'
 import { ShowMenu } from './ShowMenu'
 import { TourOverlay } from './TourOverlay'
 import { useTour } from '../store/tourStore'
+import { VENUE_PRESETS } from '../model/venues'
 import './ui.css'
 
 const MODES = ['patch', 'program', 'run'] as const
@@ -33,13 +34,19 @@ export function AppShell() {
     s.show.fixtures.some((f) => s.definitions[f.definitionId]?.category === 'hazer'),
   )
   const venueName = useShowStore((s) => s.venueName)
+  const venueUrl = useShowStore((s) => s.venueUrl)
+  const venuePreset = useShowStore((s) => s.show.venuePreset)
   const setVenue = useShowStore((s) => s.setVenue)
-  const clearVenue = useShowStore((s) => s.clearVenue)
+  const setVenuePreset = useShowStore((s) => s.setVenuePreset)
   const venueRef = useRef<HTMLInputElement>(null)
   const onVenueFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     e.target.value = ''
     if (file) setVenue(URL.createObjectURL(file), file.name)
+  }
+  const onVenueSelect = (v: string) => {
+    if (v === '__file') venueRef.current?.click()
+    else if (v !== '__custom') setVenuePreset(v || null)
   }
   const [viewer, setViewer] = useState<'2d' | '3d'>('3d')
 
@@ -107,13 +114,19 @@ export function AppShell() {
                 style={{ display: 'none' }}
                 onChange={onVenueFile}
               />
-              <button
-                className={`ghost-btn${venueName ? ' active' : ''}`}
-                onClick={() => (venueName ? clearVenue() : venueRef.current?.click())}
-                title={venueName ? `Venue: ${venueName} — click to remove` : 'Load a 3D venue model (glTF / GLB) behind the rig'}
+              <select
+                className="venue-select"
+                value={venueUrl ? '__custom' : (venuePreset ?? '')}
+                onChange={(e) => onVenueSelect(e.target.value)}
+                title="Venue behind the rig"
               >
-                🏛 {venueName ? 'Venue ✕' : 'Venue'}
-              </button>
+                <option value="">🏛 Venue: none</option>
+                {VENUE_PRESETS.map((v) => (
+                  <option key={v.id} value={v.id}>{v.name}</option>
+                ))}
+                {venueUrl && <option value="__custom">{venueName}</option>}
+                <option value="__file">Load glTF…</option>
+              </select>
             </>
           )}
           {viewer === '3d' && (

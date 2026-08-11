@@ -122,6 +122,8 @@ export interface Show {
   venue?: string
   /** Lighting designer / drawn-by — shown on the plot title block. */
   designer?: string
+  /** Built-in venue model drawn in the 3D viewer (persists with the show). */
+  venuePreset?: string
   /** Number of universes (v1 typically 1). */
   universeCount: number
   fixtures: PatchedFixture[]

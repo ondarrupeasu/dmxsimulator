@@ -3,6 +3,7 @@ import * as THREE from 'three'
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js'
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js'
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js'
+import { buildVenue } from '../../model/venues'
 import { useShowStore } from '../../store/showStore'
 import { computeFixtureOutputs, mergeProgrammer, computePlaybackBase, resolveLevels } from '../../engine/dmx'
 import { applyEffects } from '../../engine/effects'
@@ -354,24 +355,21 @@ export function Visualizer3D() {
     grid.position.y = 0.02
     scene.add(grid)
 
-    // Optional venue model (glTF/GLB): loaded into this holder, auto-fitted to the
-    // stage, and reconciled in the loop when the store's venueUrl changes. The default
-    // stage/floor stay put underneath (a real venue model usually replaces them visually).
+    // Optional venue behind the rig: a built-in preset (buildVenue, already at scene
+    // scale) or a loaded glTF/GLB (auto-fitted). Reconciled in the loop by a key; the
+    // default stage/floor stay underneath.
     const venueGroup = new THREE.Group()
     scene.add(venueGroup)
     const gltfLoader = new GLTFLoader()
-    let venueUrl: string | null = null
-    let venueLoading = false
-    const loadVenue = (url: string | null) => {
-      venueUrl = url
-      venueLoading = !!url
+    let venueKey: string | null = null
+    const reconcileVenue = (url: string | null, preset: string | undefined) => {
+      const key = url ? `u:${url}` : preset ? `p:${preset}` : null
+      if (key === venueKey) return
+      venueKey = key
       venueGroup.clear()
-      if (!url) return
-      gltfLoader.load(
-        url,
-        (gltf) => {
-          venueLoading = false
-          if (venueUrl !== url) return // superseded while loading
+      if (url) {
+        gltfLoader.load(url, (gltf) => {
+          if (venueKey !== `u:${url}`) return // superseded while loading
           const model = gltf.scene
           // Auto-fit: centre on X/Z, sit the base on the floor, scale to ~16 u wide.
           const box = new THREE.Box3().setFromObject(model)
@@ -382,10 +380,11 @@ export function Visualizer3D() {
           model.scale.setScalar(scale)
           model.position.set(-centre.x * scale, -box.min.y * scale, -centre.z * scale)
           venueGroup.add(model)
-        },
-        undefined,
-        () => { venueLoading = false }, // load error → leave the default stage
-      )
+        }, undefined, () => {}) // load error → leave the default stage
+      } else if (preset) {
+        const v = buildVenue(preset)
+        if (v) venueGroup.add(v)
+      }
     }
 
     // ---- Venue: a 1 m-high stage (tarima) with the audience flat in front ----
@@ -505,8 +504,8 @@ export function Visualizer3D() {
       const state = useShowStore.getState()
       const { show, definitions, programmer, cues, playbackLevels, fades, effects, selection } = state
       const selSet = new Set(selection)
-      // Reconcile the optional venue model when it changes.
-      if (state.venueUrl !== venueUrl && !venueLoading) loadVenue(state.venueUrl)
+      // Reconcile the optional venue (preset or loaded glTF) when it changes.
+      reconcileVenue(state.venueUrl, show.venuePreset)
       // House/work lights toggle: lit room + lighter background, or dark beams-only.
       const lit = state.viewLights
       workHemi.intensity = lit ? 1.6 : 0

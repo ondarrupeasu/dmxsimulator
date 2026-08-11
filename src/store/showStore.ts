@@ -164,12 +164,14 @@ interface ShowState {
   viewLights: boolean
   setViewLights: (v: boolean) => void
 
-  // Optional venue model (a loaded glTF/GLB) drawn behind the rig. Transient — the
-  // object URL dies on reload, so it isn't persisted.
+  // Venue behind the rig: either a built-in preset (show.venuePreset, persisted) or a
+  // loaded glTF/GLB (venueUrl — transient, its object URL dies on reload). Mutually
+  // exclusive: choosing one clears the other.
   venueUrl: string | null
   venueName: string | null
   setVenue: (url: string, name: string) => void
   clearVenue: () => void
+  setVenuePreset: (id: string | null) => void
 
   // Blind: program without the live programmer reaching the real DMX output.
   blind: boolean
@@ -790,15 +792,22 @@ export const useShowStore = create<ShowState>()(
 
       venueUrl: null,
       venueName: null,
+      // Loading a custom glTF clears any preset (they're mutually exclusive).
       setVenue: (url, name) =>
         set((s) => {
           if (s.venueUrl) URL.revokeObjectURL(s.venueUrl)
-          return { venueUrl: url, venueName: name }
+          return { venueUrl: url, venueName: name, show: { ...s.show, venuePreset: undefined } }
         }),
       clearVenue: () =>
         set((s) => {
           if (s.venueUrl) URL.revokeObjectURL(s.venueUrl)
-          return { venueUrl: null, venueName: null }
+          return { venueUrl: null, venueName: null, show: { ...s.show, venuePreset: undefined } }
+        }),
+      // Choosing a built-in preset clears any loaded custom model.
+      setVenuePreset: (id) =>
+        set((s) => {
+          if (s.venueUrl) URL.revokeObjectURL(s.venueUrl)
+          return { venueUrl: null, venueName: null, show: { ...s.show, venuePreset: id ?? undefined } }
         }),
 
       blind: false,
