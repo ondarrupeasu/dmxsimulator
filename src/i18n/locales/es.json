@@ -26,6 +26,7 @@
     "search": "Buscar marca / modelo…",
     "noMatch": "Ningún fixture coincide con la búsqueda.",
     "allTrusses": "Todos los truss",
+    "batchSel": "{{n}} seleccionados — cambiar todos:",
     "patched": "Fixtures asignados",
     "rig": "Distribución en el truss — arrastra para colocar",
     "readdress": "Re-direccionar por orden de rig",

@@ -120,6 +120,9 @@ interface ShowState {
   setFixturePosition: (instanceId: string, x: number, y: number) => void
   /** Move a fixture to another truss (index into venue TRUSSES). */
   setFixtureTruss: (instanceId: string, truss: number) => void
+  /** Move every selected fixture to a truss / universe at once. */
+  setSelectedTruss: (truss: number) => void
+  setSelectedUniverse: (universe: number) => void
   /** Move a fixture to another universe, re-addressing to a free slot there. */
   setFixtureUniverse: (instanceId: string, universe: number) => void
   /** Reorder fixtures left→right by truss position and re-assign DMX addresses in
@@ -555,6 +558,54 @@ export const useShowStore = create<ShowState>()(
             fixtures: s.show.fixtures.map((f) => (f.id === instanceId ? { ...f, truss } : f)),
           },
         })),
+
+      setSelectedTruss: (truss) =>
+        set((s) => {
+          const sel = new Set(s.selection)
+          if (sel.size === 0) return {}
+          return {
+            show: { ...s.show, fixtures: s.show.fixtures.map((f) => (sel.has(f.id) ? { ...f, truss } : f)) },
+          }
+        }),
+
+      setSelectedUniverse: (universe) =>
+        set((s) => {
+          const sel = s.selection
+          if (sel.length === 0) return {}
+          const selSet = new Set(sel)
+          // Occupancy from fixtures already in the target universe that we're NOT moving.
+          const occupied = new Uint8Array(UNIVERSE_SIZE + 1)
+          for (const o of s.show.fixtures) {
+            if (o.universe !== universe || selSet.has(o.id)) continue
+            const ofp = fixtureFootprint(s.definitions[o.definitionId], o.modeIndex)
+            for (let a = o.address; a < o.address + ofp && a <= UNIVERSE_SIZE; a++) occupied[a] = 1
+          }
+          // Pack each selected fixture into the next free block, in list order.
+          const moves = new Map<string, number>()
+          for (const pf of s.show.fixtures) {
+            if (!selSet.has(pf.id)) continue
+            const fp = fixtureFootprint(s.definitions[pf.definitionId], pf.modeIndex)
+            let address: number | null = null
+            for (let start = 1; start + fp - 1 <= UNIVERSE_SIZE; start++) {
+              let free = true
+              for (let a = start; a < start + fp; a++) if (occupied[a]) { free = false; break }
+              if (free) { address = start; break }
+            }
+            if (address == null) continue // target universe full — leave this one put
+            for (let a = address; a < address + fp; a++) occupied[a] = 1
+            moves.set(pf.id, address)
+          }
+          if (moves.size === 0) return {}
+          return {
+            show: {
+              ...s.show,
+              universeCount: Math.max(s.show.universeCount, universe),
+              fixtures: s.show.fixtures.map((f) =>
+                moves.has(f.id) ? { ...f, universe, address: moves.get(f.id)! } : f,
+              ),
+            },
+          }
+        }),
 
       setFixtureUniverse: (instanceId, universe) =>
         set((s) => {

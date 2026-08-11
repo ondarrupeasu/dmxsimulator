@@ -248,6 +248,20 @@
   border: 1px solid var(--border); border-radius: var(--radius-sm); cursor: pointer;
 }
 .rig-readdress:hover { border-color: var(--coral); color: var(--coral); }
+/* Batch-assign bar: change truss / universe for the whole selection at once. */
+.batch-bar {
+  display: flex; align-items: center; flex-wrap: wrap; gap: 8px;
+  margin: -2px 0 8px; padding: 6px 8px;
+  background: var(--coral-soft); border: 1px solid var(--coral);
+  border-radius: var(--radius-sm);
+}
+.batch-n { font-size: 11px; font-weight: 600; color: var(--text); }
+.batch-bar label { display: inline-flex; align-items: center; gap: 4px; font-size: 10px; color: var(--text-faint); }
+.batch-bar select {
+  font: inherit; font-size: 11px; padding: 2px 5px;
+  color: var(--text); background: var(--bg-input);
+  border: 1px solid var(--border); border-radius: var(--radius-sm); cursor: pointer;
+}
 .rig-tools { display: flex; align-items: center; gap: 6px; }
 .rig-truss {
   font: inherit; font-size: 11px; text-transform: none; letter-spacing: 0;

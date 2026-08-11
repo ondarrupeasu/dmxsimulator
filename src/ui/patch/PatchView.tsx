@@ -30,6 +30,8 @@ export function PatchView() {
   const setFixturePosition = useShowStore((s) => s.setFixturePosition)
   const setFixtureTruss = useShowStore((s) => s.setFixtureTruss)
   const setFixtureUniverse = useShowStore((s) => s.setFixtureUniverse)
+  const setSelectedTruss = useShowStore((s) => s.setSelectedTruss)
+  const setSelectedUniverse = useShowStore((s) => s.setSelectedUniverse)
   const readdressByRigOrder = useShowStore((s) => s.readdressByRigOrder)
 
   // Truss strip — drag a chip to set its position along the rig (x = −1..1).
@@ -137,6 +139,29 @@ export function PatchView() {
               <div className="section-label">
                 {t('patch.patched')} ({show.fixtures.length})
               </div>
+              {selection.length > 1 && (
+                <div className="batch-bar">
+                  <span className="batch-n">{t('patch.batchSel', { n: selection.length })}</span>
+                  <label>
+                    <span>{t('patch.truss')}</span>
+                    <select value="" onChange={(e) => e.target.value && setSelectedTruss(Number(e.target.value))}>
+                      <option value="">—</option>
+                      {TRUSSES.map((tr) => (
+                        <option key={tr.id} value={tr.id}>{tr.name}</option>
+                      ))}
+                    </select>
+                  </label>
+                  <label>
+                    <span>{t('patch.universe')}</span>
+                    <select value="" onChange={(e) => e.target.value && setSelectedUniverse(Number(e.target.value))}>
+                      <option value="">—</option>
+                      {UNIVERSES.map((u) => (
+                        <option key={u} value={u}>U{u}</option>
+                      ))}
+                    </select>
+                  </label>
+                </div>
+              )}
               {show.fixtures.length === 0 ? (
                 <div className="prog-empty">{t('patch.empty')}</div>
               ) : (

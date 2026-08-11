@@ -26,6 +26,7 @@
     "search": "Bilatu marka / modeloa…",
     "noMatch": "Ez dago bat datorren fixture-rik.",
     "allTrusses": "Truss guztiak",
+    "batchSel": "{{n}} hautatuta — denak aldatu:",
     "patched": "Esleitutako fixtureak",
     "rig": "Truss-eko banaketa — arrastatu kokatzeko",
     "readdress": "Birhelbideratu rig ordenaz",
