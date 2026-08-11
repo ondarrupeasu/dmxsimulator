@@ -125,6 +125,10 @@ interface ShowState {
   setChannel: (instanceId: string, channelIndex: number, value: number) => void
   /** Set one channel function across all selected fixtures that have it. */
   setSelectedByFunction: (fn: string, value: number) => void
+  /** Remove the given channel functions from the selection's programmer (the Off key). */
+  clearSelectedFunctions: (fns: string[]) => void
+  /** Spread a function 0→255 across the selection in rig order (the Fan key). */
+  fanSelected: (fn: string) => void
   locateSelected: () => void
   clearProgrammer: () => void
 
@@ -539,6 +543,44 @@ export const useShowStore = create<ShowState>()(
               }
             })
           }
+          return { programmer }
+        }),
+
+      clearSelectedFunctions: (fns) =>
+        set((s) => {
+          const wanted = new Set(fns)
+          const programmer = { ...s.programmer }
+          for (const id of s.selection) {
+            if (!programmer[id]) continue
+            const pf = s.show.fixtures.find((f) => f.id === id)
+            const channels = pf && s.definitions[pf.definitionId]?.modes[pf.modeIndex]?.channels
+            if (!channels) continue
+            const edits = { ...programmer[id] }
+            channels.forEach((ch, i) => {
+              if (wanted.has(ch.function)) delete edits[i]
+            })
+            if (Object.keys(edits).length) programmer[id] = edits
+            else delete programmer[id]
+          }
+          return { programmer }
+        }),
+
+      fanSelected: (fn) =>
+        set((s) => {
+          // Spread 0→255 across the selection in rig (fixture-list) order.
+          const order = s.show.fixtures.map((f) => f.id)
+          const ids = s.selection.slice().sort((a, b) => order.indexOf(a) - order.indexOf(b))
+          if (ids.length < 2) return s
+          const programmer = { ...s.programmer }
+          ids.forEach((id, idx) => {
+            const pf = s.show.fixtures.find((f) => f.id === id)
+            const channels = pf && s.definitions[pf.definitionId]?.modes[pf.modeIndex]?.channels
+            if (!channels) return
+            const value = Math.round((idx / (ids.length - 1)) * 255)
+            channels.forEach((ch, i) => {
+              if (ch.function === fn) programmer[id] = { ...programmer[id], [i]: value }
+            })
+          })
           return { programmer }
         }),
 

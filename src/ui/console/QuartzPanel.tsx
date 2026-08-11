@@ -47,6 +47,9 @@ function Key({
   )
 }
 
+// Fixed executors 11–18 that map to a touchscreen workspace we actually have.
+const EXEC_SCREEN: Record<number, string> = { 13: 'playbacks', 16: 'colour', 17: 'groups' }
+
 // The only two key sizes on the desk (in cqw): 1:1 and a little narrower; one height.
 const KW = 4.4
 const NW = 3.7
@@ -195,6 +198,8 @@ export function QuartzPanel() {
   const fixtures = useShowStore((s) => s.show.fixtures)
   const select = useShowStore((s) => s.select)
   const setByFn = useShowStore((s) => s.setSelectedByFunction)
+  const clearSelectedFunctions = useShowStore((s) => s.clearSelectedFunctions)
+  const fanSelected = useShowStore((s) => s.fanSelected)
   const cmdAppend = useShowStore((s) => s.cmdAppend)
   const cmdBackspace = useShowStore((s) => s.cmdBackspace)
   const cmdClear = useShowStore((s) => s.cmdClear)
@@ -202,6 +207,8 @@ export function QuartzPanel() {
 
   const active = ATTRIBUTES.find((a) => a.name === attr) ?? ATTRIBUTES[0]
   const wheelFns = [0, 1, 2].map((i) => active.wheels[i]?.find((fn) => present.has(fn)))
+  const activeFns = active.wheels.flat() // every function in the active attribute bank
+  const fanFn = activeFns.find((fn) => present.has(fn)) // what Fan spreads
   const noSel = selection.length === 0
   const noFx = fixtures.length === 0
   // Step the selection to the previous/next patched fixture (Fix −1 / Fix +1).
@@ -273,6 +280,11 @@ export function QuartzPanel() {
                 />
               )
             }
+            // 11–18 are the fixed workspace shortcuts; wire the ones we have windows for.
+            const scr = EXEC_SCREEN[n]
+            if (scr) {
+              return <Key key={i} v="dark" narrow led={false} title={`Executor ${n} — abrir workspace`} onClick={() => setScreen(scr)} />
+            }
             return <Key key={i} v="dark" narrow disabled title={`Executor ${n}`} />
           })}
         </Box>
@@ -293,8 +305,8 @@ export function QuartzPanel() {
         <Box x={178} y={272} w={452} h={118} cols={7} rows={2}>
           {ATTRIBUTES.map((a) => <Key key={a.name} v="white" on={a.name === attr} title={a.name} onClick={() => setAttr(a.name)} tour={a.name === 'Position' ? 'desk-position' : a.name === 'Colour' ? 'desk-colour' : undefined} />)}
           <Key v="white" title="Shape → Shapes" onClick={() => setScreen('effects')} tour="desk-shape" />
-          <Key v="white" title="ML Menu — menú Moving Light" onClick={() => setMenu('ml')} /><Key v="white" disabled title="Blind" /><Key v="white" disabled title="Off" />
-          <Key v="white" disabled title="Fan" /><Key v="white" disabled title="Options" /><Key v="dark" disabled title="Latch Menu" />
+          <Key v="white" title="ML Menu — menú Moving Light" onClick={() => setMenu('ml')} /><Key v="white" disabled title="Blind" /><Key v="white" disabled={noSel || activeFns.length === 0} title={`Off — quitar ${active.name} de la selección`} onClick={() => clearSelectedFunctions(activeFns)} />
+          <Key v="white" disabled={selection.length < 2 || !fanFn} title={fanFn ? `Fan — abanicar ${fanFn} por la selección` : 'Fan'} onClick={() => fanFn && fanSelected(fanFn)} /><Key v="white" disabled title="Options" /><Key v="dark" disabled title="Latch Menu" />
         </Box>
         <GridLabels x={178} y={392} w={452} cols={7} items={['Shape', 'ML\nMenu', 'Blind', 'Off', 'Fan', 'Options', 'Latch\nMenu']} />
 
