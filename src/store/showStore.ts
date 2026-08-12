@@ -13,7 +13,7 @@ import type { Palette, PaletteKind } from '../model/palette'
 import { PALETTE_FUNCTIONS, PALETTE_LABELS } from '../model/palette'
 import type { Group } from '../model/group'
 import type { Effect, EffectType } from '../engine/effects'
-import { applyEffects } from '../engine/effects'
+import { applyEffects, activeEffects } from '../engine/effects'
 import { BUILTIN_FIXTURES } from '../model/library'
 import { templateById } from '../model/templates'
 import type { ProgrammerValues } from '../engine/dmx'
@@ -293,10 +293,11 @@ export const useShowStore = create<ShowState>()(
 
       recordCue: () =>
         set((s) => {
-          // Deep-copy the current programmer as the cue snapshot.
+          // Deep-copy the current programmer + running shapes as the cue snapshot.
           const values: ProgrammerValues = {}
           for (const id in s.programmer) values[id] = { ...s.programmer[id] }
-          const cue: Cue = { id: nextInstanceId(), name: `Cue ${s.cues.length + 1}`, values }
+          const effects = s.effects.map((e) => ({ ...e, fixtureIds: [...e.fixtureIds] }))
+          const cue: Cue = { id: nextInstanceId(), name: `Cue ${s.cues.length + 1}`, values, effects }
           return { cues: [...s.cues, cue] }
         }),
 
@@ -304,7 +305,8 @@ export const useShowStore = create<ShowState>()(
         set((s) => {
           const values: ProgrammerValues = {}
           for (const inst in s.programmer) values[inst] = { ...s.programmer[inst] }
-          return { cues: s.cues.map((c) => (c.id === id ? { ...c, values } : c)) }
+          const effects = s.effects.map((e) => ({ ...e, fixtureIds: [...e.fixtureIds] }))
+          return { cues: s.cues.map((c) => (c.id === id ? { ...c, values, effects } : c)) }
         }),
 
       copyCue: (id) =>
@@ -794,7 +796,8 @@ export const useShowStore = create<ShowState>()(
           return { programmer }
         }),
 
-      clearProgrammer: () => set({ programmer: {}, smoke: false }),
+      // Clear empties the programmer — static values AND any running shapes.
+      clearProgrammer: () => set({ programmer: {}, smoke: false, effects: [] }),
 
       deskMenu: 'root',
       setDeskMenu: (m) => set({ deskMenu: m }),
@@ -1037,6 +1040,7 @@ export function useEffectiveProgrammer(respectBlind = false): ProgrammerValues {
     const levels = resolveLevels(playbackLevels, fades, now)
     const base = computePlaybackBase(cues, levels, show, definitions)
     const merged = respectBlind && blind ? base : mergeProgrammer(base, programmer)
-    return applyEffects(merged, effects, show, definitions, now)
+    const active = activeEffects(cues, playbackLevels, fades, now, effects)
+    return applyEffects(merged, active, show, definitions, now)
   }, [programmer, cues, playbackLevels, fades, effects, show, definitions, now, blind, respectBlind])
 }

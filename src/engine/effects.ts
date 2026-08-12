@@ -5,6 +5,9 @@
  * them consistently.
  */
 import type { FixtureDefinition, Show } from '../model/types'
+import type { Cue } from '../model/cue'
+import type { Fade } from './dmx'
+import { resolveLevel } from './dmx'
 import type { ProgrammerValues } from './dmx'
 
 export type EffectType = 'circle' | 'colourCycle' | 'dimmerWave'
@@ -42,6 +45,24 @@ function hsv(h: number, s: number, v: number): [number, number, number] {
     [v, p, q],
   ][i % 6]
   return [r * 255, g * 255, b * 255]
+}
+
+/** The shapes to run right now = the live programmer shapes + those of any cue that
+ *  is currently up (level > 0), so playing a cue reproduces the shapes it was recorded
+ *  with. Live shapes come last so they win while you're building a look. */
+export function activeEffects(
+  cues: Cue[],
+  levels: Record<string, number>,
+  fades: Record<string, Fade>,
+  now: number,
+  live: Effect[],
+): Effect[] {
+  const out: Effect[] = []
+  for (const c of cues) {
+    if (c.effects?.length && resolveLevel(c.id, levels, fades, now) > 0) out.push(...c.effects)
+  }
+  out.push(...live)
+  return out
 }
 
 export function applyEffects(

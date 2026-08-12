@@ -67,15 +67,19 @@ export function AppShell() {
   const tickClock = useShowStore((s) => s.tickClock)
   const fadeCount = useShowStore((s) => Object.keys(s.fades).length)
   const settleFades = useShowStore((s) => s.settleFades)
+  // A cue with recorded shapes that's currently up also needs the clock running.
+  const cueEffectsUp = useShowStore((s) =>
+    s.cues.some((c) => (c.effects?.length ?? 0) > 0 && (s.playbackLevels[c.id] ?? 0) > 0),
+  )
   useEffect(() => {
-    const effectsRun = effectsCount > 0 && playing
+    const effectsRun = (effectsCount > 0 || cueEffectsUp) && playing
     if (!effectsRun && fadeCount === 0) return
     const iv = setInterval(() => {
       tickClock(0.05)
       settleFades()
     }, 50)
     return () => clearInterval(iv)
-  }, [effectsCount, playing, fadeCount, tickClock, settleFades])
+  }, [effectsCount, cueEffectsUp, playing, fadeCount, tickClock, settleFades])
 
   const Surface = consoleById(consoleId).Surface
   // The faithful Quartz desk fills the Program workspace. Patch and Run (a stripped

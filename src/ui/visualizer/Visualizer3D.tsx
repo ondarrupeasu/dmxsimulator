@@ -6,7 +6,7 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js'
 import { buildVenue } from '../../model/venues'
 import { useShowStore } from '../../store/showStore'
 import { computeFixtureOutputs, mergeProgrammer, computePlaybackBase, resolveLevels } from '../../engine/dmx'
-import { applyEffects } from '../../engine/effects'
+import { applyEffects, activeEffects } from '../../engine/effects'
 import { computeVisualState } from '../../engine/render'
 import type { TrussDef } from '../../model/types'
 import { getTrusses, trussById, STAGE_TOP } from '../../model/venue'
@@ -523,7 +523,8 @@ export function Visualizer3D() {
       const levels = resolveLevels(playbackLevels, fades, state.now)
       const base = computePlaybackBase(cues, levels, show, definitions)
       const merged = mergeProgrammer(base, programmer)
-      const effective = applyEffects(merged, effects, show, definitions, clock)
+      const active = activeEffects(cues, playbackLevels, fades, state.now, effects)
+      const effective = applyEffects(merged, active, show, definitions, clock)
 
       const live = new Set(show.fixtures.map((f) => f.id))
       for (const [id, fx] of fxMap) {
