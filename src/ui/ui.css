@@ -1264,6 +1264,20 @@
   animation: blindpulse 1.4s ease-in-out infinite;
 }
 @keyframes blindpulse { 50% { opacity: 0.55; } }
+/* Active momentary-mode warning (Avo/Flash/Swop are toggles here) — like the Avo border. */
+.qcal.swopping { outline: 0.25cqw solid #ffb454; outline-offset: -0.25cqw; }
+.cal-modes-badge {
+  position: absolute; top: 1.4%; left: 50%; transform: translateX(-50%);
+  display: flex; gap: 0.5cqw; align-items: center; z-index: 22; pointer-events: none;
+  font-size: 1.15cqw; font-weight: 800; letter-spacing: 0.3px;
+}
+.cal-modes-badge span {
+  padding: 0.3cqw 0.9cqw; border-radius: 0.7cqw; box-shadow: 0 0.3cqw 1cqw rgba(0, 0, 0, 0.55);
+}
+.cal-modes-badge .mb-avo { background: var(--coral); color: #1a1113; }
+.cal-modes-badge .mb-flash { background: #3a86e0; color: #fff; }
+.cal-modes-badge .mb-swop { background: #ffb454; color: #201401; animation: blindpulse 1.4s ease-in-out infinite; }
+.cal-modes-badge .mb-hint { background: rgba(0, 0, 0, 0.5); color: #cfcfd6; font-weight: 600; }
 .qcal.shift .cal-lbl .sub { display: block; color: var(--coral); font-weight: 700; }
 /* Where a key HAS a shifted function, the primary label is replaced by it
    (e.g. "All" → "Rem Dim"); keys with no shifted function just dim. */

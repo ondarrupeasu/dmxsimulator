@@ -253,8 +253,15 @@ export function QuartzPanel() {
       <button className="qcal-zonetoggle" onClick={() => setShowZones((s) => !s)}>
         {showZones ? 'Ocultar zonas' : 'Ver zonas'}
       </button>
-      <div className={`qcal${shift ? ' shift' : ''}`}>
-        {shift && <div className="cal-shift-badge">AVO · segundas funciones activas</div>}
+      <div className={`qcal${shift ? ' shift' : ''}${swopId ? ' swopping' : ''}`}>
+        {(shift || flashIds.length > 0 || swopId) && (
+          <div className="cal-modes-badge">
+            {shift && <span className="mb-avo">AVO · segundas funciones</span>}
+            {flashIds.length > 0 && <span className="mb-flash">FLASH ×{flashIds.length}</span>}
+            {swopId && <span className="mb-swop">SWOP · resto en negro</span>}
+            <span className="mb-hint">clic en el botón para apagar</span>
+          </div>
+        )}
         {blind && <div className="cal-blind-badge">BLIND · el programmer no sale a escena</div>}
         {showZones && (
           <div className="cal-zones">
