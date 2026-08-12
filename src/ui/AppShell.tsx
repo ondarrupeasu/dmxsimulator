@@ -53,8 +53,10 @@ export function AppShell() {
   // Collapsible secondary panes: folding the Fixtures window maximises the desk,
   // folding the DMX monitor maximises the visualiser.
   const screenRef = useRef<ImperativePanelHandle>(null)
+  const fixturesRef = useRef<ImperativePanelHandle>(null)
   const monitorRef = useRef<ImperativePanelHandle>(null)
   const [screenCollapsed, setScreenCollapsed] = useState(false)
+  const [fixturesCollapsed, setFixturesCollapsed] = useState(false)
   const [monitorCollapsed, setMonitorCollapsed] = useState(false)
 
   // Animation clock for the 2D view + monitor (the 3D view self-clocks). Advances
@@ -239,8 +241,22 @@ export function AppShell() {
                   <div className="pane">{visualizerPanel}</div>
                 </Panel>
                 <PanelResizeHandle className="rz rz-h" />
-                <Panel defaultSize={22} minSize={12}>
-                  <div className="pane">{fixturesPanel}</div>
+                <Panel
+                  ref={fixturesRef} collapsible collapsedSize={4}
+                  defaultSize={22} minSize={12}
+                  onCollapse={() => setFixturesCollapsed(true)}
+                  onExpand={() => setFixturesCollapsed(false)}
+                >
+                  <div className="pane">
+                    <button
+                      className="pane-fold"
+                      title={fixturesCollapsed ? t('common.expand') : t('common.collapse')}
+                      onClick={() => (fixturesCollapsed ? fixturesRef.current?.expand() : fixturesRef.current?.collapse())}
+                    >
+                      {fixturesCollapsed ? '⌄' : '⌃'}
+                    </button>
+                    {!fixturesCollapsed && fixturesPanel}
+                  </div>
                 </Panel>
                 <PanelResizeHandle className="rz rz-h" />
                 <Panel

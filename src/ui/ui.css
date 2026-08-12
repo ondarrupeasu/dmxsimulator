@@ -110,9 +110,9 @@
 /* Keep the monitor's universe switcher clear of the pane fold button (top-right).
    Let the title truncate and pin the U-buttons so they never overflow into the
    fold arrow's zone, no matter how narrow the monitor panel gets. */
-.panel > header.mon-header { padding-right: 44px; }
-.mon-header > h2 { flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.mon-header .vh-tools { flex: 0 0 auto; }
+.panel > header.mon-header, .panel > header.fx-win-header { padding-right: 44px; }
+.mon-header > h2, .fx-win-header > h2 { flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mon-header .vh-tools, .fx-win-header .vh-tools { flex: 0 0 auto; }
 
 .rz {
   position: relative;

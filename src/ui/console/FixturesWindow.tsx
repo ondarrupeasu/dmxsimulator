@@ -45,7 +45,7 @@ export function FixturesWindow() {
   let idx = -1
   return (
     <div className="panel" data-tour="fixtures">
-      <header>
+      <header className="fx-win-header">
         <h2>{t('fixturesWindow.title')}</h2>
         <div className="vh-tools">
           <button className="ghost-btn" disabled={noFx} onClick={() => select(show.fixtures.map((f) => f.id))}>
