@@ -1220,6 +1220,12 @@
 .ckled.on { background: #3ab2ff; box-shadow: 0 0 0.35cqw #cdeaff, 0 0 1.9cqw #2ea6ff, 0 0 3cqw rgba(46, 166, 255, 0.6); }
 .ckled.on.red { background: #ff3b3b; box-shadow: 0 0 0.35cqw #ffd6d6, 0 0 1.9cqw #ff2424, 0 0 3cqw rgba(255, 40, 40, 0.6); }
 .ckled.on.blue { background: #3ab2ff; box-shadow: 0 0 0.35cqw #cdeaff, 0 0 1.9cqw #2ea6ff, 0 0 3cqw rgba(46, 166, 255, 0.6); }
+/* Titan LED flash: an occupied playback whose fader is at 0, or a key awaiting a target
+   after Record (documented desk behaviour). Pulses the LED on/off. */
+.ckled.flash { animation: ckled-flash 0.85s ease-in-out infinite; }
+.ckled.flash:not(.on) { background: #2f6d92; }
+.ckled.red.flash:not(.on) { background: #8a2f2f; }
+@keyframes ckled-flash { 0%, 100% { opacity: 0.28; } 50% { opacity: 1; } }
 
 /* Big red keys (Go, Locate) */
 .calbig {

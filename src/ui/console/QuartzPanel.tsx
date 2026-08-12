@@ -33,9 +33,9 @@ const ATTRIBUTES: { name: string; wheels: string[][] }[] = [
 
 type V = 'white' | 'dark' | 'blue' | 'red'
 function Key({
-  v = 'dark', led = true, ledColor, ledBottom, on, text, narrow, assignable, disabled, title, onClick, onContextMenu, tour,
+  v = 'dark', led = true, ledColor, ledBottom, on, flash, text, narrow, assignable, disabled, title, onClick, onContextMenu, tour,
 }: {
-  v?: V; led?: boolean; ledColor?: 'red' | 'blue'; ledBottom?: boolean; on?: boolean
+  v?: V; led?: boolean; ledColor?: 'red' | 'blue'; ledBottom?: boolean; on?: boolean; flash?: boolean
   text?: string; narrow?: boolean; assignable?: boolean; disabled?: boolean; title?: string
   onClick?: () => void; onContextMenu?: (e: React.MouseEvent) => void; tour?: string
 }) {
@@ -44,7 +44,7 @@ function Key({
       className={`ck ck-${v}${ledBottom ? ' ledb' : ''}${narrow ? ' narrow' : ''}${assignable ? ' assignable' : ''}`}
       disabled={disabled} title={title} onClick={onClick} onContextMenu={onContextMenu} data-tour={tour}
     >
-      {led && <span className={`ckled${on ? ' on' : ''}${ledColor ? ' ' + ledColor : ''}`} />}
+      {led && <span className={`ckled${on ? ' on' : ''}${flash ? ' flash' : ''}${ledColor ? ' ' + ledColor : ''}`} />}
       {text != null && <span className="cktext">{text}</span>}
     </button>
   )
@@ -328,7 +328,7 @@ export function QuartzPanel() {
         {/* Program keys 6×2 */}
         <GridLabels x={658} y={270} w={386} cols={6} items={['Record', 'Update', 'Edit', 'Select\nIf', 'Patch', 'Disk']} subs={['', '', '', '', '', 'Setup']} above />
         <Box x={658} y={272} w={386} h={118} cols={6} rows={2}>
-          <Key v="dark" ledColor="red" on={recordArm || hasProgrammer} title={recordArm ? 'Record armed — toca un fader para grabar ahí (pulsa Record otra vez para cancelar)' : 'Record — pulsa y luego elige el fader donde guardar'} onClick={() => { setMenu('record'); if (hasProgrammer || recordArm) armRecord() }} tour="desk-record" />
+          <Key v="dark" ledColor="red" on={recordArm || hasProgrammer} flash={recordArm} title={recordArm ? 'Record armado — parpadea esperando que elijas el fader donde grabar (pulsa Record otra vez para cancelar)' : 'Record — pulsa y luego elige el fader donde guardar'} onClick={() => { setMenu('record'); if (hasProgrammer || recordArm) armRecord() }} tour="desk-record" />
           <Key v="white" led={false} disabled={!hasActive || !hasProgrammer} title="Update" onClick={() => connectedId && updateCue(connectedId)} />
           <Key v="white" led={false} disabled title="Edit" /><Key v="white" led={false} disabled title="Select If" /><Key v="white" led={false} title="Patch — abre el menú Patch" onClick={() => setMenu('patch')} /><Key v="white" led={false} disabled title="Disk" />
           <Key v="white" led={false} disabled={!hasActive} title="Delete" onClick={() => connectedId && deleteCue(connectedId)} />
@@ -351,8 +351,12 @@ export function QuartzPanel() {
         <Box x={44} y={454} w={612} h={104} cols={10} rows={2} spread>
           {Array.from({ length: 10 }, (_, i) => {
             const gi = playbackPage * 10 + i; const cue = bySlot[gi]; const on = !!cue && isUp(cue.id)
+            // Titan LED model: occupied handle whose fader is at 0 → its LED FLASHES (a
+            // reminder why no light is coming on). While Record is armed, the valid targets
+            // flash to say "pick where to record". Occupied + up = steady.
+            const flash = recordArm ? true : !!cue && !on
             const title = recordArm ? (cue ? `Record over ${cue.name}` : 'Record here') : cue ? `Go ${cue.name}` : 'Empty'
-            return <Key key={`t${i}`} v={recordArm ? 'red' : 'blue'} narrow ledBottom on={on} disabled={!recordArm && !cue} title={title} onClick={() => (recordArm ? recordCueAt(gi) : cue && goCue(cue.id))} />
+            return <Key key={`t${i}`} v={recordArm ? 'red' : 'blue'} narrow ledBottom on={on} flash={flash} disabled={!recordArm && !cue} title={title} onClick={() => (recordArm ? recordCueAt(gi) : cue && goCue(cue.id))} />
           })}
           {Array.from({ length: 10 }, (_, i) => {
             const gi = playbackPage * 10 + i; const cue = bySlot[gi]
