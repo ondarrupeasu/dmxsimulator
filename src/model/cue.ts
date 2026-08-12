@@ -38,6 +38,10 @@ export interface Playback {
   mode: 'list' | 'chase'
   /** Chase tempo in beats per minute (used when mode === 'chase'). */
   bpm?: number
+  /** True when this playback lives on an EXECUTOR button, not one of the 10 faders — it's
+   *  reached only via its executor and never takes a fader slot (the real desk keeps
+   *  executors and playback faders separate). */
+  executor?: boolean
   /** An in-progress cross-fade between cues: the look that was live when Go was pressed
    *  (`fromValues`) morphs into the new current step over `dur` seconds from `start`. */
   transition?: { fromValues: ProgrammerValues; start: number; dur: number }
@@ -66,6 +70,7 @@ export function playbacksBySlot(pbs: Playback[]): (Playback | undefined)[] {
   const bySlot: (Playback | undefined)[] = []
   const loose: Playback[] = []
   for (const p of pbs) {
+    if (p.executor) continue // executors live on their own buttons, not the fader grid
     if (typeof p.slot === 'number' && p.slot >= 0) bySlot[p.slot] = p
     else loose.push(p)
   }

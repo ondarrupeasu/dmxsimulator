@@ -711,8 +711,8 @@ export const useShowStore = create<ShowState>()(
       recordExecutor: (n) =>
         set((s) => {
           if (Object.keys(s.programmer).length === 0) return s
-          const slot = firstFreePlaybackSlot(s.playbacks)
-          const pb = makePlayback(nextInstanceId(), slot, snapProgrammer(s), snapEffects(s))
+          const pb = makePlayback(nextInstanceId(), -1, snapProgrammer(s), snapEffects(s))
+          pb.executor = true // lives on the executor button, not a fader slot
           pb.name = s.executorLabels[n] ?? `Exec ${n}`
           pb.steps[0].name = pb.name
           return {
