@@ -70,10 +70,17 @@ interface ShowState {
   // Sound to Light — 7 audio bands (see engine/audio.ts), each with a trigger threshold
   // and an optional playback slot it fires when the band crosses that threshold.
   audioEnabled: boolean
-  audioBands: { threshold: number; cueSlot: number | null }[]
+  /** Auto Gain (Titan): the engine adjusts input gain automatically. */
+  audioAutoGain: boolean
+  audioBands: { threshold: number; cueSlot: number | null; enabled: boolean; auto: boolean }[]
   setAudioEnabled: (v: boolean) => void
+  setAudioAutoGain: (v: boolean) => void
   setAudioBandThreshold: (i: number, v: number) => void
   setAudioBandCue: (i: number, slot: number | null) => void
+  /** Per-band Enable (Titan): disable triggers on this band. */
+  setAudioBandEnabled: (i: number, v: boolean) => void
+  /** Per-band Auto (Titan): auto-adjust this band's trigger level when idle. */
+  setAudioBandAuto: (i: number, v: boolean) => void
 
   // Quartz desk UI state (shared between its screen + button panel)
   deskAttr: string
@@ -292,12 +299,18 @@ export const useShowStore = create<ShowState>()(
       removeEffect: (id) => set((s) => ({ effects: s.effects.filter((e) => e.id !== id) })),
 
       audioEnabled: false,
-      audioBands: Array.from({ length: 7 }, () => ({ threshold: 0.5, cueSlot: null as number | null })),
+      audioAutoGain: false,
+      audioBands: Array.from({ length: 7 }, () => ({ threshold: 0.5, cueSlot: null as number | null, enabled: true, auto: false })),
       setAudioEnabled: (v) => set({ audioEnabled: v }),
+      setAudioAutoGain: (v) => set({ audioAutoGain: v }),
       setAudioBandThreshold: (i, v) =>
-        set((s) => ({ audioBands: s.audioBands.map((b, j) => (j === i ? { ...b, threshold: v } : b)) })),
+        set((s) => ({ audioBands: s.audioBands.map((b, j) => (j === i ? { ...b, threshold: v, auto: false } : b)) })),
       setAudioBandCue: (i, slot) =>
         set((s) => ({ audioBands: s.audioBands.map((b, j) => (j === i ? { ...b, cueSlot: slot } : b)) })),
+      setAudioBandEnabled: (i, v) =>
+        set((s) => ({ audioBands: s.audioBands.map((b, j) => (j === i ? { ...b, enabled: v } : b)) })),
+      setAudioBandAuto: (i, v) =>
+        set((s) => ({ audioBands: s.audioBands.map((b, j) => (j === i ? { ...b, auto: v } : b)) })),
 
       deskAttr: 'Intensity',
       setDeskAttr: (a) => set({ deskAttr: a }),

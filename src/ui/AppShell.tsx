@@ -83,19 +83,32 @@ export function AppShell() {
   useEffect(() => {
     if (!audioEnabled) return
     let raf = 0
+    let frame = 0
     const over = new Array(7).fill(false)
+    const baseline = new Array(7).fill(0)
     const loop = () => {
       const levels = audioEngine.bands()
-      audioEngine.detectBeat(performance.now(), levels[1] ?? 0)
+      const peak = levels.reduce((m, v) => Math.max(m, v), 0)
       const st = useShowStore.getState()
+      if (st.audioAutoGain) audioEngine.autoGain(peak) // Titan Auto Gain
+      audioEngine.detectBeat(performance.now(), levels[1] ?? 0)
       const bySlot = cuesBySlot(st.cues)
+      frame++
       st.audioBands.forEach((b, i) => {
-        const on = (levels[i] ?? 0) >= b.threshold
+        const lvl = levels[i] ?? 0
+        baseline[i] = baseline[i] * 0.98 + lvl * 0.02 // slow quiet-floor estimate
+        const on = b.enabled && lvl >= b.threshold
         if (on && !over[i] && b.cueSlot != null) {
           const cue = bySlot[b.cueSlot]
           if (cue) st.goCue(cue.id)
         }
         over[i] = on
+        // Per-band Auto trigger level: when idle, sit a margin above the floor (throttled).
+        if (b.auto && !on && frame % 15 === 0) {
+          const target = Math.min(0.95, baseline[i] + 0.18)
+          if (Math.abs(target - b.threshold) > 0.02)
+            useShowStore.setState((s) => ({ audioBands: s.audioBands.map((bb, j) => (j === i ? { ...bb, threshold: target } : bb)) }))
+        }
       })
       raf = requestAnimationFrame(loop)
     }

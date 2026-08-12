@@ -5,32 +5,35 @@ import { cuesBySlot } from '../../model/cue'
 
 const bandLabel = (hz: number) => (hz >= 1000 ? `${hz / 1000}k` : `${hz}`)
 
-/** Sound to Light + BPM — Titan's "Audio Triggers" workspace. Load a track (mp3) or use
- *  line-in/mic (on a real Quartz this is the built-in audio jack); the 7 bands fire the
- *  playbacks you map to them when they cross threshold. BPM/Tap drives shape speed. */
+/** Sound to Light — Titan's "Audio Triggers" workspace (real on the Quartz/Arena, which
+ *  have the audio hardware). The 7 fixed bands fire the playback you map to them when they
+ *  cross their trigger level. Gain / Auto Gain and per-band Enable / Auto mirror the desk.
+ *  Loading an mp3/aac file is a SIMULATOR-ONLY convenience (the real desk only has the
+ *  physical line-in jack) — flagged with the PWA marker so students know it's not on Titan. */
 export function AudioPanel() {
   const enabled = useShowStore((s) => s.audioEnabled)
   const setEnabled = useShowStore((s) => s.setAudioEnabled)
+  const autoGain = useShowStore((s) => s.audioAutoGain)
+  const setAutoGain = useShowStore((s) => s.setAudioAutoGain)
   const bands = useShowStore((s) => s.audioBands)
   const setThreshold = useShowStore((s) => s.setAudioBandThreshold)
   const setBandCue = useShowStore((s) => s.setAudioBandCue)
+  const setBandEnabled = useShowStore((s) => s.setAudioBandEnabled)
+  const setBandAuto = useShowStore((s) => s.setAudioBandAuto)
   const cues = useShowStore((s) => s.cues)
-  const effects = useShowStore((s) => s.effects)
-  const updateEffect = useShowStore((s) => s.updateEffect)
   const fileRef = useRef<HTMLInputElement>(null)
 
   const [levels, setLevels] = useState<number[]>(() => AUDIO_BANDS.map(() => 0))
   const [source, setSource] = useState(audioEngine.source)
-  const [bpm, setBpm] = useState(audioEngine.bpm)
   const [gain, setGainState] = useState(audioEngine.gain)
 
-  // Live meters + BPM readout at animation rate (levels aren't in the store — no churn).
+  // Live meters + gain readout at animation rate (levels aren't in the store — no churn).
   useEffect(() => {
     let raf = 0
     const loop = () => {
       setLevels(audioEngine.bands())
-      setBpm(audioEngine.bpm)
       setSource(audioEngine.source)
+      setGainState(audioEngine.gain) // reflects Auto Gain moving the slider
       raf = requestAnimationFrame(loop)
     }
     raf = requestAnimationFrame(loop)
@@ -66,8 +69,9 @@ export function AudioPanel() {
   return (
     <div className="audio-panel">
       <div className="audio-row audio-src">
-        <button className="audio-file" onClick={() => fileRef.current?.click()}>♪ Load track (mp3)</button>
-        <button className="audio-mic" onClick={useMic}>🎙 Line-in / Mic</button>
+        <button className="audio-file pwa-only" title="Exclusivo del simulador: la Quartz real solo tiene entrada line-in física, no carga archivos"
+          onClick={() => fileRef.current?.click()}>♪ Load track (mp3/aac)<span className="pwa-tag">PWA</span></button>
+        <button className="audio-mic" title="Line-in / micro (en la Quartz real: el jack de audio integrado)" onClick={useMic}>🎙 Line-in / Mic</button>
         <input ref={fileRef} type="file" accept="audio/*" style={{ display: 'none' }} onChange={onFile} />
         <span className="audio-lbl">{source === 'none' ? 'No source' : audioEngine.label}</span>
         <label className="audio-enable">
@@ -77,30 +81,37 @@ export function AudioPanel() {
 
       <div className="audio-row audio-gain">
         <span>Gain</span>
-        <input type="range" min={0.5} max={4} step={0.1} value={gain} onChange={(e) => { const v = Number(e.target.value); audioEngine.gain = v; setGainState(v) }} />
-        <span className="audio-bpm">BPM {bpm}
-          <button className="audio-tap" onClick={() => audioEngine.tap(performance.now())}>Tap</button>
-          <button className="audio-tobeat" title="Set every running shape's speed to the beat"
-            onClick={() => effects.forEach((e) => updateEffect(e.id, { speed: Math.min(1, audioEngine.bpm / 60) }))}
-            disabled={!effects.length}>→ shapes to beat</button>
-        </span>
+        <input type="range" min={0.5} max={4} step={0.1} value={gain} disabled={autoGain}
+          onChange={(e) => { const v = Number(e.target.value); audioEngine.gain = v; setGainState(v) }} />
+        <label className="audio-enable" title="Auto Gain: la mesa ajusta la ganancia sola">
+          <input type="checkbox" checked={autoGain} onChange={(e) => setAutoGain(e.target.checked)} /> Auto Gain
+        </label>
       </div>
 
       <div className="section-label">Sound to Light — bands fire the playback you map</div>
       <div className="audio-bands">
         {AUDIO_BANDS.map((hz, i) => {
+          const b = bands[i]
           const lvl = levels[i] ?? 0
-          const over = lvl >= bands[i].threshold
+          const over = b.enabled && lvl >= b.threshold
           return (
-            <div key={hz} className={`audio-band${over ? ' hit' : ''}`}>
+            <div key={hz} className={`audio-band${over ? ' hit' : ''}${b.enabled ? '' : ' off'}`}>
               <span className="ab-hz">{bandLabel(hz)}</span>
               <div className="ab-meter">
                 <div className="ab-fill" style={{ height: `${Math.round(lvl * 100)}%` }} />
-                <div className="ab-thresh" style={{ bottom: `${Math.round(bands[i].threshold * 100)}%` }} />
+                <div className="ab-thresh" style={{ bottom: `${Math.round(b.threshold * 100)}%` }} />
               </div>
               <input className="ab-tset" type="range" min={0} max={1} step={0.02}
-                value={bands[i].threshold} onChange={(e) => setThreshold(i, Number(e.target.value))} />
-              <select className="ab-cue" value={bands[i].cueSlot ?? ''}
+                value={b.threshold} disabled={b.auto} onChange={(e) => setThreshold(i, Number(e.target.value))} />
+              <div className="ab-switches">
+                <label title="Enable: activa/desactiva el trigger de esta banda">
+                  <input type="checkbox" checked={b.enabled} onChange={(e) => setBandEnabled(i, e.target.checked)} /> En
+                </label>
+                <label title="Auto: ajusta el nivel de disparo solo cuando no hay triggers">
+                  <input type="checkbox" checked={b.auto} onChange={(e) => setBandAuto(i, e.target.checked)} /> Auto
+                </label>
+              </div>
+              <select className="ab-cue" value={b.cueSlot ?? ''}
                 onChange={(e) => setBandCue(i, e.target.value === '' ? null : Number(e.target.value))}>
                 <option value="">—</option>
                 {cueOptions.map((o) => (

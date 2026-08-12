@@ -107,6 +107,13 @@ class AudioEngine {
     })
   }
 
+  /** Auto Gain (Titan): nudge the input gain so the loudest band peaks near ~0.85.
+   *  `peak` is the current max post-gain band level; called each frame while enabled. */
+  autoGain(peak: number) {
+    if (peak > 0.98) this.gain = Math.max(0.5, this.gain - 0.03)
+    else if (peak < 0.6) this.gain = Math.min(4, this.gain + 0.015)
+  }
+
   /** Energy-based beat detection on the kick band → updates bpm. Returns true on a beat. */
   detectBeat(nowMs: number, level: number): boolean {
     this.energy.push(level)

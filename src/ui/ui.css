@@ -972,6 +972,19 @@
 .ab-thresh { position: absolute; left: -1px; right: -1px; height: 2px; background: #7fc0f0; }
 .ab-tset { width: 64px; }
 .ab-cue { font-size: 10px; max-width: 72px; }
+.audio-band.off { opacity: 0.45; }
+.ab-switches { display: flex; flex-direction: column; gap: 1px; font-size: 9px; color: #9aa0a8; }
+.ab-switches label { display: inline-flex; align-items: center; gap: 3px; cursor: pointer; }
+.ab-switches input { margin: 0; }
+
+/* PWA-only marker: a control that does NOT exist on the real Quartz (or works differently
+   there). Coral dashed outline + a small "PWA" tag so students know it's a simulator extra. */
+.pwa-only { position: relative; border: 1px dashed #ff8a6a !important; }
+.pwa-tag {
+  display: inline-block; margin-left: 6px; padding: 0 4px; border-radius: 3px;
+  background: #ff8a6a; color: #1a1a1f; font-size: 8px; font-weight: 800;
+  letter-spacing: 0.5px; vertical-align: middle;
+}
 
 /* A–G softkey column — physical-look grey keys (right of the screen) + labels. */
 .qscreen-soft {
