@@ -40,17 +40,30 @@ function FxSlider({
   )
 }
 
-/** Shows the running effects (Avolites "shapes") and lets you tune their parameters. */
+/** Create + tune effects (Avolites "shapes"): add one on the current selection,
+ *  then adjust its speed / size / spread live. */
 export function EffectsPanel() {
   const effects = useShowStore((s) => s.effects)
+  const addEffect = useShowStore((s) => s.addEffect)
   const updateEffect = useShowStore((s) => s.updateEffect)
   const removeEffect = useShowStore((s) => s.removeEffect)
-
-  if (effects.length === 0) return null
+  const selCount = useShowStore((s) => s.selection.length)
 
   return (
     <div className="fx-panel">
       <div className="section-label">Effects (shapes)</div>
+      <div className="fx-add">
+        {(['circle', 'colourCycle', 'dimmerWave'] as EffectType[]).map((tp) => (
+          <button key={tp} disabled={!selCount} onClick={() => addEffect(tp)} title={selCount ? '' : 'Select fixtures first'}>
+            ＋ {TYPE_LABELS[tp]}
+          </button>
+        ))}
+      </div>
+      {effects.length === 0 && (
+        <div className="prog-empty">
+          {selCount ? 'Add a shape above — it runs on your selection.' : 'Select fixtures, then add a shape.'}
+        </div>
+      )}
       {effects.map((e) => (
         <div className="fx-card" key={e.id}>
           <div className="fx-head">

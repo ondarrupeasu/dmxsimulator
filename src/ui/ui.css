@@ -1319,6 +1319,13 @@
 
 /* ---- Effects (shapes) panel ---- */
 .fx-panel { display: flex; flex-direction: column; gap: 8px; }
+.fx-add { display: flex; flex-wrap: wrap; gap: 6px; }
+.fx-add button {
+  font-size: 11px; padding: 4px 10px; border-radius: var(--radius-sm);
+  color: var(--coral); background: transparent; border: 1px solid var(--coral); cursor: pointer;
+}
+.fx-add button:hover:not(:disabled) { background: var(--coral); color: #16131a; }
+.fx-add button:disabled { opacity: 0.4; cursor: not-allowed; color: var(--text-faint); border-color: var(--border); }
 .fx-card {
   background: var(--bg-elev);
   border: 1px solid var(--border);

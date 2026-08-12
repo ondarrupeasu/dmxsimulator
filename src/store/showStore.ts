@@ -12,7 +12,7 @@ import type { Cue } from '../model/cue'
 import type { Palette, PaletteKind } from '../model/palette'
 import { PALETTE_FUNCTIONS, PALETTE_LABELS } from '../model/palette'
 import type { Group } from '../model/group'
-import type { Effect } from '../engine/effects'
+import type { Effect, EffectType } from '../engine/effects'
 import { applyEffects } from '../engine/effects'
 import { BUILTIN_FIXTURES } from '../model/library'
 import { templateById } from '../model/templates'
@@ -61,6 +61,8 @@ interface ShowState {
   /** Whether effect animations are running (Play) or frozen (Pause). */
   playing: boolean
   setPlaying: (v: boolean) => void
+  /** Add a shape (effect) on the current selection, with sensible defaults. */
+  addEffect: (type: EffectType) => void
   updateEffect: (id: string, partial: Partial<Effect>) => void
   removeEffect: (id: string) => void
 
@@ -265,6 +267,16 @@ export const useShowStore = create<ShowState>()(
       tickClock: (dt) => set((s) => ({ now: s.now + dt })),
       playing: true,
       setPlaying: (v) => set({ playing: v }),
+      addEffect: (type) =>
+        set((s) => {
+          if (s.selection.length === 0) return s
+          const d =
+            type === 'circle' ? { speed: 0.12, size: 60, spread: 1.3 }
+            : type === 'colourCycle' ? { speed: 0.08, size: 0, spread: 1.6 }
+            : { speed: 0.4, size: 0, spread: 1.0 }
+          const eff: Effect = { id: `fx-${Date.now().toString(36)}`, type, fixtureIds: [...s.selection], ...d }
+          return { effects: [...s.effects, eff], playing: true }
+        }),
       updateEffect: (id, partial) =>
         set((s) => ({
           effects: s.effects.map((e) => (e.id === id ? { ...e, ...partial } : e)),
