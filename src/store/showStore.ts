@@ -81,6 +81,10 @@ interface ShowState {
   setAudioBandEnabled: (i: number, v: boolean) => void
   /** Per-band Auto (Titan): auto-adjust this band's trigger level when idle. */
   setAudioBandAuto: (i: number, v: boolean) => void
+  /** SIMULATOR HELPER: one-click Sound-to-Light demo — records two bright looks (red / blue)
+   *  to playbacks and maps them to the bass and mid bands, so you can hear a track and see it
+   *  react without building it by hand. */
+  setupAudioDemo: () => void
 
   // Quartz desk UI state (shared between its screen + button panel)
   deskAttr: string
@@ -412,6 +416,54 @@ export const useShowStore = create<ShowState>()(
         set((s) => ({ audioBands: s.audioBands.map((b, j) => (j === i ? { ...b, enabled: v } : b)) })),
       setAudioBandAuto: (i, v) =>
         set((s) => ({ audioBands: s.audioBands.map((b, j) => (j === i ? { ...b, auto: v } : b)) })),
+
+      setupAudioDemo: () =>
+        set((s) => {
+          const fx = s.show.fixtures
+          if (fx.length === 0) return s
+          // A full-intensity look in one colour (dimmer + open shutter + RGB) across all fixtures.
+          const look = (rgb: [number, number, number]): ProgrammerValues => {
+            const values: ProgrammerValues = {}
+            for (const pf of fx) {
+              const channels = s.definitions[pf.definitionId]?.modes[pf.modeIndex]?.channels
+              if (!channels) continue
+              const v: Record<number, number> = {}
+              channels.forEach((ch, i) => {
+                if (ch.function === 'dimmer') v[i] = 255
+                else if (ch.function === 'shutter') v[i] = 255
+                else if (ch.function === 'red') v[i] = rgb[0]
+                else if (ch.function === 'green') v[i] = rgb[1]
+                else if (ch.function === 'blue') v[i] = rgb[2]
+              })
+              if (Object.keys(v).length) values[pf.id] = v
+            }
+            return values
+          }
+          const mk = (slot: number, name: string, rgb: [number, number, number]): Playback => {
+            const pb = makePlayback(nextInstanceId(), slot, look(rgb), [])
+            pb.name = name
+            pb.steps[0].name = name
+            return pb
+          }
+          const red = mk(0, 'Demo · Red (graves)', [255, 0, 0])
+          const blue = mk(1, 'Demo · Blue (agudos)', [0, 40, 255])
+          return {
+            playbacks: [red, blue],
+            connectedId: null,
+            playbackLevels: {},
+            firedLevels: {},
+            fades: {},
+            // Bass band (50 Hz) fires red, mid band (875 Hz) fires blue; snappy so each hit flashes.
+            playbackFade: 0.15,
+            audioEnabled: true,
+            audioBands: s.audioBands.map((b, i) => ({
+              ...b,
+              enabled: i === 0 || i === 3,
+              threshold: 0.28,
+              cueSlot: i === 0 ? 0 : i === 3 ? 1 : null,
+            })),
+          }
+        }),
 
       deskAttr: 'Intensity',
       setDeskAttr: (a) => set({ deskAttr: a }),

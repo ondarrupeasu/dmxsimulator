@@ -21,6 +21,7 @@ export function AudioPanel() {
   const setBandCue = useShowStore((s) => s.setAudioBandCue)
   const setBandEnabled = useShowStore((s) => s.setAudioBandEnabled)
   const setBandAuto = useShowStore((s) => s.setAudioBandAuto)
+  const setupAudioDemo = useShowStore((s) => s.setupAudioDemo)
   const playbacks = useShowStore((s) => s.playbacks)
   const fileRef = useRef<HTMLInputElement>(null)
 
@@ -123,7 +124,11 @@ export function AudioPanel() {
         </label>
       </div>
 
-      <div className="section-label">Sound to Light — bands fire the playback you map</div>
+      <div className="section-label audio-s2l-head">
+        <span>Sound to Light — bands fire the playback you map</span>
+        <button className="audio-demo pwa-only" title="Monta un ejemplo: graba 2 looks con intensidad (rojo/azul) y los mapea a graves/agudos. Carga un track y súbele el volumen para verlo."
+          onClick={() => setupAudioDemo()}>⚡ Demo<PwaTag sim="crea 2 escenas y las mapea de un clic para probar" real="en la mesa montas tú las escenas y las asignas a las bandas" /></button>
+      </div>
       <div className="audio-bands">
         {AUDIO_BANDS.map((hz, i) => {
           const b = bands[i]
