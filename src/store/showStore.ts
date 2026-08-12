@@ -67,6 +67,14 @@ interface ShowState {
   updateEffect: (id: string, partial: Partial<Effect>) => void
   removeEffect: (id: string) => void
 
+  // Sound to Light — 7 audio bands (see engine/audio.ts), each with a trigger threshold
+  // and an optional playback slot it fires when the band crosses that threshold.
+  audioEnabled: boolean
+  audioBands: { threshold: number; cueSlot: number | null }[]
+  setAudioEnabled: (v: boolean) => void
+  setAudioBandThreshold: (i: number, v: number) => void
+  setAudioBandCue: (i: number, slot: number | null) => void
+
   // Quartz desk UI state (shared between its screen + button panel)
   deskAttr: string
   setDeskAttr: (a: string) => void
@@ -282,6 +290,14 @@ export const useShowStore = create<ShowState>()(
           effects: s.effects.map((e) => (e.id === id ? { ...e, ...partial } : e)),
         })),
       removeEffect: (id) => set((s) => ({ effects: s.effects.filter((e) => e.id !== id) })),
+
+      audioEnabled: false,
+      audioBands: Array.from({ length: 7 }, () => ({ threshold: 0.5, cueSlot: null as number | null })),
+      setAudioEnabled: (v) => set({ audioEnabled: v }),
+      setAudioBandThreshold: (i, v) =>
+        set((s) => ({ audioBands: s.audioBands.map((b, j) => (j === i ? { ...b, threshold: v } : b)) })),
+      setAudioBandCue: (i, slot) =>
+        set((s) => ({ audioBands: s.audioBands.map((b, j) => (j === i ? { ...b, cueSlot: slot } : b)) })),
 
       deskAttr: 'Intensity',
       setDeskAttr: (a) => set({ deskAttr: a }),

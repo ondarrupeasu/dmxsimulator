@@ -15,6 +15,8 @@ import { ShowMenu } from './ShowMenu'
 import { TourOverlay } from './TourOverlay'
 import { useTour } from '../store/tourStore'
 import { VENUE_PRESETS } from '../model/venues'
+import { audioEngine } from '../engine/audio'
+import { cuesBySlot } from '../model/cue'
 import './ui.css'
 
 const MODES = ['patch', 'program'] as const
@@ -74,6 +76,32 @@ export function AppShell() {
     }, 50)
     return () => clearInterval(iv)
   }, [effectsCount, cueEffectsUp, playing, fadeCount, tickClock, settleFades])
+
+  // Sound to Light: while enabled, watch the 7 bands and fire each band's mapped playback
+  // on the rising edge over its threshold (like Titan's audio triggers); track the beat.
+  const audioEnabled = useShowStore((s) => s.audioEnabled)
+  useEffect(() => {
+    if (!audioEnabled) return
+    let raf = 0
+    const over = new Array(7).fill(false)
+    const loop = () => {
+      const levels = audioEngine.bands()
+      audioEngine.detectBeat(performance.now(), levels[1] ?? 0)
+      const st = useShowStore.getState()
+      const bySlot = cuesBySlot(st.cues)
+      st.audioBands.forEach((b, i) => {
+        const on = (levels[i] ?? 0) >= b.threshold
+        if (on && !over[i] && b.cueSlot != null) {
+          const cue = bySlot[b.cueSlot]
+          if (cue) st.goCue(cue.id)
+        }
+        over[i] = on
+      })
+      raf = requestAnimationFrame(loop)
+    }
+    raf = requestAnimationFrame(loop)
+    return () => cancelAnimationFrame(raf)
+  }, [audioEnabled])
 
   const Surface = consoleById(consoleId).Surface
   // The faithful Quartz desk fills the Program workspace (playback runs from the desk

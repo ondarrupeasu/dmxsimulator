@@ -20,7 +20,8 @@
       "WebFetch(domain:media.equipson.es)",
       "WebFetch(domain:www.gdtf.eu)",
       "WebFetch(domain:gitlab.com)",
-      "WebFetch(domain:www.capture.se)"
+      "WebFetch(domain:www.capture.se)",
+      "WebFetch(domain:forum.avolites.com)"
     ]
   }
 }

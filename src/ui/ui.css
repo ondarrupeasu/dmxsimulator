@@ -949,6 +949,30 @@
 .qd-cell.rec:hover:not(:disabled) { border-color: #7fb8dd; color: #cfeafd; }
 .qd-cell.rec:disabled { opacity: 0.4; cursor: not-allowed; }
 
+/* Audio Triggers workspace (Sound to Light + BPM), on the Titan screen. */
+.audio-panel { display: flex; flex-direction: column; gap: 8px; color: #dcdce2; }
+.audio-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.audio-panel button {
+  font-size: 11px; padding: 4px 9px; color: #e8e8ec;
+  background: linear-gradient(180deg, #3d3e44, #2a2b30); border: 1px solid #17181c;
+  border-top-color: #55565d; border-radius: 4px; cursor: pointer;
+}
+.audio-panel button:hover:not(:disabled) { border-color: #7fb8dd; }
+.audio-lbl { font-size: 11px; color: #9aa0a8; flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.audio-enable { font-size: 11px; display: inline-flex; align-items: center; gap: 4px; }
+.audio-gain span { font-size: 11px; }
+.audio-gain input[type="range"] { width: 120px; }
+.audio-bpm { margin-left: auto; display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; color: #7fc0f0; }
+.audio-bands { display: flex; gap: 8px; align-items: stretch; }
+.audio-band { flex: 1 1 0; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.audio-band.hit .ab-hz { color: #ff5a4d; }
+.ab-hz { font-size: 10px; color: #9aa0a8; }
+.ab-meter { position: relative; width: 22px; height: 90px; background: #17181c; border: 1px solid #2c2d32; border-radius: 3px; overflow: hidden; }
+.ab-fill { position: absolute; left: 0; right: 0; bottom: 0; background: linear-gradient(180deg, #ff5a4d, #ffb054 60%, #4ad06a); }
+.ab-thresh { position: absolute; left: -1px; right: -1px; height: 2px; background: #7fc0f0; }
+.ab-tset { width: 64px; }
+.ab-cue { font-size: 10px; max-width: 72px; }
+
 /* A–G softkey column — physical-look grey keys (right of the screen) + labels. */
 .qscreen-soft {
   flex: 0 0 134px;

@@ -2,6 +2,7 @@ import { useShowStore } from '../../store/showStore'
 import type { PaletteKind } from '../../model/palette'
 import { PALETTE_LABELS } from '../../model/palette'
 import { EffectsPanel } from '../run/EffectsPanel'
+import { AudioPanel } from './AudioPanel'
 
 const PALETTE_KINDS: PaletteKind[] = ['colour', 'position', 'gobo', 'beam', 'intensity']
 
@@ -17,6 +18,7 @@ const TABS: { key: string; label: string }[] = [
   { key: 'intensity', label: 'Intensity' },
   { key: 'playbacks', label: 'Playbacks' },
   { key: 'effects', label: 'Shapes' },
+  { key: 'audio', label: 'Audio' },
 ]
 
 type SoftKey = {
@@ -197,6 +199,8 @@ export function QuartzScreen() {
         ))}
       </div>
     )
+  } else if (screen === 'audio') {
+    body = <AudioPanel />
   } else if (screen === 'effects') {
     body = <EffectsPanel />
   } else if (screen === 'groups') {
