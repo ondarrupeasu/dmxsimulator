@@ -98,6 +98,26 @@ class AudioEngine {
     this.label = file.name
   }
 
+  // --- mp3 transport (file source only) ---
+  get paused(): boolean {
+    return this.mediaEl?.paused ?? true
+  }
+  get currentTime(): number {
+    return this.mediaEl?.currentTime ?? 0
+  }
+  get duration(): number {
+    const d = this.mediaEl?.duration ?? 0
+    return Number.isFinite(d) ? d : 0
+  }
+  togglePlay() {
+    if (!this.mediaEl) return
+    if (this.mediaEl.paused) void this.mediaEl.play()
+    else this.mediaEl.pause()
+  }
+  seek(t: number) {
+    if (this.mediaEl) this.mediaEl.currentTime = Math.max(0, Math.min(this.duration || t, t))
+  }
+
   stop() {
     this.mediaEl?.pause()
     this.mediaEl = null

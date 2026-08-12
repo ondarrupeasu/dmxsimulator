@@ -27,6 +27,7 @@ export function AudioPanel() {
   const [levels, setLevels] = useState<number[]>(() => AUDIO_BANDS.map(() => 0))
   const [source, setSource] = useState(audioEngine.source)
   const [gain, setGainState] = useState(audioEngine.gain)
+  const [tp, setTp] = useState({ t: 0, d: 0, paused: true }) // mp3 transport
 
   // Live meters + gain readout at animation rate (levels aren't in the store — no churn).
   useEffect(() => {
@@ -35,11 +36,14 @@ export function AudioPanel() {
       setLevels(audioEngine.bands())
       setSource(audioEngine.source)
       setGainState(audioEngine.gain) // reflects Auto Gain moving the slider
+      setTp({ t: audioEngine.currentTime, d: audioEngine.duration, paused: audioEngine.paused })
       raf = requestAnimationFrame(loop)
     }
     raf = requestAnimationFrame(loop)
     return () => cancelAnimationFrame(raf)
   }, [])
+
+  const fmt = (s: number) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`
 
   const onFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0]
@@ -66,9 +70,14 @@ export function AudioPanel() {
       await audioEngine.useSystemAudio()
       setEnabled(true)
     } catch (e) {
-      alert(e instanceof Error && e.message === 'no-audio'
-        ? 'No se capturó audio. Elige la pestaña "Chrome/Pestaña" (no "Ventana" ni "Pantalla completa") de una web que esté sonando (YouTube, Spotify…) y marca abajo "Compartir audio de la pestaña".'
-        : 'No se pudo capturar el audio del sistema.')
+      const err = e instanceof Error ? e : new Error('desconocido')
+      if (err.message === 'no-audio') {
+        alert('No se capturó audio. Elige la pestaña "Chrome/Pestaña" (no "Ventana" ni "Pantalla completa") de una web que esté sonando (YouTube, Spotify…) y marca abajo "Compartir audio de la pestaña".')
+      } else if (err.name === 'NotAllowedError') {
+        alert('Cancelaste o el navegador bloqueó la captura de pantalla. Vuelve a intentarlo y acepta el permiso.')
+      } else {
+        alert(`No se pudo capturar el audio del sistema (${err.name || err.message}).`)
+      }
     }
   }
 
@@ -91,6 +100,16 @@ export function AudioPanel() {
           <input type="checkbox" checked={enabled} onChange={(e) => setEnabled(e.target.checked)} /> Enable
         </label>
       </div>
+
+      {source === 'file' && (
+        <div className="audio-row audio-transport">
+          <button className="audio-play" title={tp.paused ? 'Play' : 'Pausa'} onClick={() => audioEngine.togglePlay()}>{tp.paused ? '▶' : '❚❚'}</button>
+          <span className="audio-time">{fmt(tp.t)}</span>
+          <input className="audio-seek" type="range" min={0} max={tp.d || 0} step={0.1} value={Math.min(tp.t, tp.d || 0)}
+            onChange={(e) => audioEngine.seek(Number(e.target.value))} />
+          <span className="audio-time">{fmt(tp.d)}</span>
+        </div>
+      )}
 
       <div className="audio-row audio-gain">
         <span>Gain</span>
