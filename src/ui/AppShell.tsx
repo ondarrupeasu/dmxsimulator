@@ -8,7 +8,6 @@ import { PatchView } from './patch/PatchView'
 import { DmxMonitor } from './patch/DmxMonitor'
 import { Visualizer2D } from './visualizer/Visualizer2D'
 import { Visualizer3D } from './visualizer/Visualizer3D'
-import { RunView } from './run/RunView'
 import { QuartzScreen } from './console/QuartzScreen'
 import { QuartzPanel } from './console/QuartzPanel'
 import { FixturesWindow } from './console/FixturesWindow'
@@ -18,7 +17,7 @@ import { useTour } from '../store/tourStore'
 import { VENUE_PRESETS } from '../model/venues'
 import './ui.css'
 
-const MODES = ['patch', 'program', 'run'] as const
+const MODES = ['patch', 'program'] as const
 
 export function AppShell() {
   const { t, i18n } = useTranslation()
@@ -28,11 +27,6 @@ export function AppShell() {
   const setViewLights = useShowStore((s) => s.setViewLights)
   const startTour = useTour((t) => t.start)
   const consoleId = useShowStore((s) => s.consoleId)
-  const smoke = useShowStore((s) => s.smoke)
-  const toggleSmoke = useShowStore((s) => s.toggleSmoke)
-  const hasHazer = useShowStore((s) =>
-    s.show.fixtures.some((f) => s.definitions[f.definitionId]?.category === 'hazer'),
-  )
   const venueName = useShowStore((s) => s.venueName)
   const venueUrl = useShowStore((s) => s.venueUrl)
   const venuePreset = useShowStore((s) => s.show.venuePreset)
@@ -82,11 +76,10 @@ export function AppShell() {
   }, [effectsCount, cueEffectsUp, playing, fadeCount, tickClock, settleFades])
 
   const Surface = consoleById(consoleId).Surface
-  // The faithful Quartz desk fills the Program workspace. Patch and Run (a stripped
-  // "show / operator" view) use the compact left-panel layout with a big visualiser.
+  // The faithful Quartz desk fills the Program workspace (playback runs from the desk
+  // itself, like the real console). Patch uses the compact left-panel + big visualiser.
   const quartzDocked = consoleId === 'avolites-quartz' && mode === 'program'
-  const leftPanel =
-    mode === 'patch' ? <PatchView /> : mode === 'run' ? <RunView /> : <Surface />
+  const leftPanel = mode === 'patch' ? <PatchView /> : <Surface />
 
   const visualizerPanel = (
     <div className="panel" data-tour="visualizer">
@@ -100,15 +93,6 @@ export function AppShell() {
               title={playing ? 'Pause effects' : 'Play effects'}
             >
               {playing ? '❚❚ Pause' : '▶ Play'}
-            </button>
-          )}
-          {hasHazer && viewer === '3d' && (
-            <button
-              className={`ghost-btn${smoke ? ' active' : ''}`}
-              onClick={toggleSmoke}
-              title="Disparar humo (abre la válvula de todas las máquinas de humo; pulsa otra vez para cerrar)"
-            >
-              🌫 {smoke ? 'Humo ON' : 'Humo'}
             </button>
           )}
           {viewer === '3d' && (

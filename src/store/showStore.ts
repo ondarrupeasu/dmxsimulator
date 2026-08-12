@@ -9,6 +9,7 @@ import type { FixtureDefinition, PatchedFixture, Show, TrussDef } from '../model
 import { fixtureFootprint } from '../model/types'
 import { DEFAULT_TRUSSES, DEFAULT_TRUSS, nextTrussId } from '../model/venue'
 import type { Cue } from '../model/cue'
+import { cuesBySlot, firstFreeSlot } from '../model/cue'
 import type { Palette, PaletteKind } from '../model/palette'
 import { PALETTE_FUNCTIONS, PALETTE_LABELS } from '../model/palette'
 import type { Group } from '../model/group'
@@ -20,7 +21,7 @@ import type { ProgrammerValues } from '../engine/dmx'
 import type { Fade } from '../engine/dmx'
 import { UNIVERSE_SIZE, mergeProgrammer, computePlaybackBase, resolveLevel, resolveLevels } from '../engine/dmx'
 
-export type AppMode = 'patch' | 'program' | 'run'
+export type AppMode = 'patch' | 'program'
 
 interface ShowState {
   show: Show
@@ -184,12 +185,6 @@ interface ShowState {
   blind: boolean
   setBlind: (v: boolean) => void
 
-  // Smoke trigger: a fog/haze machine has no real dimmer — you open or close its
-  // valve. This latches every patched hazer's haze channel fully on/off at once,
-  // like the dedicated smoke button on the desk.
-  smoke: boolean
-  toggleSmoke: () => void
-
   // Command line (Titan-style keypad syntax, e.g. "1 THRU 4 @ 50")
   cmd: string
   cmdAppend: (token: string) => void
@@ -298,11 +293,12 @@ export const useShowStore = create<ShowState>()(
 
       recordCue: () =>
         set((s) => {
-          // Deep-copy the current programmer + running shapes as the cue snapshot.
+          // Plain Record → the first free playback slot. Deep-copy programmer + shapes.
           const values: ProgrammerValues = {}
           for (const id in s.programmer) values[id] = { ...s.programmer[id] }
           const effects = s.effects.map((e) => ({ ...e, fixtureIds: [...e.fixtureIds] }))
-          const cue: Cue = { id: nextInstanceId(), name: `Cue ${s.cues.length + 1}`, values, effects }
+          const slot = firstFreeSlot(s.cues)
+          const cue: Cue = { id: nextInstanceId(), name: `Cue ${slot + 1}`, values, effects, slot }
           return { cues: [...s.cues, cue] }
         }),
 
@@ -310,17 +306,14 @@ export const useShowStore = create<ShowState>()(
       armRecord: () => set((s) => ({ recordArm: !s.recordArm })),
       recordCueAt: (index) =>
         set((s) => {
+          // Record onto a specific fader (any slot — gaps allowed, like the real desk).
           const values: ProgrammerValues = {}
           for (const id in s.programmer) values[id] = { ...s.programmer[id] }
           const effects = s.effects.map((e) => ({ ...e, fixtureIds: [...e.fixtureIds] }))
-          const cues = [...s.cues]
-          if (index < cues.length) {
-            // Overwrite the playback that's already there (keep its id so it stays live-able).
-            cues[index] = { ...cues[index], values, effects }
-          } else {
-            // Empty slot → append (a dense list can't leave gaps, so it lands next).
-            cues.push({ id: nextInstanceId(), name: `Cue ${cues.length + 1}`, values, effects })
-          }
+          const existing = cuesBySlot(s.cues)[index]
+          const cues = existing
+            ? s.cues.map((c) => (c.id === existing.id ? { ...c, values, effects, slot: index } : c))
+            : [...s.cues, { id: nextInstanceId(), name: `Cue ${index + 1}`, values, effects, slot: index }]
           return { cues, recordArm: false }
         }),
 
@@ -338,7 +331,9 @@ export const useShowStore = create<ShowState>()(
           if (!src) return s
           const values: ProgrammerValues = {}
           for (const inst in src.values) values[inst] = { ...src.values[inst] }
-          const cue: Cue = { id: nextInstanceId(), name: `Cue ${s.cues.length + 1}`, values }
+          const effects = src.effects?.map((e) => ({ ...e, fixtureIds: [...e.fixtureIds] }))
+          const slot = firstFreeSlot(s.cues)
+          const cue: Cue = { id: nextInstanceId(), name: `Cue ${slot + 1}`, values, effects, slot }
           return { cues: [...s.cues, cue] }
         }),
 
@@ -820,7 +815,7 @@ export const useShowStore = create<ShowState>()(
         }),
 
       // Clear empties the programmer — static values AND any running shapes.
-      clearProgrammer: () => set({ programmer: {}, smoke: false, effects: [] }),
+      clearProgrammer: () => set({ programmer: {}, effects: [] }),
 
       deskMenu: 'root',
       setDeskMenu: (m) => set({ deskMenu: m }),
@@ -850,27 +845,6 @@ export const useShowStore = create<ShowState>()(
 
       blind: false,
       setBlind: (v) => set({ blind: v }),
-
-      smoke: false,
-      toggleSmoke: () =>
-        set((s) => {
-          const on = !s.smoke
-          const programmer = { ...s.programmer }
-          for (const pf of s.show.fixtures) {
-            const def = s.definitions[pf.definitionId]
-            if (def?.category !== 'hazer') continue
-            const channels = def.modes[pf.modeIndex]?.channels ?? []
-            const edits = { ...programmer[pf.id] }
-            channels.forEach((ch, i) => {
-              // Open the haze valve full, and spin the fan so it actually comes out.
-              if (ch.function === 'haze') on ? (edits[i] = 255) : delete edits[i]
-              else if (ch.function === 'control' && on) edits[i] = 255
-            })
-            if (Object.keys(edits).length) programmer[pf.id] = edits
-            else delete programmer[pf.id]
-          }
-          return { smoke: on, programmer }
-        }),
 
       cmd: '',
       cmdAppend: (token) => set((s) => ({ cmd: s.cmd + token })),
@@ -939,7 +913,6 @@ export const useShowStore = create<ShowState>()(
           palettes: [],
           playbackPage: 0,
           templateId,
-          smoke: false,
         })
       },
 
@@ -954,7 +927,6 @@ export const useShowStore = create<ShowState>()(
           activeCueId: null,
           palettes: [],
           playbackPage: 0,
-          smoke: false,
         }),
 
       exportShow: () => {
@@ -989,7 +961,6 @@ export const useShowStore = create<ShowState>()(
           activeCueId: null,
           playbackPage: 0,
           templateId: '',
-          smoke: false,
         })
         return true
       },
@@ -998,7 +969,6 @@ export const useShowStore = create<ShowState>()(
         set((s) => ({
           show: makeDemoShow(s.definitions),
           programmer: {},
-          smoke: false,
           selection: [],
           cues: [],
           activeCueId: null,

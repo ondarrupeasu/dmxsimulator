@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useShowStore } from '../../store/showStore'
+import { cuesBySlot } from '../../model/cue'
 import { useSelectedValue, useSelectionFunctions } from './useSelectedValue'
 
 /**
@@ -232,10 +233,13 @@ export function QuartzPanel() {
   }
   const dig = (d: string) => () => cmdAppend(d)
   const hasActive = !!activeCueId
+  // Playbacks are sparse: faders index by slot, and Next/Prev step in slot order.
+  const bySlot = cuesBySlot(cues)
   const goRel = (dir: 1 | -1) => {
-    if (!cues.length) return
-    const idx = cues.findIndex((c) => c.id === activeCueId)
-    const nextId = cues[idx < 0 ? (dir > 0 ? 0 : cues.length - 1) : (idx + dir + cues.length) % cues.length].id
+    const ordered = bySlot.filter((c): c is NonNullable<typeof c> => !!c)
+    if (!ordered.length) return
+    const idx = ordered.findIndex((c) => c.id === activeCueId)
+    const nextId = ordered[idx < 0 ? (dir > 0 ? 0 : ordered.length - 1) : (idx + dir + ordered.length) % ordered.length].id
     // Crossfade: fade the previous cue out as the new one fades in.
     if (activeCueId && activeCueId !== nextId) killPlayback(activeCueId)
     goCue(nextId)
@@ -349,12 +353,12 @@ export function QuartzPanel() {
         <Frame x={38} y={448} w={624} h={116} />
         <Box x={44} y={454} w={612} h={104} cols={10} rows={2} spread>
           {Array.from({ length: 10 }, (_, i) => {
-            const gi = playbackPage * 10 + i; const cue = cues[gi]; const on = !!cue && isUp(cue.id)
+            const gi = playbackPage * 10 + i; const cue = bySlot[gi]; const on = !!cue && isUp(cue.id)
             const title = recordArm ? (cue ? `Record over ${cue.name}` : 'Record here') : cue ? `Go ${cue.name}` : 'Empty'
             return <Key key={`t${i}`} v={recordArm ? 'red' : 'blue'} narrow ledBottom on={on} disabled={!recordArm && !cue} title={title} onClick={() => (recordArm ? recordCueAt(gi) : cue && goCue(cue.id))} />
           })}
           {Array.from({ length: 10 }, (_, i) => {
-            const gi = playbackPage * 10 + i; const cue = cues[gi]
+            const gi = playbackPage * 10 + i; const cue = bySlot[gi]
             const title = recordArm ? (cue ? `Record over ${cue.name}` : 'Record here') : cue ? `Flash ${cue.name}` : 'Empty'
             return <Key key={`b${i}`} v={recordArm ? 'red' : 'dark'} narrow led={false} disabled={!recordArm && !cue} title={title} onClick={() => (recordArm ? recordCueAt(gi) : cue && goCue(cue.id))} />
           })}
@@ -364,7 +368,7 @@ export function QuartzPanel() {
         <GridLabels x={44} y={588} w={612} cols={10} items={['1', '2', '3', '4', '5', '6', '7', '8', '9', '10']} />
         <div className="cal-faders" data-tour="desk-fader" style={{ left: L(44), top: T(608), width: L(612), height: T(220) }}>
           {Array.from({ length: 10 }, (_, i) => {
-            const gi = playbackPage * 10 + i; const cue = cues[gi]
+            const gi = playbackPage * 10 + i; const cue = bySlot[gi]
             return (
               <div className="cal-fader" key={i}>
                 <input
