@@ -611,16 +611,22 @@ export const useShowStore = create<ShowState>()(
       swop: (id) => set((s) => ({ swopId: s.swopId === id ? null : id })),
       // The faders are manual and NON-motorised: dragging is the only thing that moves a
       // handle. Raising from 0 connects the playback + brings up its first step (like pushing
-      // the fader up on the real desk). Never animated by Go/fire.
+      // the fader up on the real desk). Never animated by Go/fire. Touching the fader also
+      // GRABS the playback: it clears any fired level (from Go / a Sound-to-Light trigger),
+      // so the fader is the real master and pulling it to 0 turns the playback OFF.
       setPlaybackLevel: (id, value) =>
         set((s) => {
           const v = Math.max(0, Math.min(255, value))
           const prev = s.playbackLevels[id] ?? 0
+          const firedLevels = { ...s.firedLevels }
+          delete firedLevels[id]
+          const fades = { ...s.fades }
+          delete fades[id]
           if (prev <= 0 && v > 0) {
             const playbacks = s.playbacks.map((p) => (p.id === id && p.current < 0 ? { ...p, current: 0 } : p))
-            return { playbackLevels: { ...s.playbackLevels, [id]: v }, playbacks, connectedId: id }
+            return { playbackLevels: { ...s.playbackLevels, [id]: v }, firedLevels, fades, playbacks, connectedId: id }
           }
-          return { playbackLevels: { ...s.playbackLevels, [id]: v } }
+          return { playbackLevels: { ...s.playbackLevels, [id]: v }, firedLevels, fades }
         }),
       fades: {},
       playbackFade: 3,
