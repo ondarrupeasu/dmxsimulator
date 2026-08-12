@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useShowStore } from '../../store/showStore'
-import { cuesBySlot } from '../../model/cue'
+import { playbacksBySlot } from '../../model/cue'
 import { useSelectedValue, useSelectionFunctions } from './useSelectedValue'
 
 /**
@@ -167,9 +167,12 @@ export function QuartzPanel() {
   const copyCue = useShowStore((s) => s.copyCue)
   const deleteCue = useShowStore((s) => s.deleteCue)
   const releaseCue = useShowStore((s) => s.releaseCue)
-  const cues = useShowStore((s) => s.cues)
-  const activeCueId = useShowStore((s) => s.activeCueId)
+  const playbacks = useShowStore((s) => s.playbacks)
+  const connectedId = useShowStore((s) => s.connectedId)
   const goCue = useShowStore((s) => s.goCue)
+  const go = useShowStore((s) => s.go)
+  const goBack = useShowStore((s) => s.goBack)
+  const stopPlayback = useShowStore((s) => s.stopPlayback)
   const playbackPage = useShowStore((s) => s.playbackPage)
   const setPlaybackPage = useShowStore((s) => s.setPlaybackPage)
   const playbackLevels = useShowStore((s) => s.playbackLevels)
@@ -192,7 +195,7 @@ export function QuartzPanel() {
   // A playback is "up" if its level is above 0 or a fade is taking it up.
   const isUp = (id: string) => (playbackLevels[id] ?? 0) > 0 || !!(fades[id] && fades[id].to > 0)
   // Executor click: fire/kill its bound cue, or capture the current look, or label it.
-  const boundCue = (n: number) => cues.find((c) => c.id === executorCues[n])
+  const boundCue = (n: number) => playbacks.find((p) => p.id === executorCues[n])
   const execCaption = (n: number) => boundCue(n)?.name ?? executorLabels[n]
   const onExecutor = (n: number) => {
     const cue = boundCue(n)
@@ -234,18 +237,10 @@ export function QuartzPanel() {
     select([fixtures[ni].id])
   }
   const dig = (d: string) => () => cmdAppend(d)
-  const hasActive = !!activeCueId
-  // Playbacks are sparse: faders index by slot, and Next/Prev step in slot order.
-  const bySlot = cuesBySlot(cues)
-  const goRel = (dir: 1 | -1) => {
-    const ordered = bySlot.filter((c): c is NonNullable<typeof c> => !!c)
-    if (!ordered.length) return
-    const idx = ordered.findIndex((c) => c.id === activeCueId)
-    const nextId = ordered[idx < 0 ? (dir > 0 ? 0 : ordered.length - 1) : (idx + dir + ordered.length) % ordered.length].id
-    // Crossfade: fade the previous cue out as the new one fades in.
-    if (activeCueId && activeCueId !== nextId) killPlayback(activeCueId)
-    goCue(nextId)
-  }
+  const hasActive = !!connectedId
+  // Playbacks are sparse: faders index by slot. The central Go/Prev/Stop drive the CONNECTED
+  // playback's steps (a cue list), not the faders — exactly like the real desk.
+  const bySlot = playbacksBySlot(playbacks)
 
   return (
     <div className="qpanel">
@@ -334,10 +329,10 @@ export function QuartzPanel() {
         <GridLabels x={658} y={270} w={386} cols={6} items={['Record', 'Update', 'Edit', 'Select\nIf', 'Patch', 'Disk']} subs={['', '', '', '', '', 'Setup']} above />
         <Box x={658} y={272} w={386} h={118} cols={6} rows={2}>
           <Key v="dark" ledColor="red" on={recordArm || hasProgrammer} title={recordArm ? 'Record armed — toca un fader para grabar ahí (pulsa Record otra vez para cancelar)' : 'Record — pulsa y luego elige el fader donde guardar'} onClick={() => { setMenu('record'); if (hasProgrammer || recordArm) armRecord() }} tour="desk-record" />
-          <Key v="white" led={false} disabled={!hasActive || !hasProgrammer} title="Update" onClick={() => activeCueId && updateCue(activeCueId)} />
+          <Key v="white" led={false} disabled={!hasActive || !hasProgrammer} title="Update" onClick={() => connectedId && updateCue(connectedId)} />
           <Key v="white" led={false} disabled title="Edit" /><Key v="white" led={false} disabled title="Select If" /><Key v="white" led={false} title="Patch — abre el menú Patch" onClick={() => setMenu('patch')} /><Key v="white" led={false} disabled title="Disk" />
-          <Key v="white" led={false} disabled={!hasActive} title="Delete" onClick={() => activeCueId && deleteCue(activeCueId)} />
-          <Key v="white" led={false} disabled={!hasActive} title="Copy" onClick={() => activeCueId && copyCue(activeCueId)} />
+          <Key v="white" led={false} disabled={!hasActive} title="Delete" onClick={() => connectedId && deleteCue(connectedId)} />
+          <Key v="white" led={false} disabled={!hasActive} title="Copy" onClick={() => connectedId && copyCue(connectedId)} />
           <Key v="white" led={false} disabled title="Move" /><Key v="white" led={false} disabled title="Unfold" /><Key v="white" led={false} disabled title="Include" />
           <Key v="white" led={false} disabled={!hasActive} title="Release" onClick={releaseCue} />
         </Box>
@@ -401,12 +396,12 @@ export function QuartzPanel() {
         <Label x={652} y={736} w={58} text={'Connect\n/Cue'} align="right" /><Label x={848} y={736} w={56} text="Stop" align="left" />
         <Box x={714} y={594} w={130} h={178} cols={2} rows={3}>
           <Key v="white" led={false} disabled title="Live Time" /><Key v="white" led={false} disabled title="Next Time" />
-          <Key v="white" led={false} disabled={!cues.length} title="Prev Cue" onClick={() => goRel(-1)} />
-          <Key v="white" led={false} disabled={!cues.length} title="Next Cue" onClick={() => goRel(1)} />
-          <Key v="dark" disabled title="Connect/Cue" /><Key v="dark" disabled title="Stop" />
+          <Key v="white" led={false} disabled={!hasActive} title="Prev Cue — paso anterior del playback conectado" onClick={goBack} />
+          <Key v="white" led={false} disabled={!hasActive} title="Next Cue — siguiente paso del playback conectado" onClick={go} />
+          <Key v="dark" disabled title="Connect/Cue" /><Key v="dark" disabled={!hasActive} title="Stop — suelta el playback conectado" onClick={stopPlayback} />
         </Box>
         <Box x={749} y={766} w={60} h={62} cols={1} rows={1}>
-          <Key v="red" ledColor="red" on={cues.length > 0} disabled={!cues.length} title="Go" onClick={() => goRel(1)} />
+          <Key v="red" ledColor="red" on={hasActive} disabled={!hasActive} title="Go — avanza el playback conectado al siguiente cue" onClick={go} />
         </Box>
         <Label x={725} y={832} w={108} text="Go" />
 

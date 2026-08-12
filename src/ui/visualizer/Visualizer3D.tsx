@@ -7,6 +7,7 @@ import { buildVenue } from '../../model/venues'
 import { useShowStore } from '../../store/showStore'
 import { computeFixtureOutputs, mergeProgrammer, computePlaybackBase, resolveLevels } from '../../engine/dmx'
 import { applyEffects, activeEffects } from '../../engine/effects'
+import { liveCues } from '../../model/cue'
 import { computeVisualState } from '../../engine/render'
 import type { TrussDef } from '../../model/types'
 import { getTrusses, trussById, STAGE_TOP } from '../../model/venue'
@@ -506,7 +507,8 @@ export function Visualizer3D() {
     const animate = () => {
       raf = requestAnimationFrame(animate)
       const state = useShowStore.getState()
-      const { show, definitions, programmer, cues, playbackLevels, fades, effects, selection } = state
+      const { show, definitions, programmer, playbacks, playbackLevels, fades, effects, selection } = state
+      const cues = liveCues(playbacks)
       const selSet = new Set(selection)
       // Reconcile the optional venue (preset or loaded glTF) when it changes.
       reconcileVenue(state.venueUrl, show.venuePreset)

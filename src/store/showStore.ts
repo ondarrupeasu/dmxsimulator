@@ -8,8 +8,8 @@ import { useMemo } from 'react'
 import type { FixtureDefinition, PatchedFixture, Show, TrussDef } from '../model/types'
 import { fixtureFootprint } from '../model/types'
 import { DEFAULT_TRUSSES, DEFAULT_TRUSS, nextTrussId } from '../model/venue'
-import type { Cue } from '../model/cue'
-import { cuesBySlot, firstFreeSlot } from '../model/cue'
+import type { Playback, CueStep, LegacyCue } from '../model/cue'
+import { playbacksBySlot, firstFreePlaybackSlot, liveCues, migrateLegacyCues } from '../model/cue'
 import type { Palette, PaletteKind } from '../model/palette'
 import { PALETTE_FUNCTIONS, PALETTE_LABELS } from '../model/palette'
 import type { Group } from '../model/group'
@@ -35,22 +35,22 @@ interface ShowState {
   templateId: string
   /** Instance ids currently selected in the programmer. */
   selection: string[]
-  /** Recorded cues (the show's playback stack). */
-  cues: Cue[]
-  /** Cue currently output by the playback, or null. */
-  activeCueId: string | null
+  /** The show's playbacks (each = a fader holding one or more cue steps). */
+  playbacks: Playback[]
+  /** The connected playback — the one the central Go/Prev/Stop transport drives. */
+  connectedId: string | null
   /** Saved palettes (colour/position/gobo/beam/intensity). */
   palettes: Palette[]
-  /** Current playback page (0-based); each page shows 10 cues. */
+  /** Current playback page (0-based); each page shows 10 playbacks. */
   playbackPage: number
   /** User labels for the assignable executors 1–10 (handwritten-tape style). */
   executorLabels: Record<number, string>
   setExecutorLabel: (n: number, label: string) => void
-  /** Cue bound to each executor button (executor number → cueId). */
+  /** Playback bound to each executor button (executor number → playbackId). */
   executorCues: Record<number, string>
-  /** Record the current programmer as a cue and bind it to executor n. */
+  /** Record the current programmer as a playback and bind it to executor n. */
   recordExecutor: (n: number) => void
-  /** Unbind an executor (its cue stays in the cue list). */
+  /** Unbind an executor (its playback stays in the stack). */
   clearExecutor: (n: number) => void
   /** Running effects (movement/colour animation). Set by templates for now. */
   effects: Effect[]
@@ -92,31 +92,50 @@ interface ShowState {
   setConsole: (consoleId: string) => void
 
   // Cues / playback
+  /** Record the programmer as a NEW playback (one step) on the first free slot. */
   recordCue: () => void
   /** "Record armed" — after pressing Record, the next playback you touch is the target. */
   recordArm: boolean
   armRecord: () => void
-  /** Record the programmer + shapes onto a specific playback slot (overwrite or append). */
+  /** Record onto a specific slot: empty → new playback; occupied → APPEND a step (build a
+   *  cue list), exactly like recording again onto the same playback on the real desk. */
   recordCueAt: (index: number) => void
-  /** Re-snapshot the current programmer into an existing cue. */
+  /** Re-snapshot the current programmer into a playback's live step. */
   updateCue: (id: string) => void
-  /** Duplicate a cue at the end of the list. */
+  /** Duplicate a playback onto the first free slot. */
   copyCue: (id: string) => void
+  /** Delete a whole playback. */
   deleteCue: (id: string) => void
+  /** Delete one step from a playback (removes the playback if it was the last step). */
+  deleteStep: (playbackId: string, stepId: string) => void
+  /** Fire a playback: connect it and bring up its first step (Go on that handle). */
   goCue: (id: string) => void
+  /** Central Go — advance the CONNECTED playback to its next step (wraps at the end). */
+  go: () => void
+  /** Central Prev — step the connected playback back one. */
+  goBack: () => void
+  /** Central Stop — release the connected playback. */
+  stopPlayback: () => void
+  /** Release the connected playback (fade out + disconnect). */
   releaseCue: () => void
-  /** Rename a cue (its hand-typed legend). */
+  /** Rename a playback (its hand-typed legend). */
   renameCue: (id: string, name: string) => void
-  /** Per-playback fader level (cueId → 0–255) — what the desk faders control. */
+  /** Switch a playback between a manual cue list and an auto-timed chase. */
+  setPlaybackMode: (id: string, mode: 'list' | 'chase') => void
+  /** Set a chase playback's tempo (BPM). */
+  setPlaybackBpm: (id: string, bpm: number) => void
+  /** Clock hook: advance every running chase to its next step by its BPM. */
+  advanceChases: () => void
+  /** Per-playback fader level (playbackId → 0–255) — what the desk faders control. */
   playbackLevels: Record<string, number>
-  setPlaybackLevel: (cueId: string, value: number) => void
-  /** In-progress Go crossfades (cueId → fade), interpolated against `now`. */
+  setPlaybackLevel: (playbackId: string, value: number) => void
+  /** In-progress Go crossfades (playbackId → fade), interpolated against `now`. */
   fades: Record<string, Fade>
   /** Fade time (seconds) used by the next Go / Release. The TIME key sets it. */
   playbackFade: number
   setPlaybackFade: (seconds: number) => void
   /** Fade a playback out to 0 over the fade time. */
-  killPlayback: (cueId: string) => void
+  killPlayback: (playbackId: string) => void
   /** Land completed fades into playbackLevels and drop them (called by the clock). */
   settleFades: () => void
 
@@ -232,6 +251,56 @@ function defsRecord(defs: FixtureDefinition[]): Record<string, FixtureDefinition
   return Object.fromEntries(defs.map((d) => [d.id, d]))
 }
 
+// --- Playback helpers -------------------------------------------------------
+/** Per-chase next-advance clock time (seconds), keyed by playback id. Module-level cache;
+ *  it's only a timing memo, so it doesn't need to live in the persisted store. */
+const chaseClock: Record<string, number> = {}
+
+/** Deep-copy the current programmer values (instance → channel → 0–255). */
+function snapProgrammer(s: { programmer: ProgrammerValues }): ProgrammerValues {
+  const values: ProgrammerValues = {}
+  for (const id in s.programmer) values[id] = { ...s.programmer[id] }
+  return values
+}
+/** Deep-copy the running shapes (so a cue keeps its own effect instances). */
+function snapEffects(s: { effects: Effect[] }): Effect[] {
+  return s.effects.map((e) => ({ ...e, fixtureIds: [...e.fixtureIds] }))
+}
+/** Build a fresh one-step playback at a slot. */
+function makePlayback(id: string, slot: number, values: ProgrammerValues, effects: Effect[]): Playback {
+  return {
+    id,
+    slot,
+    name: `Playback ${slot + 1}`,
+    current: -1,
+    mode: 'list',
+    steps: [{ id: `${id}-s1`, number: 1, name: 'Cue 1', values, effects }],
+  }
+}
+/** Step the connected playback by ±1 (wrapping), holding its level up over the step's fade
+ *  time. Returns the partial state for `set`. Shared by the central Go / Prev keys. */
+function stepConnected(
+  s: ShowState,
+  dir: 1 | -1,
+): Partial<ShowState> | ShowState {
+  const id = s.connectedId
+  if (!id) return s
+  const pb = s.playbacks.find((p) => p.id === id)
+  if (!pb || pb.steps.length === 0) return s
+  const n = pb.steps.length
+  const next = pb.current < 0 ? (dir > 0 ? 0 : n - 1) : (pb.current + dir + n) % n
+  const step = pb.steps[next]
+  const dur = step.fadeIn ?? s.playbackFade
+  const from = resolveLevel(id, s.playbackLevels, s.fades, s.now)
+  const playbacks = s.playbacks.map((p) => (p.id === id ? { ...p, current: next } : p))
+  if (dur <= 0 || from >= 255) {
+    const fades = { ...s.fades }
+    delete fades[id]
+    return { playbacks, playbackLevels: { ...s.playbackLevels, [id]: 255 }, fades }
+  }
+  return { playbacks, fades: { ...s.fades, [id]: { from, to: 255, start: s.now, dur } } }
+}
+
 /** Build a small demo show so the app shows something on first launch. */
 function makeDemoShow(defs: Record<string, FixtureDefinition>): Show {
   const fixtures: PatchedFixture[] = []
@@ -272,8 +341,8 @@ export const useShowStore = create<ShowState>()(
       consoleId: 'avolites-quartz',
       templateId: '',
       selection: [],
-      cues: [],
-      activeCueId: null,
+      playbacks: [],
+      connectedId: null,
       palettes: [],
       playbackPage: 0,
       effects: [],
@@ -322,48 +391,59 @@ export const useShowStore = create<ShowState>()(
 
       recordCue: () =>
         set((s) => {
-          // Plain Record → the first free playback slot. Deep-copy programmer + shapes.
-          const values: ProgrammerValues = {}
-          for (const id in s.programmer) values[id] = { ...s.programmer[id] }
-          const effects = s.effects.map((e) => ({ ...e, fixtureIds: [...e.fixtureIds] }))
-          const slot = firstFreeSlot(s.cues)
-          const cue: Cue = { id: nextInstanceId(), name: `Cue ${slot + 1}`, values, effects, slot }
-          return { cues: [...s.cues, cue] }
+          // Plain Record → a NEW one-step playback on the first free slot.
+          const slot = firstFreePlaybackSlot(s.playbacks)
+          return { playbacks: [...s.playbacks, makePlayback(nextInstanceId(), slot, snapProgrammer(s), snapEffects(s))] }
         }),
 
       recordArm: false,
       armRecord: () => set((s) => ({ recordArm: !s.recordArm })),
       recordCueAt: (index) =>
         set((s) => {
-          // Record onto a specific fader (any slot — gaps allowed, like the real desk).
-          const values: ProgrammerValues = {}
-          for (const id in s.programmer) values[id] = { ...s.programmer[id] }
-          const effects = s.effects.map((e) => ({ ...e, fixtureIds: [...e.fixtureIds] }))
-          const existing = cuesBySlot(s.cues)[index]
-          const cues = existing
-            ? s.cues.map((c) => (c.id === existing.id ? { ...c, values, effects, slot: index } : c))
-            : [...s.cues, { id: nextInstanceId(), name: `Cue ${index + 1}`, values, effects, slot: index }]
-          return { cues, recordArm: false }
+          const values = snapProgrammer(s)
+          const effects = snapEffects(s)
+          const existing = playbacksBySlot(s.playbacks)[index]
+          if (existing) {
+            // Record again onto the same handle → APPEND a step (grow the cue list),
+            // exactly like the real desk.
+            const num = (existing.steps[existing.steps.length - 1]?.number ?? 0) + 1
+            const step: CueStep = { id: `${existing.id}-s${num}-${nextInstanceId()}`, number: num, name: `Cue ${num}`, values, effects }
+            return {
+              playbacks: s.playbacks.map((p) => (p.id === existing.id ? { ...p, steps: [...p.steps, step] } : p)),
+              recordArm: false,
+            }
+          }
+          return { playbacks: [...s.playbacks, makePlayback(nextInstanceId(), index, values, effects)], recordArm: false }
         }),
 
       updateCue: (id) =>
         set((s) => {
-          const values: ProgrammerValues = {}
-          for (const inst in s.programmer) values[inst] = { ...s.programmer[inst] }
-          const effects = s.effects.map((e) => ({ ...e, fixtureIds: [...e.fixtureIds] }))
-          return { cues: s.cues.map((c) => (c.id === id ? { ...c, values, effects } : c)) }
+          // Re-snapshot the playback's live step.
+          const values = snapProgrammer(s)
+          const effects = snapEffects(s)
+          return {
+            playbacks: s.playbacks.map((p) => {
+              if (p.id !== id) return p
+              const i = p.current >= 0 ? p.current : 0
+              return { ...p, steps: p.steps.map((st, j) => (j === i ? { ...st, values, effects } : st)) }
+            }),
+          }
         }),
 
       copyCue: (id) =>
         set((s) => {
-          const src = s.cues.find((c) => c.id === id)
+          const src = s.playbacks.find((p) => p.id === id)
           if (!src) return s
-          const values: ProgrammerValues = {}
-          for (const inst in src.values) values[inst] = { ...src.values[inst] }
-          const effects = src.effects?.map((e) => ({ ...e, fixtureIds: [...e.fixtureIds] }))
-          const slot = firstFreeSlot(s.cues)
-          const cue: Cue = { id: nextInstanceId(), name: `Cue ${slot + 1}`, values, effects, slot }
-          return { cues: [...s.cues, cue] }
+          const slot = firstFreePlaybackSlot(s.playbacks)
+          const pid = nextInstanceId()
+          const steps: CueStep[] = src.steps.map((st, k) => ({
+            ...st,
+            id: `${pid}-s${k + 1}`,
+            values: Object.fromEntries(Object.entries(st.values).map(([inst, chs]) => [inst, { ...chs }])),
+            effects: st.effects?.map((e) => ({ ...e, fixtureIds: [...e.fixtureIds] })),
+          }))
+          const pb: Playback = { ...src, id: pid, slot, name: `Playback ${slot + 1}`, current: -1, steps }
+          return { playbacks: [...s.playbacks, pb] }
         }),
 
       deleteCue: (id) =>
@@ -373,25 +453,80 @@ export const useShowStore = create<ShowState>()(
           const fades = { ...s.fades }
           delete fades[id]
           return {
-            cues: s.cues.filter((c) => c.id !== id),
-            activeCueId: s.activeCueId === id ? null : s.activeCueId,
+            playbacks: s.playbacks.filter((p) => p.id !== id),
+            connectedId: s.connectedId === id ? null : s.connectedId,
             playbackLevels: levels,
             fades,
           }
         }),
 
-      // Go / flash fades the playback up to full over the fade time and connects it;
-      // the fader can then scale it. Release fades the connected playback back out.
+      deleteStep: (playbackId, stepId) =>
+        set((s) => {
+          const pb = s.playbacks.find((p) => p.id === playbackId)
+          if (!pb) return s
+          const kept = pb.steps.filter((st) => st.id !== stepId)
+          if (kept.length === 0) {
+            // Removing the last step drops the whole playback.
+            const levels = { ...s.playbackLevels }
+            delete levels[playbackId]
+            const fades = { ...s.fades }
+            delete fades[playbackId]
+            return {
+              playbacks: s.playbacks.filter((p) => p.id !== playbackId),
+              connectedId: s.connectedId === playbackId ? null : s.connectedId,
+              playbackLevels: levels,
+              fades,
+            }
+          }
+          const steps = kept.map((st, i) => ({ ...st, number: i + 1 }))
+          const current = pb.current >= steps.length ? steps.length - 1 : pb.current
+          return { playbacks: s.playbacks.map((p) => (p.id === playbackId ? { ...p, steps, current } : p)) }
+        }),
+
+      // Go on a handle fires the playback: connect it + bring up its first step over the
+      // fade time; the fader then scales it.
       goCue: (id) =>
         set((s) => {
+          const pb = s.playbacks.find((p) => p.id === id)
+          if (!pb || pb.steps.length === 0) return s
+          const playbacks = s.playbacks.map((p) => (p.id === id ? { ...p, current: 0 } : p))
           const from = resolveLevel(id, s.playbackLevels, s.fades, s.now)
           if (s.playbackFade <= 0) {
             const fades = { ...s.fades }
             delete fades[id]
-            return { activeCueId: id, playbackLevels: { ...s.playbackLevels, [id]: 255 }, fades }
+            return { connectedId: id, playbacks, playbackLevels: { ...s.playbackLevels, [id]: 255 }, fades }
           }
-          return { activeCueId: id, fades: { ...s.fades, [id]: { from, to: 255, start: s.now, dur: s.playbackFade } } }
+          return { connectedId: id, playbacks, fades: { ...s.fades, [id]: { from, to: 255, start: s.now, dur: s.playbackFade } } }
         }),
+
+      // Central Go — advance the CONNECTED playback to its next step (wraps at the end).
+      go: () => set((s) => stepConnected(s, +1)),
+      goBack: () => set((s) => stepConnected(s, -1)),
+      stopPlayback: () => get().releaseCue(),
+
+      setPlaybackMode: (id, mode) =>
+        set((s) => ({ playbacks: s.playbacks.map((p) => (p.id === id ? { ...p, mode, bpm: p.bpm ?? 120 } : p)) })),
+      setPlaybackBpm: (id, bpm) =>
+        set((s) => ({ playbacks: s.playbacks.map((p) => (p.id === id ? { ...p, bpm: Math.max(20, Math.min(600, Math.round(bpm))) } : p)) })),
+
+      advanceChases: () =>
+        set((s) => {
+          let changed = false
+          const playbacks = s.playbacks.map((p) => {
+            if (p.mode !== 'chase' || p.steps.length < 2) return p
+            if (resolveLevel(p.id, s.playbackLevels, s.fades, s.now) <= 0) return p
+            const interval = 60 / (p.bpm ?? 120)
+            if (chaseClock[p.id] == null) chaseClock[p.id] = s.now + interval
+            if (s.now >= chaseClock[p.id]) {
+              chaseClock[p.id] = s.now + interval
+              changed = true
+              return { ...p, current: p.current < 0 ? 0 : (p.current + 1) % p.steps.length }
+            }
+            return p
+          })
+          return changed ? { playbacks } : s
+        }),
+
       killPlayback: (id) =>
         set((s) => {
           const from = resolveLevel(id, s.playbackLevels, s.fades, s.now)
@@ -406,27 +541,34 @@ export const useShowStore = create<ShowState>()(
         }),
       releaseCue: () =>
         set((s) => {
-          if (!s.activeCueId) return s
-          const id = s.activeCueId
+          if (!s.connectedId) return s
+          const id = s.connectedId
           const from = resolveLevel(id, s.playbackLevels, s.fades, s.now)
           if (s.playbackFade <= 0) {
             const levels = { ...s.playbackLevels }
             delete levels[id]
             const fades = { ...s.fades }
             delete fades[id]
-            return { activeCueId: null, playbackLevels: levels, fades }
+            return { connectedId: null, playbackLevels: levels, fades }
           }
-          return { activeCueId: null, fades: { ...s.fades, [id]: { from, to: 0, start: s.now, dur: s.playbackFade } } }
+          return { connectedId: null, fades: { ...s.fades, [id]: { from, to: 0, start: s.now, dur: s.playbackFade } } }
         }),
       renameCue: (id, name) =>
-        set((s) => ({ cues: s.cues.map((c) => (c.id === id ? { ...c, name } : c)) })),
+        set((s) => ({ playbacks: s.playbacks.map((p) => (p.id === id ? { ...p, name } : p)) })),
       playbackLevels: {},
-      // Faders are manual: set the level directly and cancel any fade on that playback.
-      setPlaybackLevel: (cueId, value) =>
+      // Faders are manual: set the level directly. Raising from 0 fires the playback's first
+      // step and connects it (like raising a fader on the real desk).
+      setPlaybackLevel: (id, value) =>
         set((s) => {
+          const v = Math.max(0, Math.min(255, value))
           const fades = { ...s.fades }
-          delete fades[cueId]
-          return { playbackLevels: { ...s.playbackLevels, [cueId]: Math.max(0, Math.min(255, value)) }, fades }
+          delete fades[id]
+          const prev = s.playbackLevels[id] ?? 0
+          if (prev <= 0 && v > 0) {
+            const playbacks = s.playbacks.map((p) => (p.id === id && p.current < 0 ? { ...p, current: 0 } : p))
+            return { playbackLevels: { ...s.playbackLevels, [id]: v }, fades, playbacks, connectedId: id }
+          }
+          return { playbackLevels: { ...s.playbackLevels, [id]: v }, fades }
         }),
       fades: {},
       playbackFade: 3,
@@ -534,12 +676,13 @@ export const useShowStore = create<ShowState>()(
       recordExecutor: (n) =>
         set((s) => {
           if (Object.keys(s.programmer).length === 0) return s
-          const values: ProgrammerValues = {}
-          for (const inst in s.programmer) values[inst] = { ...s.programmer[inst] }
-          const cue: Cue = { id: nextInstanceId(), name: s.executorLabels[n] ?? `Exec ${n}`, values }
+          const slot = firstFreePlaybackSlot(s.playbacks)
+          const pb = makePlayback(nextInstanceId(), slot, snapProgrammer(s), snapEffects(s))
+          pb.name = s.executorLabels[n] ?? `Exec ${n}`
+          pb.steps[0].name = pb.name
           return {
-            cues: [...s.cues, cue],
-            executorCues: { ...s.executorCues, [n]: cue.id },
+            playbacks: [...s.playbacks, pb],
+            executorCues: { ...s.executorCues, [n]: pb.id },
           }
         }),
       clearExecutor: (n) =>
@@ -937,8 +1080,8 @@ export const useShowStore = create<ShowState>()(
           effects: effects ?? [],
           now: 0,
           selection: [],
-          cues: [],
-          activeCueId: null,
+          playbacks: [],
+          connectedId: null,
           palettes: [],
           playbackPage: 0,
           templateId,
@@ -952,8 +1095,8 @@ export const useShowStore = create<ShowState>()(
           effects: [],
           now: 0,
           selection: [],
-          cues: [],
-          activeCueId: null,
+          playbacks: [],
+          connectedId: null,
           palettes: [],
           playbackPage: 0,
         }),
@@ -986,8 +1129,8 @@ export const useShowStore = create<ShowState>()(
           palettes: d.palettes ?? [],
           now: 0,
           selection: [],
-          cues: [],
-          activeCueId: null,
+          playbacks: [],
+          connectedId: null,
           playbackPage: 0,
           templateId: '',
         })
@@ -999,8 +1142,8 @@ export const useShowStore = create<ShowState>()(
           show: makeDemoShow(s.definitions),
           programmer: {},
           selection: [],
-          cues: [],
-          activeCueId: null,
+          playbacks: [],
+          connectedId: null,
           playbackLevels: {},
           fades: {},
           executorCues: {},
@@ -1014,15 +1157,27 @@ export const useShowStore = create<ShowState>()(
     }),
     {
       name: 'dmxsimulator-show',
-      version: 2,
+      version: 3,
+      // v3: cues (one per fader) → playbacks (a fader holds a list of cue steps). Reuse the
+      // old cue id as the playback id so persisted levels/fades/executor bindings stay valid.
+      migrate: (persisted, version) => {
+        const s = persisted as Record<string, unknown>
+        if (version < 3 && Array.isArray(s.cues)) {
+          s.playbacks = migrateLegacyCues(s.cues as LegacyCue[])
+          s.connectedId = (s.activeCueId as string | null) ?? null
+          delete s.cues
+          delete s.activeCueId
+        }
+        return s
+      },
       // Persist the work + chosen console, not transient UI state.
       partialize: (s) => ({
         show: s.show,
         programmer: s.programmer,
         consoleId: s.consoleId,
         templateId: s.templateId,
-        cues: s.cues,
-        activeCueId: s.activeCueId,
+        playbacks: s.playbacks,
+        connectedId: s.connectedId,
         playbackLevels: s.playbackLevels,
         playbackFade: s.playbackFade,
         palettes: s.palettes,
@@ -1050,7 +1205,7 @@ if (import.meta.env.DEV) (window as unknown as { __showStore?: unknown }).__show
  */
 export function useEffectiveProgrammer(respectBlind = false): ProgrammerValues {
   const programmer = useShowStore((s) => s.programmer)
-  const cues = useShowStore((s) => s.cues)
+  const playbacks = useShowStore((s) => s.playbacks)
   const playbackLevels = useShowStore((s) => s.playbackLevels)
   const fades = useShowStore((s) => s.fades)
   const effects = useShowStore((s) => s.effects)
@@ -1059,6 +1214,8 @@ export function useEffectiveProgrammer(respectBlind = false): ProgrammerValues {
   const now = useShowStore((s) => s.now)
   const blind = useShowStore((s) => s.blind)
   return useMemo(() => {
+    // Each playback contributes its live step (id = playback id) to the merge.
+    const cues = liveCues(playbacks)
     const levels = resolveLevels(playbackLevels, fades, now)
     const base = computePlaybackBase(cues, levels, show, definitions)
     const merged = respectBlind && blind ? base : mergeProgrammer(base, programmer)
@@ -1067,5 +1224,5 @@ export function useEffectiveProgrammer(respectBlind = false): ProgrammerValues {
     const liveEffects = respectBlind && blind ? [] : effects
     const active = activeEffects(cues, playbackLevels, fades, now, liveEffects)
     return applyEffects(merged, active, show, definitions, now)
-  }, [programmer, cues, playbackLevels, fades, effects, show, definitions, now, blind, respectBlind])
+  }, [programmer, playbacks, playbackLevels, fades, effects, show, definitions, now, blind, respectBlind])
 }

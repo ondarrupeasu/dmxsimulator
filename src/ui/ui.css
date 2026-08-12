@@ -986,6 +986,43 @@
   letter-spacing: 0.5px; vertical-align: middle; cursor: help;
 }
 
+/* Playbacks workspace — cards for each fader's playback (single cue / cue list / chase). */
+.pb-grid { display: flex; flex-wrap: wrap; gap: 8px; align-content: flex-start; padding: 2px; }
+.pb-card {
+  width: 150px; min-height: 52px; display: flex; flex-direction: column; gap: 6px;
+  padding: 6px 8px; border-radius: 6px; background: #1b1c21; border: 1px solid #2c2d32;
+}
+.pb-card.connected { border-color: #ff8a6a; box-shadow: 0 0 0 1px #ff8a6a inset; }
+.pb-card.empty { opacity: 0.35; align-items: center; justify-content: center; min-height: 40px; }
+.pb-card.rec {
+  align-items: center; justify-content: center; color: #ff8a6a; font-weight: 700; cursor: pointer;
+  border-style: dashed; background: transparent;
+}
+.pb-card.rec:disabled { opacity: 0.4; cursor: default; }
+.pb-head { display: flex; align-items: center; gap: 4px; }
+.pb-fire {
+  flex: 1 1 auto; min-width: 0; display: flex; align-items: center; gap: 6px; cursor: pointer;
+  background: transparent; border: 0; color: #e6e6ea; padding: 2px; text-align: left;
+}
+.pb-slot { flex: 0 0 auto; font-size: 10px; font-weight: 800; color: #1a1a1f; background: #8aa0b8; border-radius: 3px; padding: 0 4px; }
+.pb-slot.dim { background: #3a3b42; color: #8a8b92; }
+.pb-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; }
+.pb-ico { flex: 0 0 auto; background: transparent; border: 0; color: #9aa0a8; cursor: pointer; font-size: 12px; padding: 2px 3px; }
+.pb-ico:hover { color: #ff8a6a; }
+.pb-ico.sm { font-size: 10px; }
+.pb-meta { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.pb-badge { font-size: 9px; color: #9aa0a8; background: #24252b; border-radius: 3px; padding: 1px 5px; }
+.pb-seg { display: inline-flex; border: 1px solid #34353c; border-radius: 4px; overflow: hidden; }
+.pb-seg button { background: #24252b; border: 0; color: #9aa0a8; font-size: 9px; padding: 1px 6px; cursor: pointer; }
+.pb-seg button.on { background: #ff8a6a; color: #1a1a1f; font-weight: 700; }
+.pb-bpm { font-size: 9px; color: #9aa0a8; display: inline-flex; align-items: center; gap: 3px; }
+.pb-bpm input { width: 44px; background: #17181c; border: 1px solid #34353c; color: #e6e6ea; border-radius: 3px; font-size: 10px; padding: 1px 3px; }
+.pb-steps { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
+.pb-steps li { display: flex; align-items: center; gap: 5px; font-size: 10px; color: #b7b8be; padding: 1px 3px; border-radius: 3px; }
+.pb-steps li.live { background: #2a2119; color: #ffb98a; }
+.pb-stepno { flex: 0 0 auto; width: 14px; text-align: right; color: #7a7b82; }
+.pb-stepname { flex: 1 1 auto; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
 /* A–G softkey column — physical-look grey keys (right of the screen) + labels. */
 .qscreen-soft {
   flex: 0 0 134px;

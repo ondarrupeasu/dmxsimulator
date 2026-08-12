@@ -7,7 +7,7 @@
  * merge, so keep this side-effect free.
  */
 import type { FixtureDefinition, Show } from '../model/types'
-import type { Cue } from '../model/cue'
+import type { LiveCue } from '../model/cue'
 
 export const UNIVERSE_SIZE = 512
 
@@ -68,7 +68,7 @@ export function resolveLevels(levels: Record<string, number>, fades: Record<stri
  * This is what the faders on the desk actually control.
  */
 export function computePlaybackBase(
-  cues: Cue[],
+  cues: LiveCue[],
   levels: Record<string, number>,
   show: Show,
   defsById: Record<string, FixtureDefinition>,

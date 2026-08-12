@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useShowStore } from '../../store/showStore'
 import { audioEngine, AUDIO_BANDS } from '../../engine/audio'
-import { cuesBySlot } from '../../model/cue'
+import { playbacksBySlot } from '../../model/cue'
 import { PwaTag } from '../PwaTag'
 
 const bandLabel = (hz: number) => (hz >= 1000 ? `${hz / 1000}k` : `${hz}`)
@@ -21,7 +21,7 @@ export function AudioPanel() {
   const setBandCue = useShowStore((s) => s.setAudioBandCue)
   const setBandEnabled = useShowStore((s) => s.setAudioBandEnabled)
   const setBandAuto = useShowStore((s) => s.setAudioBandAuto)
-  const cues = useShowStore((s) => s.cues)
+  const playbacks = useShowStore((s) => s.playbacks)
   const fileRef = useRef<HTMLInputElement>(null)
 
   const [levels, setLevels] = useState<number[]>(() => AUDIO_BANDS.map(() => 0))
@@ -72,9 +72,9 @@ export function AudioPanel() {
     }
   }
 
-  const bySlot = cuesBySlot(cues)
+  const bySlot = playbacksBySlot(playbacks)
   const cueOptions = bySlot
-    .map((c, slot) => (c ? { slot, name: c.name } : null))
+    .map((p, slot) => (p ? { slot, name: p.name } : null))
     .filter((o): o is { slot: number; name: string } => !!o)
 
   return (

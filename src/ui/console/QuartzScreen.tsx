@@ -3,6 +3,7 @@ import type { PaletteKind } from '../../model/palette'
 import { PALETTE_LABELS } from '../../model/palette'
 import { EffectsPanel } from '../run/EffectsPanel'
 import { AudioPanel } from './AudioPanel'
+import { PlaybacksWindow } from './PlaybacksWindow'
 
 const PALETTE_KINDS: PaletteKind[] = ['colour', 'position', 'gobo', 'beam', 'intensity']
 
@@ -65,12 +66,6 @@ export function QuartzScreen() {
   const applyPalette = useShowStore((s) => s.applyPalette)
   const deletePalette = useShowStore((s) => s.deletePalette)
   const renamePalette = useShowStore((s) => s.renamePalette)
-  const cues = useShowStore((s) => s.cues)
-  const activeCueId = useShowStore((s) => s.activeCueId)
-  const recordCue = useShowStore((s) => s.recordCue)
-  const goCue = useShowStore((s) => s.goCue)
-  const deleteCue = useShowStore((s) => s.deleteCue)
-  const renameCue = useShowStore((s) => s.renameCue)
 
   const fixtures = show.fixtures
   const noFx = fixtures.length === 0
@@ -223,23 +218,7 @@ export function QuartzScreen() {
       </div>
     )
   } else if (screen === 'playbacks') {
-    body = (
-      <div className="qd-ws-grid">
-        {cues.map((c) =>
-          renderCell(
-            c.id,
-            c.name,
-            () => goCue(c.id),
-            () => askLegend(c.name, (n) => renameCue(c.id, n)),
-            () => deleteCue(c.id),
-            { active: c.id === activeCueId, colorClass: 'ws-playback' },
-          ),
-        )}
-        <button className="qd-cell rec" onClick={recordCue} disabled={!progActive} title="Record the programmer as a new cue">
-          ＋ Record Cue
-        </button>
-      </div>
-    )
+    body = <PlaybacksWindow />
   } else {
     const list = palettes.filter((p) => p.kind === kind)
     body = (

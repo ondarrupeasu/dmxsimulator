@@ -5,7 +5,7 @@
  * them consistently.
  */
 import type { FixtureDefinition, Show } from '../model/types'
-import type { Cue } from '../model/cue'
+import type { LiveCue } from '../model/cue'
 import type { Fade } from './dmx'
 import { resolveLevel } from './dmx'
 import type { ProgrammerValues } from './dmx'
@@ -51,7 +51,7 @@ function hsv(h: number, s: number, v: number): [number, number, number] {
  *  is currently up (level > 0), so playing a cue reproduces the shapes it was recorded
  *  with. Live shapes come last so they win while you're building a look. */
 export function activeEffects(
-  cues: Cue[],
+  cues: LiveCue[],
   levels: Record<string, number>,
   fades: Record<string, Fade>,
   now: number,

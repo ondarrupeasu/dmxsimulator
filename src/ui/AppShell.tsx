@@ -16,7 +16,7 @@ import { TourOverlay } from './TourOverlay'
 import { useTour } from '../store/tourStore'
 import { VENUE_PRESETS } from '../model/venues'
 import { audioEngine } from '../engine/audio'
-import { cuesBySlot } from '../model/cue'
+import { playbacksBySlot, activeStep } from '../model/cue'
 import './ui.css'
 
 const MODES = ['patch', 'program'] as const
@@ -63,9 +63,14 @@ export function AppShell() {
   const tickClock = useShowStore((s) => s.tickClock)
   const fadeCount = useShowStore((s) => Object.keys(s.fades).length)
   const settleFades = useShowStore((s) => s.settleFades)
-  // A cue with recorded shapes that's currently up also needs the clock running.
+  const advanceChases = useShowStore((s) => s.advanceChases)
+  // A playback whose live step has shapes, or a running chase, also needs the clock running.
   const cueEffectsUp = useShowStore((s) =>
-    s.cues.some((c) => (c.effects?.length ?? 0) > 0 && (s.playbackLevels[c.id] ?? 0) > 0),
+    s.playbacks.some((p) => {
+      if ((s.playbackLevels[p.id] ?? 0) <= 0) return false
+      if (p.mode === 'chase' && p.steps.length > 1) return true
+      return (activeStep(p)?.effects?.length ?? 0) > 0
+    }),
   )
   useEffect(() => {
     const effectsRun = (effectsCount > 0 || cueEffectsUp) && playing
@@ -73,9 +78,10 @@ export function AppShell() {
     const iv = setInterval(() => {
       tickClock(0.05)
       settleFades()
+      advanceChases()
     }, 50)
     return () => clearInterval(iv)
-  }, [effectsCount, cueEffectsUp, playing, fadeCount, tickClock, settleFades])
+  }, [effectsCount, cueEffectsUp, playing, fadeCount, tickClock, settleFades, advanceChases])
 
   // Sound to Light: while enabled, watch the 7 bands and fire each band's mapped playback
   // on the rising edge over its threshold (like Titan's audio triggers); track the beat.
@@ -92,15 +98,15 @@ export function AppShell() {
       const st = useShowStore.getState()
       if (st.audioAutoGain) audioEngine.autoGain(peak) // Titan Auto Gain
       audioEngine.detectBeat(performance.now(), levels[1] ?? 0)
-      const bySlot = cuesBySlot(st.cues)
+      const bySlot = playbacksBySlot(st.playbacks)
       frame++
       st.audioBands.forEach((b, i) => {
         const lvl = levels[i] ?? 0
         baseline[i] = baseline[i] * 0.98 + lvl * 0.02 // slow quiet-floor estimate
         const on = b.enabled && lvl >= b.threshold
         if (on && !over[i] && b.cueSlot != null) {
-          const cue = bySlot[b.cueSlot]
-          if (cue) st.goCue(cue.id)
+          const pb = bySlot[b.cueSlot]
+          if (pb) st.goCue(pb.id)
         }
         over[i] = on
         // Per-band Auto trigger level: when idle, sit a margin above the floor (throttled).
