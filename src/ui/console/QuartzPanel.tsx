@@ -33,20 +33,16 @@ const ATTRIBUTES: { name: string; wheels: string[][] }[] = [
 
 type V = 'white' | 'dark' | 'blue' | 'red'
 function Key({
-  v = 'dark', led = true, ledColor, ledBottom, on, flash, text, narrow, assignable, disabled, title, onClick, onContextMenu, onHoldStart, onHoldEnd, tour,
+  v = 'dark', led = true, ledColor, ledBottom, on, flash, text, narrow, assignable, disabled, title, onClick, onContextMenu, tour,
 }: {
   v?: V; led?: boolean; ledColor?: 'red' | 'blue'; ledBottom?: boolean; on?: boolean; flash?: boolean
   text?: string; narrow?: boolean; assignable?: boolean; disabled?: boolean; title?: string
-  onClick?: () => void; onContextMenu?: (e: React.MouseEvent) => void
-  onHoldStart?: () => void; onHoldEnd?: () => void; tour?: string
+  onClick?: () => void; onContextMenu?: (e: React.MouseEvent) => void; tour?: string
 }) {
   return (
     <button
       className={`ck ck-${v}${ledBottom ? ' ledb' : ''}${narrow ? ' narrow' : ''}${assignable ? ' assignable' : ''}`}
       disabled={disabled} title={title} onClick={onClick} onContextMenu={onContextMenu} data-tour={tour}
-      onPointerDown={onHoldStart ? (e) => { e.preventDefault(); onHoldStart() } : undefined}
-      onPointerUp={onHoldEnd}
-      onPointerLeave={onHoldEnd}
     >
       {led && <span className={`ckled${on ? ' on' : ''}${flash ? ' flash' : ''}${ledColor ? ' ' + ledColor : ''}`} />}
       {text != null && <span className="cktext">{text}</span>}
@@ -186,6 +182,8 @@ export function QuartzPanel() {
   const killPlayback = useShowStore((s) => s.killPlayback)
   const flash = useShowStore((s) => s.flash)
   const swop = useShowStore((s) => s.swop)
+  const flashIds = useShowStore((s) => s.flashIds)
+  const swopId = useShowStore((s) => s.swopId)
   const playbackFade = useShowStore((s) => s.playbackFade)
   const setPlaybackFade = useShowStore((s) => s.setPlaybackFade)
   const executorLabels = useShowStore((s) => s.executorLabels)
@@ -357,27 +355,29 @@ export function QuartzPanel() {
         <Frame x={38} y={448} w={624} h={116} />
         <Box x={44} y={454} w={612} h={104} cols={10} rows={2} spread>
           {Array.from({ length: 10 }, (_, i) => {
-            const gi = playbackPage * 10 + i; const cue = bySlot[gi]; const on = !!cue && isUp(cue.id)
+            const gi = playbackPage * 10 + i; const cue = bySlot[gi]
+            const flashed = !!cue && flashIds.includes(cue.id)
+            const on = !!cue && (isUp(cue.id) || flashed)
             // Titan LED model: occupied handle whose fader is at 0 → its LED FLASHES (a
             // reminder why no light is coming on). While Record is armed, the valid targets
             // flash to say "pick where to record". Occupied + up = steady.
             const led = recordArm ? true : !!cue && !on
-            // Top button = FLASH (momentary): held → the playback is added into the output at
-            // full, released → back to the fader. (Under Record arm it's a record target.)
-            const title = recordArm ? (cue ? `Record over ${cue.name}` : 'Record here') : cue ? `Flash ${cue.name} (mantén pulsado)` : 'Empty'
+            // Top button = FLASH: adds the playback into the output at full. On the real desk
+            // it's momentary (held); a browser can't hold two buttons, so here it's a TOGGLE.
+            const title = recordArm ? (cue ? `Record over ${cue.name}` : 'Record here')
+              : cue ? `Flash ${cue.name} — ${flashed ? 'ON (clic para apagar)' : 'clic para encender'}. En la Quartz real es momentáneo (mantener pulsado); aquí es conmutador.` : 'Empty'
             return <Key key={`t${i}`} v={recordArm ? 'red' : 'blue'} narrow ledBottom on={on} flash={led} disabled={!recordArm && !cue} title={title}
-              onClick={recordArm ? () => recordCueAt(gi) : undefined}
-              onHoldStart={!recordArm && cue ? () => flash(cue.id, true) : undefined}
-              onHoldEnd={!recordArm && cue ? () => flash(cue.id, false) : undefined} />
+              onClick={recordArm ? () => recordCueAt(gi) : cue ? () => flash(cue.id) : undefined} />
           })}
           {Array.from({ length: 10 }, (_, i) => {
             const gi = playbackPage * 10 + i; const cue = bySlot[gi]
-            // Bottom button = SWOP (momentary): held → this playback full, everything else off.
-            const title = recordArm ? (cue ? `Record over ${cue.name}` : 'Record here') : cue ? `Swop ${cue.name} (solo, mantén pulsado)` : 'Empty'
-            return <Key key={`b${i}`} v={recordArm ? 'red' : 'dark'} narrow led={false} disabled={!recordArm && !cue} title={title}
-              onClick={recordArm ? () => recordCueAt(gi) : undefined}
-              onHoldStart={!recordArm && cue ? () => swop(cue.id, true) : undefined}
-              onHoldEnd={!recordArm && cue ? () => swop(cue.id, false) : undefined} />
+            const swopped = !!cue && swopId === cue.id
+            // Bottom button = SWOP (solo): this playback full, everything else off. Toggle here
+            // for the same reason as Flash (no press-and-hold with a mouse).
+            const title = recordArm ? (cue ? `Record over ${cue.name}` : 'Record here')
+              : cue ? `Swop ${cue.name} — ${swopped ? 'ON (clic para apagar)' : 'solo, clic para encender'}. En la Quartz real es momentáneo; aquí es conmutador.` : 'Empty'
+            return <Key key={`b${i}`} v={recordArm || swopped ? 'red' : 'dark'} narrow led={swopped} ledBottom on={swopped} disabled={!recordArm && !cue} title={title}
+              onClick={recordArm ? () => recordCueAt(gi) : cue ? () => swop(cue.id) : undefined} />
           })}
         </Box>
 

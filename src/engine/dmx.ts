@@ -69,7 +69,7 @@ export function effectivePlaybackLevels(
   fired: Record<string, number>,
   fades: Record<string, Fade>,
   now: number,
-  flashId?: string | null,
+  flashIds?: string[],
   swopId?: string | null,
 ): Record<string, number> {
   // Swop solos one playback: it's full and every other playback's output is muted.
@@ -77,8 +77,8 @@ export function effectivePlaybackLevels(
   const out: Record<string, number> = { ...manual }
   const resolved = resolveLevels(fired, fades, now)
   for (const id in resolved) out[id] = Math.max(out[id] ?? 0, resolved[id])
-  // Flash adds a playback into the output at full (HTP).
-  if (flashId) out[flashId] = 255
+  // Flash adds playbacks into the output at full (HTP).
+  if (flashIds) for (const id of flashIds) out[id] = 255
   return out
 }
 
