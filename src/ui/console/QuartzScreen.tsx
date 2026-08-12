@@ -5,7 +5,7 @@ import { PALETTE_LABELS } from '../../model/palette'
 import { EffectsPanel } from '../run/EffectsPanel'
 import { AudioPanel } from './AudioPanel'
 import { PlaybacksWindow } from './PlaybacksWindow'
-import { userNumberOf } from '../../model/types'
+import { userNumberOf, fixtureAttributeKeys, ATTRIBUTE_BANKS } from '../../model/types'
 
 const PALETTE_KINDS: PaletteKind[] = ['colour', 'position', 'gobo', 'beam', 'intensity']
 
@@ -55,6 +55,7 @@ export function QuartzScreen() {
   const toggleHighlight = useShowStore((s) => s.toggleHighlight)
   const programmer = useShowStore((s) => s.programmer)
   const show = useShowStore((s) => s.show)
+  const definitions = useShowStore((s) => s.definitions)
   const cmd = useShowStore((s) => s.cmd)
   const deskMenu = useShowStore((s) => s.deskMenu)
   const setMenu = useShowStore((s) => s.setDeskMenu)
@@ -235,15 +236,22 @@ export function QuartzScreen() {
       <div className="qd-muted" style={{ padding: 10 }}>Patch fixtures first (Patch mode).</div>
     ) : (
       <div className="qd-ws-grid">
-        {fixtures.map((pf, i) => (
-          <div key={pf.id} className={`qd-cell ws-fixture${selection.includes(pf.id) ? ' active' : ''}`}>
-            <button className="qd-cell-hit" onClick={() => toggleSelect(pf.id)} title={`${pf.name} — nº ${userNumberOf(fixtures, i)} (teclea ${userNumberOf(fixtures, i)} para seleccionarlo)`}>
-              <span className="qd-usernum">{userNumberOf(fixtures, i)}</span>
-              {pf.name}
-            </button>
-            <span className="qd-ipcg">I P C G B E S FX</span>
-          </div>
-        ))}
+        {fixtures.map((pf, i) => {
+          const has = fixtureAttributeKeys(definitions[pf.definitionId], pf.modeIndex)
+          return (
+            <div key={pf.id} className={`qd-cell ws-fixture${selection.includes(pf.id) ? ' active' : ''}`}>
+              <button className="qd-cell-hit" onClick={() => toggleSelect(pf.id)} title={`${pf.name} — nº ${userNumberOf(fixtures, i)} · atributos: ${ATTRIBUTE_BANKS.filter((b) => has.has(b.key)).map((b) => b.label).join(', ') || '—'}`}>
+                <span className="qd-usernum">{userNumberOf(fixtures, i)}</span>
+                {pf.name}
+              </button>
+              <span className="qd-ipcg">
+                {ATTRIBUTE_BANKS.map((b) => (
+                  <span key={b.key} className={has.has(b.key) ? 'on' : ''} title={b.label}>{b.key}</span>
+                ))}
+              </span>
+            </div>
+          )
+        })}
       </div>
     )
   } else if (screen === 'audio') {

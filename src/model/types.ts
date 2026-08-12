@@ -122,6 +122,28 @@ export function nextUserNumber(fixtures: PatchedFixture[]): number {
   return 1 + fixtures.reduce((mx, f, i) => Math.max(mx, f.userNumber ?? i + 1), 0)
 }
 
+/** Titan attribute banks in order, with the channel functions that belong to each. Used to
+ *  show which controls (Intensity / Position / Colour / Gobo / Beam / Effect / Special) a
+ *  fixture actually has — the "IPCGBES / FX" strip. */
+export const ATTRIBUTE_BANKS: { key: string; label: string; fns: string[] }[] = [
+  { key: 'I', label: 'Intensity', fns: ['dimmer', 'shutter', 'strobe', 'haze'] },
+  { key: 'P', label: 'Position', fns: ['pan', 'tilt', 'panFine', 'tiltFine'] },
+  { key: 'C', label: 'Colour', fns: ['red', 'green', 'blue', 'white', 'amber', 'colorWheel', 'colorTemp'] },
+  { key: 'G', label: 'Gobo', fns: ['gobo', 'goboRotation'] },
+  { key: 'B', label: 'Beam', fns: ['prism', 'zoom', 'iris', 'focus'] },
+  { key: 'E', label: 'Effect', fns: ['macro'] },
+  { key: 'S', label: 'Special', fns: ['control'] },
+]
+
+/** The set of attribute-bank keys a fixture actually has, from its channel functions. */
+export function fixtureAttributeKeys(def: FixtureDefinition | undefined, modeIndex: number): Set<string> {
+  const out = new Set<string>()
+  const channels = def?.modes[modeIndex]?.channels ?? []
+  const fns = new Set<string>(channels.map((c) => c.function))
+  for (const bank of ATTRIBUTE_BANKS) if (bank.fns.some((f) => fns.has(f))) out.add(bank.key)
+  return out
+}
+
 /** A truss in the rig — a hanging bar at a depth (z) and height (y). */
 export interface TrussDef {
   id: number
