@@ -48,8 +48,8 @@ export function AudioPanel() {
       try {
         await audioEngine.useFile(f)
         setEnabled(true)
-      } catch {
-        alert('No se pudo reproducir el audio.')
+      } catch (err) {
+        alert(`No se pudo reproducir el audio: ${err instanceof Error ? err.message : 'formato no soportado'}.`)
       }
     }
   }
@@ -67,7 +67,7 @@ export function AudioPanel() {
       setEnabled(true)
     } catch (e) {
       alert(e instanceof Error && e.message === 'no-audio'
-        ? 'Marca la casilla "Compartir audio de la pestaña/sistema" al elegir la fuente.'
+        ? 'No se capturó audio. Elige la pestaña "Chrome/Pestaña" (no "Ventana" ni "Pantalla completa") de una web que esté sonando (YouTube, Spotify…) y marca abajo "Compartir audio de la pestaña".'
         : 'No se pudo capturar el audio del sistema.')
     }
   }

@@ -36,7 +36,7 @@ class AudioEngine {
   private lastTap = 0
   private tapGaps: number[] = []
 
-  private ensureCtx() {
+  private async ensureCtx() {
     if (!this.ctx) {
       const Ctx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext
       this.ctx = new Ctx()
@@ -45,12 +45,14 @@ class AudioEngine {
       this.analyser.smoothingTimeConstant = 0.7
       this.data = new Uint8Array(this.analyser.frequencyBinCount)
     }
-    if (this.ctx.state === 'suspended') void this.ctx.resume()
+    // Must be awaited: a media element routed through a suspended context is silent AND
+    // gives the analyser no data (the mp3 "does nothing" bug).
+    if (this.ctx.state === 'suspended') await this.ctx.resume()
   }
 
   async useMic() {
     this.stop()
-    this.ensureCtx()
+    await this.ensureCtx()
     this.stream = await navigator.mediaDevices.getUserMedia({ audio: true })
     this.srcNode = this.ctx!.createMediaStreamSource(this.stream)
     this.srcNode.connect(this.analyser!) // analyse only — don't feed the speakers (no echo)
@@ -58,19 +60,19 @@ class AudioEngine {
     this.label = 'Line-in / Mic'
   }
 
-  /** SIMULATOR-ONLY: capture the computer's own audio (a browser tab / the system output,
-   *  e.g. a YouTube or Spotify tab) via getDisplayMedia and treat it as the line-in. The
-   *  real Quartz can't do this — it only has the physical audio jack. */
+  /** SIMULATOR-ONLY: capture the computer's own audio via getDisplayMedia and treat it as the
+   *  line-in. IMPORTANT: only a shared browser TAB provides audio (with "share tab audio"
+   *  ticked); sharing a window or the whole screen gives no audio on macOS/Chrome. */
   async useSystemAudio() {
     this.stop()
-    this.ensureCtx()
-    // getDisplayMedia requires video to be requested; we keep only the audio track.
+    await this.ensureCtx()
     const md = navigator.mediaDevices as MediaDevices & { getDisplayMedia: (c: MediaStreamConstraints) => Promise<MediaStream> }
+    // Video is required for the picker; we keep only the audio track.
     const stream = await md.getDisplayMedia({ video: true, audio: true })
     const audioTracks = stream.getAudioTracks()
     if (!audioTracks.length) {
       stream.getTracks().forEach((t) => t.stop())
-      throw new Error('no-audio') // the user didn't tick "share audio"
+      throw new Error('no-audio') // shared a window/screen, or didn't tick "share audio"
     }
     stream.getVideoTracks().forEach((t) => t.stop()) // we only need the audio
     this.stream = stream
@@ -82,10 +84,11 @@ class AudioEngine {
 
   async useFile(file: File) {
     this.stop()
-    this.ensureCtx()
+    await this.ensureCtx()
     this.url = URL.createObjectURL(file)
     const el = new Audio(this.url)
     el.loop = true
+    el.crossOrigin = 'anonymous'
     this.mediaEl = el
     this.srcNode = this.ctx!.createMediaElementSource(el)
     this.srcNode.connect(this.analyser!)
