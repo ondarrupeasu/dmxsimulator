@@ -507,7 +507,7 @@ export function Visualizer3D() {
     const animate = () => {
       raf = requestAnimationFrame(animate)
       const state = useShowStore.getState()
-      const { show, definitions, programmer, playbacks, playbackLevels, firedLevels, fades, effects, selection } = state
+      const { show, definitions, programmer, playbacks, playbackLevels, firedLevels, fades, flashId, swopId, effects, selection } = state
       const cues = liveCues(playbacks, state.now)
       const selSet = new Set(selection)
       // Reconcile the optional venue (preset or loaded glTF) when it changes.
@@ -522,7 +522,7 @@ export function Visualizer3D() {
       const nowMs = performance.now()
       if (state.playing) clock += (nowMs - lastMs) / 1000 // freeze on Pause
       lastMs = nowMs
-      const levels = effectivePlaybackLevels(playbackLevels, firedLevels, fades, state.now)
+      const levels = effectivePlaybackLevels(playbackLevels, firedLevels, fades, state.now, flashId, swopId)
       const base = computePlaybackBase(cues, levels, show, definitions)
       const merged = mergeProgrammer(base, programmer)
       const active = activeEffects(cues, levels, {}, state.now, effects)

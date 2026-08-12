@@ -33,16 +33,20 @@ const ATTRIBUTES: { name: string; wheels: string[][] }[] = [
 
 type V = 'white' | 'dark' | 'blue' | 'red'
 function Key({
-  v = 'dark', led = true, ledColor, ledBottom, on, flash, text, narrow, assignable, disabled, title, onClick, onContextMenu, tour,
+  v = 'dark', led = true, ledColor, ledBottom, on, flash, text, narrow, assignable, disabled, title, onClick, onContextMenu, onHoldStart, onHoldEnd, tour,
 }: {
   v?: V; led?: boolean; ledColor?: 'red' | 'blue'; ledBottom?: boolean; on?: boolean; flash?: boolean
   text?: string; narrow?: boolean; assignable?: boolean; disabled?: boolean; title?: string
-  onClick?: () => void; onContextMenu?: (e: React.MouseEvent) => void; tour?: string
+  onClick?: () => void; onContextMenu?: (e: React.MouseEvent) => void
+  onHoldStart?: () => void; onHoldEnd?: () => void; tour?: string
 }) {
   return (
     <button
       className={`ck ck-${v}${ledBottom ? ' ledb' : ''}${narrow ? ' narrow' : ''}${assignable ? ' assignable' : ''}`}
       disabled={disabled} title={title} onClick={onClick} onContextMenu={onContextMenu} data-tour={tour}
+      onPointerDown={onHoldStart ? (e) => { e.preventDefault(); onHoldStart() } : undefined}
+      onPointerUp={onHoldEnd}
+      onPointerLeave={onHoldEnd}
     >
       {led && <span className={`ckled${on ? ' on' : ''}${flash ? ' flash' : ''}${ledColor ? ' ' + ledColor : ''}`} />}
       {text != null && <span className="cktext">{text}</span>}
@@ -180,6 +184,8 @@ export function QuartzPanel() {
   const setPlaybackLevel = useShowStore((s) => s.setPlaybackLevel)
   const fades = useShowStore((s) => s.fades)
   const killPlayback = useShowStore((s) => s.killPlayback)
+  const flash = useShowStore((s) => s.flash)
+  const swop = useShowStore((s) => s.swop)
   const playbackFade = useShowStore((s) => s.playbackFade)
   const setPlaybackFade = useShowStore((s) => s.setPlaybackFade)
   const executorLabels = useShowStore((s) => s.executorLabels)
@@ -355,14 +361,23 @@ export function QuartzPanel() {
             // Titan LED model: occupied handle whose fader is at 0 → its LED FLASHES (a
             // reminder why no light is coming on). While Record is armed, the valid targets
             // flash to say "pick where to record". Occupied + up = steady.
-            const flash = recordArm ? true : !!cue && !on
-            const title = recordArm ? (cue ? `Record over ${cue.name}` : 'Record here') : cue ? `Go ${cue.name}` : 'Empty'
-            return <Key key={`t${i}`} v={recordArm ? 'red' : 'blue'} narrow ledBottom on={on} flash={flash} disabled={!recordArm && !cue} title={title} onClick={() => (recordArm ? recordCueAt(gi) : cue && goCue(cue.id))} />
+            const led = recordArm ? true : !!cue && !on
+            // Top button = FLASH (momentary): held → the playback is added into the output at
+            // full, released → back to the fader. (Under Record arm it's a record target.)
+            const title = recordArm ? (cue ? `Record over ${cue.name}` : 'Record here') : cue ? `Flash ${cue.name} (mantén pulsado)` : 'Empty'
+            return <Key key={`t${i}`} v={recordArm ? 'red' : 'blue'} narrow ledBottom on={on} flash={led} disabled={!recordArm && !cue} title={title}
+              onClick={recordArm ? () => recordCueAt(gi) : undefined}
+              onHoldStart={!recordArm && cue ? () => flash(cue.id, true) : undefined}
+              onHoldEnd={!recordArm && cue ? () => flash(cue.id, false) : undefined} />
           })}
           {Array.from({ length: 10 }, (_, i) => {
             const gi = playbackPage * 10 + i; const cue = bySlot[gi]
-            const title = recordArm ? (cue ? `Record over ${cue.name}` : 'Record here') : cue ? `Flash ${cue.name}` : 'Empty'
-            return <Key key={`b${i}`} v={recordArm ? 'red' : 'dark'} narrow led={false} disabled={!recordArm && !cue} title={title} onClick={() => (recordArm ? recordCueAt(gi) : cue && goCue(cue.id))} />
+            // Bottom button = SWOP (momentary): held → this playback full, everything else off.
+            const title = recordArm ? (cue ? `Record over ${cue.name}` : 'Record here') : cue ? `Swop ${cue.name} (solo, mantén pulsado)` : 'Empty'
+            return <Key key={`b${i}`} v={recordArm ? 'red' : 'dark'} narrow led={false} disabled={!recordArm && !cue} title={title}
+              onClick={recordArm ? () => recordCueAt(gi) : undefined}
+              onHoldStart={!recordArm && cue ? () => swop(cue.id, true) : undefined}
+              onHoldEnd={!recordArm && cue ? () => swop(cue.id, false) : undefined} />
           })}
         </Box>
 

@@ -136,6 +136,15 @@ interface ShowState {
   firedLevels: Record<string, number>
   /** In-progress fired-level fades (playbackId → fade), interpolated against `now`. */
   fades: Record<string, Fade>
+  /** The playback being FLASHED right now (momentary, while its Flash button is held) — it's
+   *  added into the output at full (HTP). Null when nothing is flashed. */
+  flashId: string | null
+  /** The playback being SWOPPED right now (momentary) — full while ALL other output is muted. */
+  swopId: string | null
+  /** Hold/release a momentary Flash (adds the playback into the output at full). */
+  flash: (id: string, on: boolean) => void
+  /** Hold/release a momentary Swop (this playback full, everything else off). */
+  swop: (id: string, on: boolean) => void
   /** Fade time (seconds) used by the next Go / Release. The TIME key sets it. */
   playbackFade: number
   setPlaybackFade: (seconds: number) => void
@@ -568,6 +577,10 @@ export const useShowStore = create<ShowState>()(
         set((s) => ({ playbacks: s.playbacks.map((p) => (p.id === id ? { ...p, name } : p)) })),
       playbackLevels: {},
       firedLevels: {},
+      flashId: null,
+      swopId: null,
+      flash: (id, on) => set((s) => ({ flashId: on ? id : s.flashId === id ? null : s.flashId })),
+      swop: (id, on) => set((s) => ({ swopId: on ? id : s.swopId === id ? null : s.swopId })),
       // The faders are manual and NON-motorised: dragging is the only thing that moves a
       // handle. Raising from 0 connects the playback + brings up its first step (like pushing
       // the fader up on the real desk). Never animated by Go/fire.
@@ -1221,6 +1234,8 @@ export function useEffectiveProgrammer(respectBlind = false): ProgrammerValues {
   const playbackLevels = useShowStore((s) => s.playbackLevels)
   const firedLevels = useShowStore((s) => s.firedLevels)
   const fades = useShowStore((s) => s.fades)
+  const flashId = useShowStore((s) => s.flashId)
+  const swopId = useShowStore((s) => s.swopId)
   const effects = useShowStore((s) => s.effects)
   const show = useShowStore((s) => s.show)
   const definitions = useShowStore((s) => s.definitions)
@@ -1228,9 +1243,10 @@ export function useEffectiveProgrammer(respectBlind = false): ProgrammerValues {
   const blind = useShowStore((s) => s.blind)
   return useMemo(() => {
     // Each playback contributes its live step (id = playback id) to the merge, interpolated
-    // while a Go cross-fade is in progress. Its master = HTP(manual fader, fired level).
+    // while a Go cross-fade is in progress. Its master = HTP(manual fader, fired level),
+    // plus any momentary Flash/Swop.
     const cues = liveCues(playbacks, now)
-    const levels = effectivePlaybackLevels(playbackLevels, firedLevels, fades, now)
+    const levels = effectivePlaybackLevels(playbackLevels, firedLevels, fades, now, flashId, swopId)
     const base = computePlaybackBase(cues, levels, show, definitions)
     const merged = respectBlind && blind ? base : mergeProgrammer(base, programmer)
     // Blind holds the whole programmer from the real output — its live shapes too, not
@@ -1238,5 +1254,5 @@ export function useEffectiveProgrammer(respectBlind = false): ProgrammerValues {
     const liveEffects = respectBlind && blind ? [] : effects
     const active = activeEffects(cues, levels, {}, now, liveEffects)
     return applyEffects(merged, active, show, definitions, now)
-  }, [programmer, playbacks, playbackLevels, firedLevels, fades, effects, show, definitions, now, blind, respectBlind])
+  }, [programmer, playbacks, playbackLevels, firedLevels, fades, flashId, swopId, effects, show, definitions, now, blind, respectBlind])
 }
