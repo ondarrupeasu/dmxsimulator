@@ -116,6 +116,12 @@ interface ShowState {
   goBack: () => void
   /** Central Stop — release the connected playback. */
   stopPlayback: () => void
+  /** "Connect armed" — after pressing Connect, the next playback you touch becomes the one the
+   *  central Go/Prev/Stop drive, WITHOUT firing it. */
+  connectArm: boolean
+  armConnect: () => void
+  /** Connect a playback to the central transport without firing it. */
+  connectPlayback: (id: string) => void
   /** Release the connected playback (fade out + disconnect). */
   releaseCue: () => void
   /** Rename a playback (its hand-typed legend). */
@@ -531,6 +537,9 @@ export const useShowStore = create<ShowState>()(
       go: () => set((s) => stepConnected(s, +1)),
       goBack: () => set((s) => stepConnected(s, -1)),
       stopPlayback: () => get().releaseCue(),
+      connectArm: false,
+      armConnect: () => set((s) => ({ connectArm: !s.connectArm })),
+      connectPlayback: (id) => set({ connectedId: id, connectArm: false }),
 
       setPlaybackMode: (id, mode) =>
         set((s) => ({ playbacks: s.playbacks.map((p) => (p.id === id ? { ...p, mode, bpm: p.bpm ?? 120 } : p)) })),

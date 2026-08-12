@@ -173,6 +173,9 @@ export function QuartzPanel() {
   const go = useShowStore((s) => s.go)
   const goBack = useShowStore((s) => s.goBack)
   const stopPlayback = useShowStore((s) => s.stopPlayback)
+  const connectArm = useShowStore((s) => s.connectArm)
+  const armConnect = useShowStore((s) => s.armConnect)
+  const connectPlayback = useShowStore((s) => s.connectPlayback)
   const playbackPage = useShowStore((s) => s.playbackPage)
   const setPlaybackPage = useShowStore((s) => s.setPlaybackPage)
   const playbackLevels = useShowStore((s) => s.playbackLevels)
@@ -254,12 +257,13 @@ export function QuartzPanel() {
         {showZones ? 'Ocultar zonas' : 'Ver zonas'}
       </button>
       <div className={`qcal${shift ? ' shift' : ''}${swopId ? ' swopping' : ''}`}>
-        {(shift || flashIds.length > 0 || swopId) && (
+        {(shift || flashIds.length > 0 || swopId || connectArm) && (
           <div className="cal-modes-badge">
             {shift && <span className="mb-avo">AVO · segundas funciones</span>}
             {flashIds.length > 0 && <span className="mb-flash">FLASH ×{flashIds.length}</span>}
             {swopId && <span className="mb-swop">SWOP · resto en negro</span>}
-            <span className="mb-hint">clic en el botón para apagar</span>
+            {connectArm && <span className="mb-flash">CONNECT · toca un playback</span>}
+            {!connectArm && <span className="mb-hint">clic en el botón para apagar</span>}
           </div>
         )}
         {blind && <div className="cal-blind-badge">BLIND · el programmer no sale a escena</div>}
@@ -365,17 +369,17 @@ export function QuartzPanel() {
           {Array.from({ length: 10 }, (_, i) => {
             const gi = playbackPage * 10 + i; const cue = bySlot[gi]
             const flashed = !!cue && flashIds.includes(cue.id)
-            const on = !!cue && (isUp(cue.id) || flashed)
+            const connected = !!cue && connectedId === cue.id
+            const on = !!cue && (isUp(cue.id) || flashed || (connectArm && connected))
             // Titan LED model: occupied handle whose fader is at 0 → its LED FLASHES (a
-            // reminder why no light is coming on). While Record is armed, the valid targets
-            // flash to say "pick where to record". Occupied + up = steady.
-            const led = recordArm ? true : !!cue && !on
-            // Top button = FLASH: adds the playback into the output at full. On the real desk
-            // it's momentary (held); a browser can't hold two buttons, so here it's a TOGGLE.
+            // reminder why no light is coming on). While Record/Connect is armed, the valid
+            // targets flash to say "pick one". Occupied + up = steady.
+            const led = recordArm || connectArm ? true : !!cue && !on
             const title = recordArm ? (cue ? `Record over ${cue.name}` : 'Record here')
+              : connectArm ? (cue ? `Connect ${cue.name} al Go central` : 'Empty')
               : cue ? `Flash ${cue.name} — ${flashed ? 'ON (clic para apagar)' : 'clic para encender'}. En la Quartz real es momentáneo (mantener pulsado); aquí es conmutador.` : 'Empty'
-            return <Key key={`t${i}`} v={recordArm ? 'red' : 'blue'} narrow ledBottom on={on} flash={led} disabled={!recordArm && !cue} title={title}
-              onClick={recordArm ? () => recordCueAt(gi) : cue ? () => flash(cue.id) : undefined} />
+            return <Key key={`t${i}`} v={recordArm ? 'red' : 'blue'} narrow ledBottom on={on} flash={led} disabled={(!recordArm && !connectArm && !cue) || (connectArm && !cue)} title={title}
+              onClick={recordArm ? () => recordCueAt(gi) : connectArm ? (cue ? () => connectPlayback(cue.id) : undefined) : cue ? () => flash(cue.id) : undefined} />
           })}
           {Array.from({ length: 10 }, (_, i) => {
             const gi = playbackPage * 10 + i; const cue = bySlot[gi]
@@ -426,7 +430,7 @@ export function QuartzPanel() {
           <Key v="white" led={false} disabled title="Live Time" /><Key v="white" led={false} disabled title="Next Time" />
           <Key v="white" led={false} disabled={!hasActive} title="Prev Cue — paso anterior del playback conectado" onClick={goBack} />
           <Key v="white" led={false} disabled={!hasActive} title="Next Cue — siguiente paso del playback conectado" onClick={go} />
-          <Key v="dark" disabled title="Connect/Cue" /><Key v="dark" disabled={!hasActive} title="Stop — suelta el playback conectado" onClick={stopPlayback} />
+          <Key v="dark" ledColor="blue" on={connectArm} flash={connectArm} disabled={!playbacks.length} title={connectArm ? 'Connect armado — toca un playback para conectarlo al Go central (sin dispararlo)' : 'Connect/Cue — conecta un playback al transporte central sin dispararlo'} onClick={armConnect} /><Key v="dark" disabled={!hasActive} title="Stop — suelta el playback conectado" onClick={stopPlayback} />
         </Box>
         <Box x={749} y={766} w={60} h={62} cols={1} rows={1}>
           <Key v="red" ledColor="red" on={hasActive} disabled={!hasActive} title="Go — avanza el playback conectado al siguiente cue" onClick={go} />
