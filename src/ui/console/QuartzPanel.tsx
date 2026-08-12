@@ -216,11 +216,12 @@ export function QuartzPanel() {
   const present = useSelectionFunctions()
   const fixtures = useShowStore((s) => s.show.fixtures)
   const select = useShowStore((s) => s.select)
-  const setByFn = useShowStore((s) => s.setSelectedByFunction)
   const clearSelectedFunctions = useShowStore((s) => s.clearSelectedFunctions)
   const fanSelected = useShowStore((s) => s.fanSelected)
   const blind = useShowStore((s) => s.blind)
   const setBlind = useShowStore((s) => s.setBlind)
+  const highlight = useShowStore((s) => s.highlight)
+  const toggleHighlight = useShowStore((s) => s.toggleHighlight)
   const cmdAppend = useShowStore((s) => s.cmdAppend)
   const cmdBackspace = useShowStore((s) => s.cmdBackspace)
   const cmdClear = useShowStore((s) => s.cmdClear)
@@ -316,7 +317,7 @@ export function QuartzPanel() {
           <Key v="dark" narrow led={false} disabled={fixtures.length < 2} title="Fix −1 — fixture anterior" onClick={() => step(-1)} />
           <Key v="dark" narrow led={false} disabled={fixtures.length < 2} title="Fix +1 — fixture siguiente" onClick={() => step(1)} />
           <Key v="dark" narrow on={!noFx && selection.length === fixtures.length} disabled={noFx} title="All — seleccionar todo" onClick={() => select(fixtures.map((f) => f.id))} />
-          <Key v="dark" narrow disabled={noSel} title="Hi Light — intensidad al máximo" onClick={() => setByFn('dimmer', 255)} />
+          <Key v="dark" narrow ledColor="blue" on={highlight} title="Hi Light — resalta los fixtures seleccionados a tope (enclavado; no se guarda en el programmer). Clic para activar/desactivar." onClick={toggleHighlight} />
         </Box>
         <GridLabels x={40} y={392} w={100} cols={2} items={['All', 'Hi\nLight']} subs={['Rem Dim', 'Lo Light']} />
 

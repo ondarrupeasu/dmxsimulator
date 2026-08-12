@@ -125,6 +125,32 @@ export function computePlaybackBase(
   return out
 }
 
+/** Highlight overlay: lift the selected fixtures' intensity (dimmer) to full in the OUTPUT
+ *  only — never touching the programmer — so you can see what you're controlling (Titan's
+ *  HiLight). Non-selected fixtures are untouched. Returns a new values object. */
+export function applyHighlight(
+  values: ProgrammerValues,
+  selection: string[],
+  show: Show,
+  defsById: Record<string, FixtureDefinition>,
+): ProgrammerValues {
+  if (selection.length === 0) return values
+  const sel = new Set(selection)
+  const out: ProgrammerValues = {}
+  for (const id in values) out[id] = { ...values[id] }
+  for (const pf of show.fixtures) {
+    if (!sel.has(pf.id)) continue
+    const mode = defsById[pf.definitionId]?.modes[pf.modeIndex]
+    if (!mode) continue
+    const dst = (out[pf.id] ??= {})
+    mode.channels.forEach((ch, i) => {
+      if (ch.function === 'dimmer') dst[i] = 255
+      if (ch.function === 'shutter') dst[i] = 255 // open so the beam is visible
+    })
+  }
+  return out
+}
+
 /**
  * Compute the 512 raw values for one universe.
  * Programmer values override the fixture's channel defaults; unpatched channels

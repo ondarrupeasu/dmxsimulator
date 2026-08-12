@@ -50,7 +50,8 @@ export function QuartzScreen() {
   const clearSelection = useShowStore((s) => s.clearSelection)
   const clearProgrammer = useShowStore((s) => s.clearProgrammer)
   const locateSelected = useShowStore((s) => s.locateSelected)
-  const setByFn = useShowStore((s) => s.setSelectedByFunction)
+  const highlight = useShowStore((s) => s.highlight)
+  const toggleHighlight = useShowStore((s) => s.toggleHighlight)
   const programmer = useShowStore((s) => s.programmer)
   const show = useShowStore((s) => s.show)
   const cmd = useShowStore((s) => s.cmd)
@@ -124,7 +125,7 @@ export function QuartzScreen() {
       keys: [
         { k: 'A', label: 'All', sub: 'Select all', kind: 'action', onClick: () => select(fixtures.map((f) => f.id)), disabled: noFx },
         { k: 'B', label: 'Locate', sub: 'Home values', kind: 'action', onClick: locateSelected, disabled: noSel },
-        { k: 'C', label: 'Highlight', sub: 'Intensity full', kind: 'action', onClick: () => setByFn('dimmer', 255), disabled: noSel },
+        { k: 'C', label: highlight ? 'Highlight ✓' : 'Highlight', sub: 'Ver selección', kind: 'action', onClick: toggleHighlight },
         { k: 'D', label: 'Clear', sub: 'Programmer', kind: 'action', onClick: clearAll, disabled: noSel && !progActive },
         { k: 'E', label: 'Set Legend', kind: 'text', info: true },
         { k: 'F', label: 'Open Workspace', kind: 'menu', info: true },

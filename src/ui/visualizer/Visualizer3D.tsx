@@ -5,7 +5,7 @@ import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js'
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js'
 import { buildVenue } from '../../model/venues'
 import { useShowStore } from '../../store/showStore'
-import { computeFixtureOutputs, mergeProgrammer, computePlaybackBase, effectivePlaybackLevels } from '../../engine/dmx'
+import { computeFixtureOutputs, mergeProgrammer, computePlaybackBase, effectivePlaybackLevels, applyHighlight } from '../../engine/dmx'
 import { applyEffects, activeEffects } from '../../engine/effects'
 import { liveCues } from '../../model/cue'
 import { computeVisualState } from '../../engine/render'
@@ -526,7 +526,8 @@ export function Visualizer3D() {
       const base = computePlaybackBase(cues, levels, show, definitions)
       const merged = mergeProgrammer(base, programmer)
       const active = activeEffects(cues, levels, {}, state.now, effects)
-      const effective = applyEffects(merged, active, show, definitions, clock)
+      let effective = applyEffects(merged, active, show, definitions, clock)
+      if (state.highlight) effective = applyHighlight(effective, selection, show, definitions)
 
       const live = new Set(show.fixtures.map((f) => f.id))
       for (const [id, fx] of fxMap) {

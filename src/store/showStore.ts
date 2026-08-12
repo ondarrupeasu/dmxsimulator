@@ -19,7 +19,7 @@ import { BUILTIN_FIXTURES } from '../model/library'
 import { templateById } from '../model/templates'
 import type { ProgrammerValues } from '../engine/dmx'
 import type { Fade } from '../engine/dmx'
-import { UNIVERSE_SIZE, mergeProgrammer, computePlaybackBase, resolveLevel, effectivePlaybackLevels } from '../engine/dmx'
+import { UNIVERSE_SIZE, mergeProgrammer, computePlaybackBase, resolveLevel, effectivePlaybackLevels, applyHighlight } from '../engine/dmx'
 
 export type AppMode = 'patch' | 'program'
 
@@ -234,6 +234,11 @@ interface ShowState {
   // Blind: program without the live programmer reaching the real DMX output.
   blind: boolean
   setBlind: (v: boolean) => void
+  /** Highlight (Titan): a latching aid that lifts the SELECTED fixtures to full intensity on
+   *  stage so you can see what you're controlling — non-destructive (never enters the
+   *  programmer). Toggled by the HiLight key. */
+  highlight: boolean
+  toggleHighlight: () => void
 
   // Command line (Titan-style keypad syntax, e.g. "1 THRU 4 @ 50")
   cmd: string
@@ -1047,6 +1052,8 @@ export const useShowStore = create<ShowState>()(
 
       blind: false,
       setBlind: (v) => set({ blind: v }),
+      highlight: false,
+      toggleHighlight: () => set((s) => ({ highlight: !s.highlight })),
 
       cmd: '',
       cmdAppend: (token) => set((s) => ({ cmd: s.cmd + token })),
@@ -1261,6 +1268,8 @@ export function useEffectiveProgrammer(respectBlind = false): ProgrammerValues {
   const definitions = useShowStore((s) => s.definitions)
   const now = useShowStore((s) => s.now)
   const blind = useShowStore((s) => s.blind)
+  const highlight = useShowStore((s) => s.highlight)
+  const selection = useShowStore((s) => s.selection)
   return useMemo(() => {
     // Each playback contributes its live step (id = playback id) to the merge, interpolated
     // while a Go cross-fade is in progress. Its master = HTP(manual fader, fired level),
@@ -1273,6 +1282,9 @@ export function useEffectiveProgrammer(respectBlind = false): ProgrammerValues {
     // just the static values. Playback (cue) shapes still run.
     const liveEffects = respectBlind && blind ? [] : effects
     const active = activeEffects(cues, levels, {}, now, liveEffects)
-    return applyEffects(merged, active, show, definitions, now)
-  }, [programmer, playbacks, playbackLevels, firedLevels, fades, flashIds, swopId, effects, show, definitions, now, blind, respectBlind])
+    const out = applyEffects(merged, active, show, definitions, now)
+    // HiLight overlay lifts the selected fixtures' intensity in the output only (never the
+    // programmer). It's a live stage aid, so it shows even through Blind.
+    return highlight ? applyHighlight(out, selection, show, definitions) : out
+  }, [programmer, playbacks, playbackLevels, firedLevels, fades, flashIds, swopId, effects, show, definitions, now, blind, highlight, selection, respectBlind])
 }
