@@ -23,6 +23,24 @@ function combine16(msb: number, lsb: number): number {
   return (msb * 256 + lsb) / 65535
 }
 
+/** A generic colour-wheel slot table (open + 7 gels) so a colour-wheel fixture shows
+ *  a visible colour as its wheel channel moves. Not the exact per-fixture gels, but it
+ *  lets the beam change colour like the real thing. */
+const COLOUR_WHEEL: [number, number, number][] = [
+  [255, 245, 220], // open / white
+  [255, 40, 40], // red
+  [255, 130, 0], // orange
+  [255, 225, 60], // yellow
+  [40, 220, 90], // green
+  [40, 200, 235], // cyan
+  [50, 90, 255], // blue
+  [220, 60, 230], // magenta
+]
+function colourWheelSlot(v: number): [number, number, number] {
+  const i = Math.min(COLOUR_WHEEL.length - 1, Math.floor((v / 256) * COLOUR_WHEEL.length))
+  return COLOUR_WHEEL[i]
+}
+
 export function computeVisualState(
   def: FixtureDefinition,
   modeIndex: number,
@@ -48,9 +66,14 @@ export function computeVisualState(
   const hasColor = ['red', 'green', 'blue', 'white', 'amber'].some(
     (fn) => channels.some((c) => c.function === fn),
   )
-  // A pure dimmer emits warm white; a colour fixture with no colour picked yet also
-  // shows open white, so raising intensity alone lights it (beginner-friendly).
-  if (!hasColor || cr + cg + cb === 0) {
+  // A colour-wheel spot (no RGB mixing): map its wheel value to a slot colour so the
+  // beam actually changes colour when you turn the Colour wheel.
+  const wheelVal = get('colorWheel')
+  if ((!hasColor || cr + cg + cb === 0) && wheelVal !== undefined) {
+    ;[cr, cg, cb] = colourWheelSlot(wheelVal)
+  } else if (!hasColor || cr + cg + cb === 0) {
+    // A pure dimmer emits warm white; an RGB fixture with no colour picked yet also
+    // shows open white, so raising intensity alone lights it (beginner-friendly).
     cr = 255
     cg = 245
     cb = 220
