@@ -467,7 +467,17 @@
   right: 0;
   bottom: 0;
   background: var(--coral);
+  /* A channel that simply has a value reads as a MUTED coral, so a busy universe isn't a
+     wall of red. The channel the desk is driving (the active attribute of the selection, or
+     one you just clicked) fills full coral + a bright ring, so it stands out. */
+  opacity: 0.42;
 }
+.dmx-cell.editing .fill { opacity: 1; }
+.dmx-cell.editing {
+  box-shadow: inset 0 0 0 1.5px #ffe2d8, 0 0 5px rgba(255, 122, 90, 0.65);
+  z-index: 1;
+}
+.dmx-cell.editing.patched:hover { box-shadow: inset 0 0 0 1.5px #fff, 0 0 5px rgba(255, 122, 90, 0.8); }
 /* Channel number — always shown, top-left, for identification. */
 .dmx-cell .ch {
   position: absolute;

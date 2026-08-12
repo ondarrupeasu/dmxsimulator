@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useShowStore } from '../../store/showStore'
 import { playbacksBySlot } from '../../model/cue'
 import { useSelectedValue, useSelectionFunctions } from './useSelectedValue'
@@ -235,6 +235,30 @@ export function QuartzPanel() {
   const cmdClear = useShowStore((s) => s.cmdClear)
   const commitCommand = useShowStore((s) => s.commitCommand)
 
+  // SIMULATOR EXTRA: drive the command line from the computer keyboard (the real desk has a
+  // physical keypad; a PWA has no keys, so this is a convenience). Ignored while typing in a
+  // real input/textarea so it never fights the show-name/legend fields.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const t = e.target as HTMLElement | null
+      if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT' || t.isContentEditable)) return
+      if (e.metaKey || e.ctrlKey || e.altKey) return
+      const k = e.key
+      if (/^[0-9]$/.test(k)) cmdAppend(k)
+      else if (k === '.') cmdAppend('.')
+      else if (k === 'Enter') commitCommand()
+      else if (k === 'Backspace') cmdBackspace()
+      else if (k === 'Escape') cmdClear()
+      else if (k === '@') cmdAppend(' @ ')
+      else if (k === '>') cmdAppend(' Through ')
+      else if (k === '+') cmdAppend(' And ')
+      else return
+      e.preventDefault()
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [cmdAppend, cmdBackspace, cmdClear, commitCommand])
+
   const active = ATTRIBUTES.find((a) => a.name === attr) ?? ATTRIBUTES[0]
   const wheelFns = [0, 1, 2].map((i) => active.wheels[i]?.find((fn) => present.has(fn)))
   const activeFns = active.wheels.flat() // every function in the active attribute bank
@@ -451,7 +475,7 @@ export function QuartzPanel() {
           <Key v="white" led={false} text="1" title="1" onClick={dig('1')} /><Key v="white" led={false} text="2" title="2" onClick={dig('2')} /><Key v="white" led={false} text="3" title="3" onClick={dig('3')} /><Key v="white" on={shift} text="Avo" title="Avo — segundas funciones (las azules). En la Quartz real se MANTIENE pulsado mientras pulsas otra tecla; como aquí no se pueden pulsar dos a la vez, es un conmutador (clic para activar/desactivar)." onClick={() => setShift((s) => !s)} />
           <Key v="white" led={false} text="4" title="4" onClick={dig('4')} /><Key v="white" led={false} text="5" title="5" onClick={dig('5')} /><Key v="white" led={false} text="6" title="6" onClick={dig('6')} /><Key v="white" ledColor="blue" on={playbackFade > 0} text="TIME" title={`Time — fundido de Go: ${playbackFade}s (clic para cambiar; 0 = Snap)`} onClick={() => { const v = window.prompt('Tiempo de fundido en Go (segundos):', String(playbackFade)); if (v !== null) setPlaybackFade(Number(v.replace(',', '.')) || 0) }} />
           <Key v="white" led={false} text="7" title="7" onClick={dig('7')} /><Key v="white" led={false} text="8" title="8" onClick={dig('8')} /><Key v="white" led={false} text="9" title="9" onClick={dig('9')} /><Key v="white" ledColor="red" on={hasProgrammer} text="CLEAR" title="Clear — vacía el programmer y deselecciona" onClick={() => { clearProgrammer(); select([]) }} />
-          <Key v="white" led={false} text="EXIT" title="Exit — salir al menú raíz / vaciar la línea" onClick={() => { cmdClear(); setMenu('root') }} /><Key v="white" led={false} text="0" title="0" onClick={dig('0')} /><Key v="white" led={false} text="ENTER" title="Enter — ejecutar la línea de comandos" onClick={commitCommand} /><Key v="white" led={false} disabled text="." title="." />
+          <Key v="white" led={false} text="EXIT" title="Exit — salir al menú raíz / vaciar la línea" onClick={() => { cmdClear(); setMenu('root') }} /><Key v="white" led={false} text="0" title="0" onClick={dig('0')} /><Key v="white" led={false} text="ENTER" title="Enter — ejecutar la línea de comandos" onClick={commitCommand} /><Key v="white" led={false} text="." title="Punto — p. ej. @ . = 0%" onClick={dig('.')} />
           <Key v="dark" led={false} title="Back — borrar" onClick={cmdBackspace} /><Key v="dark" led={false} disabled={noFx} title="Through — rango" onClick={() => cmdAppend(' Through ')} /><Key v="dark" led={false} disabled={noFx} title="And — añadir" onClick={() => cmdAppend(' And ')} /><Key v="dark" led={false} disabled={noSel && noFx} title="@ — intensidad (@ @ = full)" onClick={() => cmdAppend(' @ ')} />
         </Box>
         <GridLabels x={916} y={832} w={258} cols={4} items={['Back', 'Through', 'And', '@']} subs={['Undo', '−%', '+%', 'Redo']} />

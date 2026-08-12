@@ -37,6 +37,7 @@ export function DmxMonitor({ universe = 1 }: { universe?: number }) {
   const definitions = useShowStore((s) => s.definitions)
   const selection = useShowStore((s) => s.selection)
   const select = useShowStore((s) => s.select)
+  const deskAttr = useShowStore((s) => s.deskAttr)
   const setDeskAttr = useShowStore((s) => s.setDeskAttr)
   const setDeskScreen = useShowStore((s) => s.setDeskScreen)
   const setChannel = useShowStore((s) => s.setChannel)
@@ -87,6 +88,16 @@ export function DmxMonitor({ universe = 1 }: { universe?: number }) {
     for (const [ch, o] of owners) if (sel.has(o.id)) set.add(ch)
     return set
   }, [owners, selection])
+
+  // The channels the desk is actually driving right now = the selection's channels whose
+  // function belongs to the active attribute bank. These are the "in use" ones (bright);
+  // clicking any channel jumps the desk to its attribute, so it lights up here too.
+  const editing = useMemo(() => {
+    const set = new Set<number>()
+    const sel = new Set(selection)
+    for (const [ch, o] of owners) if (sel.has(o.id) && FN_ATTR[o.fn]?.attr === deskAttr) set.add(ch)
+    return set
+  }, [owners, selection, deskAttr])
 
   const onChannel = (o: Owner) => {
     select([o.id])
@@ -152,7 +163,7 @@ export function DmxMonitor({ universe = 1 }: { universe?: number }) {
             return (
               <div
                 key={i}
-                className={`dmx-cell${v > 0 ? ' active' : ''}${owned.has(i) ? ' owned' : ''}${owner ? ' patched' : ''}`}
+                className={`dmx-cell${v > 0 ? ' active' : ''}${owned.has(i) ? ' owned' : ''}${editing.has(i) ? ' editing' : ''}${owner ? ' patched' : ''}`}
                 title={title}
                 onPointerDown={owner ? (e) => onCellDown(e, owner, v) : undefined}
                 style={owner ? { touchAction: 'none' } : undefined}
