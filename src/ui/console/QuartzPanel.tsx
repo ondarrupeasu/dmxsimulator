@@ -157,7 +157,6 @@ export function QuartzPanel() {
   const selection = useShowStore((s) => s.selection)
   const locateSelected = useShowStore((s) => s.locateSelected)
   const clearProgrammer = useShowStore((s) => s.clearProgrammer)
-  const recordCue = useShowStore((s) => s.recordCue)
   const recordArm = useShowStore((s) => s.recordArm)
   const armRecord = useShowStore((s) => s.armRecord)
   const recordCueAt = useShowStore((s) => s.recordCueAt)
