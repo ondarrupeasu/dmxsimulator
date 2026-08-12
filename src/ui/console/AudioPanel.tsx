@@ -51,6 +51,7 @@ export function AudioPanel() {
     if (f) {
       try {
         await audioEngine.useFile(f)
+        setSource(audioEngine.source) // show the transport immediately (don't wait for rAF)
         setEnabled(true)
       } catch (err) {
         alert(`No se pudo reproducir el audio: ${err instanceof Error ? err.message : 'formato no soportado'}.`)
@@ -60,6 +61,7 @@ export function AudioPanel() {
   const useMic = async () => {
     try {
       await audioEngine.useMic()
+      setSource(audioEngine.source)
       setEnabled(true)
     } catch {
       alert('No se pudo abrir el micro / line-in (permiso denegado).')
@@ -68,11 +70,12 @@ export function AudioPanel() {
   const useSystem = async () => {
     try {
       await audioEngine.useSystemAudio()
+      setSource(audioEngine.source)
       setEnabled(true)
     } catch (e) {
       const err = e instanceof Error ? e : new Error('desconocido')
       if (err.message === 'no-audio') {
-        alert('No se capturó audio. Elige la pestaña "Chrome/Pestaña" (no "Ventana" ni "Pantalla completa") de una web que esté sonando (YouTube, Spotify…) y marca abajo "Compartir audio de la pestaña".')
+        alert('No se capturó audio.\n\nLa captura de audio SOLO funciona en Chrome / Brave / Edge, compartiendo una PESTAÑA del MISMO navegador (Safari y Firefox no lo permiten, y no se puede capturar el audio de otra app/ventana).\n\nAbre este simulador en Brave/Chrome, pon la música en OTRA pestaña del mismo navegador, elige esa pestaña y marca "Compartir audio de la pestaña".')
       } else if (err.name === 'NotAllowedError') {
         alert('Cancelaste o el navegador bloqueó la captura de pantalla. Vuelve a intentarlo y acepta el permiso.')
       } else {
@@ -92,8 +95,8 @@ export function AudioPanel() {
         <button className="audio-mic" title="La opción fiel: en la Quartz real es el jack de audio (line-in) integrado. Aquí usa el micro / entrada de línea del ordenador." onClick={useMic}>🎙 Line-in / Mic</button>
         <button className="audio-file pwa-only" onClick={() => fileRef.current?.click()}>♪ Track (mp3/aac)
           <PwaTag sim="cargas un archivo de audio y las bandas reaccionan a él" real="no carga archivos: solo entra sonido por el jack line-in físico" /></button>
-        <button className="audio-sys pwa-only" onClick={useSystem}>🖥 Audio del sistema
-          <PwaTag sim="captura el sonido de una pestaña/pantalla (YouTube, Spotify…) como si fuera el line-in" real="no existe: el sonido entra solo por el jack físico de audio" /></button>
+        <button className="audio-sys pwa-only" title="Solo Chrome / Brave / Edge, compartiendo una PESTAÑA del mismo navegador (Safari/Firefox no lo permiten)." onClick={useSystem}>🖥 Audio del sistema
+          <PwaTag sim="captura el sonido de una pestaña del navegador (Chrome/Brave/Edge) como si fuera el line-in" real="no existe: el sonido entra solo por el jack físico de audio" /></button>
         <input ref={fileRef} type="file" accept="audio/*" style={{ display: 'none' }} onChange={onFile} />
         <span className="audio-lbl">{source === 'none' ? 'No source' : audioEngine.label}</span>
         <label className="audio-enable">
