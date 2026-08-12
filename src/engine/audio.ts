@@ -12,7 +12,7 @@
 /** Titan's seven Sound-to-Light band centre frequencies (Hz). */
 export const AUDIO_BANDS = [50, 140, 380, 875, 2400, 6200, 14000]
 
-export type AudioSource = 'none' | 'mic' | 'file'
+export type AudioSource = 'none' | 'mic' | 'file' | 'system'
 
 class AudioEngine {
   private ctx: AudioContext | null = null
@@ -56,6 +56,28 @@ class AudioEngine {
     this.srcNode.connect(this.analyser!) // analyse only — don't feed the speakers (no echo)
     this.source = 'mic'
     this.label = 'Line-in / Mic'
+  }
+
+  /** SIMULATOR-ONLY: capture the computer's own audio (a browser tab / the system output,
+   *  e.g. a YouTube or Spotify tab) via getDisplayMedia and treat it as the line-in. The
+   *  real Quartz can't do this — it only has the physical audio jack. */
+  async useSystemAudio() {
+    this.stop()
+    this.ensureCtx()
+    // getDisplayMedia requires video to be requested; we keep only the audio track.
+    const md = navigator.mediaDevices as MediaDevices & { getDisplayMedia: (c: MediaStreamConstraints) => Promise<MediaStream> }
+    const stream = await md.getDisplayMedia({ video: true, audio: true })
+    const audioTracks = stream.getAudioTracks()
+    if (!audioTracks.length) {
+      stream.getTracks().forEach((t) => t.stop())
+      throw new Error('no-audio') // the user didn't tick "share audio"
+    }
+    stream.getVideoTracks().forEach((t) => t.stop()) // we only need the audio
+    this.stream = stream
+    this.srcNode = this.ctx!.createMediaStreamSource(new MediaStream(audioTracks))
+    this.srcNode.connect(this.analyser!) // analyse only — the tab already plays through the speakers
+    this.source = 'system'
+    this.label = 'System / tab audio'
   }
 
   async useFile(file: File) {

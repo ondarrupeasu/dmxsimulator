@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useShowStore } from '../../store/showStore'
 import { audioEngine, AUDIO_BANDS } from '../../engine/audio'
 import { cuesBySlot } from '../../model/cue'
+import { PwaTag } from '../PwaTag'
 
 const bandLabel = (hz: number) => (hz >= 1000 ? `${hz / 1000}k` : `${hz}`)
 
@@ -60,6 +61,16 @@ export function AudioPanel() {
       alert('No se pudo abrir el micro / line-in (permiso denegado).')
     }
   }
+  const useSystem = async () => {
+    try {
+      await audioEngine.useSystemAudio()
+      setEnabled(true)
+    } catch (e) {
+      alert(e instanceof Error && e.message === 'no-audio'
+        ? 'Marca la casilla "Compartir audio de la pestaña/sistema" al elegir la fuente.'
+        : 'No se pudo capturar el audio del sistema.')
+    }
+  }
 
   const bySlot = cuesBySlot(cues)
   const cueOptions = bySlot
@@ -69,9 +80,11 @@ export function AudioPanel() {
   return (
     <div className="audio-panel">
       <div className="audio-row audio-src">
-        <button className="audio-file pwa-only" title="Exclusivo del simulador: la Quartz real solo tiene entrada line-in física, no carga archivos"
-          onClick={() => fileRef.current?.click()}>♪ Load track (mp3/aac)<span className="pwa-tag">PWA</span></button>
-        <button className="audio-mic" title="Line-in / micro (en la Quartz real: el jack de audio integrado)" onClick={useMic}>🎙 Line-in / Mic</button>
+        <button className="audio-mic" title="La opción fiel: en la Quartz real es el jack de audio (line-in) integrado. Aquí usa el micro / entrada de línea del ordenador." onClick={useMic}>🎙 Line-in / Mic</button>
+        <button className="audio-file pwa-only" onClick={() => fileRef.current?.click()}>♪ Track (mp3/aac)
+          <PwaTag sim="cargas un archivo de audio y las bandas reaccionan a él" real="no carga archivos: solo entra sonido por el jack line-in físico" /></button>
+        <button className="audio-sys pwa-only" onClick={useSystem}>🖥 Audio del sistema
+          <PwaTag sim="captura el sonido de una pestaña/pantalla (YouTube, Spotify…) como si fuera el line-in" real="no existe: el sonido entra solo por el jack físico de audio" /></button>
         <input ref={fileRef} type="file" accept="audio/*" style={{ display: 'none' }} onChange={onFile} />
         <span className="audio-lbl">{source === 'none' ? 'No source' : audioEngine.label}</span>
         <label className="audio-enable">

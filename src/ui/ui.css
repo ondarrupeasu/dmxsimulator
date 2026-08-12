@@ -983,7 +983,7 @@
 .pwa-tag {
   display: inline-block; margin-left: 6px; padding: 0 4px; border-radius: 3px;
   background: #ff8a6a; color: #1a1a1f; font-size: 8px; font-weight: 800;
-  letter-spacing: 0.5px; vertical-align: middle;
+  letter-spacing: 0.5px; vertical-align: middle; cursor: help;
 }
 
 /* A–G softkey column — physical-look grey keys (right of the screen) + labels. */
