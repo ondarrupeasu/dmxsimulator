@@ -1033,7 +1033,10 @@ export function useEffectiveProgrammer(respectBlind = false): ProgrammerValues {
     const levels = resolveLevels(playbackLevels, fades, now)
     const base = computePlaybackBase(cues, levels, show, definitions)
     const merged = respectBlind && blind ? base : mergeProgrammer(base, programmer)
-    const active = activeEffects(cues, playbackLevels, fades, now, effects)
+    // Blind holds the whole programmer from the real output — its live shapes too, not
+    // just the static values. Playback (cue) shapes still run.
+    const liveEffects = respectBlind && blind ? [] : effects
+    const active = activeEffects(cues, playbackLevels, fades, now, liveEffects)
     return applyEffects(merged, active, show, definitions, now)
   }, [programmer, cues, playbackLevels, fades, effects, show, definitions, now, blind, respectBlind])
 }

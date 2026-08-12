@@ -19,12 +19,14 @@ const L = (px: number) => `${(px / IMG_W) * 100}%`
 const T = (px: number) => `${(px / IMG_H) * 100}%`
 const clamp = (v: number) => Math.max(0, Math.min(255, v))
 
+// Attribute banks → up to 3 wheels each (Titan groups shutter/strobe with Intensity,
+// iris/prism/zoom/focus with Beam). Colour still needs pages for RGBW+A/UV — noted.
 const ATTRIBUTES: { name: string; wheels: string[][] }[] = [
-  { name: 'Intensity', wheels: [['dimmer', 'haze']] },
+  { name: 'Intensity', wheels: [['dimmer', 'haze'], ['shutter', 'strobe']] },
   { name: 'Position', wheels: [['pan'], ['tilt']] },
-  { name: 'Colour', wheels: [['red', 'colorWheel'], ['green'], ['blue', 'white']] },
+  { name: 'Colour', wheels: [['red', 'colorWheel'], ['green', 'amber'], ['blue', 'white']] },
   { name: 'Gobo', wheels: [['gobo'], ['goboRotation']] },
-  { name: 'Beam', wheels: [['prism'], ['shutter'], ['zoom', 'focus']] },
+  { name: 'Beam', wheels: [['prism', 'iris'], ['zoom'], ['focus']] },
   { name: 'Effect', wheels: [] },
   { name: 'Special', wheels: [] },
 ]
@@ -416,7 +418,7 @@ export function QuartzPanel() {
           <Key v="dark" disabled title="Macro" /><Key v="dark" title="Group — workspace de grupos" onClick={() => { setScreen('groups'); setMenu('group') }} />
           <Key v="white" led={false} text="1" title="1" onClick={dig('1')} /><Key v="white" led={false} text="2" title="2" onClick={dig('2')} /><Key v="white" led={false} text="3" title="3" onClick={dig('3')} /><Key v="white" on={shift} text="Avo" title="Avo — activa/desactiva las segundas funciones" onClick={() => setShift((s) => !s)} />
           <Key v="white" led={false} text="4" title="4" onClick={dig('4')} /><Key v="white" led={false} text="5" title="5" onClick={dig('5')} /><Key v="white" led={false} text="6" title="6" onClick={dig('6')} /><Key v="white" ledColor="blue" on={playbackFade > 0} text="TIME" title={`Time — fundido de Go: ${playbackFade}s (clic para cambiar; 0 = Snap)`} onClick={() => { const v = window.prompt('Tiempo de fundido en Go (segundos):', String(playbackFade)); if (v !== null) setPlaybackFade(Number(v.replace(',', '.')) || 0) }} />
-          <Key v="white" led={false} text="7" title="7" onClick={dig('7')} /><Key v="white" led={false} text="8" title="8" onClick={dig('8')} /><Key v="white" led={false} text="9" title="9" onClick={dig('9')} /><Key v="white" ledColor="red" on={hasProgrammer} text="CLEAR" title="Clear the programmer" onClick={clearProgrammer} />
+          <Key v="white" led={false} text="7" title="7" onClick={dig('7')} /><Key v="white" led={false} text="8" title="8" onClick={dig('8')} /><Key v="white" led={false} text="9" title="9" onClick={dig('9')} /><Key v="white" ledColor="red" on={hasProgrammer} text="CLEAR" title="Clear — vacía el programmer y deselecciona" onClick={() => { clearProgrammer(); select([]) }} />
           <Key v="white" led={false} text="EXIT" title="Exit — salir al menú raíz / vaciar la línea" onClick={() => { cmdClear(); setMenu('root') }} /><Key v="white" led={false} text="0" title="0" onClick={dig('0')} /><Key v="white" led={false} text="ENTER" title="Enter — ejecutar la línea de comandos" onClick={commitCommand} /><Key v="white" led={false} disabled text="." title="." />
           <Key v="dark" led={false} title="Back — borrar" onClick={cmdBackspace} /><Key v="dark" led={false} disabled={noFx} title="Through — rango" onClick={() => cmdAppend(' Through ')} /><Key v="dark" led={false} disabled={noFx} title="And — añadir" onClick={() => cmdAppend(' And ')} /><Key v="dark" led={false} disabled={noSel && noFx} title="@ — intensidad (@ @ = full)" onClick={() => cmdAppend(' @ ')} />
         </Box>

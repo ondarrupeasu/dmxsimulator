@@ -87,16 +87,23 @@ export function applyEffects(
         const idx = channels.findIndex((c) => c.function === fn)
         if (idx >= 0) out[fid] = { ...out[fid], [idx]: clampByte(val) }
       }
+      // Read the fixture's current (base) value for a function, so shapes are OFFSETS
+      // added to the programmed position/level — like Titan: a circle orbits wherever
+      // the head is pointing, not a forced centre.
+      const baseOf = (fn: string, fallback: number) => {
+        const idx = channels.findIndex((c) => c.function === fn)
+        return idx >= 0 ? (out[fid]?.[idx] ?? channels[idx].defaultValue ?? fallback) : fallback
+      }
       if (eff.type === 'circle') {
-        setFn('pan', 128 + Math.sin(phase) * eff.size)
-        setFn('tilt', 128 + Math.cos(phase) * eff.size)
+        setFn('pan', baseOf('pan', 128) + Math.sin(phase) * eff.size)
+        setFn('tilt', baseOf('tilt', 128) + Math.cos(phase) * eff.size)
       } else if (eff.type === 'colourCycle') {
         const [r, g, b] = hsv(((phase / (Math.PI * 2)) % 1 + 1) % 1, 1, 1)
         setFn('red', r)
         setFn('green', g)
         setFn('blue', b)
       } else if (eff.type === 'dimmerWave') {
-        setFn('dimmer', 128 + Math.sin(phase) * 127)
+        setFn('dimmer', baseOf('dimmer', 255) - (0.5 - 0.5 * Math.sin(phase)) * 255)
       }
     })
   }
