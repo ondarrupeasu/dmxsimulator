@@ -1,3 +1,4 @@
+import { useRef } from 'react'
 import { useShowStore } from '../../store/showStore'
 import type { PaletteKind } from '../../model/palette'
 import { PALETTE_LABELS } from '../../model/palette'
@@ -54,7 +55,43 @@ export function QuartzScreen() {
   const show = useShowStore((s) => s.show)
   const cmd = useShowStore((s) => s.cmd)
   const deskMenu = useShowStore((s) => s.deskMenu)
+  const setMenu = useShowStore((s) => s.setDeskMenu)
   const setMode = useShowStore((s) => s.setMode)
+  const exportShow = useShowStore((s) => s.exportShow)
+  const importShow = useShowStore((s) => s.importShow)
+  const resetShow = useShowStore((s) => s.resetShow)
+  const showFileRef = useRef<HTMLInputElement>(null)
+  // The Disk menu, faithful to Titan (Save / Load / New Show). A browser can't write to the
+  // desk's internal disk/USB, so Save downloads a .json and Load reads one back — the same
+  // action, different medium (the app's top Import/Export do the same, outside the desk).
+  const saveShow = () => {
+    const blob = new Blob([exportShow()], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `${show.name?.trim() || 'show'}.json`
+    a.click()
+    URL.revokeObjectURL(url)
+    setMenu('root')
+  }
+  const loadShow = () => showFileRef.current?.click()
+  const onShowFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0]
+    e.target.value = ''
+    if (!f) return
+    try {
+      if (!importShow(JSON.parse(await f.text()))) alert('Ese archivo no es un show válido.')
+      else setMenu('root')
+    } catch {
+      alert('No se pudo leer el archivo.')
+    }
+  }
+  const newShow = () => {
+    if (window.confirm('New Show — ¿borrar el show actual y empezar uno nuevo?')) {
+      resetShow()
+      setMenu('root')
+    }
+  }
 
   const groups = useShowStore((s) => s.groups)
   const recordGroup = useShowStore((s) => s.recordGroup)
@@ -154,6 +191,18 @@ export function QuartzScreen() {
         { k: 'G' },
       ],
     },
+    disk: {
+      title: 'Disk',
+      keys: [
+        { k: 'A', label: 'Save Show', sub: 'Descarga .json', kind: 'action', onClick: saveShow },
+        { k: 'B', label: 'Save Show As…', sub: 'Descarga .json', kind: 'action', onClick: saveShow },
+        { k: 'C', label: 'Load Show', sub: 'Abre un .json', kind: 'action', onClick: loadShow },
+        { k: 'D', label: 'New Show', sub: 'Borra y empieza', kind: 'action', onClick: newShow },
+        { k: 'E' },
+        { k: 'F' },
+        { k: 'G' },
+      ],
+    },
   }
   const menu = MENUS[deskMenu] ?? MENUS.root
 
@@ -247,6 +296,7 @@ export function QuartzScreen() {
 
   return (
     <div className="qscreen" data-tour="titan-screen">
+      <input ref={showFileRef} type="file" accept="application/json,.json" style={{ display: 'none' }} onChange={onShowFile} />
       <div className="qscreen-head">
         <span className="qd-brand">Avolites Quartz</span>
         <span className="qd-titan">TITAN</span>
