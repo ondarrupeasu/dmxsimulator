@@ -960,6 +960,10 @@
 .audio-panel button:hover:not(:disabled) { border-color: #7fb8dd; }
 .audio-lbl { font-size: 11px; color: #9aa0a8; flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .audio-enable { font-size: 11px; display: inline-flex; align-items: center; gap: 4px; }
+.qd-usernum {
+  display: inline-block; margin-right: 5px; min-width: 15px; padding: 0 3px; border-radius: 3px;
+  background: #2f3b4a; color: #9fc4e8; font-size: 9px; font-weight: 800; text-align: center;
+}
 .audio-s2l-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .audio-demo { font-size: 11px; padding: 2px 8px; }
 .audio-transport { gap: 8px; }

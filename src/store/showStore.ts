@@ -6,7 +6,7 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { useMemo } from 'react'
 import type { FixtureDefinition, PatchedFixture, Show, TrussDef } from '../model/types'
-import { fixtureFootprint } from '../model/types'
+import { fixtureFootprint, nextUserNumber } from '../model/types'
 import { DEFAULT_TRUSSES, DEFAULT_TRUSS, nextTrussId } from '../model/venue'
 import type { Playback, CueStep, LegacyCue } from '../model/cue'
 import { playbacksBySlot, firstFreePlaybackSlot, liveCues, stepValues, migrateLegacyCues } from '../model/cue'
@@ -837,6 +837,7 @@ export const useShowStore = create<ShowState>()(
           definitionId,
           modeIndex,
           name: `${def.model} ${count + 1}`,
+          userNumber: nextUserNumber(get().show.fixtures),
           universe: 1,
           address,
           position: { x: 0, y: 0.6, z: 0 },
@@ -1185,7 +1186,10 @@ export const useShowStore = create<ShowState>()(
               }
             } else i += 1 // skip And / stray keywords
           }
-          const ids = [...nums].filter((n) => n >= 1 && n <= fixtures.length).map((n) => fixtures[n - 1].id)
+          // Resolve by Titan user number (falls back to list position for older shows).
+          const byNum = new Map<number, string>()
+          fixtures.forEach((f, i) => byNum.set(f.userNumber ?? i + 1, f.id))
+          const ids = [...nums].map((n) => byNum.get(n)).filter((id): id is string => !!id)
           const selection = ids.length ? ids : s.selection
           let programmer = s.programmer
           if (hasAt) {

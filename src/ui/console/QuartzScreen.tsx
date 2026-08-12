@@ -5,6 +5,7 @@ import { PALETTE_LABELS } from '../../model/palette'
 import { EffectsPanel } from '../run/EffectsPanel'
 import { AudioPanel } from './AudioPanel'
 import { PlaybacksWindow } from './PlaybacksWindow'
+import { userNumberOf } from '../../model/types'
 
 const PALETTE_KINDS: PaletteKind[] = ['colour', 'position', 'gobo', 'beam', 'intensity']
 
@@ -234,9 +235,10 @@ export function QuartzScreen() {
       <div className="qd-muted" style={{ padding: 10 }}>Patch fixtures first (Patch mode).</div>
     ) : (
       <div className="qd-ws-grid">
-        {fixtures.map((pf) => (
+        {fixtures.map((pf, i) => (
           <div key={pf.id} className={`qd-cell ws-fixture${selection.includes(pf.id) ? ' active' : ''}`}>
-            <button className="qd-cell-hit" onClick={() => toggleSelect(pf.id)} title={pf.name}>
+            <button className="qd-cell-hit" onClick={() => toggleSelect(pf.id)} title={`${pf.name} — nº ${userNumberOf(fixtures, i)} (teclea ${userNumberOf(fixtures, i)} para seleccionarlo)`}>
+              <span className="qd-usernum">{userNumberOf(fixtures, i)}</span>
               {pf.name}
             </button>
             <span className="qd-ipcg">I P C G B E S FX</span>

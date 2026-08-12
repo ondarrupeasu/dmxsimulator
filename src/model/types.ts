@@ -94,6 +94,10 @@ export interface PatchedFixture {
   modeIndex: number
   /** User-facing label, e.g. "PAR 1". */
   name: string
+  /** Titan "user number" — how you select the fixture from the command line (e.g. typing
+   *  "1 THRU 4"). Auto-assigned sequentially on patch; independent of the DMX address. When
+   *  absent (older shows / templates) it falls back to the fixture's position in the list. */
+  userNumber?: number
   /** 1-based universe number. */
   universe: number
   /** 1-based start channel (1–512). */
@@ -105,6 +109,17 @@ export interface PatchedFixture {
   truss?: number
   /** Floor-standing (e.g. a hazer on the stage deck) instead of hung on a truss. */
   floor?: boolean
+}
+
+/** The fixture's effective user number: its explicit `userNumber`, or its 1-based position
+ *  in the list as a fallback (older shows / template rigs that predate user numbers). */
+export function userNumberOf(fixtures: PatchedFixture[], index: number): number {
+  return fixtures[index]?.userNumber ?? index + 1
+}
+
+/** The next free user number to assign when patching — one above the highest in use. */
+export function nextUserNumber(fixtures: PatchedFixture[]): number {
+  return 1 + fixtures.reduce((mx, f, i) => Math.max(mx, f.userNumber ?? i + 1), 0)
 }
 
 /** A truss in the rig — a hanging bar at a depth (z) and height (y). */
