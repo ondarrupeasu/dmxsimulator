@@ -8,3 +8,13 @@ export function PwaTag({ sim, real }: { sim: string; real: string }) {
     <span className="pwa-tag" title={title} aria-label={title}>PWA</span>
   )
 }
+
+/** The sibling marker: a control/feature that only works on the PHYSICAL Quartz — it exists
+ *  on the real desk but can't do its real job in a browser (no hardware). Explains why, so
+ *  the student knows this button is real but inert here (as opposed to not-yet-built). */
+export function HwTag({ why }: { why: string }) {
+  const title = `Solo en el Quartz físico.\n▸ ${why}`
+  return (
+    <span className="hw-tag" title={title} aria-label={title}>HW</span>
+  )
+}

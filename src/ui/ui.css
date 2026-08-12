@@ -985,6 +985,13 @@
   background: #ff8a6a; color: #1a1a1f; font-size: 8px; font-weight: 800;
   letter-spacing: 0.5px; vertical-align: middle; cursor: help;
 }
+/* Sibling marker: physical-Quartz-only (real on the desk, inert in a browser). */
+.hw-only { position: relative; border: 1px dashed #6aa9ff !important; }
+.hw-tag {
+  display: inline-block; margin-left: 6px; padding: 0 4px; border-radius: 3px;
+  background: #6aa9ff; color: #10131a; font-size: 8px; font-weight: 800;
+  letter-spacing: 0.5px; vertical-align: middle; cursor: help;
+}
 
 /* Playbacks workspace — cards for each fader's playback (single cue / cue list / chase). */
 .pb-grid { display: flex; flex-wrap: wrap; gap: 8px; align-content: flex-start; padding: 2px; }
