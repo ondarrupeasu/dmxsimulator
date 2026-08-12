@@ -19,7 +19,7 @@ import { BUILTIN_FIXTURES } from '../model/library'
 import { templateById } from '../model/templates'
 import type { ProgrammerValues } from '../engine/dmx'
 import type { Fade } from '../engine/dmx'
-import { UNIVERSE_SIZE, mergeProgrammer, computePlaybackBase, resolveLevel, resolveLevels } from '../engine/dmx'
+import { UNIVERSE_SIZE, mergeProgrammer, computePlaybackBase, resolveLevel, effectivePlaybackLevels } from '../engine/dmx'
 
 export type AppMode = 'patch' | 'program'
 
@@ -126,10 +126,15 @@ interface ShowState {
   setPlaybackBpm: (id: string, bpm: number) => void
   /** Clock hook: advance every running chase to its next step by its BPM. */
   advanceChases: () => void
-  /** Per-playback fader level (playbackId → 0–255) — what the desk faders control. */
+  /** Manual fader position per playback (playbackId → 0–255). Set ONLY by dragging — the
+   *  Quartz faders are NOT motorised, so this never animates on its own. */
   playbackLevels: Record<string, number>
   setPlaybackLevel: (playbackId: string, value: number) => void
-  /** In-progress Go crossfades (playbackId → fade), interpolated against `now`. */
+  /** Fired level per playback — the intensity a Go / flash / executor / audio trigger brings
+   *  up (it fades over time). Kept SEPARATE from the manual fader so firing lights a playback
+   *  without moving its handle; the output master is HTP(manual fader, fired level). */
+  firedLevels: Record<string, number>
+  /** In-progress fired-level fades (playbackId → fade), interpolated against `now`. */
   fades: Record<string, Fade>
   /** Fade time (seconds) used by the next Go / Release. The TIME key sets it. */
   playbackFade: number
@@ -289,19 +294,13 @@ function stepConnected(
   if (!pb || pb.steps.length === 0) return s
   const n = pb.steps.length
   const next = pb.current < 0 ? (dir > 0 ? 0 : n - 1) : (pb.current + dir + n) % n
-  const step = pb.steps[next]
-  const dur = step.fadeIn ?? s.playbackFade
-  const from = resolveLevel(id, s.playbackLevels, s.fades, s.now)
-  // Cross-fade the LOOK from what's live now into the new step over the same time.
+  const dur = pb.steps[next].fadeIn ?? s.playbackFade
+  // Central Go only steps + cross-fades the LOOK over the fade time. It does NOT change any
+  // level: the intensity keeps coming from whatever master is active (the manual fader, or a
+  // fired level) — so the physical fader never moves when you press Go, like the real desk.
   const fromValues = stepValues(pb, s.now)
   const transition = dur > 0 ? { fromValues, start: s.now, dur } : undefined
-  const playbacks = s.playbacks.map((p) => (p.id === id ? { ...p, current: next, transition } : p))
-  if (dur <= 0 || from >= 255) {
-    const fades = { ...s.fades }
-    delete fades[id]
-    return { playbacks, playbackLevels: { ...s.playbackLevels, [id]: 255 }, fades }
-  }
-  return { playbacks, fades: { ...s.fades, [id]: { from, to: 255, start: s.now, dur } } }
+  return { playbacks: s.playbacks.map((p) => (p.id === id ? { ...p, current: next, transition } : p)) }
 }
 
 /** Build a small demo show so the app shows something on first launch. */
@@ -453,12 +452,15 @@ export const useShowStore = create<ShowState>()(
         set((s) => {
           const levels = { ...s.playbackLevels }
           delete levels[id]
+          const fl = { ...s.firedLevels }
+          delete fl[id]
           const fades = { ...s.fades }
           delete fades[id]
           return {
             playbacks: s.playbacks.filter((p) => p.id !== id),
             connectedId: s.connectedId === id ? null : s.connectedId,
             playbackLevels: levels,
+            firedLevels: fl,
             fades,
           }
         }),
@@ -472,12 +474,15 @@ export const useShowStore = create<ShowState>()(
             // Removing the last step drops the whole playback.
             const levels = { ...s.playbackLevels }
             delete levels[playbackId]
+            const fl = { ...s.firedLevels }
+            delete fl[playbackId]
             const fades = { ...s.fades }
             delete fades[playbackId]
             return {
               playbacks: s.playbacks.filter((p) => p.id !== playbackId),
               connectedId: s.connectedId === playbackId ? null : s.connectedId,
               playbackLevels: levels,
+              firedLevels: fl,
               fades,
             }
           }
@@ -486,18 +491,18 @@ export const useShowStore = create<ShowState>()(
           return { playbacks: s.playbacks.map((p) => (p.id === playbackId ? { ...p, steps, current } : p)) }
         }),
 
-      // Go on a handle fires the playback: connect it + bring up its first step over the
-      // fade time; the fader then scales it.
+      // Go on a handle fires the playback: connect it + bring up its first step over the fade
+      // time. This lifts the FIRED level (not the manual fader) so the handle doesn't move.
       goCue: (id) =>
         set((s) => {
           const pb = s.playbacks.find((p) => p.id === id)
           if (!pb || pb.steps.length === 0) return s
           const playbacks = s.playbacks.map((p) => (p.id === id ? { ...p, current: 0, transition: undefined } : p))
-          const from = resolveLevel(id, s.playbackLevels, s.fades, s.now)
+          const from = resolveLevel(id, s.firedLevels, s.fades, s.now)
           if (s.playbackFade <= 0) {
             const fades = { ...s.fades }
             delete fades[id]
-            return { connectedId: id, playbacks, playbackLevels: { ...s.playbackLevels, [id]: 255 }, fades }
+            return { connectedId: id, playbacks, firedLevels: { ...s.firedLevels, [id]: 255 }, fades }
           }
           return { connectedId: id, playbacks, fades: { ...s.fades, [id]: { from, to: 255, start: s.now, dur: s.playbackFade } } }
         }),
@@ -517,7 +522,8 @@ export const useShowStore = create<ShowState>()(
           let changed = false
           const playbacks = s.playbacks.map((p) => {
             if (p.mode !== 'chase' || p.steps.length < 2) return p
-            if (resolveLevel(p.id, s.playbackLevels, s.fades, s.now) <= 0) return p
+            const up = Math.max(s.playbackLevels[p.id] ?? 0, resolveLevel(p.id, s.firedLevels, s.fades, s.now))
+            if (up <= 0) return p
             const interval = 60 / (p.bpm ?? 120)
             if (chaseClock[p.id] == null) chaseClock[p.id] = s.now + interval
             if (s.now >= chaseClock[p.id]) {
@@ -530,15 +536,17 @@ export const useShowStore = create<ShowState>()(
           return changed ? { playbacks } : s
         }),
 
+      // Kill / Release fade the FIRED level back out (the manual fader is left where it is —
+      // it's physical, the desk can't move it).
       killPlayback: (id) =>
         set((s) => {
-          const from = resolveLevel(id, s.playbackLevels, s.fades, s.now)
+          const from = resolveLevel(id, s.firedLevels, s.fades, s.now)
           if (s.playbackFade <= 0) {
-            const levels = { ...s.playbackLevels }
-            delete levels[id]
+            const fl = { ...s.firedLevels }
+            delete fl[id]
             const fades = { ...s.fades }
             delete fades[id]
-            return { playbackLevels: levels, fades }
+            return { firedLevels: fl, fades }
           }
           return { fades: { ...s.fades, [id]: { from, to: 0, start: s.now, dur: s.playbackFade } } }
         }),
@@ -546,32 +554,32 @@ export const useShowStore = create<ShowState>()(
         set((s) => {
           if (!s.connectedId) return s
           const id = s.connectedId
-          const from = resolveLevel(id, s.playbackLevels, s.fades, s.now)
+          const from = resolveLevel(id, s.firedLevels, s.fades, s.now)
           if (s.playbackFade <= 0) {
-            const levels = { ...s.playbackLevels }
-            delete levels[id]
+            const fl = { ...s.firedLevels }
+            delete fl[id]
             const fades = { ...s.fades }
             delete fades[id]
-            return { connectedId: null, playbackLevels: levels, fades }
+            return { connectedId: null, firedLevels: fl, fades }
           }
           return { connectedId: null, fades: { ...s.fades, [id]: { from, to: 0, start: s.now, dur: s.playbackFade } } }
         }),
       renameCue: (id, name) =>
         set((s) => ({ playbacks: s.playbacks.map((p) => (p.id === id ? { ...p, name } : p)) })),
       playbackLevels: {},
-      // Faders are manual: set the level directly. Raising from 0 fires the playback's first
-      // step and connects it (like raising a fader on the real desk).
+      firedLevels: {},
+      // The faders are manual and NON-motorised: dragging is the only thing that moves a
+      // handle. Raising from 0 connects the playback + brings up its first step (like pushing
+      // the fader up on the real desk). Never animated by Go/fire.
       setPlaybackLevel: (id, value) =>
         set((s) => {
           const v = Math.max(0, Math.min(255, value))
-          const fades = { ...s.fades }
-          delete fades[id]
           const prev = s.playbackLevels[id] ?? 0
           if (prev <= 0 && v > 0) {
             const playbacks = s.playbacks.map((p) => (p.id === id && p.current < 0 ? { ...p, current: 0 } : p))
-            return { playbackLevels: { ...s.playbackLevels, [id]: v }, fades, playbacks, connectedId: id }
+            return { playbackLevels: { ...s.playbackLevels, [id]: v }, playbacks, connectedId: id }
           }
-          return { playbackLevels: { ...s.playbackLevels, [id]: v }, fades }
+          return { playbackLevels: { ...s.playbackLevels, [id]: v } }
         }),
       fades: {},
       playbackFade: 3,
@@ -581,18 +589,18 @@ export const useShowStore = create<ShowState>()(
           const ids = Object.keys(s.fades)
           if (ids.length === 0) return s
           const fades = { ...s.fades }
-          const levels = { ...s.playbackLevels }
+          const fl = { ...s.firedLevels }
           let changed = false
           for (const id of ids) {
             const f = s.fades[id]
             if (s.now >= f.start + f.dur) {
-              if (f.to <= 0) delete levels[id]
-              else levels[id] = f.to
+              if (f.to <= 0) delete fl[id]
+              else fl[id] = f.to
               delete fades[id]
               changed = true
             }
           }
-          return changed ? { fades, playbackLevels: levels } : s
+          return changed ? { fades, firedLevels: fl } : s
         }),
 
       groups: [],
@@ -1148,6 +1156,7 @@ export const useShowStore = create<ShowState>()(
           playbacks: [],
           connectedId: null,
           playbackLevels: {},
+          firedLevels: {},
           fades: {},
           executorCues: {},
           palettes: [],
@@ -1210,6 +1219,7 @@ export function useEffectiveProgrammer(respectBlind = false): ProgrammerValues {
   const programmer = useShowStore((s) => s.programmer)
   const playbacks = useShowStore((s) => s.playbacks)
   const playbackLevels = useShowStore((s) => s.playbackLevels)
+  const firedLevels = useShowStore((s) => s.firedLevels)
   const fades = useShowStore((s) => s.fades)
   const effects = useShowStore((s) => s.effects)
   const show = useShowStore((s) => s.show)
@@ -1218,15 +1228,15 @@ export function useEffectiveProgrammer(respectBlind = false): ProgrammerValues {
   const blind = useShowStore((s) => s.blind)
   return useMemo(() => {
     // Each playback contributes its live step (id = playback id) to the merge, interpolated
-    // while a Go cross-fade is in progress.
+    // while a Go cross-fade is in progress. Its master = HTP(manual fader, fired level).
     const cues = liveCues(playbacks, now)
-    const levels = resolveLevels(playbackLevels, fades, now)
+    const levels = effectivePlaybackLevels(playbackLevels, firedLevels, fades, now)
     const base = computePlaybackBase(cues, levels, show, definitions)
     const merged = respectBlind && blind ? base : mergeProgrammer(base, programmer)
     // Blind holds the whole programmer from the real output — its live shapes too, not
     // just the static values. Playback (cue) shapes still run.
     const liveEffects = respectBlind && blind ? [] : effects
-    const active = activeEffects(cues, playbackLevels, fades, now, liveEffects)
+    const active = activeEffects(cues, levels, {}, now, liveEffects)
     return applyEffects(merged, active, show, definitions, now)
-  }, [programmer, playbacks, playbackLevels, fades, effects, show, definitions, now, blind, respectBlind])
+  }, [programmer, playbacks, playbackLevels, firedLevels, fades, effects, show, definitions, now, blind, respectBlind])
 }

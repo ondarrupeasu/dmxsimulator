@@ -67,7 +67,8 @@ export function AppShell() {
   // A playback whose live step has shapes, or a running chase, also needs the clock running.
   const cueEffectsUp = useShowStore((s) =>
     s.playbacks.some((p) => {
-      if ((s.playbackLevels[p.id] ?? 0) <= 0) return false
+      const up = Math.max(s.playbackLevels[p.id] ?? 0, s.firedLevels[p.id] ?? 0)
+      if (up <= 0) return false
       if (p.mode === 'chase' && p.steps.length > 1) return true
       return (activeStep(p)?.effects?.length ?? 0) > 0
     }),

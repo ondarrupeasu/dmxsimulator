@@ -61,6 +61,21 @@ export function resolveLevels(levels: Record<string, number>, fades: Record<stri
   return out
 }
 
+/** The output master per playback = HTP(manual fader, fired level). The manual fader is never
+ *  animated (the desk's faders aren't motorised); the fired level is what Go / flash / executor
+ *  / audio triggers bring up (and it may be mid-fade). */
+export function effectivePlaybackLevels(
+  manual: Record<string, number>,
+  fired: Record<string, number>,
+  fades: Record<string, Fade>,
+  now: number,
+): Record<string, number> {
+  const out: Record<string, number> = { ...manual }
+  const resolved = resolveLevels(fired, fades, now)
+  for (const id in resolved) out[id] = Math.max(out[id] ?? 0, resolved[id])
+  return out
+}
+
 /**
  * Merge every playback that is up (its fader level > 0) into one base layer:
  * intensity (dimmer) is scaled by the fader level and combined HTP (highest wins);

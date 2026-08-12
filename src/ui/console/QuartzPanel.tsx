@@ -176,6 +176,7 @@ export function QuartzPanel() {
   const playbackPage = useShowStore((s) => s.playbackPage)
   const setPlaybackPage = useShowStore((s) => s.setPlaybackPage)
   const playbackLevels = useShowStore((s) => s.playbackLevels)
+  const firedLevels = useShowStore((s) => s.firedLevels)
   const setPlaybackLevel = useShowStore((s) => s.setPlaybackLevel)
   const fades = useShowStore((s) => s.fades)
   const killPlayback = useShowStore((s) => s.killPlayback)
@@ -192,8 +193,8 @@ export function QuartzPanel() {
     if (v !== null) setExecutorLabel(n, v)
   }
   const hasProgrammer = useShowStore((s) => Object.keys(s.programmer).length > 0)
-  // A playback is "up" if its level is above 0 or a fade is taking it up.
-  const isUp = (id: string) => (playbackLevels[id] ?? 0) > 0 || !!(fades[id] && fades[id].to > 0)
+  // A playback is "up" if the manual fader OR the fired level is above 0 (or fading up).
+  const isUp = (id: string) => (playbackLevels[id] ?? 0) > 0 || (firedLevels[id] ?? 0) > 0 || !!(fades[id] && fades[id].to > 0)
   // Executor click: fire/kill its bound cue, or capture the current look, or label it.
   const boundCue = (n: number) => playbacks.find((p) => p.id === executorCues[n])
   const execCaption = (n: number) => boundCue(n)?.name ?? executorLabels[n]

@@ -5,7 +5,7 @@ import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js'
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js'
 import { buildVenue } from '../../model/venues'
 import { useShowStore } from '../../store/showStore'
-import { computeFixtureOutputs, mergeProgrammer, computePlaybackBase, resolveLevels } from '../../engine/dmx'
+import { computeFixtureOutputs, mergeProgrammer, computePlaybackBase, effectivePlaybackLevels } from '../../engine/dmx'
 import { applyEffects, activeEffects } from '../../engine/effects'
 import { liveCues } from '../../model/cue'
 import { computeVisualState } from '../../engine/render'
@@ -507,7 +507,7 @@ export function Visualizer3D() {
     const animate = () => {
       raf = requestAnimationFrame(animate)
       const state = useShowStore.getState()
-      const { show, definitions, programmer, playbacks, playbackLevels, fades, effects, selection } = state
+      const { show, definitions, programmer, playbacks, playbackLevels, firedLevels, fades, effects, selection } = state
       const cues = liveCues(playbacks, state.now)
       const selSet = new Set(selection)
       // Reconcile the optional venue (preset or loaded glTF) when it changes.
@@ -522,10 +522,10 @@ export function Visualizer3D() {
       const nowMs = performance.now()
       if (state.playing) clock += (nowMs - lastMs) / 1000 // freeze on Pause
       lastMs = nowMs
-      const levels = resolveLevels(playbackLevels, fades, state.now)
+      const levels = effectivePlaybackLevels(playbackLevels, firedLevels, fades, state.now)
       const base = computePlaybackBase(cues, levels, show, definitions)
       const merged = mergeProgrammer(base, programmer)
-      const active = activeEffects(cues, playbackLevels, fades, state.now, effects)
+      const active = activeEffects(cues, levels, {}, state.now, effects)
       const effective = applyEffects(merged, active, show, definitions, clock)
 
       const live = new Set(show.fixtures.map((f) => f.id))
