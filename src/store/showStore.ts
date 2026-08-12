@@ -215,8 +215,16 @@ interface ShowState {
   setSelectedByFunction: (fn: string, value: number) => void
   /** Remove the given channel functions from the selection's programmer (the Off key). */
   clearSelectedFunctions: (fns: string[]) => void
-  /** Spread a function 0→255 across the selection in rig order (the Fan key). */
+  /** Spread a function 0→255 across the selection in rig order (legacy one-shot). */
   fanSelected: (fn: string) => void
+  /** Fan MODE (Titan): while on, turning a wheel FANS that attribute across the selection
+   *  (symmetric Line curve — first/last fixtures move to opposite sides, the centre stays)
+   *  instead of setting a uniform value. Held/latched on the desk → a toggle here. */
+  fanMode: boolean
+  toggleFanMode: () => void
+  /** Apply a symmetric fan delta to a function across the selection (used by the wheels while
+   *  Fan mode is on). `delta` is how far the wheel turned. */
+  fanAdjust: (fn: string, delta: number) => void
   locateSelected: () => void
   clearProgrammer: () => void
 
@@ -1009,6 +1017,31 @@ export const useShowStore = create<ShowState>()(
             const value = Math.round((idx / (ids.length - 1)) * 255)
             channels.forEach((ch, i) => {
               if (ch.function === fn) programmer[id] = { ...programmer[id], [i]: value }
+            })
+          })
+          return { programmer }
+        }),
+
+      fanMode: false,
+      toggleFanMode: () => set((s) => ({ fanMode: !s.fanMode })),
+      fanAdjust: (fn, delta) =>
+        set((s) => {
+          const order = s.show.fixtures.map((f) => f.id)
+          const ids = s.selection.slice().sort((a, b) => order.indexOf(a) - order.indexOf(b))
+          if (ids.length < 2) return s
+          const n = ids.length
+          const programmer = { ...s.programmer }
+          ids.forEach((id, idx) => {
+            const pf = s.show.fixtures.find((f) => f.id === id)
+            const channels = pf && s.definitions[pf.definitionId]?.modes[pf.modeIndex]?.channels
+            if (!channels) return
+            // Line curve: centre value maps to 0, ends to ∓1 (first goes down, last up).
+            const centered = (idx - (n - 1) / 2) / ((n - 1) / 2)
+            channels.forEach((ch, i) => {
+              if (ch.function !== fn) return
+              const cur = programmer[id]?.[i] ?? ch.defaultValue ?? 128
+              const v = Math.max(0, Math.min(255, Math.round(cur + centered * delta)))
+              programmer[id] = { ...programmer[id], [i]: v }
             })
           })
           return { programmer }

@@ -113,6 +113,8 @@ function Label({ x, y, w, text, sub, align = 'center' }: { x: number; y: number;
 function Wheel({ x, y, d, fn, tour }: { x: number; y: number; d: number; fn: string | undefined; tour?: string }) {
   const value = useSelectedValue(fn ?? '')
   const setByFn = useShowStore((s) => s.setSelectedByFunction)
+  const fanMode = useShowStore((s) => s.fanMode)
+  const fanAdjust = useShowStore((s) => s.fanAdjust)
   const [spin, setSpin] = useState(0)
   const onPointerDown = (e: React.PointerEvent) => {
     if (!fn) return
@@ -121,14 +123,16 @@ function Wheel({ x, y, d, fn, tour }: { x: number; y: number; d: number; fn: str
     let v = value; let lastY = e.clientY
     const move = (ev: PointerEvent) => {
       const dy = lastY - ev.clientY; lastY = ev.clientY
-      v = clamp(v + dy * 1.5); setByFn(fn, Math.round(v)); setSpin((s) => s + dy * 2)
+      if (fanMode) fanAdjust(fn, dy * 1.5) // Fan mode: the wheel spreads the value instead of setting it
+      else { v = clamp(v + dy * 1.5); setByFn(fn, Math.round(v)) }
+      setSpin((s) => s + dy * 2)
     }
     const up = () => { window.removeEventListener('pointermove', move); window.removeEventListener('pointerup', up) }
     window.addEventListener('pointermove', move); window.addEventListener('pointerup', up)
   }
   return (
-    <div className={`calwheel${fn ? '' : ' idle'}`} style={{ left: L(x), top: T(y), width: L(d), height: T(d) }}
-      onPointerDown={onPointerDown} title={fn ? `${fn}: ${value}` : 'no control'} data-tour={tour}>
+    <div className={`calwheel${fn ? '' : ' idle'}${fanMode && fn ? ' fanning' : ''}`} style={{ left: L(x), top: T(y), width: L(d), height: T(d) }}
+      onPointerDown={onPointerDown} title={fn ? (fanMode ? `Fan ${fn} — gira para abanicar por la selección` : `${fn}: ${value}`) : 'no control'} data-tour={tour}>
       <span className="calwheel-spin" style={{ transform: `rotate(${spin}deg)` }}><span className="calwheel-dot" /></span>
     </div>
   )
@@ -220,7 +224,8 @@ export function QuartzPanel() {
   const fixtures = useShowStore((s) => s.show.fixtures)
   const select = useShowStore((s) => s.select)
   const clearSelectedFunctions = useShowStore((s) => s.clearSelectedFunctions)
-  const fanSelected = useShowStore((s) => s.fanSelected)
+  const fanMode = useShowStore((s) => s.fanMode)
+  const toggleFanMode = useShowStore((s) => s.toggleFanMode)
   const blind = useShowStore((s) => s.blind)
   const setBlind = useShowStore((s) => s.setBlind)
   const highlight = useShowStore((s) => s.highlight)
@@ -233,7 +238,6 @@ export function QuartzPanel() {
   const active = ATTRIBUTES.find((a) => a.name === attr) ?? ATTRIBUTES[0]
   const wheelFns = [0, 1, 2].map((i) => active.wheels[i]?.find((fn) => present.has(fn)))
   const activeFns = active.wheels.flat() // every function in the active attribute bank
-  const fanFn = activeFns.find((fn) => present.has(fn)) // what Fan spreads
   const noSel = selection.length === 0
   const noFx = fixtures.length === 0
   // Step the selection to the previous/next patched fixture (Fix −1 / Fix +1).
@@ -257,12 +261,13 @@ export function QuartzPanel() {
         {showZones ? 'Ocultar zonas' : 'Ver zonas'}
       </button>
       <div className={`qcal${shift ? ' shift' : ''}${swopId ? ' swopping' : ''}`}>
-        {(shift || flashIds.length > 0 || swopId || connectArm) && (
+        {(shift || flashIds.length > 0 || swopId || connectArm || fanMode) && (
           <div className="cal-modes-badge">
             {shift && <span className="mb-avo">AVO · segundas funciones</span>}
             {flashIds.length > 0 && <span className="mb-flash">FLASH ×{flashIds.length}</span>}
             {swopId && <span className="mb-swop">SWOP · resto en negro</span>}
             {connectArm && <span className="mb-flash">CONNECT · toca un playback</span>}
+            {fanMode && <span className="mb-flash">FAN · gira una rueda</span>}
             {!connectArm && <span className="mb-hint">clic en el botón para apagar</span>}
           </div>
         )}
@@ -338,7 +343,7 @@ export function QuartzPanel() {
           {ATTRIBUTES.map((a) => <Key key={a.name} v="white" on={a.name === attr} title={a.name} onClick={() => setAttr(a.name)} tour={a.name === 'Position' ? 'desk-position' : a.name === 'Colour' ? 'desk-colour' : undefined} />)}
           <Key v="white" title="Shape → Shapes" onClick={() => setScreen('effects')} tour="desk-shape" />
           <Key v="white" title="ML Menu — menú Moving Light" onClick={() => setMenu('ml')} /><Key v="white" ledColor="red" on={blind} title="Blind — programar sin salida a escena" onClick={() => setBlind(!blind)} /><Key v="white" disabled={noSel || activeFns.length === 0} title={`Off — quitar ${active.name} de la selección`} onClick={() => clearSelectedFunctions(activeFns)} />
-          <Key v="white" disabled={selection.length < 2 || !fanFn} title={fanFn ? `Fan — abanicar ${fanFn} por la selección` : 'Fan'} onClick={() => fanFn && fanSelected(fanFn)} /><Key v="white" disabled title="Options" /><Key v="dark" disabled title="Latch Menu" />
+          <Key v="white" ledColor="blue" on={fanMode} title="Fan — modo abanico: con él activo, gira una rueda y el atributo se reparte por la selección (el centro no cambia). Clic para activar/desactivar." onClick={toggleFanMode} /><Key v="white" disabled title="Options" /><Key v="dark" disabled title="Latch Menu" />
         </Box>
         <GridLabels x={178} y={392} w={452} cols={7} items={['Shape', 'ML\nMenu', 'Blind', 'Off', 'Fan', 'Options', 'Latch\nMenu']} />
 
