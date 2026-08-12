@@ -14,6 +14,16 @@ export interface FixtureVisualState {
   pan?: number
   /** Tilt angle in degrees, -135..135 (0 = centre), if the fixture tilts. */
   tilt?: number
+  /** Beam width 0..1 (zoom): 0 = tight, 1 = wide. Undefined if the fixture has no zoom. */
+  zoom?: number
+  /** Iris aperture 0..1: 1 = fully open, 0 = pinched to a pinspot. Undefined if no iris. */
+  iris?: number
+  /** Edge focus 0..1: 0 = soft/hazy, 1 = crisp. Undefined if no focus. */
+  focus?: number
+  /** Prism engaged 0..1 (splits the beam into facets). Undefined if no prism. */
+  prism?: number
+  /** Gobo slot value 0..255 (which pattern is in the beam). Undefined if no gobo. */
+  gobo?: number
   /** True while a shutter/strobe channel is in its strobing range. */
   strobing: boolean
 }
@@ -104,11 +114,24 @@ export function computeVisualState(
   const shutter = get('shutter') ?? get('strobe')
   const strobing = shutter !== undefined && shutter >= 64 && shutter <= 223
 
+  // Beam-shaping attributes (approximate DMX conventions — a teaching sim, not a fixture's
+  // exact profile). Undefined when the fixture doesn't have that channel.
+  const zoomV = get('zoom')
+  const irisV = get('iris')
+  const focusV = get('focus')
+  const prismV = get('prism')
+  const goboV = get('gobo')
+
   return {
     intensity,
     color: { r: cr, g: cg, b: cb },
     pan,
     tilt,
+    zoom: zoomV !== undefined ? zoomV / 255 : undefined,
+    iris: irisV !== undefined ? 1 - irisV / 255 : undefined, // 0 DMX = open
+    focus: focusV !== undefined ? focusV / 255 : undefined,
+    prism: prismV !== undefined ? prismV / 255 : undefined,
+    gobo: goboV,
     strobing,
   }
 }

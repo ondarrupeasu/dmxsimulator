@@ -637,7 +637,12 @@ export function Visualizer3D() {
           length = Math.min(24, (home.y - STAGE_TOP) / -down.y)
           hitsFloor = true
         }
-        fx.beam.scale.setScalar(length)
+        // Beam width from zoom + iris: zoom opens/closes the cone, iris pinches it toward a
+        // pinspot. Scale X/Z (width) independently of Y (length) so the cone angle changes.
+        const zoomF = vs.zoom !== undefined ? 0.45 + vs.zoom * 1.45 : 1
+        const irisF = vs.iris !== undefined ? 0.18 + vs.iris * 0.82 : 1
+        const widthF = zoomF * irisF
+        fx.beam.scale.set(length * widthF, length, length * widthF)
 
         const on = vs.intensity > 0.01
         fx.beam.visible = on
@@ -655,7 +660,7 @@ export function Visualizer3D() {
           const vert = Math.max(0.2, -down.y) // cos of angle from vertical
           const floorAngle = Math.atan2(down.z, down.x)
           fx.pool.rotation.set(-Math.PI / 2, 0, -floorAngle)
-          fx.pool.scale.set(length / vert, length, 1)
+          fx.pool.scale.set((length / vert) * widthF, length * widthF, 1)
           fx.poolMat.color.copy(col)
           fx.poolMat.opacity = vs.intensity * 0.35
         } else {
