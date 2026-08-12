@@ -9,7 +9,7 @@ import type { FixtureDefinition, PatchedFixture, Show, TrussDef } from '../model
 import { fixtureFootprint } from '../model/types'
 import { DEFAULT_TRUSSES, DEFAULT_TRUSS, nextTrussId } from '../model/venue'
 import type { Playback, CueStep, LegacyCue } from '../model/cue'
-import { playbacksBySlot, firstFreePlaybackSlot, liveCues, migrateLegacyCues } from '../model/cue'
+import { playbacksBySlot, firstFreePlaybackSlot, liveCues, stepValues, migrateLegacyCues } from '../model/cue'
 import type { Palette, PaletteKind } from '../model/palette'
 import { PALETTE_FUNCTIONS, PALETTE_LABELS } from '../model/palette'
 import type { Group } from '../model/group'
@@ -292,7 +292,10 @@ function stepConnected(
   const step = pb.steps[next]
   const dur = step.fadeIn ?? s.playbackFade
   const from = resolveLevel(id, s.playbackLevels, s.fades, s.now)
-  const playbacks = s.playbacks.map((p) => (p.id === id ? { ...p, current: next } : p))
+  // Cross-fade the LOOK from what's live now into the new step over the same time.
+  const fromValues = stepValues(pb, s.now)
+  const transition = dur > 0 ? { fromValues, start: s.now, dur } : undefined
+  const playbacks = s.playbacks.map((p) => (p.id === id ? { ...p, current: next, transition } : p))
   if (dur <= 0 || from >= 255) {
     const fades = { ...s.fades }
     delete fades[id]
@@ -489,7 +492,7 @@ export const useShowStore = create<ShowState>()(
         set((s) => {
           const pb = s.playbacks.find((p) => p.id === id)
           if (!pb || pb.steps.length === 0) return s
-          const playbacks = s.playbacks.map((p) => (p.id === id ? { ...p, current: 0 } : p))
+          const playbacks = s.playbacks.map((p) => (p.id === id ? { ...p, current: 0, transition: undefined } : p))
           const from = resolveLevel(id, s.playbackLevels, s.fades, s.now)
           if (s.playbackFade <= 0) {
             const fades = { ...s.fades }
@@ -1214,8 +1217,9 @@ export function useEffectiveProgrammer(respectBlind = false): ProgrammerValues {
   const now = useShowStore((s) => s.now)
   const blind = useShowStore((s) => s.blind)
   return useMemo(() => {
-    // Each playback contributes its live step (id = playback id) to the merge.
-    const cues = liveCues(playbacks)
+    // Each playback contributes its live step (id = playback id) to the merge, interpolated
+    // while a Go cross-fade is in progress.
+    const cues = liveCues(playbacks, now)
     const levels = resolveLevels(playbackLevels, fades, now)
     const base = computePlaybackBase(cues, levels, show, definitions)
     const merged = respectBlind && blind ? base : mergeProgrammer(base, programmer)

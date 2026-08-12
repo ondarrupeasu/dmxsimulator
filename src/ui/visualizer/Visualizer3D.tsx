@@ -508,7 +508,7 @@ export function Visualizer3D() {
       raf = requestAnimationFrame(animate)
       const state = useShowStore.getState()
       const { show, definitions, programmer, playbacks, playbackLevels, fades, effects, selection } = state
-      const cues = liveCues(playbacks)
+      const cues = liveCues(playbacks, state.now)
       const selSet = new Set(selection)
       // Reconcile the optional venue (preset or loaded glTF) when it changes.
       reconcileVenue(state.venueUrl, show.venuePreset)

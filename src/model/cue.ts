@@ -38,6 +38,9 @@ export interface Playback {
   mode: 'list' | 'chase'
   /** Chase tempo in beats per minute (used when mode === 'chase'). */
   bpm?: number
+  /** An in-progress cross-fade between cues: the look that was live when Go was pressed
+   *  (`fromValues`) morphs into the new current step over `dur` seconds from `start`. */
+  transition?: { fromValues: ProgrammerValues; start: number; dur: number }
 }
 
 /** Legacy pre-cue-lists shape (a cue was one fader). Kept only for persist/import migration. */
@@ -90,12 +93,38 @@ export function activeStep(pb: Playback): CueStep | undefined {
   return pb.steps[Math.min(i, pb.steps.length - 1)]
 }
 
-/** The engine's view of all playbacks: each one's active step as a LiveCue (id = playback id). */
-export function liveCues(pbs: Playback[]): LiveCue[] {
+/** A playback's output values at time `now`: the current step, or — while a Go cross-fade is
+ *  running — the outgoing look interpolated toward the incoming step. Channels present on both
+ *  sides lerp; a channel on only one side is held (the common cue-list case touches the same
+ *  channels each step, so it morphs smoothly). Intensity is additionally faded by the fader. */
+export function stepValues(pb: Playback, now: number): ProgrammerValues {
+  const to = activeStep(pb)?.values ?? {}
+  const tr = pb.transition
+  if (!tr || tr.dur <= 0 || now >= tr.start + tr.dur) return to
+  const t = Math.max(0, (now - tr.start) / tr.dur)
+  const from = tr.fromValues
+  const out: ProgrammerValues = {}
+  for (const inst of new Set([...Object.keys(from), ...Object.keys(to)])) {
+    const fi = from[inst]
+    const ti = to[inst]
+    const dst: Record<number, number> = {}
+    for (const chStr of new Set([...Object.keys(fi ?? {}), ...Object.keys(ti ?? {})])) {
+      const ch = Number(chStr)
+      const a = fi?.[ch] ?? ti?.[ch] ?? 0
+      const b = ti?.[ch] ?? fi?.[ch] ?? 0
+      dst[ch] = Math.round(a + (b - a) * t)
+    }
+    out[inst] = dst
+  }
+  return out
+}
+
+/** The engine's view of all playbacks: each one's live values at `now` (id = playback id). */
+export function liveCues(pbs: Playback[], now = 0): LiveCue[] {
   const out: LiveCue[] = []
   for (const pb of pbs) {
     const st = activeStep(pb)
-    if (st) out.push({ id: pb.id, values: st.values, effects: st.effects })
+    if (st) out.push({ id: pb.id, values: stepValues(pb, now), effects: st.effects })
   }
   return out
 }

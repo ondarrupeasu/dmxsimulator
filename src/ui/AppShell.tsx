@@ -72,16 +72,18 @@ export function AppShell() {
       return (activeStep(p)?.effects?.length ?? 0) > 0
     }),
   )
+  // A Go cross-fade in progress also needs the clock (it may have no level fade to drive it).
+  const transitionUp = useShowStore((s) => s.playbacks.some((p) => p.transition && s.now < p.transition.start + p.transition.dur))
   useEffect(() => {
     const effectsRun = (effectsCount > 0 || cueEffectsUp) && playing
-    if (!effectsRun && fadeCount === 0) return
+    if (!effectsRun && fadeCount === 0 && !transitionUp) return
     const iv = setInterval(() => {
       tickClock(0.05)
       settleFades()
       advanceChases()
     }, 50)
     return () => clearInterval(iv)
-  }, [effectsCount, cueEffectsUp, playing, fadeCount, tickClock, settleFades, advanceChases])
+  }, [effectsCount, cueEffectsUp, playing, fadeCount, transitionUp, tickClock, settleFades, advanceChases])
 
   // Sound to Light: while enabled, watch the 7 bands and fire each band's mapped playback
   // on the rising edge over its threshold (like Titan's audio triggers); track the beat.
