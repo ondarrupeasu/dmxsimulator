@@ -77,6 +77,11 @@ interface ShowState {
 
   // Cues / playback
   recordCue: () => void
+  /** "Record armed" — after pressing Record, the next playback you touch is the target. */
+  recordArm: boolean
+  armRecord: () => void
+  /** Record the programmer + shapes onto a specific playback slot (overwrite or append). */
+  recordCueAt: (index: number) => void
   /** Re-snapshot the current programmer into an existing cue. */
   updateCue: (id: string) => void
   /** Duplicate a cue at the end of the list. */
@@ -299,6 +304,24 @@ export const useShowStore = create<ShowState>()(
           const effects = s.effects.map((e) => ({ ...e, fixtureIds: [...e.fixtureIds] }))
           const cue: Cue = { id: nextInstanceId(), name: `Cue ${s.cues.length + 1}`, values, effects }
           return { cues: [...s.cues, cue] }
+        }),
+
+      recordArm: false,
+      armRecord: () => set((s) => ({ recordArm: !s.recordArm })),
+      recordCueAt: (index) =>
+        set((s) => {
+          const values: ProgrammerValues = {}
+          for (const id in s.programmer) values[id] = { ...s.programmer[id] }
+          const effects = s.effects.map((e) => ({ ...e, fixtureIds: [...e.fixtureIds] }))
+          const cues = [...s.cues]
+          if (index < cues.length) {
+            // Overwrite the playback that's already there (keep its id so it stays live-able).
+            cues[index] = { ...cues[index], values, effects }
+          } else {
+            // Empty slot → append (a dense list can't leave gaps, so it lands next).
+            cues.push({ id: nextInstanceId(), name: `Cue ${cues.length + 1}`, values, effects })
+          }
+          return { cues, recordArm: false }
         }),
 
       updateCue: (id) =>

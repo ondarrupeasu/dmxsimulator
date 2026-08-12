@@ -158,6 +158,9 @@ export function QuartzPanel() {
   const locateSelected = useShowStore((s) => s.locateSelected)
   const clearProgrammer = useShowStore((s) => s.clearProgrammer)
   const recordCue = useShowStore((s) => s.recordCue)
+  const recordArm = useShowStore((s) => s.recordArm)
+  const armRecord = useShowStore((s) => s.armRecord)
+  const recordCueAt = useShowStore((s) => s.recordCueAt)
   const updateCue = useShowStore((s) => s.updateCue)
   const copyCue = useShowStore((s) => s.copyCue)
   const deleteCue = useShowStore((s) => s.deleteCue)
@@ -325,7 +328,7 @@ export function QuartzPanel() {
         {/* Program keys 6×2 */}
         <GridLabels x={658} y={270} w={386} cols={6} items={['Record', 'Update', 'Edit', 'Select\nIf', 'Patch', 'Disk']} subs={['', '', '', '', '', 'Setup']} above />
         <Box x={658} y={272} w={386} h={118} cols={6} rows={2}>
-          <Key v="dark" ledColor="red" on={hasProgrammer} title="Record — abre el menú Record" onClick={() => { setMenu('record'); if (hasProgrammer) recordCue() }} tour="desk-record" />
+          <Key v="dark" ledColor="red" on={recordArm || hasProgrammer} title={recordArm ? 'Record armed — toca un fader para grabar ahí (pulsa Record otra vez para cancelar)' : 'Record — pulsa y luego elige el fader donde guardar'} onClick={() => { setMenu('record'); if (hasProgrammer || recordArm) armRecord() }} tour="desk-record" />
           <Key v="white" led={false} disabled={!hasActive || !hasProgrammer} title="Update" onClick={() => activeCueId && updateCue(activeCueId)} />
           <Key v="white" led={false} disabled title="Edit" /><Key v="white" led={false} disabled title="Select If" /><Key v="white" led={false} title="Patch — abre el menú Patch" onClick={() => setMenu('patch')} /><Key v="white" led={false} disabled title="Disk" />
           <Key v="white" led={false} disabled={!hasActive} title="Delete" onClick={() => activeCueId && deleteCue(activeCueId)} />
@@ -348,11 +351,13 @@ export function QuartzPanel() {
         <Box x={44} y={454} w={612} h={104} cols={10} rows={2} spread>
           {Array.from({ length: 10 }, (_, i) => {
             const gi = playbackPage * 10 + i; const cue = cues[gi]; const on = !!cue && isUp(cue.id)
-            return <Key key={`t${i}`} v="blue" narrow ledBottom on={on} disabled={!cue} title={cue ? `Go ${cue.name}` : 'Empty'} onClick={() => cue && goCue(cue.id)} />
+            const title = recordArm ? (cue ? `Record over ${cue.name}` : 'Record here') : cue ? `Go ${cue.name}` : 'Empty'
+            return <Key key={`t${i}`} v={recordArm ? 'red' : 'blue'} narrow ledBottom on={on} disabled={!recordArm && !cue} title={title} onClick={() => (recordArm ? recordCueAt(gi) : cue && goCue(cue.id))} />
           })}
           {Array.from({ length: 10 }, (_, i) => {
             const gi = playbackPage * 10 + i; const cue = cues[gi]
-            return <Key key={`b${i}`} v="dark" narrow led={false} disabled={!cue} title={cue ? `Flash ${cue.name}` : 'Empty'} onClick={() => cue && goCue(cue.id)} />
+            const title = recordArm ? (cue ? `Record over ${cue.name}` : 'Record here') : cue ? `Flash ${cue.name}` : 'Empty'
+            return <Key key={`b${i}`} v={recordArm ? 'red' : 'dark'} narrow led={false} disabled={!recordArm && !cue} title={title} onClick={() => (recordArm ? recordCueAt(gi) : cue && goCue(cue.id))} />
           })}
         </Box>
 
