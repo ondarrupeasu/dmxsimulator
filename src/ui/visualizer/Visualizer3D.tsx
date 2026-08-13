@@ -622,9 +622,11 @@ export function Visualizer3D() {
         const vs = computeVisualState(def, pf.modeIndex, outById.get(pf.id) ?? [])
         const col = new THREE.Color(vs.color.r / 255, vs.color.g / 255, vs.color.b / 255)
 
-        // Pan turns the yoke, tilt turns the head — the beam (in the head) follows.
-        fx.panPart.rotation.y = THREE.MathUtils.degToRad(vs.pan ?? 0)
-        fx.tiltPart.rotation.x = THREE.MathUtils.degToRad(vs.tilt ?? 0)
+        // Pan turns the yoke, tilt turns the head — the beam (in the head) follows. The
+        // fixture's physical rig aim is the BASE orientation (how a static PAR was pointed by
+        // hand); a moving head's DMX pan/tilt adds on top.
+        fx.panPart.rotation.y = THREE.MathUtils.degToRad((pf.aim?.pan ?? 0) + (vs.pan ?? 0))
+        fx.tiltPart.rotation.x = THREE.MathUtils.degToRad((pf.aim?.tilt ?? 0) + (vs.tilt ?? 0))
 
         // Beam world direction = pan ∘ tilt applied to local −Y (down).
         _qy.setFromAxisAngle(_Y, fx.panPart.rotation.y)

@@ -5,6 +5,7 @@ import { PALETTE_LABELS } from '../../model/palette'
 import { EffectsPanel } from '../run/EffectsPanel'
 import { AudioPanel } from './AudioPanel'
 import { PlaybacksWindow } from './PlaybacksWindow'
+import { AimPad } from './AimPad'
 import { userNumberOf, fixtureAttributeKeys, ATTRIBUTE_BANKS } from '../../model/types'
 
 const PALETTE_KINDS: PaletteKind[] = ['colour', 'position', 'gobo', 'beam', 'intensity']
@@ -53,6 +54,7 @@ export function QuartzScreen() {
   const locateSelected = useShowStore((s) => s.locateSelected)
   const highlight = useShowStore((s) => s.highlight)
   const toggleHighlight = useShowStore((s) => s.toggleHighlight)
+  const setFixtureAim = useShowStore((s) => s.setFixtureAim)
   const programmer = useShowStore((s) => s.programmer)
   const show = useShowStore((s) => s.show)
   const definitions = useShowStore((s) => s.definitions)
@@ -238,8 +240,10 @@ export function QuartzScreen() {
       <div className="qd-ws-grid">
         {fixtures.map((pf, i) => {
           const has = fixtureAttributeKeys(definitions[pf.definitionId], pf.modeIndex)
+          const selected = selection.includes(pf.id)
+          const staticAimable = !has.has('P') && definitions[pf.definitionId]?.category !== 'hazer'
           return (
-            <div key={pf.id} className={`qd-cell ws-fixture${selection.includes(pf.id) ? ' active' : ''}`}>
+            <div key={pf.id} className={`qd-cell ws-fixture${selected ? ' active' : ''}`}>
               <button className="qd-cell-hit" onClick={() => toggleSelect(pf.id)} title={`${pf.name} — nº ${userNumberOf(fixtures, i)} · atributos: ${ATTRIBUTE_BANKS.filter((b) => has.has(b.key)).map((b) => b.label).join(', ') || '—'}`}>
                 <span className="qd-usernum">{userNumberOf(fixtures, i)}</span>
                 {pf.name}
@@ -249,6 +253,9 @@ export function QuartzScreen() {
                   <span key={b.key} className={has.has(b.key) ? 'on' : ''} title={b.label}>{b.key}</span>
                 ))}
               </span>
+              {selected && staticAimable && (
+                <AimPad pan={pf.aim?.pan ?? 0} tilt={pf.aim?.tilt ?? 0} onChange={(p, t) => setFixtureAim(pf.id, p, t)} />
+              )}
             </div>
           )
         })}

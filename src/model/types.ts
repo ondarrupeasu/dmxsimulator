@@ -109,6 +109,10 @@ export interface PatchedFixture {
   truss?: number
   /** Floor-standing (e.g. a hazer on the stage deck) instead of hung on a truss. */
   floor?: boolean
+  /** Physical rigging AIM in degrees — how a NON-moving fixture (a PAR, profile…) is pointed
+   *  by hand when hung (you'd climb a ladder and angle it). Not a DMX attribute; the desk
+   *  can't change it. Moving heads ignore it (they aim via their pan/tilt channels). */
+  aim?: { pan: number; tilt: number }
 }
 
 /** The fixture's effective user number: its explicit `userNumber`, or its 1-based position

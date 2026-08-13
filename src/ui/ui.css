@@ -201,6 +201,25 @@
 /* Truss + universe selectors on each patched-fixture row. */
 .patch-assign { display: flex; gap: 6px; align-items: center; margin-right: 8px; }
 .patch-assign label { display: inline-flex; align-items: center; gap: 3px; font-size: 10px; color: var(--text-faint); }
+/* Aim pad — a static fixture's rigging orientation (only on the SELECTED fixture card). */
+.aim-wrap { display: flex; align-items: center; gap: 5px; margin-top: 4px; }
+.aim-pad {
+  position: relative; width: 44px; height: 44px; flex: 0 0 auto; cursor: crosshair;
+  background: #10151c; border: 1px solid #35506e; border-radius: 5px;
+}
+/* The circle = the horizon (edge of the downward half-sphere the fixture can reach). */
+.aim-pad::before {
+  content: ''; position: absolute; inset: 3px; border-radius: 50%;
+  border: 1px dashed #35506e; background: radial-gradient(circle, #1c2836 0%, #141b24 70%);
+}
+/* Centre mark = straight down. */
+.aim-pad::after {
+  content: ''; position: absolute; left: 50%; top: 50%; width: 3px; height: 3px; margin: -1.5px 0 0 -1.5px;
+  border-radius: 50%; background: #4a688f;
+}
+.aim-dot { position: absolute; width: 8px; height: 8px; margin: -4px 0 0 -4px; border-radius: 50%; background: #6aa9ff; box-shadow: 0 0 6px #6aa9ff; z-index: 1; }
+.aim-read { font-size: 8px; color: #7fb0e8; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.aim-reset { font-size: 11px; line-height: 1; padding: 1px 4px; cursor: pointer; background: #24252b; color: #9fc4e8; border: 1px solid #35506e; border-radius: 4px; }
 .patch-assign select {
   font-size: 11px; padding: 2px 4px; border-radius: var(--radius-sm);
   background: var(--bg-input); border: 1px solid var(--border); color: var(--text);

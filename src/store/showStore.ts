@@ -193,6 +193,8 @@ interface ShowState {
   setFixtureTruss: (instanceId: string, truss: number) => void
   /** Toggle a fixture between floor-standing and truss-hung. */
   setFixtureFloor: (instanceId: string, floor: boolean) => void
+  /** Set a non-moving fixture's physical rigging aim (pan/tilt degrees). */
+  setFixtureAim: (instanceId: string, pan: number, tilt: number) => void
   /** Edit the show's metadata (name / venue / designer) shown in exports. */
   setShowMeta: (patch: Partial<Pick<Show, 'name' | 'venue' | 'designer'>>) => void
   /** Move every selected fixture to a truss / universe at once. */
@@ -906,6 +908,14 @@ export const useShowStore = create<ShowState>()(
           show: {
             ...s.show,
             fixtures: s.show.fixtures.map((f) => (f.id === instanceId ? { ...f, floor } : f)),
+          },
+        })),
+
+      setFixtureAim: (instanceId, pan, tilt) =>
+        set((s) => ({
+          show: {
+            ...s.show,
+            fixtures: s.show.fixtures.map((f) => (f.id === instanceId ? { ...f, aim: { pan, tilt } } : f)),
           },
         })),
 
