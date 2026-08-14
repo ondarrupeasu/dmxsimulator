@@ -727,6 +727,18 @@
 .qd-muted { color: var(--text-faint); font-size: 12px; }
 
 /* Touchscreen tabs (Fixtures / palette windows) */
+.qd-views { display: flex; align-items: center; gap: 3px; margin-left: auto; flex-wrap: wrap; }
+.qd-views-cap { font-size: 8.5px; font-weight: 700; letter-spacing: 0.4px; color: #3a3a3c; text-transform: uppercase; margin-right: 1px; }
+.qd-view {
+  font: inherit; font-size: 9.5px; padding: 2px 7px; font-weight: 600;
+  color: #123; background: linear-gradient(180deg, #eaf6ff, #cfe6f7);
+  border: 1px solid #6ba8d6; border-top-color: #f7fdff; border-radius: 4px; cursor: pointer;
+}
+.qd-view:hover { background: linear-gradient(180deg, #f4fbff, #dcedfa); }
+.qd-view-rec { background: linear-gradient(180deg, #3d3e44, #2a2b30); color: #d7d8dc; border-color: #17181c; border-top-color: #55565d; }
+.qd-view-rec:hover { background: linear-gradient(180deg, #47484f, #303138); }
+.qd-view-rec.arm { background: linear-gradient(180deg, #ff6b5e, #e2483b); color: #fff; border-color: #a5271c; border-top-color: #ff9c92; animation: qd-rec-blink 1s steps(2, jump-none) infinite; }
+@keyframes qd-rec-blink { 50% { filter: brightness(1.25); } }
 .qd-tabs { display: flex; gap: 3px; margin-left: 8px; flex-wrap: wrap; }
 .qd-tabs button {
   font: inherit; font-size: 10px; padding: 3px 9px; font-weight: 600;

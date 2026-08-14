@@ -73,7 +73,20 @@ export function QuartzScreen() {
   const setShow = useShowStore((s) => s.setShow)
   const addDefinitions = useShowStore((s) => s.addDefinitions)
   const loadTemplate = useShowStore((s) => s.loadTemplate)
+  const workspaces = useShowStore((s) => s.workspaces)
+  const recallWorkspace = useShowStore((s) => s.recallWorkspace)
+  const deleteWorkspace = useShowStore((s) => s.deleteWorkspace)
+  const recordWorkspace = useShowStore((s) => s.recordWorkspace)
+  const workspaceRecordArm = useShowStore((s) => s.workspaceRecordArm)
+  const armWorkspaceRecord = useShowStore((s) => s.armWorkspaceRecord)
   const showFileRef = useRef<HTMLInputElement>(null)
+  // Titan "Record Workspace": arm it (View/Open → Record Workspace, or the Rec chip), then
+  // touch a Workspace button to store the current window layout. Empty slot = Quick Record.
+  const quickRecordWorkspace = () => {
+    const name = window.prompt('Nombre del Workspace (View):', `View ${workspaces.length + 1}`)
+    if (name != null) recordWorkspace(name)
+    else armWorkspaceRecord() // cancel disarms
+  }
   // The Disk menu, faithful to Titan (Save / Load / New Show). A browser can't write to the
   // desk's internal disk/USB, so Save downloads a .json and Load reads one back — the same
   // action, different medium (the app's top Import/Export do the same, outside the desk).
@@ -384,6 +397,27 @@ export function QuartzScreen() {
               {tb.label}
             </button>
           ))}
+        </div>
+        <div className="qd-views" title="Workspaces (Views): disposiciones de ventanas guardadas — Titan">
+          <span className="qd-views-cap">Views</span>
+          {workspaces.map((ws) => (
+            <button
+              key={ws.id}
+              className="qd-view"
+              onClick={() => recallWorkspace(ws.id)}
+              onContextMenu={(e) => { e.preventDefault(); if (window.confirm(`¿Borrar el View "${ws.name}"?`)) deleteWorkspace(ws.id) }}
+              title={`${ws.name} — clic: recuperar · clic derecho: borrar`}
+            >
+              {ws.name}
+            </button>
+          ))}
+          <button
+            className={`qd-view qd-view-rec${workspaceRecordArm ? ' arm' : ''}`}
+            onClick={() => (workspaceRecordArm ? quickRecordWorkspace() : armWorkspaceRecord())}
+            title="Record Workspace: guarda la disposición actual (pestaña + visor + paneles plegados) como un View"
+          >
+            {workspaceRecordArm ? '＋ guardar' : '◉ Rec'}
+          </button>
         </div>
       </div>
 

@@ -199,6 +199,8 @@ export function QuartzPanel() {
   const executorCues = useShowStore((s) => s.executorCues)
   const recordExecutor = useShowStore((s) => s.recordExecutor)
   const clearExecutor = useShowStore((s) => s.clearExecutor)
+  const workspaceRecordArm = useShowStore((s) => s.workspaceRecordArm)
+  const armWorkspaceRecord = useShowStore((s) => s.armWorkspaceRecord)
   const editExecutor = (n: number) => {
     const cur = executorLabels[n] ?? ''
     const v = window.prompt(`Executor ${n} — escribe su etiqueta (vacío para borrar)`, cur)
@@ -455,7 +457,7 @@ export function QuartzPanel() {
         <GridLabels x={1074} y={270} w={122} cols={2} items={['Min/Max', 'Size/Pos']} subs={['Next', 'Other Screen']} above />
         <Box x={1074} y={272} w={122} h={118} cols={2} rows={2} narrow>
           <Key v="dark" narrow led={false} disabled title="Min/Max" /><Key v="dark" narrow led={false} disabled title="Size/Pos" />
-          <Key v="dark" narrow disabled title="View/Open" /><Key v="dark" narrow led={false} disabled title="Close/Control" />
+          <Key v="dark" narrow led={workspaceRecordArm} title="View/Open — arma Record Workspace: guarda la disposición de ventanas como un View (toca luego el botón Views ＋)" onClick={armWorkspaceRecord} /><Key v="dark" narrow led={false} disabled title="Close/Control" />
         </Box>
         <GridLabels x={1074} y={392} w={122} cols={2} items={['View\n/Open', 'Close\nControl']} />
 

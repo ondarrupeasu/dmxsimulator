@@ -23,6 +23,15 @@ import { UNIVERSE_SIZE, mergeProgrammer, computePlaybackBase, resolveLevel, effe
 
 export type AppMode = 'patch' | 'program'
 
+/** A Titan "Workspace": a named snapshot of the on-screen window layout. */
+export interface DeskWorkspace {
+  id: string
+  name: string
+  screen: string
+  viewer: '2d' | '3d'
+  fold: { screen: boolean; fixtures: boolean; monitor: boolean }
+}
+
 interface ShowState {
   show: Show
   /** All available definitions (built-in + imported), by id. */
@@ -246,6 +255,24 @@ interface ShowState {
   // 3D viewer "house/work lights": lit room to see the rig, off to design the look.
   viewLights: boolean
   setViewLights: (v: boolean) => void
+
+  // Visualiser toggle (2D plan ↔ 3D). Lifted into the store so a recalled Workspace/View
+  // (Titan's saved window layouts) can restore it along with the rest of the arrangement.
+  viewer: '2d' | '3d'
+  setViewer: (v: '2d' | '3d') => void
+  // Which of the right-column panes are folded away. Single source of truth so a View can
+  // fold/unfold them; AppShell mirrors these onto the resizable-panel handles.
+  fold: { screen: boolean; fixtures: boolean; monitor: boolean }
+  setFold: (key: 'screen' | 'fixtures' | 'monitor', val: boolean) => void
+  // Titan "Workspaces": named snapshots of the window layout (active desk screen + viewer +
+  // which panes are folded). Recorded with Open/View → Record Workspace, recalled by touch.
+  workspaces: DeskWorkspace[]
+  recordWorkspace: (name: string) => void
+  recallWorkspace: (id: string) => void
+  deleteWorkspace: (id: string) => void
+  // "Record Workspace" armed: the next empty Workspace button becomes the target (Quick Record).
+  workspaceRecordArm: boolean
+  armWorkspaceRecord: () => void
 
   // Venue behind the rig: either a built-in preset (show.venuePreset, persisted) or a
   // loaded glTF/GLB (venueUrl — transient, its object URL dies on reload). Mutually
@@ -1148,6 +1175,36 @@ export const useShowStore = create<ShowState>()(
       viewLights: false,
       setViewLights: (v) => set({ viewLights: v }),
 
+      viewer: '3d',
+      setViewer: (v) => set({ viewer: v }),
+      fold: { screen: false, fixtures: false, monitor: false },
+      setFold: (key, val) => set((s) => (s.fold[key] === val ? {} : { fold: { ...s.fold, [key]: val } })),
+      // Two default Views to start from (kept for a first run; users record their own alongside).
+      workspaces: [
+        { id: 'ws-program', name: 'Programa', screen: 'fixtures', viewer: '3d', fold: { screen: false, fixtures: false, monitor: false } },
+        { id: 'ws-visualiser', name: 'Visualiser', screen: 'fixtures', viewer: '3d', fold: { screen: false, fixtures: true, monitor: true } },
+      ],
+      workspaceRecordArm: false,
+      armWorkspaceRecord: () => set((s) => ({ workspaceRecordArm: !s.workspaceRecordArm })),
+      recordWorkspace: (name) =>
+        set((s) => {
+          const snap: DeskWorkspace = {
+            id: `ws-${s.workspaces.length + 1}-${name.toLowerCase().replace(/\s+/g, '-').slice(0, 12)}`,
+            name: name.trim() || `View ${s.workspaces.length + 1}`,
+            screen: s.deskScreen,
+            viewer: s.viewer,
+            fold: { ...s.fold },
+          }
+          return { workspaces: [...s.workspaces, snap], workspaceRecordArm: false }
+        }),
+      recallWorkspace: (id) =>
+        set((s) => {
+          const ws = s.workspaces.find((w) => w.id === id)
+          if (!ws) return {}
+          return { deskScreen: ws.screen, viewer: ws.viewer, fold: { ...ws.fold } }
+        }),
+      deleteWorkspace: (id) => set((s) => ({ workspaces: s.workspaces.filter((w) => w.id !== id) })),
+
       venueUrl: null,
       venueName: null,
       // Loading a custom glTF clears any preset (they're mutually exclusive).
@@ -1358,6 +1415,8 @@ export const useShowStore = create<ShowState>()(
         effects: s.effects,
         executorLabels: s.executorLabels,
         executorCues: s.executorCues,
+        workspaces: s.workspaces,
+        viewer: s.viewer,
       }),
     },
   ),

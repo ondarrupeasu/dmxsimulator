@@ -1,6 +1,6 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Panel, PanelGroup, PanelResizeHandle, type ImperativePanelHandle } from 'react-resizable-panels'
+import { Panel, PanelGroup, PanelResizeHandle, type ImperativePanelHandle, type ImperativePanelGroupHandle } from 'react-resizable-panels'
 import { useShowStore } from '../store/showStore'
 import { setLanguage } from '../i18n'
 import { consoleById } from '../console/registry'
@@ -58,16 +58,45 @@ export function AppShell() {
     if (v === '__file') venueRef.current?.click()
     else if (v !== '__custom') setVenuePreset(v || null)
   }
-  const [viewer, setViewer] = useState<'2d' | '3d'>('3d')
+  const viewer = useShowStore((s) => s.viewer)
+  const setViewer = useShowStore((s) => s.setViewer)
 
   // Collapsible secondary panes: folding the Fixtures window maximises the desk,
-  // folding the DMX monitor maximises the visualiser.
+  // folding the DMX monitor maximises the visualiser. The fold state lives in the store
+  // (single source of truth) so a recalled Workspace/View can fold/unfold these panes;
+  // the resizable-panel handles below are mirrored to it.
   const screenRef = useRef<ImperativePanelHandle>(null)
-  const fixturesRef = useRef<ImperativePanelHandle>(null)
-  const monitorRef = useRef<ImperativePanelHandle>(null)
-  const [screenCollapsed, setScreenCollapsed] = useState(false)
-  const [fixturesCollapsed, setFixturesCollapsed] = useState(false)
-  const [monitorCollapsed, setMonitorCollapsed] = useState(false)
+  const rightGroupRef = useRef<ImperativePanelGroupHandle>(null)
+  const fold = useShowStore((s) => s.fold)
+  const setFold = useShowStore((s) => s.setFold)
+  const screenCollapsed = fold.screen
+  const fixturesCollapsed = fold.fixtures
+  const monitorCollapsed = fold.monitor
+
+  // Mirror the store's fold flags onto the layout (the Workspace-recall path). The screen pane
+  // is the only collapsible in the left group, so imperative collapse/expand is reliable there.
+  // fixtures + monitor share the right vertical group, and collapsing two panels of one group in
+  // the same pass makes react-resizable-panels drop one — so drive that group with setLayout()
+  // (deterministic: collapsed → 4%, else its default share). Skip a clean first mount so the
+  // panel library's own persisted sizes (autoSaveId) survive a reload untouched.
+  const firstRun = useRef(true)
+  useEffect(() => {
+    const anyFolded = fold.screen || fold.fixtures || fold.monitor
+    const clean = firstRun.current && !anyFolded
+    firstRun.current = false
+    if (clean) return
+    const sp = screenRef.current
+    if (sp) {
+      if (fold.screen && !sp.isCollapsed()) sp.collapse()
+      else if (!fold.screen && sp.isCollapsed()) sp.expand()
+    }
+    const grp = rightGroupRef.current
+    if (grp) {
+      const f = fold.fixtures ? 4 : 22
+      const m = fold.monitor ? 4 : 28
+      grp.setLayout([100 - f - m, f, m])
+    }
+  }, [fold.screen, fold.fixtures, fold.monitor])
 
   // Animation clock for the 2D view + monitor (the 3D view self-clocks). Advances
   // while effects run (and not paused) OR a Go fade is in progress.
@@ -269,14 +298,14 @@ export function AppShell() {
                 <Panel
                   ref={screenRef} collapsible collapsedSize={4}
                   defaultSize={34} minSize={20}
-                  onCollapse={() => setScreenCollapsed(true)}
-                  onExpand={() => setScreenCollapsed(false)}
+                  onCollapse={() => setFold('screen', true)}
+                  onExpand={() => setFold('screen', false)}
                 >
                   <div className="pane">
                     <button
                       className="pane-fold"
                       title={screenCollapsed ? t('common.expand') : t('common.collapse')}
-                      onClick={() => (screenCollapsed ? screenRef.current?.expand() : screenRef.current?.collapse())}
+                      onClick={() => setFold('screen', !screenCollapsed)}
                     >
                       {screenCollapsed ? '⌄' : '⌃'}
                     </button>
@@ -296,22 +325,22 @@ export function AppShell() {
                Needs an explicit defaultSize too — with only one side sized,
                react-resizable-panels collapses the console to its minSize. */}
             <Panel id="quartz-right" order={2} defaultSize={38} minSize={24}>
-              <PanelGroup direction="vertical" autoSaveId="dmxsim-quartz-right-v2">
+              <PanelGroup ref={rightGroupRef} direction="vertical" autoSaveId="dmxsim-quartz-right-v2">
                 <Panel defaultSize={50} minSize={24}>
                   <div className="pane">{visualizerPanel}</div>
                 </Panel>
                 <PanelResizeHandle className="rz rz-h" />
                 <Panel
-                  ref={fixturesRef} collapsible collapsedSize={4}
+                  collapsible collapsedSize={4}
                   defaultSize={22} minSize={12}
-                  onCollapse={() => setFixturesCollapsed(true)}
-                  onExpand={() => setFixturesCollapsed(false)}
+                  onCollapse={() => setFold('fixtures', true)}
+                  onExpand={() => setFold('fixtures', false)}
                 >
                   <div className="pane">
                     <button
                       className="pane-fold"
                       title={fixturesCollapsed ? t('common.expand') : t('common.collapse')}
-                      onClick={() => (fixturesCollapsed ? fixturesRef.current?.expand() : fixturesRef.current?.collapse())}
+                      onClick={() => setFold('fixtures', !fixturesCollapsed)}
                     >
                       {fixturesCollapsed ? '⌄' : '⌃'}
                     </button>
@@ -320,16 +349,16 @@ export function AppShell() {
                 </Panel>
                 <PanelResizeHandle className="rz rz-h" />
                 <Panel
-                  ref={monitorRef} collapsible collapsedSize={4}
+                  collapsible collapsedSize={4}
                   defaultSize={28} minSize={14}
-                  onCollapse={() => setMonitorCollapsed(true)}
-                  onExpand={() => setMonitorCollapsed(false)}
+                  onCollapse={() => setFold('monitor', true)}
+                  onExpand={() => setFold('monitor', false)}
                 >
                   <div className="pane">
                     <button
                       className="pane-fold"
                       title={monitorCollapsed ? t('common.expand') : t('common.collapse')}
-                      onClick={() => (monitorCollapsed ? monitorRef.current?.expand() : monitorRef.current?.collapse())}
+                      onClick={() => setFold('monitor', !monitorCollapsed)}
                     >
                       {monitorCollapsed ? '⌃' : '⌄'}
                     </button>
