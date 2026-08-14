@@ -153,10 +153,15 @@ interface ShowState {
   /** The playback currently SWOPPED (full while ALL other output is muted). Toggle; solo, so
    *  only one at a time. */
   swopId: string | null
-  /** Toggle a playback's Flash on/off. */
+  /** Toggle a playback's Flash on/off (mouse click). */
   flash: (id: string) => void
-  /** Toggle a playback's Swop on/off (solo). */
+  /** Toggle a playback's Swop on/off (solo) (mouse click). */
   swop: (id: string) => void
+  /** Set a playback's Flash explicitly — used by the keyboard (hold key = on, release = off),
+   *  which CAN press several at once (a mouse can't), so it's momentary + multi like the desk. */
+  setFlash: (id: string, on: boolean) => void
+  /** Set a playback's Swop explicitly (keyboard hold). */
+  setSwop: (id: string, on: boolean) => void
   /** Fade time (seconds) used by the next Go / Release. The TIME key sets it. */
   playbackFade: number
   setPlaybackFade: (seconds: number) => void
@@ -663,6 +668,8 @@ export const useShowStore = create<ShowState>()(
       swopId: null,
       flash: (id) => set((s) => ({ flashIds: s.flashIds.includes(id) ? s.flashIds.filter((x) => x !== id) : [...s.flashIds, id] })),
       swop: (id) => set((s) => ({ swopId: s.swopId === id ? null : id })),
+      setFlash: (id, on) => set((s) => ({ flashIds: on ? (s.flashIds.includes(id) ? s.flashIds : [...s.flashIds, id]) : s.flashIds.filter((x) => x !== id) })),
+      setSwop: (id, on) => set((s) => ({ swopId: on ? id : s.swopId === id ? null : s.swopId })),
       // The faders are manual and NON-motorised: dragging is the only thing that moves a
       // handle. Raising from 0 connects the playback + brings up its first step (like pushing
       // the fader up on the real desk). Never animated by Go/fire. Touching the fader also

@@ -259,6 +259,56 @@ export function QuartzPanel() {
     return () => window.removeEventListener('keydown', onKey)
   }, [cmdAppend, cmdBackspace, cmdClear, commitCommand])
 
+  // SIMULATOR EXTRA that's actually MORE faithful: the two playback-fader button rows on the
+  // computer keyboard — QWERTYUIOP = top row (Flash), ASDFGHJKLÑ = bottom row (Swop). Unlike a
+  // mouse (one pointer), the keyboard can hold several at once and momentarily, exactly like
+  // pressing several buttons with your hands on the real desk. A per-key map remembers which
+  // playback each key fired so releasing frees the right one even if you changed page.
+  useEffect(() => {
+    const FLASH = 'qwertyuiop'
+    const SWOP = 'asdfghjklñ;'
+    const pressed: Record<string, string> = {}
+    const faderId = (i: number): string | undefined => {
+      const s = useShowStore.getState()
+      return playbacksBySlot(s.playbacks)[s.playbackPage * 10 + i]?.id
+    }
+    const isField = (t: EventTarget | null) => {
+      const el = t as HTMLElement | null
+      return !!el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.tagName === 'SELECT' || el.isContentEditable)
+    }
+    const onDown = (e: KeyboardEvent) => {
+      if (isField(e.target) || e.metaKey || e.ctrlKey || e.altKey) return
+      const k = e.key.toLowerCase()
+      const fi = FLASH.indexOf(k)
+      const si = SWOP.indexOf(k)
+      if (fi < 0 && si < 0) return
+      e.preventDefault()
+      if (e.repeat || pressed[k]) return
+      const id = faderId(fi >= 0 ? fi : Math.min(si, 9))
+      if (!id) return
+      pressed[k] = id
+      if (fi >= 0) useShowStore.getState().setFlash(id, true)
+      else useShowStore.getState().setSwop(id, true)
+    }
+    const release = (k: string) => {
+      const id = pressed[k]
+      if (!id) return
+      delete pressed[k]
+      if (FLASH.includes(k)) useShowStore.getState().setFlash(id, false)
+      else useShowStore.getState().setSwop(id, false)
+    }
+    const onUp = (e: KeyboardEvent) => release(e.key.toLowerCase())
+    const onBlur = () => { for (const k of Object.keys(pressed)) release(k) } // don't leave keys stuck
+    window.addEventListener('keydown', onDown)
+    window.addEventListener('keyup', onUp)
+    window.addEventListener('blur', onBlur)
+    return () => {
+      window.removeEventListener('keydown', onDown)
+      window.removeEventListener('keyup', onUp)
+      window.removeEventListener('blur', onBlur)
+    }
+  }, [])
+
   const active = ATTRIBUTES.find((a) => a.name === attr) ?? ATTRIBUTES[0]
   const wheelFns = [0, 1, 2].map((i) => active.wheels[i]?.find((fn) => present.has(fn)))
   const activeFns = active.wheels.flat() // every function in the active attribute bank
