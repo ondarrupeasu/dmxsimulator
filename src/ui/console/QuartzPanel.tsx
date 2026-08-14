@@ -33,9 +33,9 @@ const ATTRIBUTES: { name: string; wheels: string[][] }[] = [
 
 type V = 'white' | 'dark' | 'blue' | 'red'
 function Key({
-  v = 'dark', led = true, ledColor, ledBottom, on, flash, text, hint, avo, narrow, assignable, disabled, title, onClick, onContextMenu, tour,
+  v = 'dark', led = true, ledColor, ledBottom, on, dim, flash, text, hint, avo, narrow, assignable, disabled, title, onClick, onContextMenu, tour,
 }: {
-  v?: V; led?: boolean; ledColor?: 'red' | 'blue'; ledBottom?: boolean; on?: boolean; flash?: boolean
+  v?: V; led?: boolean; ledColor?: 'red' | 'blue'; ledBottom?: boolean; on?: boolean; dim?: boolean; flash?: boolean
   text?: string; hint?: string; avo?: boolean; narrow?: boolean; assignable?: boolean; disabled?: boolean; title?: string
   onClick?: () => void; onContextMenu?: (e: React.MouseEvent) => void; tour?: string
 }) {
@@ -44,7 +44,7 @@ function Key({
       className={`ck ck-${v}${ledBottom ? ' ledb' : ''}${narrow ? ' narrow' : ''}${assignable ? ' assignable' : ''}${avo ? ' ck-avo' : ''}`}
       disabled={disabled} title={title} onClick={onClick} onContextMenu={onContextMenu} data-tour={tour}
     >
-      {led && <span className={`ckled${on ? ' on' : ''}${flash ? ' flash' : ''}${ledColor ? ' ' + ledColor : ''}`} />}
+      {led && <span className={`ckled${on ? ' on' : ''}${dim ? ' dim' : ''}${flash ? ' flash' : ''}${ledColor ? ' ' + ledColor : ''}`} />}
       {text != null && <span className="cktext">{text}</span>}
       {hint && <span className="ckhint">{hint}</span>}
     </button>
@@ -403,7 +403,7 @@ export function QuartzPanel() {
                   : `Executor ${n} — clic para etiquetar`
               return (
                 <Key
-                  key={i} v="dark" narrow assignable={!caption} ledColor="red" on={lit}
+                  key={i} v="dark" narrow assignable={!caption} ledColor="red" on={lit} dim={!!cue && !lit}
                   title={title}
                   onClick={() => onExecutor(n)}
                   onContextMenu={(e) => { e.preventDefault(); if (cue) clearExecutor(n) }}
@@ -469,14 +469,14 @@ export function QuartzPanel() {
             const flashed = !!cue && flashIds.includes(cue.id)
             const connected = !!cue && connectedId === cue.id
             const on = !!cue && (isUp(cue.id) || flashed || (connectArm && connected))
-            // Titan LED model: occupied handle whose fader is at 0 → its LED FLASHES (a
-            // reminder why no light is coming on). While Record/Connect is armed, the valid
-            // targets flash to say "pick one". Occupied + up = steady.
-            const led = recordArm || connectArm ? true : !!cue && !on
+            // Titan Show-Occupation LED model: empty handle → LED off; occupied + fader down →
+            // DIM (there's something stored here); occupied + up (or flashed) → BRIGHT. While
+            // Record/Connect is armed, the valid targets FLASH to say "pick one".
+            const armed = recordArm || connectArm
             const title = recordArm ? (cue ? `Record over ${cue.name}` : 'Record here')
               : connectArm ? (cue ? `Connect ${cue.name} al Go central` : 'Empty')
               : cue ? `Flash ${cue.name} — ${flashed ? 'ON (clic para apagar)' : 'clic para encender'}. En la Quartz real es momentáneo (mantener pulsado); aquí es conmutador.` : 'Empty'
-            return <Key key={`t${i}`} v={recordArm ? 'red' : 'blue'} narrow ledBottom on={on} flash={led} hint={'QWERTYUIOP'[i]} disabled={(!recordArm && !connectArm && !cue) || (connectArm && !cue)} title={`${title} · tecla ${'QWERTYUIOP'[i]} (mantén para flash; varias a la vez)`}
+            return <Key key={`t${i}`} v={recordArm ? 'red' : 'blue'} narrow ledBottom on={on} flash={armed} dim={!armed && !!cue && !on} hint={'QWERTYUIOP'[i]} disabled={(!recordArm && !connectArm && !cue) || (connectArm && !cue)} title={`${title} · tecla ${'QWERTYUIOP'[i]} (mantén para flash; varias a la vez)`}
               onClick={recordArm ? () => recordCueAt(gi) : connectArm ? (cue ? () => connectPlayback(cue.id) : undefined) : cue ? () => flash(cue.id) : undefined} />
           })}
           {Array.from({ length: 10 }, (_, i) => {

@@ -1310,6 +1310,11 @@
 .ckled.on { background: #3ab2ff; box-shadow: 0 0 0.35cqw #cdeaff, 0 0 1.9cqw #2ea6ff, 0 0 3cqw rgba(46, 166, 255, 0.6); }
 .ckled.on.red { background: #ff3b3b; box-shadow: 0 0 0.35cqw #ffd6d6, 0 0 1.9cqw #ff2424, 0 0 3cqw rgba(255, 40, 40, 0.6); }
 .ckled.on.blue { background: #3ab2ff; box-shadow: 0 0 0.35cqw #cdeaff, 0 0 1.9cqw #2ea6ff, 0 0 3cqw rgba(46, 166, 255, 0.6); }
+/* Show-Occupation DIM state: a handle that HAS something stored but isn't up. Lit in its own
+   colour at low intensity, no bloom — distinct from empty (grey) and active (bright). */
+.ckled.dim:not(.on) { background: #1c6a99; box-shadow: 0 0 0.3cqw rgba(58, 178, 255, 0.5); }
+.ckled.dim.red:not(.on) { background: #9a2b2b; box-shadow: 0 0 0.3cqw rgba(255, 59, 59, 0.5); }
+.ckled.dim.blue:not(.on) { background: #1c6a99; box-shadow: 0 0 0.3cqw rgba(58, 178, 255, 0.5); }
 /* Titan LED flash: an occupied playback whose fader is at 0, or a key awaiting a target
    after Record (documented desk behaviour). Pulses the LED on/off. */
 .ckled.flash { animation: ckled-flash 0.85s ease-in-out infinite; }
