@@ -33,19 +33,20 @@ const ATTRIBUTES: { name: string; wheels: string[][] }[] = [
 
 type V = 'white' | 'dark' | 'blue' | 'red'
 function Key({
-  v = 'dark', led = true, ledColor, ledBottom, on, flash, text, narrow, assignable, disabled, title, onClick, onContextMenu, tour,
+  v = 'dark', led = true, ledColor, ledBottom, on, flash, text, hint, avo, narrow, assignable, disabled, title, onClick, onContextMenu, tour,
 }: {
   v?: V; led?: boolean; ledColor?: 'red' | 'blue'; ledBottom?: boolean; on?: boolean; flash?: boolean
-  text?: string; narrow?: boolean; assignable?: boolean; disabled?: boolean; title?: string
+  text?: string; hint?: string; avo?: boolean; narrow?: boolean; assignable?: boolean; disabled?: boolean; title?: string
   onClick?: () => void; onContextMenu?: (e: React.MouseEvent) => void; tour?: string
 }) {
   return (
     <button
-      className={`ck ck-${v}${ledBottom ? ' ledb' : ''}${narrow ? ' narrow' : ''}${assignable ? ' assignable' : ''}`}
+      className={`ck ck-${v}${ledBottom ? ' ledb' : ''}${narrow ? ' narrow' : ''}${assignable ? ' assignable' : ''}${avo ? ' ck-avo' : ''}`}
       disabled={disabled} title={title} onClick={onClick} onContextMenu={onContextMenu} data-tour={tour}
     >
       {led && <span className={`ckled${on ? ' on' : ''}${flash ? ' flash' : ''}${ledColor ? ' ' + ledColor : ''}`} />}
       {text != null && <span className="cktext">{text}</span>}
+      {hint && <span className="ckhint">{hint}</span>}
     </button>
   )
 }
@@ -284,6 +285,19 @@ export function QuartzPanel() {
       if (fi < 0 && si < 0) return
       e.preventDefault()
       if (e.repeat || pressed[k]) return
+      // Caps Lock reroutes the same 20 keys to the EXECUTORS (1–10 top, 11–20 bottom): tap to
+      // fire / tap again to release the executor bound to it.
+      if (e.getModifierState('CapsLock')) {
+        const n = fi >= 0 ? fi + 1 : Math.min(si, 9) + 11
+        const s = useShowStore.getState()
+        const pid = s.executorCues[n]
+        if (pid) {
+          const up = (s.playbackLevels[pid] ?? 0) > 0 || (s.firedLevels[pid] ?? 0) > 0
+          if (up) s.killPlayback(pid)
+          else s.goCue(pid)
+        }
+        return
+      }
       const id = faderId(fi >= 0 ? fi : Math.min(si, 9))
       if (!id) return
       pressed[k] = id
@@ -457,7 +471,7 @@ export function QuartzPanel() {
             const title = recordArm ? (cue ? `Record over ${cue.name}` : 'Record here')
               : connectArm ? (cue ? `Connect ${cue.name} al Go central` : 'Empty')
               : cue ? `Flash ${cue.name} — ${flashed ? 'ON (clic para apagar)' : 'clic para encender'}. En la Quartz real es momentáneo (mantener pulsado); aquí es conmutador.` : 'Empty'
-            return <Key key={`t${i}`} v={recordArm ? 'red' : 'blue'} narrow ledBottom on={on} flash={led} disabled={(!recordArm && !connectArm && !cue) || (connectArm && !cue)} title={title}
+            return <Key key={`t${i}`} v={recordArm ? 'red' : 'blue'} narrow ledBottom on={on} flash={led} hint={'QWERTYUIOP'[i]} disabled={(!recordArm && !connectArm && !cue) || (connectArm && !cue)} title={`${title} · tecla ${'QWERTYUIOP'[i]} (mantén para flash; varias a la vez)`}
               onClick={recordArm ? () => recordCueAt(gi) : connectArm ? (cue ? () => connectPlayback(cue.id) : undefined) : cue ? () => flash(cue.id) : undefined} />
           })}
           {Array.from({ length: 10 }, (_, i) => {
@@ -467,7 +481,7 @@ export function QuartzPanel() {
             // for the same reason as Flash (no press-and-hold with a mouse).
             const title = recordArm ? (cue ? `Record over ${cue.name}` : 'Record here')
               : cue ? `Swop ${cue.name} — ${swopped ? 'ON (clic para apagar)' : 'solo, clic para encender'}. En la Quartz real es momentáneo; aquí es conmutador.` : 'Empty'
-            return <Key key={`b${i}`} v={recordArm || swopped ? 'red' : 'dark'} narrow led={swopped} ledBottom on={swopped} disabled={!recordArm && !cue} title={title}
+            return <Key key={`b${i}`} v={recordArm || swopped ? 'red' : 'dark'} narrow led={swopped} ledBottom on={swopped} hint={'ASDFGHJKLÑ'[i]} disabled={!recordArm && !cue} title={`${title} · tecla ${'ASDFGHJKLÑ'[i]} (mantén para swop). Bloq Mayús + tecla = executor.`}
               onClick={recordArm ? () => recordCueAt(gi) : cue ? () => swop(cue.id) : undefined} />
           })}
         </Box>
@@ -522,7 +536,7 @@ export function QuartzPanel() {
           <Key v="dark" title="Fixture — selección (la ventana de fixtures está a la derecha)" onClick={() => setMenu('root')} />
           <Key v="dark" title="Palettes" onClick={() => { setScreen('colour'); setMenu('palette') }} />
           <Key v="dark" disabled title="Macro" /><Key v="dark" title="Group — workspace de grupos" onClick={() => { setScreen('groups'); setMenu('group') }} />
-          <Key v="white" led={false} text="1" title="1" onClick={dig('1')} /><Key v="white" led={false} text="2" title="2" onClick={dig('2')} /><Key v="white" led={false} text="3" title="3" onClick={dig('3')} /><Key v="white" on={shift} text="Avo" title="Avo — segundas funciones (las azules). En la Quartz real se MANTIENE pulsado mientras pulsas otra tecla; como aquí no se pueden pulsar dos a la vez, es un conmutador (clic para activar/desactivar)." onClick={() => setShift((s) => !s)} />
+          <Key v="white" led={false} text="1" title="1" onClick={dig('1')} /><Key v="white" led={false} text="2" title="2" onClick={dig('2')} /><Key v="white" led={false} text="3" title="3" onClick={dig('3')} /><Key v="white" on={shift} avo text="avo" title="avo (Avolites) — segundas funciones (las azules). En la Quartz real se MANTIENE pulsado mientras pulsas otra tecla; aquí es conmutador (clic para activar/desactivar)." onClick={() => setShift((s) => !s)} />
           <Key v="white" led={false} text="4" title="4" onClick={dig('4')} /><Key v="white" led={false} text="5" title="5" onClick={dig('5')} /><Key v="white" led={false} text="6" title="6" onClick={dig('6')} /><Key v="white" ledColor="blue" on={playbackFade > 0} text="TIME" title={`Time — fundido de Go: ${playbackFade}s (clic para cambiar; 0 = Snap)`} onClick={() => { const v = window.prompt('Tiempo de fundido en Go (segundos):', String(playbackFade)); if (v !== null) setPlaybackFade(Number(v.replace(',', '.')) || 0) }} />
           <Key v="white" led={false} text="7" title="7" onClick={dig('7')} /><Key v="white" led={false} text="8" title="8" onClick={dig('8')} /><Key v="white" led={false} text="9" title="9" onClick={dig('9')} /><Key v="white" ledColor="red" on={hasProgrammer} text="CLEAR" title="Clear — vacía el programmer y deselecciona" onClick={() => { clearProgrammer(); select([]) }} />
           <Key v="white" led={false} text="EXIT" title="Exit — salir al menú raíz / vaciar la línea" onClick={() => { cmdClear(); setMenu('root') }} /><Key v="white" led={false} text="0" title="0" onClick={dig('0')} /><Key v="white" led={false} text="ENTER" title="Enter — ejecutar la línea de comandos" onClick={commitCommand} /><Key v="white" led={false} text="." title="Punto — p. ej. @ . = 0%" onClick={dig('.')} />

@@ -1286,6 +1286,15 @@
 .ckled.flash:not(.on) { background: #2f6d92; }
 .ckled.red.flash:not(.on) { background: #8a2f2f; }
 @keyframes ckled-flash { 0%, 100% { opacity: 0.28; } 50% { opacity: 1; } }
+/* Keyboard-shortcut letter on a key (QWERTY… flash row, ASDF… swop row) — a sim aid so you
+   see which computer key triggers each button. Subtle, in the corner. */
+.ckhint {
+  position: absolute; top: 3%; left: 8%; z-index: 2; pointer-events: none;
+  font-size: 1.15cqw; font-weight: 800; line-height: 1; color: rgba(255, 255, 255, 0.5);
+}
+.ck-white .ckhint { color: rgba(0, 0, 0, 0.38); }
+/* Avo key = the Avolites wordmark (lowercase), like the real desk's logo key. */
+.ck-avo .cktext { text-transform: lowercase; font-style: italic; font-weight: 800; letter-spacing: -0.3px; }
 
 /* Big red keys (Go, Locate) */
 .calbig {
