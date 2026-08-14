@@ -342,7 +342,7 @@ export function QuartzScreen() {
     body = (
       <div className="qd-showlib">
         <div className="qd-showlib-head">
-          <span>Show Library — plantillas de ejemplo</span>
+          <span>Show Library — shows de ejemplo</span>
           <button className="qd-slk-btn" onClick={loadShow}>Importar archivo…</button>
         </div>
         <div className="qd-showlib-grid">

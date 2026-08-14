@@ -77,7 +77,7 @@ const STEPS: Step[] = [
   {
     target: 'visualizer',
     title: '¡Listo! 🎉',
-    body: 'Has montado un truss con posición, color, intensidad, un cue, executors, grupos y un efecto. Repite para más trusses o carga una plantilla. ¡A jugar!',
+    body: 'Has montado un truss con posición, color, intensidad, un cue, executors, grupos y un efecto. Repite para más trusses o carga un show de ejemplo desde el menú Disk → Show Library de la mesa. ¡A jugar!',
   },
 ]
 
