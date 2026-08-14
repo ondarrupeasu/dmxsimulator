@@ -660,10 +660,26 @@ export function Visualizer3D() {
         down.set(0, -1, 0).applyQuaternion(_q.copy(_qy).multiply(_qx))
         let length = 16
         let hitsFloor = false
+        let landX = home.x
+        let landZ = home.z
+        let surfaceY = STAGE_TOP
         if (down.y < -0.02) {
-          // Reach the stage deck (1 m above the floor) from this truss's height.
-          length = Math.min(24, (home.y - STAGE_TOP) / -down.y)
-          hitsFloor = true
+          // The beam hits the STAGE DECK (top at STAGE_TOP) only if it lands within the stage
+          // footprint; past the downstage edge it carries on down to the AUDIENCE FLOOR (y=0),
+          // so the light pool sits on the real surface instead of floating at stage height.
+          let t = (home.y - STAGE_TOP) / -down.y
+          let hx = home.x + down.x * t
+          let hz = home.z + down.z * t
+          if (!(hx >= -10 && hx <= 10 && hz >= -7 && hz <= 4)) {
+            surfaceY = 0
+            t = home.y / -down.y
+            hx = home.x + down.x * t
+            hz = home.z + down.z * t
+          }
+          length = Math.min(24, t)
+          landX = hx
+          landZ = hz
+          hitsFloor = t <= 24.001
         }
         // Beam width from zoom + iris: zoom opens/closes the cone, iris pinches it toward a
         // pinspot. Scale X/Z (width) independently of Y (length) so the cone angle changes.
@@ -684,7 +700,7 @@ export function Visualizer3D() {
         // floor obliquely), oriented and stretched along the beam's ground track.
         if (on && hitsFloor) {
           fx.pool.visible = true
-          fx.pool.position.set(home.x + down.x * length, STAGE_TOP + 0.02, home.z + down.z * length)
+          fx.pool.position.set(landX, surfaceY + 0.02, landZ)
           const vert = Math.max(0.2, -down.y) // cos of angle from vertical
           const floorAngle = Math.atan2(down.z, down.x)
           fx.pool.rotation.set(-Math.PI / 2, 0, -floorAngle)
