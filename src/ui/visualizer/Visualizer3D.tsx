@@ -197,6 +197,32 @@ function buildTruss(length: number): THREE.Mesh {
 
 const metalMat = new THREE.MeshStandardMaterial({ color: 0x2b2b31, metalness: 0.6, roughness: 0.5 })
 
+/** Gobo pattern textures used as the pool's alphaMap (white = light passes, black = blocked),
+ *  so a spot with a gobo throws a shaped pattern on the floor instead of a plain disc. Slot 0
+ *  is "open" (no texture). A handful of generic patterns — not a fixture's real gobo wheel. */
+function makeGoboTextures(): THREE.CanvasTexture[] {
+  const draws: ((c: CanvasRenderingContext2D) => void)[] = [
+    (c) => { for (let i = 0; i < 55; i++) { c.beginPath(); c.arc(Math.random() * 128, Math.random() * 128, 5 + Math.random() * 13, 0, 7); c.fill() } }, // breakup dots
+    (c) => { c.translate(64, 64); for (let i = 0; i < 12; i++) { c.rotate(Math.PI / 6); c.fillRect(-3.5, 6, 7, 60) } }, // spokes
+    (c) => { c.translate(64, 64); c.lineWidth = 6; for (let r = 12; r < 62; r += 15) { c.beginPath(); c.arc(0, 0, r, 0, 7); c.stroke() } }, // rings
+    (c) => { for (let i = 0; i < 9; i++) { c.save(); c.translate(Math.random() * 128, Math.random() * 128); c.rotate(Math.random() * 7); c.beginPath(); c.moveTo(0, -16); c.lineTo(13, 13); c.lineTo(-13, 13); c.closePath(); c.fill(); c.restore() } }, // leaves
+  ]
+  return draws.map((draw) => {
+    const cv = document.createElement('canvas')
+    cv.width = cv.height = 128
+    const ctx = cv.getContext('2d')!
+    ctx.fillStyle = '#000'
+    ctx.fillRect(0, 0, 128, 128)
+    ctx.fillStyle = '#fff'
+    ctx.strokeStyle = '#fff'
+    draw(ctx)
+    const tex = new THREE.CanvasTexture(cv)
+    tex.center.set(0.5, 0.5)
+    return tex
+  })
+}
+const GOBO_TEX = makeGoboTextures()
+
 /** A fixture model. Moving heads get a base + panning yoke + tilting head; other
  *  kinds get a static can on a yoke. Either way the beam lives in the tilt part. */
 function buildFixture(movingHead: boolean): FxObj {
@@ -665,6 +691,15 @@ export function Visualizer3D() {
           fx.pool.scale.set((length / vert) * widthF, length * widthF, 1)
           fx.poolMat.color.copy(col)
           fx.poolMat.opacity = vs.intensity * 0.35
+          // Gobo: shape the pool with a pattern (alphaMap) when a gobo is in the beam.
+          const goboTex = vs.gobo !== undefined && vs.gobo >= 8
+            ? GOBO_TEX[Math.min(GOBO_TEX.length - 1, Math.floor((vs.gobo / 256) * GOBO_TEX.length))]
+            : null
+          if (fx.poolMat.alphaMap !== goboTex) {
+            fx.poolMat.alphaMap = goboTex
+            fx.poolMat.needsUpdate = true
+          }
+          if (goboTex) fx.poolMat.opacity = vs.intensity * 0.55 // patterned pool reads brighter
         } else {
           fx.pool.visible = false
         }
