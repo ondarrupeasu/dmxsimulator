@@ -60,12 +60,6 @@ export function FixturesWindow() {
       <header className="fx-win-header">
         <h2>{t('fixturesWindow.title')}</h2>
         <div className="vh-tools">
-          {selAimable.length > 0 && (
-            <div className="fx-aim-head" title={`Orientar ${selAimable.length > 1 ? `${selAimable.length} focos` : selAimable[0].name} (montaje físico — no es DMX). Míralo en el 3D.`}>
-              <span className="fx-aim-cap">Aim ↺</span>
-              <AimPad pan={aim.pan} tilt={aim.tilt} onChange={(p, tl) => selAimable.forEach((f) => setFixtureAim(f.id, p, tl))} />
-            </div>
-          )}
           <button className="ghost-btn" disabled={noFx} onClick={() => select(show.fixtures.map((f) => f.id))}>
             {t('fixturesWindow.all')}
           </button>
@@ -74,6 +68,12 @@ export function FixturesWindow() {
           </button>
         </div>
       </header>
+      {selAimable.length > 0 && (
+        <div className="fx-aim-bar" title="Orientación física del foco (montaje — no es DMX). Míralo en el 3D.">
+          <span className="fx-aim-cap">Aim ↺ {selAimable.length > 1 ? `${selAimable.length} focos` : selAimable[0].name}</span>
+          <AimPad pan={aim.pan} tilt={aim.tilt} onChange={(p, tl) => selAimable.forEach((f) => setFixtureAim(f.id, p, tl))} />
+        </div>
+      )}
       <div className="scroll">
         {noFx ? (
           <span className="qd-muted">{t('fixturesWindow.empty')}</span>

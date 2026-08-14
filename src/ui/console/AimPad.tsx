@@ -40,7 +40,10 @@ export function AimPad({ pan, tilt, onChange }: { pan: number; tilt: number; onC
       <div className="aim-pad" ref={ref} onPointerDown={onDown} title="Apuntar el foco: el centro es recto hacia abajo, arrastra hacia donde quieres que ilumine (el borde = horizontal). Míralo en el 3D.">
         <span className="aim-dot" style={{ left: `${dotX}%`, top: `${dotY}%` }} />
       </div>
-      <span className="aim-read">P{pan}° · T{tilt}°</span>
+      <span className="aim-read">
+        <span className="aim-field">Pan<b>{pan}°</b></span>
+        <span className="aim-field">Tilt<b>{tilt}°</b></span>
+      </span>
       <button className="aim-reset" title="Centrar" onPointerDown={(e) => e.stopPropagation()} onClick={(e) => { e.stopPropagation(); onChange(0, 0) }}>⌖</button>
     </div>
   )

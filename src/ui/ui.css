@@ -218,7 +218,10 @@
   border-radius: 50%; background: #4a688f;
 }
 .aim-dot { position: absolute; width: 8px; height: 8px; margin: -4px 0 0 -4px; border-radius: 50%; background: #6aa9ff; box-shadow: 0 0 6px #6aa9ff; z-index: 1; }
-.aim-read { font-size: 8px; color: #7fb0e8; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.aim-read { display: inline-flex; flex-direction: column; gap: 2px; font-size: 9px; color: #7fb0e8; }
+/* Fixed-width value fields so growing numbers (−180°…) never reflow / shift the joystick. */
+.aim-field { display: inline-flex; justify-content: space-between; gap: 5px; min-width: 66px; }
+.aim-field b { min-width: 38px; text-align: right; font-variant-numeric: tabular-nums; color: #cfe4fb; }
 .aim-reset { font-size: 11px; line-height: 1; padding: 1px 4px; cursor: pointer; background: #24252b; color: #9fc4e8; border: 1px solid #35506e; border-radius: 4px; }
 .patch-assign select {
   font-size: 11px; padding: 2px 4px; border-radius: var(--radius-sm);
@@ -695,9 +698,14 @@
 .qd-fx-attrs { display: flex; gap: 2px; margin-top: 2px; font-size: 8px; font-weight: 700; letter-spacing: .4px; }
 .qd-fx-attrs span { color: rgba(255, 255, 255, 0.16); }
 .qd-fx-attrs span.on { color: rgba(200, 220, 245, 0.9); }
-/* Single aim joystick in the Fixtures-window header — drives the selected aimable fixtures. */
-.fx-aim-head { display: inline-flex; align-items: center; gap: 4px; margin-right: 6px; }
-.fx-aim-cap { font-size: 9px; font-weight: 700; color: #7fb0e8; white-space: nowrap; }
+/* Aim joystick bar — its own centred row (not cramped next to All/Clear), with fixed-width
+   readouts so it never jumps around as the numbers grow. Drives all selected aimable fixtures. */
+.fx-aim-bar {
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  padding: 6px 8px; margin: 4px 6px 0; border: 1px dashed #35506e; border-radius: 6px;
+  background: #12181f;
+}
+.fx-aim-cap { font-size: 10px; font-weight: 700; color: #7fb0e8; white-space: nowrap; }
 .qd-muted { color: var(--text-faint); font-size: 12px; }
 
 /* Touchscreen tabs (Fixtures / palette windows) */
