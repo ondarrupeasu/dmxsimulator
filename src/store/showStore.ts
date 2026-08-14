@@ -23,11 +23,16 @@ import { UNIVERSE_SIZE, mergeProgrammer, computePlaybackBase, resolveLevel, effe
 
 export type AppMode = 'patch' | 'program'
 
-/** A Titan "Workspace": a named snapshot of the on-screen window layout. */
+/** Standard Titan window positions (Cog / Window Appearance): quarters, halves, full. */
+export type WinPos = 'full' | 'left' | 'right' | 'top' | 'bottom' | 'tl' | 'tr' | 'bl' | 'br'
+/** One workspace window on the Titan touchscreen: a workspace shown at a standard position. */
+export interface DeskWindow { id: string; screen: string; pos: WinPos }
+
+/** A Titan "Workspace": a named snapshot of the on-screen window layout (the whole mosaic). */
 export interface DeskWorkspace {
   id: string
   name: string
-  screen: string
+  windows: DeskWindow[]
   viewer: '2d' | '3d'
   fold: { screen: boolean; fixtures: boolean; monitor: boolean }
 }
@@ -98,8 +103,18 @@ interface ShowState {
   // Quartz desk UI state (shared between its screen + button panel)
   deskAttr: string
   setDeskAttr: (a: string) => void
+  // The focused window's workspace (kept in sync with deskWindows/deskFocus so the many
+  // readers/setters of deskScreen — executors, DMX-monitor click, tabs — keep working).
   deskScreen: string
   setDeskScreen: (s: string) => void
+  // Titan mosaic: the touchscreen holds one or more workspace windows, each at a standard
+  // position (quarter/half/full). deskFocus = the active window (tabs + Cog act on it).
+  deskWindows: DeskWindow[]
+  deskFocus: string
+  setWindowPos: (id: string, pos: WinPos) => void
+  focusWindow: (id: string) => void
+  addWindow: (screen?: string) => void
+  closeWindow: (id: string) => void
 
   setMode: (mode: AppMode) => void
   setConsole: (consoleId: string) => void
@@ -502,7 +517,51 @@ export const useShowStore = create<ShowState>()(
       deskAttr: 'Intensity',
       setDeskAttr: (a) => set({ deskAttr: a }),
       deskScreen: 'fixtures',
-      setDeskScreen: (screen) => set({ deskScreen: screen }),
+      deskWindows: [{ id: 'w-main', screen: 'fixtures', pos: 'full' }],
+      deskFocus: 'w-main',
+      // Setting "the desk screen" now means: point the FOCUSED window at that workspace.
+      setDeskScreen: (screen) =>
+        set((s) => {
+          const focus = s.deskWindows.some((w) => w.id === s.deskFocus) ? s.deskFocus : s.deskWindows[0]?.id
+          if (!focus) {
+            const w: DeskWindow = { id: 'w-main', screen, pos: 'full' }
+            return { deskWindows: [w], deskFocus: w.id, deskScreen: screen }
+          }
+          return { deskWindows: s.deskWindows.map((w) => (w.id === focus ? { ...w, screen } : w)), deskScreen: screen }
+        }),
+      setWindowPos: (id, pos) => set((s) => ({ deskWindows: s.deskWindows.map((w) => (w.id === id ? { ...w, pos } : w)) })),
+      focusWindow: (id) =>
+        set((s) => {
+          const w = s.deskWindows.find((x) => x.id === id)
+          return w ? { deskFocus: id, deskScreen: w.screen } : {}
+        }),
+      addWindow: (screen) =>
+        set((s) => {
+          // Drop the new window into the first free quarter; if the desk is a single full
+          // window, shrink it to the top-left quarter so both are visible (Titan-like tiling).
+          const taken = new Set(s.deskWindows.map((w) => w.pos))
+          const quarters: WinPos[] = ['tl', 'tr', 'bl', 'br']
+          let windows = s.deskWindows
+          if (windows.length === 1 && windows[0].pos === 'full') {
+            windows = [{ ...windows[0], pos: 'tl' }]
+            taken.clear()
+            taken.add('tl')
+          }
+          const free = quarters.find((q) => !taken.has(q)) ?? 'br'
+          const id = `w-${Date.now().toString(36)}-${windows.length}`
+          const scr = screen ?? s.deskScreen ?? 'groups'
+          return { deskWindows: [...windows, { id, screen: scr, pos: free }], deskFocus: id, deskScreen: scr }
+        }),
+      closeWindow: (id) =>
+        set((s) => {
+          if (s.deskWindows.length <= 1) return {} // never close the last window
+          const remaining = s.deskWindows.filter((w) => w.id !== id)
+          // If only one window is left, let it fill the screen again.
+          const windows = remaining.length === 1 ? [{ ...remaining[0], pos: 'full' as WinPos }] : remaining
+          const focus = windows.some((w) => w.id === s.deskFocus) ? s.deskFocus : windows[0].id
+          const fw = windows.find((w) => w.id === focus)!
+          return { deskWindows: windows, deskFocus: focus, deskScreen: fw.screen }
+        }),
 
       setMode: (mode) => set({ mode }),
       setConsole: (consoleId) => set({ consoleId }),
@@ -1179,10 +1238,15 @@ export const useShowStore = create<ShowState>()(
       setViewer: (v) => set({ viewer: v }),
       fold: { screen: false, fixtures: false, monitor: false },
       setFold: (key, val) => set((s) => (s.fold[key] === val ? {} : { fold: { ...s.fold, [key]: val } })),
-      // Two default Views to start from (kept for a first run; users record their own alongside).
+      // Default Views to start from (kept for a first run; users record their own alongside).
+      // "Mosaico" shows the Titan-style 2×2 tiling out of the box.
       workspaces: [
-        { id: 'ws-program', name: 'Programa', screen: 'fixtures', viewer: '3d', fold: { screen: false, fixtures: false, monitor: false } },
-        { id: 'ws-visualiser', name: 'Visualiser', screen: 'fixtures', viewer: '3d', fold: { screen: false, fixtures: true, monitor: true } },
+        { id: 'ws-program', name: 'Programa', windows: [{ id: 'w-main', screen: 'fixtures', pos: 'full' }], viewer: '3d', fold: { screen: false, fixtures: false, monitor: false } },
+        { id: 'ws-mosaic', name: 'Mosaico', windows: [
+          { id: 'w-fx', screen: 'fixtures', pos: 'tl' }, { id: 'w-col', screen: 'colour', pos: 'tr' },
+          { id: 'w-grp', screen: 'groups', pos: 'bl' }, { id: 'w-pb', screen: 'playbacks', pos: 'br' },
+        ], viewer: '3d', fold: { screen: false, fixtures: false, monitor: false } },
+        { id: 'ws-visualiser', name: 'Visualiser', windows: [{ id: 'w-main', screen: 'fixtures', pos: 'full' }], viewer: '3d', fold: { screen: false, fixtures: true, monitor: true } },
       ],
       workspaceRecordArm: false,
       armWorkspaceRecord: () => set((s) => ({ workspaceRecordArm: !s.workspaceRecordArm })),
@@ -1191,7 +1255,7 @@ export const useShowStore = create<ShowState>()(
           const snap: DeskWorkspace = {
             id: `ws-${s.workspaces.length + 1}-${name.toLowerCase().replace(/\s+/g, '-').slice(0, 12)}`,
             name: name.trim() || `View ${s.workspaces.length + 1}`,
-            screen: s.deskScreen,
+            windows: s.deskWindows.map((w) => ({ ...w })),
             viewer: s.viewer,
             fold: { ...s.fold },
           }
@@ -1201,7 +1265,11 @@ export const useShowStore = create<ShowState>()(
         set((s) => {
           const ws = s.workspaces.find((w) => w.id === id)
           if (!ws) return {}
-          return { deskScreen: ws.screen, viewer: ws.viewer, fold: { ...ws.fold } }
+          // Back-compat: an old View saved before mosaic stored a single `screen`.
+          const legacy = (ws as unknown as { screen?: string }).screen
+          const windows = (ws.windows && ws.windows.length ? ws.windows : [{ id: 'w-main', screen: legacy ?? 'fixtures', pos: 'full' as WinPos }]).map((w) => ({ ...w }))
+          const focus = windows[0]?.id ?? 'w-main'
+          return { deskWindows: windows, deskFocus: focus, deskScreen: windows[0]?.screen ?? 'fixtures', viewer: ws.viewer, fold: { ...ws.fold } }
         }),
       deleteWorkspace: (id) => set((s) => ({ workspaces: s.workspaces.filter((w) => w.id !== id) })),
 
@@ -1417,6 +1485,8 @@ export const useShowStore = create<ShowState>()(
         executorCues: s.executorCues,
         workspaces: s.workspaces,
         viewer: s.viewer,
+        deskWindows: s.deskWindows,
+        deskFocus: s.deskFocus,
       }),
     },
   ),

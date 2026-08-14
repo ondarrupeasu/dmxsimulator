@@ -960,7 +960,24 @@
   flex: 0 0 auto;
 }
 .qscreen-main { flex: 1; display: flex; min-height: 0; }
-.qscreen-body { flex: 1; overflow: auto; padding: 8px 10px; min-height: 0; background: var(--tt-bg); }
+.qscreen-body { flex: 1; position: relative; overflow: hidden; min-height: 0; background: var(--tt-bg); }
+/* Mosaic: each workspace window is absolutely positioned to its standard slot. A single
+   full window carries no chrome (identical to the pre-mosaic look). */
+.qd-win { position: absolute; display: flex; flex-direction: column; min-height: 0; overflow: hidden; padding: 2px; }
+.qd-win.focused { outline: 1.5px solid var(--coral, #ff6b5e); outline-offset: -1.5px; border-radius: 4px; }
+.qd-win-bar { flex: 0 0 auto; display: flex; align-items: center; gap: 6px; padding: 1px 4px 2px; position: relative; }
+.qd-win-name { font-size: 9.5px; font-weight: 700; letter-spacing: 0.3px; color: #9fb4c6; text-transform: uppercase; }
+.qd-win-tools { margin-left: auto; display: flex; gap: 2px; }
+.qd-win-btn { font-size: 10px; line-height: 1; color: #9fb4c6; background: #1a2530; border: 1px solid #2f4457; border-radius: 3px; padding: 1px 5px; cursor: pointer; }
+.qd-win-btn:hover { background: #24333f; color: #d8e6f2; }
+.qd-win-body { flex: 1; overflow: auto; padding: 4px 6px; min-height: 0; }
+/* Cog (Window Appearance) 3×3 position picker. */
+.qd-cog { position: absolute; top: 20px; right: 4px; z-index: 6; display: grid; grid-template-columns: repeat(3, 1fr); gap: 3px; padding: 5px; background: #0f1620; border: 1px solid #35506a; border-radius: 6px; box-shadow: 0 6px 18px rgba(0,0,0,0.5); }
+.qd-cog-cell { width: 22px; height: 18px; font-size: 11px; line-height: 1; color: #bcd; background: #1a2530; border: 1px solid #2f4457; border-radius: 3px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+.qd-cog-cell:hover { background: #24333f; }
+.qd-cog-cell.on { background: #3a86c0; color: #fff; border-color: #6ba8d6; }
+.qd-tab-add { font-size: 11px; font-weight: 700; padding: 2px 7px; color: #123; background: linear-gradient(180deg, #eaf6ff, #cfe6f7); border: 1px solid #6ba8d6; border-top-color: #f7fdff; border-radius: 4px; cursor: pointer; margin-left: 4px; }
+.qd-tab-add:disabled { opacity: 0.4; cursor: default; }
 
 /* Workspace windows — grids of hand-legended buttons (Groups / palettes / cues). */
 .qd-ws-grid {

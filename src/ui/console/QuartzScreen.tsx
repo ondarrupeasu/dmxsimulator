@@ -1,6 +1,7 @@
-import { useRef } from 'react'
+import { useRef, useState } from 'react'
 import { useShowStore } from '../../store/showStore'
 import type { PaletteKind } from '../../model/palette'
+import type { WinPos } from '../../store/showStore'
 import { PALETTE_LABELS } from '../../model/palette'
 import { EffectsPanel } from '../run/EffectsPanel'
 import { AudioPanel } from './AudioPanel'
@@ -52,6 +53,12 @@ const askLegend = (current: string, apply: (name: string) => void) => {
 export function QuartzScreen() {
   const rawScreen = useShowStore((s) => s.deskScreen)
   const setScreen = useShowStore((s) => s.setDeskScreen)
+  const deskWindows = useShowStore((s) => s.deskWindows)
+  const deskFocus = useShowStore((s) => s.deskFocus)
+  const focusWindow = useShowStore((s) => s.focusWindow)
+  const setWindowPos = useShowStore((s) => s.setWindowPos)
+  const addWindow = useShowStore((s) => s.addWindow)
+  const closeWindow = useShowStore((s) => s.closeWindow)
   const selection = useShowStore((s) => s.selection)
   const select = useShowStore((s) => s.select)
   const toggleSelect = useShowStore((s) => s.toggleSelect)
@@ -166,9 +173,14 @@ export function QuartzScreen() {
   const progActive = Object.keys(programmer).length > 0
   // Screens reachable from a Disk/menu softkey rather than a workspace tab (no tab lights up for them).
   const EXTRA_SCREENS = ['showlib']
-  const screen = TABS.some((tb) => tb.key === rawScreen) || EXTRA_SCREENS.includes(rawScreen) ? rawScreen : 'groups'
-  const kind: PaletteKind = PALETTE_KINDS.includes(rawScreen as PaletteKind) ? (rawScreen as PaletteKind) : 'colour'
+  const norm = (raw: string) => (TABS.some((tb) => tb.key === raw) || EXTRA_SCREENS.includes(raw) ? raw : 'groups')
+  const kindOf = (raw: string): PaletteKind => (PALETTE_KINDS.includes(raw as PaletteKind) ? (raw as PaletteKind) : 'colour')
+  // The focused window's workspace drives the tab highlight + the palette record softkeys.
+  const screen = norm(rawScreen)
+  const kind: PaletteKind = kindOf(rawScreen)
   const palKind = kind
+  // Cog (Window Appearance) popover: which window's position picker is open.
+  const [cogFor, setCogFor] = useState<string | null>(null)
 
   const clearAll = () => {
     clearSelection()
@@ -297,8 +309,11 @@ export function QuartzScreen() {
     </div>
   )
 
-  let body: React.ReactNode
-  if (screen === 'fixtures') {
+  const renderBody = (rawScr: string): React.ReactNode => {
+    const screen = norm(rawScr)
+    const kind = kindOf(rawScr)
+    let body: React.ReactNode
+    if (screen === 'fixtures') {
     body = noFx ? (
       <div className="qd-muted" style={{ padding: 10 }}>Patch fixtures first (Patch mode).</div>
     ) : (
@@ -379,7 +394,24 @@ export function QuartzScreen() {
         </button>
       </div>
     )
+    }
+    return body
   }
+
+  // Standard Titan window positions (Cog / Window Appearance) → % rectangles on the screen.
+  const POS_RECT: Record<WinPos, { l: number; t: number; w: number; h: number }> = {
+    full: { l: 0, t: 0, w: 100, h: 100 },
+    left: { l: 0, t: 0, w: 50, h: 100 }, right: { l: 50, t: 0, w: 50, h: 100 },
+    top: { l: 0, t: 0, w: 100, h: 50 }, bottom: { l: 0, t: 50, w: 100, h: 50 },
+    tl: { l: 0, t: 0, w: 50, h: 50 }, tr: { l: 50, t: 0, w: 50, h: 50 },
+    bl: { l: 0, t: 50, w: 50, h: 50 }, br: { l: 50, t: 50, w: 50, h: 50 },
+  }
+  const POS_GRID: { pos: WinPos; label: string }[] = [
+    { pos: 'tl', label: '◰' }, { pos: 'top', label: '▀' }, { pos: 'tr', label: '◳' },
+    { pos: 'left', label: '▌' }, { pos: 'full', label: '□' }, { pos: 'right', label: '▐' },
+    { pos: 'bl', label: '◱' }, { pos: 'bottom', label: '▄' }, { pos: 'br', label: '◲' },
+  ]
+  const tabLabel = (scr: string) => TABS.find((tb) => tb.key === norm(scr))?.label ?? scr
 
   return (
     <div className="qscreen" data-tour="titan-screen">
@@ -397,6 +429,12 @@ export function QuartzScreen() {
               {tb.label}
             </button>
           ))}
+          <button
+            className="qd-tab-add"
+            onClick={() => addWindow()}
+            disabled={deskWindows.length >= 4}
+            title="Abrir otra ventana en mosaico (hasta 4 — como el touchscreen del Titan)"
+          >⊞</button>
         </div>
         <div className="qd-views" title="Workspaces (Views): disposiciones de ventanas guardadas — Titan">
           <span className="qd-views-cap">Views</span>
@@ -414,7 +452,7 @@ export function QuartzScreen() {
           <button
             className={`qd-view qd-view-rec${workspaceRecordArm ? ' arm' : ''}`}
             onClick={() => (workspaceRecordArm ? quickRecordWorkspace() : armWorkspaceRecord())}
-            title="Record Workspace: guarda la disposición actual (pestaña + visor + paneles plegados) como un View"
+            title="Record Workspace: guarda la disposición actual (mosaico de ventanas + visor + paneles plegados) como un View"
           >
             {workspaceRecordArm ? '＋ guardar' : '◉ Rec'}
           </button>
@@ -422,7 +460,44 @@ export function QuartzScreen() {
       </div>
 
       <div className="qscreen-main">
-        <div className="qscreen-body">{body}</div>
+        <div className="qscreen-body">
+          {deskWindows.map((w) => {
+            const r = POS_RECT[w.pos]
+            const focused = w.id === deskFocus
+            const single = deskWindows.length === 1
+            return (
+              <div
+                key={w.id}
+                className={`qd-win${focused && !single ? ' focused' : ''}`}
+                style={{ left: `${r.l}%`, top: `${r.t}%`, width: `${r.w}%`, height: `${r.h}%`, zIndex: focused ? 2 : 1 }}
+                onMouseDown={() => { if (!focused) focusWindow(w.id) }}
+              >
+                {!single && (
+                  <div className="qd-win-bar">
+                    <span className="qd-win-name">{tabLabel(w.screen)}</span>
+                    <span className="qd-win-tools">
+                      <button className="qd-win-btn" title="Window Appearance (posición/tamaño)" onClick={(e) => { e.stopPropagation(); setCogFor(cogFor === w.id ? null : w.id) }}>⚙</button>
+                      <button className="qd-win-btn" title="Cerrar esta ventana" onClick={(e) => { e.stopPropagation(); closeWindow(w.id) }}>✕</button>
+                    </span>
+                    {cogFor === w.id && (
+                      <div className="qd-cog" onMouseDown={(e) => e.stopPropagation()}>
+                        {POS_GRID.map((g) => (
+                          <button
+                            key={g.pos}
+                            className={`qd-cog-cell${w.pos === g.pos ? ' on' : ''}`}
+                            title={g.pos}
+                            onClick={() => { setWindowPos(w.id, g.pos); setCogFor(null) }}
+                          >{g.label}</button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+                <div className="qd-win-body">{renderBody(w.screen)}</div>
+              </div>
+            )
+          })}
+        </div>
 
         <div className="qscreen-soft">
           <div className="qsk-menu">{menu.title}</div>
