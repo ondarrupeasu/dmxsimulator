@@ -12,8 +12,8 @@
   align-items: center;
   gap: 16px;
   padding: 8px 16px;
-  background: var(--bg-panel);
-  border-bottom: 1px solid var(--border);
+  background: var(--pwa-bg);
+  border-bottom: 1px solid var(--pwa-edge);
   flex: 0 0 auto;
 }
 .topbar .brand {
@@ -97,6 +97,10 @@
   min-height: 0;
 }
 .pane > * { flex: 1; min-width: 0; min-height: 0; }
+/* PWA panes (DMX monitor, patch tools…) are NOT the real desk — a cool blue-tinted
+   background + a blue edge stripe sets them apart from the neutral-grey Quartz/Titan. */
+.pwa-pane { background: var(--pwa-bg); box-shadow: inset 3px 0 0 var(--pwa-accent); }
+.pwa-pane .panel, .pwa-pane .dmx-monitor { background: transparent; }
 /* Collapse/expand chevron for foldable panes (absolute, so it's out of flex flow) */
 .pane-fold {
   position: absolute; top: 6px; right: 10px; z-index: 20;

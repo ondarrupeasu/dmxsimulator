@@ -18,6 +18,12 @@
   --ok: #4caf7d;
   --warn: #e0b34a;
 
+  /* PWA vs desk: the Quartz + Titan are neutral grey; everything that is a PWA extra
+     (not on the real console) takes a cooler blue-tinted background so it reads as "ours". */
+  --pwa-bg: #0b131f;
+  --pwa-edge: #1d3350;
+  --pwa-accent: #3d6ea5;
+
   --radius: 8px;
   --radius-sm: 5px;
   --gap: 12px;

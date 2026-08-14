@@ -696,21 +696,24 @@ export function Visualizer3D() {
           fx.beamMat.opacity = Math.min(0.95, vs.intensity * (vs.strobing ? 0.25 : 0.55) * (1 + 1.4 * hazeLevel))
         }
 
-        // Pool where the beam meets the stage deck — an ellipse (a tilted beam cuts the
-        // surface obliquely). Only drawn on the stage (see onStage above).
-        if (on && onStage) {
+        // Pool where the beam lands — an ellipse (a tilted beam cuts the surface obliquely).
+        // A plain white disc over the audience/off-stage looks wrong, so normally we only draw
+        // it on the stage deck. BUT when a gobo is in the beam we DO draw it off-stage too —
+        // otherwise the shaped pattern (incl. on the back wall) would vanish the moment the
+        // beam leaves the deck, and you couldn't see your selected gobo. A patterned pool reads
+        // as intentional, unlike a blank disc.
+        const goboTex = vs.gobo !== undefined && vs.gobo >= 8
+          ? GOBO_TEX[Math.min(GOBO_TEX.length - 1, Math.floor((vs.gobo / 256) * GOBO_TEX.length))]
+          : null
+        if (on && (onStage || goboTex)) {
           fx.pool.visible = true
-          fx.pool.position.set(landX, STAGE_TOP + 0.02, landZ)
+          fx.pool.position.set(landX, (onStage ? STAGE_TOP : 0) + 0.02, landZ)
           const vert = Math.max(0.2, -down.y) // cos of angle from vertical
           const floorAngle = Math.atan2(down.z, down.x)
           fx.pool.rotation.set(-Math.PI / 2, 0, -floorAngle)
           fx.pool.scale.set((length / vert) * widthF, length * widthF, 1)
           fx.poolMat.color.copy(col)
           fx.poolMat.opacity = vs.intensity * 0.35
-          // Gobo: shape the pool with a pattern (alphaMap) when a gobo is in the beam.
-          const goboTex = vs.gobo !== undefined && vs.gobo >= 8
-            ? GOBO_TEX[Math.min(GOBO_TEX.length - 1, Math.floor((vs.gobo / 256) * GOBO_TEX.length))]
-            : null
           if (fx.poolMat.alphaMap !== goboTex) {
             fx.poolMat.alphaMap = goboTex
             fx.poolMat.needsUpdate = true
