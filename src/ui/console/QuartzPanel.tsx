@@ -410,7 +410,7 @@ export function QuartzPanel() {
                   : `Executor ${n} — clic para etiquetar`
               return (
                 <Key
-                  key={i} v="dark" narrow assignable={!caption} ledColor="red" on={lit} dim={!!cue && !lit}
+                  key={i} v="dark" narrow assignable={!caption} ledColor="blue" on={lit} dim={!!cue && !lit}
                   title={title}
                   onClick={() => onExecutor(n)}
                   onContextMenu={(e) => { e.preventDefault(); if (cue) clearExecutor(n) }}
@@ -424,17 +424,17 @@ export function QuartzPanel() {
             const scr = EXEC_SCREEN[n]
             if (scr) {
               const active = deskScreen === scr
-              return <Key key={i} v="dark" narrow ledColor="red" on={active} dim={!active}
+              return <Key key={i} v="dark" narrow ledColor="blue" on={active} dim={!active}
                 title={`Executor ${n} — ${label} (abrir workspace)`} onClick={() => setScreen(scr)} />
             }
             if (n === 15) {
               // Visualiser: recall the big-3D "Visualiser" View (folds the side panes).
-              return <Key key={i} v="dark" narrow ledColor="red" dim
+              return <Key key={i} v="dark" narrow ledColor="blue" dim
                 title={`Executor ${n} — ${label} (visor 3D a pantalla grande)`} onClick={() => recallWorkspace('ws-visualiser')} />
             }
             // 14 Channel Grid / 18 Snap: fixed functions we haven't built yet — lit dim (assigned
             // on the real desk) but inert here, said so in the tooltip.
-            return <Key key={i} v="dark" narrow ledColor="red" dim disabled title={`Executor ${n} — ${label} (función fija; aún no disponible en el simulador)`} />
+            return <Key key={i} v="dark" narrow ledColor="blue" dim disabled title={`Executor ${n} — ${label} (función fija; aún no disponible en el simulador)`} />
           })}
         </Box>
         <GridLabels x={648} y={172} w={640} cols={10} small items={['11\nAttribute\nEditor', '12\nShow\nLibrary', '13\nPlaybacks', '14\nChannel\nGrid', '15\nVisualiser', '16\nGroups +\nPalettes', '17\nFixtures\n+ Groups', '18\nSnap', execCaption(19) ? `19\n${execCaption(19)}` : '19', execCaption(20) ? `20\n${execCaption(20)}` : '20']} />
