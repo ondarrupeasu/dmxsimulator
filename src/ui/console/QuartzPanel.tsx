@@ -51,8 +51,13 @@ function Key({
   )
 }
 
-// Fixed executors 11–18 that map to a touchscreen workspace we actually have.
-const EXEC_SCREEN: Record<number, string> = { 13: 'playbacks', 16: 'colour', 17: 'groups' }
+// Fixed executors 11–18 → the touchscreen workspace each opens (the ones we have windows for).
+const EXEC_SCREEN: Record<number, string> = { 11: 'intensity', 12: 'showlib', 13: 'playbacks', 16: 'colour', 17: 'groups' }
+// Silk-screen names of the fixed executors, for tooltips.
+const EXEC_FIXED_LABEL: Record<number, string> = {
+  11: 'Attribute Editor', 12: 'Show Library', 13: 'Playbacks', 14: 'Channel Grid',
+  15: 'Visualiser', 16: 'Groups + Palettes', 17: 'Fixtures + Groups', 18: 'Snap',
+}
 
 // The only two key sizes on the desk (in cqw): 1:1 and a little narrower; one height.
 const KW = 4.4
@@ -161,6 +166,8 @@ export function QuartzPanel() {
   const attr = useShowStore((s) => s.deskAttr)
   const setAttr = useShowStore((s) => s.setDeskAttr)
   const setScreen = useShowStore((s) => s.setDeskScreen)
+  const deskScreen = useShowStore((s) => s.deskScreen)
+  const recallWorkspace = useShowStore((s) => s.recallWorkspace)
   const setMenu = useShowStore((s) => s.setDeskMenu)
   const selection = useShowStore((s) => s.selection)
   const locateSelected = useShowStore((s) => s.locateSelected)
@@ -410,12 +417,24 @@ export function QuartzPanel() {
                 />
               )
             }
-            // 11–18 are the fixed workspace shortcuts; wire the ones we have windows for.
+            // 11–18 are FIXED-function executors (printed on the desk): unlike an empty
+            // assignable handle they always carry a function, so their LED is lit — DIM when
+            // idle, BRIGHT when their workspace is the one on screen (Show-Occupation model).
+            const label = EXEC_FIXED_LABEL[n]
             const scr = EXEC_SCREEN[n]
             if (scr) {
-              return <Key key={i} v="dark" narrow led={false} title={`Executor ${n} — abrir workspace`} onClick={() => setScreen(scr)} />
+              const active = deskScreen === scr
+              return <Key key={i} v="dark" narrow ledColor="red" on={active} dim={!active}
+                title={`Executor ${n} — ${label} (abrir workspace)`} onClick={() => setScreen(scr)} />
             }
-            return <Key key={i} v="dark" narrow disabled title={`Executor ${n}`} />
+            if (n === 15) {
+              // Visualiser: recall the big-3D "Visualiser" View (folds the side panes).
+              return <Key key={i} v="dark" narrow ledColor="red" dim
+                title={`Executor ${n} — ${label} (visor 3D a pantalla grande)`} onClick={() => recallWorkspace('ws-visualiser')} />
+            }
+            // 14 Channel Grid / 18 Snap: fixed functions we haven't built yet — lit dim (assigned
+            // on the real desk) but inert here, said so in the tooltip.
+            return <Key key={i} v="dark" narrow ledColor="red" dim disabled title={`Executor ${n} — ${label} (función fija; aún no disponible en el simulador)`} />
           })}
         </Box>
         <GridLabels x={648} y={172} w={640} cols={10} small items={['11\nAttribute\nEditor', '12\nShow\nLibrary', '13\nPlaybacks', '14\nChannel\nGrid', '15\nVisualiser', '16\nGroups +\nPalettes', '17\nFixtures\n+ Groups', '18\nSnap', execCaption(19) ? `19\n${execCaption(19)}` : '19', execCaption(20) ? `20\n${execCaption(20)}` : '20']} />
