@@ -706,6 +706,15 @@
   background: #12181f;
 }
 .fx-aim-cap { font-size: 10px; font-weight: 700; color: #7fb0e8; white-space: nowrap; }
+/* Aim joystick docked in the 3D viewer corner (shows only when an aimable fixture is selected)
+   — sits with the other viewer controls, aim the light while watching the beam swing. */
+.viz-aim {
+  position: absolute; left: 10px; bottom: 10px; z-index: 5;
+  display: flex; align-items: center; gap: 8px;
+  padding: 7px 9px; border-radius: 8px;
+  background: rgba(12, 16, 22, 0.82); border: 1px solid #35506e; backdrop-filter: blur(3px);
+}
+.viz-aim .fx-aim-cap, .viz-aim .viz-aim-cap { font-size: 10px; font-weight: 700; color: #7fb0e8; white-space: nowrap; }
 .qd-muted { color: var(--text-faint); font-size: 12px; }
 
 /* Touchscreen tabs (Fixtures / palette windows) */

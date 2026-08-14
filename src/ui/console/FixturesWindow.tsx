@@ -2,7 +2,6 @@ import { useMemo, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useShowStore } from '../../store/showStore'
 import { fixtureAttributeKeys, ATTRIBUTE_BANKS, type PatchedFixture } from '../../model/types'
-import { AimPad } from './AimPad'
 
 /** The Fixtures / Groups workspace, docked on the right next to the visualiser (an APP window,
  *  not the Quartz desk — so extras that the real console doesn't show live here). Selecting
@@ -15,7 +14,6 @@ export function FixturesWindow() {
   const toggleSelect = useShowStore((s) => s.toggleSelect)
   const select = useShowStore((s) => s.select)
   const clearSelection = useShowStore((s) => s.clearSelection)
-  const setFixtureAim = useShowStore((s) => s.setFixtureAim)
   const noFx = show.fixtures.length === 0
   const anchor = useRef<number | null>(null)
 
@@ -25,10 +23,6 @@ export function FixturesWindow() {
     const def = definitions[pf.definitionId]
     return def ? !fixtureAttributeKeys(def, pf.modeIndex).has('P') && def.category !== 'hazer' : false
   }
-  // The single aim joystick in the header drives every selected aimable fixture at once.
-  const selAimable = show.fixtures.filter((pf) => selection.includes(pf.id) && isAimable(pf))
-  const aim = selAimable[0]?.aim ?? { pan: 0, tilt: 0 }
-
   // Group by universe, sorted by address within each; single universe → one plain list.
   const groups = useMemo(() => {
     const m = new Map<number, PatchedFixture[]>()
@@ -68,12 +62,6 @@ export function FixturesWindow() {
           </button>
         </div>
       </header>
-      {selAimable.length > 0 && (
-        <div className="fx-aim-bar" title="Orientación física del foco (montaje — no es DMX). Míralo en el 3D.">
-          <span className="fx-aim-cap">Aim ↺ {selAimable.length > 1 ? `${selAimable.length} focos` : selAimable[0].name}</span>
-          <AimPad pan={aim.pan} tilt={aim.tilt} onChange={(p, tl) => selAimable.forEach((f) => setFixtureAim(f.id, p, tl))} />
-        </div>
-      )}
       <div className="scroll">
         {noFx ? (
           <span className="qd-muted">{t('fixturesWindow.empty')}</span>

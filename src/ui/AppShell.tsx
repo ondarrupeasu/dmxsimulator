@@ -11,6 +11,8 @@ import { Visualizer3D } from './visualizer/Visualizer3D'
 import { QuartzScreen } from './console/QuartzScreen'
 import { QuartzPanel } from './console/QuartzPanel'
 import { FixturesWindow } from './console/FixturesWindow'
+import { AimPad } from './console/AimPad'
+import { fixtureAttributeKeys } from '../model/types'
 import { ShowMenu } from './ShowMenu'
 import { TourOverlay } from './TourOverlay'
 import { useTour } from '../store/tourStore'
@@ -27,6 +29,18 @@ export function AppShell() {
   const setMode = useShowStore((s) => s.setMode)
   const viewLights = useShowStore((s) => s.viewLights)
   const setViewLights = useShowStore((s) => s.setViewLights)
+  const fixtures = useShowStore((s) => s.show.fixtures)
+  const definitions = useShowStore((s) => s.definitions)
+  const selection = useShowStore((s) => s.selection)
+  const setFixtureAim = useShowStore((s) => s.setFixtureAim)
+  // Non-moving fixtures you aim by hand on the truss (PARs, profiles…). The aim joystick lives
+  // in the 3D viewer corner and shows only when such a fixture is selected.
+  const selAimable = fixtures.filter(
+    (pf) => selection.includes(pf.id) && definitions[pf.definitionId] &&
+      !fixtureAttributeKeys(definitions[pf.definitionId], pf.modeIndex).has('P') &&
+      definitions[pf.definitionId].category !== 'hazer',
+  )
+  const aim = selAimable[0]?.aim ?? { pan: 0, tilt: 0 }
   const startTour = useTour((t) => t.start)
   const consoleId = useShowStore((s) => s.consoleId)
   const venueName = useShowStore((s) => s.venueName)
@@ -189,8 +203,14 @@ export function AppShell() {
           </div>
         </div>
       </header>
-      <div className="scroll" style={{ padding: viewer === '3d' ? 0 : 8, flex: 1, overflow: 'hidden' }}>
+      <div className="scroll" style={{ padding: viewer === '3d' ? 0 : 8, flex: 1, overflow: 'hidden', position: 'relative' }}>
         {viewer === '3d' ? <Visualizer3D /> : <Visualizer2D />}
+        {viewer === '3d' && selAimable.length > 0 && (
+          <div className="viz-aim" title="Orientar el foco a mano (montaje físico — no es DMX).">
+            <span className="viz-aim-cap">Aim ↺ {selAimable.length > 1 ? `${selAimable.length} focos` : selAimable[0].name}</span>
+            <AimPad pan={aim.pan} tilt={aim.tilt} onChange={(p, t) => selAimable.forEach((f) => setFixtureAim(f.id, p, t))} />
+          </div>
+        )}
       </div>
     </div>
   )
