@@ -12,6 +12,7 @@ import { QuartzScreen } from './console/QuartzScreen'
 import { QuartzPanel } from './console/QuartzPanel'
 import { FixturesWindow } from './console/FixturesWindow'
 import { AimPad } from './console/AimPad'
+import { PwaTag } from './PwaTag'
 import { fixtureAttributeKeys } from '../model/types'
 import { ShowMenu } from './ShowMenu'
 import { TourOverlay } from './TourOverlay'
@@ -150,6 +151,10 @@ export function AppShell() {
       <header>
         <h2>{t('visualizer.title')}</h2>
         <div className="vh-tools">
+          <PwaTag
+            sim="ayudas del simulador: Play/Pausa de efectos, cargar decorado, luces de sala, vista 2D y orientar PARs a mano"
+            real="el visor (Capture) del Quartz no trae estos controles, o los hace de otra forma"
+          />
           {effectsCount > 0 && (
             <button
               className="play-toggle"
