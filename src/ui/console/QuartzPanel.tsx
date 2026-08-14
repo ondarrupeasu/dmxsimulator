@@ -52,7 +52,7 @@ function Key({
 }
 
 // Fixed executors 11–18 → the touchscreen workspace each opens (the ones we have windows for).
-const EXEC_SCREEN: Record<number, string> = { 11: 'intensity', 12: 'showlib', 13: 'playbacks', 16: 'colour', 17: 'groups' }
+const EXEC_SCREEN: Record<number, string> = { 11: 'intensity', 12: 'showlib', 13: 'playbacks', 15: 'visualiser', 16: 'colour', 17: 'groups' }
 // Silk-screen names of the fixed executors, for tooltips.
 const EXEC_FIXED_LABEL: Record<number, string> = {
   11: 'Attribute Editor', 12: 'Show Library', 13: 'Playbacks', 14: 'Channel Grid',
@@ -167,7 +167,6 @@ export function QuartzPanel() {
   const setAttr = useShowStore((s) => s.setDeskAttr)
   const setScreen = useShowStore((s) => s.setDeskScreen)
   const deskScreen = useShowStore((s) => s.deskScreen)
-  const recallWorkspace = useShowStore((s) => s.recallWorkspace)
   const setMenu = useShowStore((s) => s.setDeskMenu)
   const selection = useShowStore((s) => s.selection)
   const locateSelected = useShowStore((s) => s.locateSelected)
@@ -206,8 +205,6 @@ export function QuartzPanel() {
   const executorCues = useShowStore((s) => s.executorCues)
   const recordExecutor = useShowStore((s) => s.recordExecutor)
   const clearExecutor = useShowStore((s) => s.clearExecutor)
-  const workspaceRecordArm = useShowStore((s) => s.workspaceRecordArm)
-  const armWorkspaceRecord = useShowStore((s) => s.armWorkspaceRecord)
   const editExecutor = (n: number) => {
     const cur = executorLabels[n] ?? ''
     const v = window.prompt(`Executor ${n} — escribe su etiqueta (vacío para borrar)`, cur)
@@ -427,11 +424,7 @@ export function QuartzPanel() {
               return <Key key={i} v="dark" narrow ledColor="blue" on={active} dim={!active}
                 title={`Executor ${n} — ${label} (abrir workspace)`} onClick={() => setScreen(scr)} />
             }
-            if (n === 15) {
-              // Visualiser: recall the big-3D "Visualiser" View (folds the side panes).
-              return <Key key={i} v="dark" narrow ledColor="blue" dim
-                title={`Executor ${n} — ${label} (visor 3D a pantalla grande)`} onClick={() => recallWorkspace('ws-visualiser')} />
-            }
+            // 15 Visualiser opens the Visualiser workspace, like 11-13/16-17.
             // 14 Channel Grid / 18 Snap: fixed functions we haven't built yet — lit dim (assigned
             // on the real desk) but inert here, said so in the tooltip.
             return <Key key={i} v="dark" narrow ledColor="blue" dim disabled title={`Executor ${n} — ${label} (función fija; aún no disponible en el simulador)`} />
@@ -476,7 +469,7 @@ export function QuartzPanel() {
         <GridLabels x={1074} y={270} w={122} cols={2} items={['Min/Max', 'Size/Pos']} subs={['Next', 'Other Screen']} above />
         <Box x={1074} y={272} w={122} h={118} cols={2} rows={2} narrow>
           <Key v="dark" narrow led={false} disabled title="Min/Max" /><Key v="dark" narrow led={false} disabled title="Size/Pos" />
-          <Key v="dark" narrow led={workspaceRecordArm} title="View/Open — arma Record Workspace: guarda la disposición de ventanas como un View (toca luego el botón Views ＋)" onClick={armWorkspaceRecord} /><Key v="dark" narrow led={false} disabled title="Close/Control" />
+          <Key v="dark" narrow led={false} title="View/Open — abre Workspaces: recupera una disposición guardada o graba la actual (Record Workspace)" onClick={() => setMenu('view')} /><Key v="dark" narrow led={false} disabled title="Close/Control" />
         </Box>
         <GridLabels x={1074} y={392} w={122} cols={2} items={['View\n/Open', 'Close\nControl']} />
 

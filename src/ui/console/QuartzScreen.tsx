@@ -6,6 +6,7 @@ import { PALETTE_LABELS } from '../../model/palette'
 import { EffectsPanel } from '../run/EffectsPanel'
 import { AudioPanel } from './AudioPanel'
 import { PlaybacksWindow } from './PlaybacksWindow'
+import { VisualiserWindow } from './VisualiserWindow'
 import { userNumberOf } from '../../model/types'
 import { TEMPLATES } from '../../model/templates'
 import { openPatchReport } from '../../model/report'
@@ -30,6 +31,7 @@ const TABS: { key: string; label: string }[] = [
   { key: 'playbacks', label: 'Playbacks' },
   { key: 'effects', label: 'Shapes' },
   { key: 'audio', label: 'Audio' },
+  { key: 'visualiser', label: 'Visualiser' },
 ]
 
 type SoftKey = {
@@ -82,17 +84,13 @@ export function QuartzScreen() {
   const loadTemplate = useShowStore((s) => s.loadTemplate)
   const workspaces = useShowStore((s) => s.workspaces)
   const recallWorkspace = useShowStore((s) => s.recallWorkspace)
-  const deleteWorkspace = useShowStore((s) => s.deleteWorkspace)
   const recordWorkspace = useShowStore((s) => s.recordWorkspace)
-  const workspaceRecordArm = useShowStore((s) => s.workspaceRecordArm)
-  const armWorkspaceRecord = useShowStore((s) => s.armWorkspaceRecord)
   const showFileRef = useRef<HTMLInputElement>(null)
-  // Titan "Record Workspace": arm it (View/Open → Record Workspace, or the Rec chip), then
-  // touch a Workspace button to store the current window layout. Empty slot = Quick Record.
+  // Titan "Record Workspace" (Open/View → Record Workspace): stores the current window
+  // layout (the mosaic + viewer + folded panes) under a name so you can recall it later.
   const quickRecordWorkspace = () => {
-    const name = window.prompt('Nombre del Workspace (View):', `View ${workspaces.length + 1}`)
-    if (name != null) recordWorkspace(name)
-    else armWorkspaceRecord() // cancel disarms
+    const name = window.prompt('Nombre del Workspace:', `Workspace ${workspaces.length + 1}`)
+    if (name != null && name.trim()) recordWorkspace(name)
   }
   // The Disk menu, faithful to Titan (Save / Load / New Show). A browser can't write to the
   // desk's internal disk/USB, so Save downloads a .json and Load reads one back — the same
@@ -197,8 +195,20 @@ export function QuartzScreen() {
         { k: 'C', label: highlight ? 'Highlight ✓' : 'Highlight', sub: 'Ver selección', kind: 'action', onClick: toggleHighlight },
         { k: 'D', label: 'Clear', sub: 'Programmer', kind: 'action', onClick: clearAll, disabled: noSel && !progActive },
         { k: 'E', label: 'Set Legend', kind: 'text', info: true },
-        { k: 'F', label: 'Open Workspace', kind: 'menu', info: true },
+        { k: 'F', label: 'Open / View', sub: 'Workspaces', kind: 'menu', onClick: () => setMenu('view') },
         { k: 'G' },
+      ],
+    },
+    view: {
+      title: 'Open / View — Workspaces',
+      keys: [
+        { k: 'A', label: 'Record Workspace', sub: 'Guarda el mosaico', kind: 'action', onClick: quickRecordWorkspace },
+        ...(['B', 'C', 'D', 'E', 'F', 'G'] as const).map((k, i) => {
+          const ws = workspaces[i]
+          return ws
+            ? { k, label: ws.name, sub: 'Recuperar', kind: 'action' as const, onClick: () => { recallWorkspace(ws.id); setMenu('root') } }
+            : { k }
+        }),
       ],
     },
     record: {
@@ -328,6 +338,8 @@ export function QuartzScreen() {
         ))}
       </div>
     )
+  } else if (screen === 'visualiser') {
+    body = <VisualiserWindow />
   } else if (screen === 'audio') {
     body = <AudioPanel />
   } else if (screen === 'effects') {
@@ -435,27 +447,6 @@ export function QuartzScreen() {
             disabled={deskWindows.length >= 4}
             title="Abrir otra ventana en mosaico (hasta 4 — como el touchscreen del Titan)"
           >⊞</button>
-        </div>
-        <div className="qd-views" title="Workspaces (Views): disposiciones de ventanas guardadas — Titan">
-          <span className="qd-views-cap">Views</span>
-          {workspaces.map((ws) => (
-            <button
-              key={ws.id}
-              className="qd-view"
-              onClick={() => recallWorkspace(ws.id)}
-              onContextMenu={(e) => { e.preventDefault(); if (window.confirm(`¿Borrar el View "${ws.name}"?`)) deleteWorkspace(ws.id) }}
-              title={`${ws.name} — clic: recuperar · clic derecho: borrar`}
-            >
-              {ws.name}
-            </button>
-          ))}
-          <button
-            className={`qd-view qd-view-rec${workspaceRecordArm ? ' arm' : ''}`}
-            onClick={() => (workspaceRecordArm ? quickRecordWorkspace() : armWorkspaceRecord())}
-            title="Record Workspace: guarda la disposición actual (mosaico de ventanas + visor + paneles plegados) como un View"
-          >
-            {workspaceRecordArm ? '＋ guardar' : '◉ Rec'}
-          </button>
         </div>
       </div>
 

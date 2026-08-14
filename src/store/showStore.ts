@@ -517,8 +517,13 @@ export const useShowStore = create<ShowState>()(
       deskAttr: 'Intensity',
       setDeskAttr: (a) => set({ deskAttr: a }),
       deskScreen: 'fixtures',
-      deskWindows: [{ id: 'w-main', screen: 'fixtures', pos: 'full' }],
-      deskFocus: 'w-main',
+      // Default mosaic: the Fixtures workspace on the left, the Visualiser (the desk's Capture
+      // output) on the right — so the 3D view is visible inside the Titan screen from the start.
+      deskWindows: [
+        { id: 'w-fx', screen: 'fixtures', pos: 'left' },
+        { id: 'w-viz', screen: 'visualiser', pos: 'right' },
+      ],
+      deskFocus: 'w-fx',
       // Setting "the desk screen" now means: point the FOCUSED window at that workspace.
       setDeskScreen: (screen) =>
         set((s) => {
@@ -1238,16 +1243,9 @@ export const useShowStore = create<ShowState>()(
       setViewer: (v) => set({ viewer: v }),
       fold: { screen: false, fixtures: false, monitor: false },
       setFold: (key, val) => set((s) => (s.fold[key] === val ? {} : { fold: { ...s.fold, [key]: val } })),
-      // Default Views to start from (kept for a first run; users record their own alongside).
-      // "Mosaico" shows the Titan-style 2×2 tiling out of the box.
-      workspaces: [
-        { id: 'ws-program', name: 'Programa', windows: [{ id: 'w-main', screen: 'fixtures', pos: 'full' }], viewer: '3d', fold: { screen: false, fixtures: false, monitor: false } },
-        { id: 'ws-mosaic', name: 'Mosaico', windows: [
-          { id: 'w-fx', screen: 'fixtures', pos: 'tl' }, { id: 'w-col', screen: 'colour', pos: 'tr' },
-          { id: 'w-grp', screen: 'groups', pos: 'bl' }, { id: 'w-pb', screen: 'playbacks', pos: 'br' },
-        ], viewer: '3d', fold: { screen: false, fixtures: false, monitor: false } },
-        { id: 'ws-visualiser', name: 'Visualiser', windows: [{ id: 'w-main', screen: 'fixtures', pos: 'full' }], viewer: '3d', fold: { screen: false, fixtures: true, monitor: true } },
-      ],
+      // Saved Workspaces (Open/View → Record Workspace). Empty by default — the student
+      // records their own named layouts, exactly like the real desk (no invented presets).
+      workspaces: [],
       workspaceRecordArm: false,
       armWorkspaceRecord: () => set((s) => ({ workspaceRecordArm: !s.workspaceRecordArm })),
       recordWorkspace: (name) =>
