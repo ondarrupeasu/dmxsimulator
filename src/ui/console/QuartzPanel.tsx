@@ -243,7 +243,10 @@ export function QuartzPanel() {
     const onKey = (e: KeyboardEvent) => {
       const t = e.target as HTMLElement | null
       if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT' || t.isContentEditable)) return
-      if (e.metaKey || e.ctrlKey || e.altKey) return
+      // "@" is Option+2 on a Mac (altKey) and AltGr+2 on Windows (which the browser reports as
+      // Ctrl+Alt). Let those through — the resulting e.key is already "@". Block only real
+      // shortcuts: Cmd, or Ctrl WITHOUT Alt.
+      if (e.metaKey || (e.ctrlKey && !e.altKey)) return
       const k = e.key
       if (/^[0-9]$/.test(k)) cmdAppend(k)
       else if (k === '.') cmdAppend('.')
