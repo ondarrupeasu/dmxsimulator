@@ -1,3 +1,4 @@
+import { useRef } from 'react'
 import { useShowStore } from '../../store/showStore'
 import { playbacksBySlot } from '../../model/cue'
 
@@ -15,6 +16,21 @@ export function PlaybacksWindow() {
   const setMode = useShowStore((s) => s.setPlaybackMode)
   const setBpm = useShowStore((s) => s.setPlaybackBpm)
   const progActive = useShowStore((s) => Object.keys(s.programmer).length > 0)
+
+  // Tap Tempo: tap the button in time and the chase's BPM follows. We average the recent
+  // intervals (taps older than 2s are dropped, so you can start a new count any time).
+  const taps = useRef<Record<string, number[]>>({})
+  const tapTempo = (id: string) => {
+    const now = performance.now()
+    const arr = (taps.current[id] ?? []).filter((t) => now - t < 2000)
+    arr.push(now)
+    taps.current[id] = arr
+    if (arr.length >= 2) {
+      const intervals = arr.slice(1).map((t, i) => t - arr[i])
+      const avg = intervals.reduce((a, b) => a + b, 0) / intervals.length
+      if (avg > 0) setBpm(id, 60000 / avg)
+    }
+  }
 
   const bySlot = playbacksBySlot(playbacks)
 
@@ -41,10 +57,13 @@ export function PlaybacksWindow() {
                     <button className={p.mode === 'chase' ? 'on' : ''} onClick={() => setMode(p.id, 'chase')} title="Chase — auto-timed by BPM">Chase</button>
                   </span>
                   {p.mode === 'chase' && (
-                    <label className="pb-bpm" title="Chase tempo (BPM)">
-                      <input type="number" min={20} max={600} value={p.bpm ?? 120}
-                        onChange={(e) => setBpm(p.id, Number(e.target.value))} /> BPM
-                    </label>
+                    <>
+                      <label className="pb-bpm" title="Chase tempo (BPM)">
+                        <input type="number" min={20} max={600} value={p.bpm ?? 120}
+                          onChange={(e) => setBpm(p.id, Number(e.target.value))} /> BPM
+                      </label>
+                      <button className="pb-tap" title="Tap Tempo — marca el tempo con varios clics y el BPM se ajusta solo" onClick={() => tapTempo(p.id)}>Tap</button>
+                    </>
                   )}
                 </>
               )}

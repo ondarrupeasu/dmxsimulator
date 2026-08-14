@@ -1114,6 +1114,9 @@
 .pb-seg button.on { background: #ff8a6a; color: #1a1a1f; font-weight: 700; }
 .pb-bpm { font-size: 9px; color: #9aa0a8; display: inline-flex; align-items: center; gap: 3px; }
 .pb-bpm input { width: 44px; background: #17181c; border: 1px solid #34353c; color: #e6e6ea; border-radius: 3px; font-size: 10px; padding: 1px 3px; }
+.pb-tap { font-size: 9px; font-weight: 700; color: #cfe; background: #24313f; border: 1px solid #3a5570; border-radius: 3px; padding: 2px 7px; cursor: pointer; margin-left: 4px; }
+.pb-tap:hover { background: #2c3d4e; }
+.pb-tap:active { background: #3a86c0; color: #fff; }
 .pb-steps { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
 .pb-steps li { display: flex; align-items: center; gap: 5px; font-size: 10px; color: #b7b8be; padding: 1px 3px; border-radius: 3px; }
 .pb-steps li.live { background: #2a2119; color: #ffb98a; }
