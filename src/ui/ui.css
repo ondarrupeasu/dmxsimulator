@@ -677,6 +677,15 @@
   border-radius: 4px;
   padding: 0 6px;
 }
+.qd-showlib { display: flex; flex-direction: column; gap: 10px; height: 100%; }
+.qd-showlib-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; color: var(--qd-fg, #cfe); font-size: 12px; }
+.qd-slk-btn { background: #1c2733; color: #cfe; border: 1px solid #35506a; border-radius: 5px; padding: 4px 10px; cursor: pointer; font-size: 11px; }
+.qd-slk-btn:hover { background: #24313f; }
+.qd-showlib-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 8px; overflow: auto; align-content: start; }
+.qd-showcard { display: flex; flex-direction: column; gap: 4px; text-align: left; background: #131c26; border: 1px solid #2b3d50; border-radius: 7px; padding: 9px 11px; color: #bcd; cursor: pointer; }
+.qd-showcard:hover { border-color: #4d7aa8; background: #182430; }
+.qd-showcard b { color: #eaf3ff; font-size: 12.5px; }
+.qd-showcard small { color: #86a0b8; font-size: 10.5px; line-height: 1.35; }
 .qd-fixtures { display: flex; flex-wrap: wrap; gap: 6px; }
 .qd-fx {
   display: flex;

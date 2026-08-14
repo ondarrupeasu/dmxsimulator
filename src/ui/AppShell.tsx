@@ -14,7 +14,6 @@ import { FixturesWindow } from './console/FixturesWindow'
 import { AimPad } from './console/AimPad'
 import { PwaTag } from './PwaTag'
 import { fixtureAttributeKeys } from '../model/types'
-import { ShowMenu } from './ShowMenu'
 import { TourOverlay } from './TourOverlay'
 import { useTour } from '../store/tourStore'
 import { VENUE_PRESETS } from '../model/venues'
@@ -243,8 +242,6 @@ export function AppShell() {
         </div>
 
         <div className="spacer" />
-
-        <ShowMenu />
 
         <button className="tour-start" onClick={startTour} title="Tutorial guiado paso a paso">
           🎓 Tutorial

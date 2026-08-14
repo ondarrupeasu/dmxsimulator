@@ -6,6 +6,11 @@ import { EffectsPanel } from '../run/EffectsPanel'
 import { AudioPanel } from './AudioPanel'
 import { PlaybacksWindow } from './PlaybacksWindow'
 import { userNumberOf } from '../../model/types'
+import { TEMPLATES } from '../../model/templates'
+import { openPatchReport } from '../../model/report'
+import { openPlot } from '../../model/plot'
+import { exportMvr } from '../../model/mvr'
+import { exportGltf } from '../../model/gltf-export'
 
 const PALETTE_KINDS: PaletteKind[] = ['colour', 'position', 'gobo', 'beam', 'intensity']
 
@@ -65,6 +70,9 @@ export function QuartzScreen() {
   const importShow = useShowStore((s) => s.importShow)
   const resetShow = useShowStore((s) => s.resetShow)
   const setShowMeta = useShowStore((s) => s.setShowMeta)
+  const setShow = useShowStore((s) => s.setShow)
+  const addDefinitions = useShowStore((s) => s.addDefinitions)
+  const loadTemplate = useShowStore((s) => s.loadTemplate)
   const showFileRef = useRef<HTMLInputElement>(null)
   // The Disk menu, faithful to Titan (Save / Load / New Show). A browser can't write to the
   // desk's internal disk/USB, so Save downloads a .json and Load reads one back — the same
@@ -80,17 +88,44 @@ export function QuartzScreen() {
     setMenu('root')
   }
   const loadShow = () => showFileRef.current?.click()
+  // Load / Import from a file — a show (.json), an MVR rig, or a GDTF fixture, like Titan's
+  // Disk import (the browser's file picker is our "USB pendrive").
   const onShowFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0]
     e.target.value = ''
     if (!f) return
+    const ext = f.name.toLowerCase().split('.').pop()
     try {
-      if (!importShow(JSON.parse(await f.text()))) alert('Ese archivo no es un show válido.')
-      else setMenu('root')
+      if (ext === 'mvr') {
+        const { importMvrFile } = await import('../../model/mvr-import')
+        const { show: sh, definitions } = await importMvrFile(await f.arrayBuffer())
+        addDefinitions(definitions)
+        setShow(sh)
+      } else if (ext === 'gdtf') {
+        const { importGdtfFile } = await import('../../model/gdtf-import')
+        const def = await importGdtfFile(await f.arrayBuffer())
+        addDefinitions([def])
+        alert(`Fixture añadido a la librería: ${def.manufacturer} ${def.model}`)
+      } else if (!importShow(JSON.parse(await f.text()))) {
+        alert('Ese archivo no es un show válido.')
+      }
+      setMenu('root')
     } catch {
       alert('No se pudo leer el archivo.')
     }
   }
+  // Export / Reports — the same formats the app offered, now on the desk's Disk menu.
+  const exportJson = () => {
+    const blob = new Blob([exportShow()], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `${show.name?.trim() || 'show'}.json`
+    a.click()
+    URL.revokeObjectURL(url)
+    setMenu('root')
+  }
+  const runExport = (p: Promise<void>) => { void p.catch(() => alert('No se pudo exportar.')); setMenu('root') }
   const newShow = () => {
     // Titan asks for the new show's name here; keep that flow (the name also shows in Patch).
     const name = window.prompt('New Show — nombre del nuevo show (deja vacío para cancelar):', '')
@@ -116,7 +151,9 @@ export function QuartzScreen() {
   const noFx = fixtures.length === 0
   const noSel = selection.length === 0
   const progActive = Object.keys(programmer).length > 0
-  const screen = TABS.some((tb) => tb.key === rawScreen) ? rawScreen : 'groups'
+  // Screens reachable from a Disk/menu softkey rather than a workspace tab (no tab lights up for them).
+  const EXTRA_SCREENS = ['showlib']
+  const screen = TABS.some((tb) => tb.key === rawScreen) || EXTRA_SCREENS.includes(rawScreen) ? rawScreen : 'groups'
   const kind: PaletteKind = PALETTE_KINDS.includes(rawScreen as PaletteKind) ? (rawScreen as PaletteKind) : 'colour'
   const palKind = kind
 
@@ -204,10 +241,22 @@ export function QuartzScreen() {
       keys: [
         { k: 'A', label: 'Save Show', sub: 'Descarga .json', kind: 'action', onClick: saveShow },
         { k: 'B', label: 'Save Show As…', sub: 'Descarga .json', kind: 'action', onClick: saveShow },
-        { k: 'C', label: 'Load Show', sub: 'Abre un .json', kind: 'action', onClick: loadShow },
+        { k: 'C', label: 'Load Show', sub: 'Abre .json', kind: 'action', onClick: loadShow },
         { k: 'D', label: 'New Show', sub: 'Borra y empieza', kind: 'action', onClick: newShow },
-        { k: 'E' },
-        { k: 'F' },
+        { k: 'E', label: 'Import', sub: '.json · MVR · GDTF', kind: 'action', onClick: loadShow },
+        { k: 'F', label: 'Export / Reports', kind: 'menu', onClick: () => setMenu('export') },
+        { k: 'G', label: 'Show Library', sub: 'Shows de ejemplo', kind: 'action', onClick: () => { setScreen('showlib'); setMenu('root') } },
+      ],
+    },
+    export: {
+      title: 'Export / Reports',
+      keys: [
+        { k: 'A', label: 'Show file (.json)', kind: 'action', onClick: exportJson },
+        { k: 'B', label: 'Patch report (PDF)', kind: 'action', onClick: () => runExport(openPatchReport(show, useShowStore.getState().definitions)) },
+        { k: 'C', label: 'Lighting plot (PDF)', kind: 'action', onClick: () => runExport(openPlot(show, useShowStore.getState().definitions)) },
+        { k: 'D', label: 'MVR — rig', sub: 'Capture / grandMA…', kind: 'action', onClick: () => runExport(exportMvr(show, useShowStore.getState().definitions)) },
+        { k: 'E', label: 'glTF/GLB — 3D', kind: 'action', onClick: () => runExport(exportGltf(show, useShowStore.getState().definitions)) },
+        { k: 'F', label: 'Disk', kind: 'menu', onClick: () => setMenu('disk') },
         { k: 'G' },
       ],
     },
@@ -276,6 +325,23 @@ export function QuartzScreen() {
     )
   } else if (screen === 'playbacks') {
     body = <PlaybacksWindow />
+  } else if (screen === 'showlib') {
+    body = (
+      <div className="qd-showlib">
+        <div className="qd-showlib-head">
+          <span>Show Library — plantillas de ejemplo</span>
+          <button className="qd-slk-btn" onClick={loadShow}>Importar archivo…</button>
+        </div>
+        <div className="qd-showlib-grid">
+          {TEMPLATES.map((tpl) => (
+            <button key={tpl.id} className="qd-showcard" onClick={() => { loadTemplate(tpl.id); setScreen('fixtures') }}>
+              <b>{tpl.name}</b>
+              <small>{tpl.description}</small>
+            </button>
+          ))}
+        </div>
+      </div>
+    )
   } else {
     const list = palettes.filter((p) => p.kind === kind)
     body = (
@@ -304,7 +370,7 @@ export function QuartzScreen() {
 
   return (
     <div className="qscreen" data-tour="titan-screen">
-      <input ref={showFileRef} type="file" accept="application/json,.json" style={{ display: 'none' }} onChange={onShowFile} />
+      <input ref={showFileRef} type="file" accept=".json,.mvr,.gdtf,application/json" style={{ display: 'none' }} onChange={onShowFile} />
       <div className="qscreen-head">
         <span className="qd-brand">Avolites Quartz</span>
         <span className="qd-titan">TITAN</span>
