@@ -21,7 +21,9 @@
       "WebFetch(domain:www.gdtf.eu)",
       "WebFetch(domain:gitlab.com)",
       "WebFetch(domain:www.capture.se)",
-      "WebFetch(domain:forum.avolites.com)"
+      "WebFetch(domain:forum.avolites.com)",
+      "mcp__visualize__read_me",
+      "mcp__visualize__show_widget"
     ]
   }
 }

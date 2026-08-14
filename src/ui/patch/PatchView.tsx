@@ -2,7 +2,7 @@ import { useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Panel, PanelGroup, PanelResizeHandle, type ImperativePanelHandle } from 'react-resizable-panels'
 import { useShowStore } from '../../store/showStore'
-import { fixtureFootprint, type FixtureCategory } from '../../model/types'
+import { fixtureFootprint, fixtureAttributeKeys, ATTRIBUTE_BANKS, type FixtureCategory } from '../../model/types'
 import { getTrusses, DEFAULT_TRUSS } from '../../model/venue'
 
 const UNIVERSES = [1, 2, 3, 4] // the Quartz has four DMX outputs
@@ -270,6 +270,16 @@ export function PatchView() {
                           <div className="detail">
                             {def?.model} · {t('patch.address')} {pf.address}–{end}
                           </div>
+                          {def && (
+                            <div className="patch-attrs" title="Bancos de atributos del fixture (Intensity · Position · Colour · Gobo · Beam · Effect · Special)">
+                              {(() => {
+                                const has = fixtureAttributeKeys(def, pf.modeIndex)
+                                return ATTRIBUTE_BANKS.map((b) => (
+                                  <span key={b.key} className={has.has(b.key) ? 'on' : ''} title={b.label}>{b.key}</span>
+                                ))
+                              })()}
+                            </div>
+                          )}
                         </div>
                         <div className="patch-assign" onClick={(e) => e.stopPropagation()}>
                           {def?.category === 'hazer' ? (

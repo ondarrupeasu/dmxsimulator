@@ -109,11 +109,28 @@ export function AppShell() {
   }, [audioEnabled])
 
   const Surface = consoleById(consoleId).Surface
-  // The Quartz desk now fills the whole Program workspace: the Titan touchscreen spans the top
-  // (its mosaic can hold the Visualiser window — the desk's Capture output — plus the A–G
-  // softkeys), the physical panel sits below. Patch keeps the compact left-panel + visualiser.
-  const quartzDocked = consoleId === 'avolites-quartz' && mode === 'program'
+  // Unified view: the Quartz desk fills the whole workspace, patch + program together (like the
+  // real console — but patching is a MENU flow on the desk, not a workspace window, so our
+  // visual patch tool is a PWA panel (below-right, blue), not a faked Titan window). The Titan
+  // touchscreen spans the top; the physical panel + PWA panel sit below. Only the legacy
+  // Universal console keeps the old Patch/Program split.
+  const quartzDocked = consoleId === 'avolites-quartz'
   const leftPanel = mode === 'patch' ? <PatchView /> : <Surface />
+  const rightPanel = useShowStore((s) => s.rightPanel)
+  const setRightPanel = useShowStore((s) => s.setRightPanel)
+  // The blue PWA side panel: DMX monitor or the patch tool, switchable by its own tabs.
+  const pwaPanel = (
+    <div className="pwa-panel">
+      <div className="pwa-tabs">
+        <button className={rightPanel === 'monitor' ? 'on' : ''} onClick={() => setRightPanel('monitor')}>DMX Monitor</button>
+        <button className={rightPanel === 'patch' ? 'on' : ''} onClick={() => setRightPanel('patch')}>Patch</button>
+        <span className="pwa-tabs-tag" title="Herramientas del simulador (PWA) — no forman parte de la mesa Quartz">PWA</span>
+      </div>
+      <div className="pwa-panel-body">
+        {rightPanel === 'monitor' ? <DmxMonitor universe={1} /> : <PatchView />}
+      </div>
+    </div>
+  )
   const monitorPanel = <DmxMonitor universe={1} />
 
   return (
@@ -128,13 +145,17 @@ export function AppShell() {
 
         <div className="spacer" />
 
-        <div className="mode-tabs">
-          {MODES.map((m) => (
-            <button key={m} data-tour={`mode-${m}`} className={mode === m ? 'active' : ''} onClick={() => setMode(m)}>
-              {t(`modes.${m}`)}
-            </button>
-          ))}
-        </div>
+        {/* The Quartz is unified (patch is a Titan window) — no Patch/Program switch. Only the
+           legacy Universal console keeps the two modes. */}
+        {!quartzDocked && (
+          <div className="mode-tabs">
+            {MODES.map((m) => (
+              <button key={m} data-tour={`mode-${m}`} className={mode === m ? 'active' : ''} onClick={() => setMode(m)}>
+                {t(`modes.${m}`)}
+              </button>
+            ))}
+          </div>
+        )}
 
         <div className="spacer" />
 
@@ -164,10 +185,10 @@ export function AppShell() {
               </div>
             </Panel>
             <PanelResizeHandle className="rz rz-h" />
-            {/* BOTTOM: the physical desk (left) + the PWA DMX monitor (right, foldable). */}
+            {/* BOTTOM: the physical desk (left) + the PWA panel (DMX monitor / Patch, right, foldable). */}
             <Panel id="quartz-bottom" order={2} defaultSize={46} minSize={26}>
-              <PanelGroup direction="horizontal" autoSaveId="dmxsim-quartz-bottom-v1">
-                <Panel defaultSize={72} minSize={40}>
+              <PanelGroup direction="horizontal" autoSaveId="dmxsim-quartz-bottom-v2">
+                <Panel defaultSize={68} minSize={38}>
                   <div className="pane">
                     <QuartzPanel />
                   </div>
@@ -175,7 +196,7 @@ export function AppShell() {
                 <PanelResizeHandle className="rz rz-v" />
                 <Panel
                   ref={monitorRef} collapsible collapsedSize={4}
-                  defaultSize={28} minSize={14}
+                  defaultSize={32} minSize={16}
                   onCollapse={() => setFold('monitor', true)}
                   onExpand={() => setFold('monitor', false)}
                 >
@@ -187,7 +208,7 @@ export function AppShell() {
                     >
                       {monitorCollapsed ? '‹' : '›'}
                     </button>
-                    {!monitorCollapsed && monitorPanel}
+                    {!monitorCollapsed && pwaPanel}
                   </div>
                 </Panel>
               </PanelGroup>

@@ -107,6 +107,10 @@ interface ShowState {
   // readers/setters of deskScreen — executors, DMX-monitor click, tabs — keep working).
   deskScreen: string
   setDeskScreen: (s: string) => void
+  // The PWA side panel (bottom-right, blue) toggles between the DMX monitor and the Patch tool.
+  // Patch is a PWA aid (Titan patches via menus, not a window), so it lives here, not in the desk.
+  rightPanel: 'monitor' | 'patch'
+  setRightPanel: (p: 'monitor' | 'patch') => void
   // Titan mosaic: the touchscreen holds one or more workspace windows, each at a standard
   // position (quarter/half/full). deskFocus = the active window (tabs + Cog act on it).
   deskWindows: DeskWindow[]
@@ -516,6 +520,8 @@ export const useShowStore = create<ShowState>()(
 
       deskAttr: 'Intensity',
       setDeskAttr: (a) => set({ deskAttr: a }),
+      rightPanel: 'monitor',
+      setRightPanel: (p) => set({ rightPanel: p }),
       deskScreen: 'fixtures',
       // Default mosaic: the Fixtures workspace on the left, the Visualiser (the desk's Capture
       // output) on the right — so the 3D view is visible inside the Titan screen from the start.

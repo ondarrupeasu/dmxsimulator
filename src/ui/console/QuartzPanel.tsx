@@ -166,6 +166,7 @@ export function QuartzPanel() {
   const attr = useShowStore((s) => s.deskAttr)
   const setAttr = useShowStore((s) => s.setDeskAttr)
   const setScreen = useShowStore((s) => s.setDeskScreen)
+  const setRightPanel = useShowStore((s) => s.setRightPanel)
   const deskScreen = useShowStore((s) => s.deskScreen)
   const setMenu = useShowStore((s) => s.setDeskMenu)
   const selection = useShowStore((s) => s.selection)
@@ -457,7 +458,7 @@ export function QuartzPanel() {
         <Box x={658} y={272} w={386} h={118} cols={6} rows={2}>
           <Key v="dark" ledColor="red" on={recordArm || hasProgrammer} flash={recordArm} title={recordArm ? 'Record armado — parpadea esperando que elijas el fader donde grabar (pulsa Record otra vez para cancelar)' : 'Record — pulsa y luego elige el fader donde guardar'} onClick={() => { setMenu('record'); if (hasProgrammer || recordArm) armRecord() }} tour="desk-record" />
           <Key v="white" led={false} disabled={!hasActive || !hasProgrammer} title="Update" onClick={() => connectedId && updateCue(connectedId)} />
-          <Key v="white" led={false} disabled title="Edit" /><Key v="white" led={false} disabled title="Select If" /><Key v="white" led={false} title="Patch — abre el menú Patch" onClick={() => setMenu('patch')} /><Key v="white" led={false} title="Disk — Save / Load / New Show" onClick={() => setMenu('disk')} />
+          <Key v="white" led={false} disabled title="Edit" /><Key v="white" led={false} disabled title="Select If" /><Key v="white" led={false} title="Patch — abre el menú Patch y el panel de patch (PWA)" onClick={() => { setMenu('patch'); setRightPanel('patch') }} /><Key v="white" led={false} title="Disk — Save / Load / New Show" onClick={() => setMenu('disk')} />
           <Key v="white" led={false} disabled={!hasActive} title="Delete" onClick={() => connectedId && deleteCue(connectedId)} />
           <Key v="white" led={false} disabled={!hasActive} title="Copy" onClick={() => connectedId && copyCue(connectedId)} />
           <Key v="white" led={false} disabled title="Move" /><Key v="white" led={false} disabled title="Unfold" /><Key v="white" led={false} disabled title="Include" />
