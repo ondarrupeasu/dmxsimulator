@@ -659,19 +659,20 @@ export function Visualizer3D() {
         _qx.setFromAxisAngle(_X, fx.tiltPart.rotation.x)
         down.set(0, -1, 0).applyQuaternion(_q.copy(_qy).multiply(_qx))
         let length = 16
-        let hitsFloor = false
+        let onStage = false // the beam lands on the (flat) stage deck → OK to draw a floor pool
         let landX = home.x
         let landZ = home.z
-        let surfaceY = STAGE_TOP
         if (down.y < -0.02) {
-          // The beam hits the STAGE DECK (top at STAGE_TOP) only if it lands within the stage
-          // footprint; past the downstage edge it carries on down to the AUDIENCE FLOOR (y=0),
-          // so the light pool sits on the real surface instead of floating at stage height.
+          // Where the beam meets the stage-deck height. We only draw the floor pool when it
+          // lands cleanly on the deck (inset from the edges/upstage wall so it never clips the
+          // lip or the corner). Off the stage — over the audience seats, a wall — the flat disc
+          // looks wrong on the 3D objects, so we drop it and just let the beam shaft carry on.
           let t = (home.y - STAGE_TOP) / -down.y
           let hx = home.x + down.x * t
           let hz = home.z + down.z * t
-          if (!(hx >= -10 && hx <= 10 && hz >= -7 && hz <= 4)) {
-            surfaceY = 0
+          onStage = hx >= -9.5 && hx <= 9.5 && hz >= -6.5 && hz <= 3.5
+          if (!onStage) {
+            // Carry the shaft on down to the floor so it doesn't stop short in mid-air.
             t = home.y / -down.y
             hx = home.x + down.x * t
             hz = home.z + down.z * t
@@ -679,7 +680,6 @@ export function Visualizer3D() {
           length = Math.min(24, t)
           landX = hx
           landZ = hz
-          hitsFloor = t <= 24.001
         }
         // Beam width from zoom + iris: zoom opens/closes the cone, iris pinches it toward a
         // pinspot. Scale X/Z (width) independently of Y (length) so the cone angle changes.
@@ -696,11 +696,11 @@ export function Visualizer3D() {
           fx.beamMat.opacity = Math.min(0.95, vs.intensity * (vs.strobing ? 0.25 : 0.55) * (1 + 1.4 * hazeLevel))
         }
 
-        // Pool where the beam meets the floor — an ellipse (a tilted beam cuts the
-        // floor obliquely), oriented and stretched along the beam's ground track.
-        if (on && hitsFloor) {
+        // Pool where the beam meets the stage deck — an ellipse (a tilted beam cuts the
+        // surface obliquely). Only drawn on the stage (see onStage above).
+        if (on && onStage) {
           fx.pool.visible = true
-          fx.pool.position.set(landX, surfaceY + 0.02, landZ)
+          fx.pool.position.set(landX, STAGE_TOP + 0.02, landZ)
           const vert = Math.max(0.2, -down.y) // cos of angle from vertical
           const floorAngle = Math.atan2(down.z, down.x)
           fx.pool.rotation.set(-Math.PI / 2, 0, -floorAngle)
