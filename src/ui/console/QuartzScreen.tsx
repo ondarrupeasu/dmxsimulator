@@ -11,14 +11,16 @@ const PALETTE_KINDS: PaletteKind[] = ['colour', 'position', 'gobo', 'beam', 'int
 
 // Touchscreen workspace tabs. Fixtures is also its own docked window on the right,
 // but it lives here too so selection works from the screen like the physical desk.
+// Attribute workspaces follow Titan's bank order IPCGBES (Intensity, Position, Colour, Gobo,
+// Beam, …); selection/tools sit before, playback/shapes/audio after.
 const TABS: { key: string; label: string }[] = [
   { key: 'fixtures', label: 'Fixtures' },
   { key: 'groups', label: 'Groups' },
-  { key: 'colour', label: 'Colour' },
+  { key: 'intensity', label: 'Intensity' },
   { key: 'position', label: 'Position' },
+  { key: 'colour', label: 'Colour' },
   { key: 'gobo', label: 'Gobo' },
   { key: 'beam', label: 'Beam' },
-  { key: 'intensity', label: 'Intensity' },
   { key: 'playbacks', label: 'Playbacks' },
   { key: 'effects', label: 'Shapes' },
   { key: 'audio', label: 'Audio' },
@@ -62,6 +64,7 @@ export function QuartzScreen() {
   const exportShow = useShowStore((s) => s.exportShow)
   const importShow = useShowStore((s) => s.importShow)
   const resetShow = useShowStore((s) => s.resetShow)
+  const setShowMeta = useShowStore((s) => s.setShowMeta)
   const showFileRef = useRef<HTMLInputElement>(null)
   // The Disk menu, faithful to Titan (Save / Load / New Show). A browser can't write to the
   // desk's internal disk/USB, so Save downloads a .json and Load reads one back — the same
@@ -89,8 +92,11 @@ export function QuartzScreen() {
     }
   }
   const newShow = () => {
-    if (window.confirm('New Show — ¿borrar el show actual y empezar uno nuevo?')) {
+    // Titan asks for the new show's name here; keep that flow (the name also shows in Patch).
+    const name = window.prompt('New Show — nombre del nuevo show (deja vacío para cancelar):', '')
+    if (name && name.trim()) {
       resetShow()
+      setShowMeta({ name: name.trim() })
       setMenu('root')
     }
   }
