@@ -75,6 +75,7 @@
     "subShows": "Example shows",
     "winMove": "Drag to move the window",
     "winCog": "Window Appearance (position/size)",
+    "winCtx": "Context Menu (window options)",
     "winClose": "Close this window",
     "winResize": "Drag to resize",
     "refOption": "Real Titan menu option (reference)",

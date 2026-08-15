@@ -217,8 +217,18 @@ export function QuartzScreen({ extMonitor }: { extMonitor?: boolean } = {}) {
   const palKind = kind
   // Cog (Window Appearance) popover: which window's position picker is open.
   const [cogFor, setCogFor] = useState<string | null>(null)
-  // Right-click context menu on a Fixtures window (Titan sets the corner display here, not the Cog).
+  // Fixtures window context menu (Titan sets the corner display here, not the Cog). Opened from
+  // the title-bar ☰ button or a right-click; clamped so it never spills off-screen.
   const [ctxFx, setCtxFx] = useState<{ x: number; y: number } | null>(null)
+  const openCtx = (x: number, y: number) => {
+    const menuW = 160, menuH = 116
+    const vw = window.innerWidth || document.documentElement.clientWidth || 0
+    const vh = window.innerHeight || document.documentElement.clientHeight || 0
+    setCtxFx({
+      x: vw ? Math.max(8, Math.min(x, vw - menuW - 8)) : Math.max(8, x),
+      y: vh ? Math.max(8, Math.min(y, vh - menuH - 8)) : Math.max(8, y),
+    })
+  }
 
   const clearAll = () => {
     clearSelection()
@@ -593,12 +603,17 @@ export function QuartzScreen({ extMonitor }: { extMonitor?: boolean } = {}) {
                 className={`qd-win${focused ? ' focused' : ''}`}
                 style={{ left: `${r.l}%`, top: `${r.t}%`, width: `${r.w}%`, height: `${r.h}%`, zIndex: focused ? 2 : 1, ['--qd-btn' as string]: BTN_SCALE[w.btnSize ?? 2], ['--qd-txt' as string]: TXT_SCALE[w.textSize ?? 1] }}
                 onMouseDown={() => { if (!focused) focusWindow(w.id) }}
-                onContextMenu={norm(w.screen) === 'fixtures' ? (e) => { e.preventDefault(); focusWindow(w.id); setCtxFx({ x: e.clientX, y: e.clientY }) } : undefined}
+                onContextMenu={norm(w.screen) === 'fixtures' ? (e) => { e.preventDefault(); focusWindow(w.id); openCtx(e.clientX, e.clientY) } : undefined}
               >
                 {(
                   <div className="qd-win-bar" onPointerDown={(e) => startWinDrag(e, w, 'move')} title={t('desk.winMove')}>
                     <span className="qd-win-name">{tabLabel(w.screen)}</span>
                     <span className="qd-win-tools">
+                      {/* Context Menu button — Titan's per-window options live here on touch consoles
+                         (right-click is only a PC/Mobile shortcut). Only Fixtures has options so far. */}
+                      {norm(w.screen) === 'fixtures' && (
+                        <button className="qd-win-btn" title={t('desk.winCtx')} onClick={(e) => { e.stopPropagation(); const r = e.currentTarget.getBoundingClientRect(); openCtx(r.right - 160, r.bottom + 3) }} onPointerDown={(e) => e.stopPropagation()}>☰</button>
+                      )}
                       <button className="qd-win-btn" title={t('desk.winCog')} onClick={(e) => { e.stopPropagation(); setCogFor(cogFor === w.id ? null : w.id) }} onPointerDown={(e) => e.stopPropagation()}>⚙</button>
                       <button className="qd-win-btn" title={t('desk.winClose')} onClick={(e) => { e.stopPropagation(); close() }} onPointerDown={(e) => e.stopPropagation()}>✕</button>
                     </span>

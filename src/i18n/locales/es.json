@@ -75,6 +75,7 @@
     "subShows": "Shows de ejemplo",
     "winMove": "Arrastra para mover la ventana",
     "winCog": "Window Appearance (posición/tamaño)",
+    "winCtx": "Context Menu (opciones de ventana)",
     "winClose": "Cerrar esta ventana",
     "winResize": "Arrastra para redimensionar",
     "refOption": "Opción real del menú Titan (referencia)",
