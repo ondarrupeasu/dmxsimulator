@@ -156,7 +156,8 @@
     "hide": "Hide the visualiser (bring it back with executor 15 · Visualiser)",
     "pwaSim": "simulator aids: effects Play/Pause, load a venue, room lights, 2D view and aiming PARs by hand",
     "pwaReal": "the Quartz's visualiser (Capture) doesn't have these controls, or does them differently",
-    "aimPad": "Aim the fixture: the centre is straight down, drag toward where you want it to light (the edge = horizontal). Watch it in the 3D."
+    "aimPad": "Aim the fixture: the centre is straight down, drag toward where you want it to light (the edge = horizontal). Watch it in the 3D.",
+    "popout": "Open the visualiser in its own window (drag it to a 2nd monitor, F11 for fullscreen)"
   },
   "run": {
     "title": "Run",

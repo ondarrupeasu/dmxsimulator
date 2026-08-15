@@ -156,7 +156,8 @@
     "hide": "Ocultar el visualizer (vuelve a activarlo con el executor 15 · Visualiser)",
     "pwaSim": "ayudas del simulador: Play/Pausa de efectos, cargar decorado, luces de sala, vista 2D y orientar PARs a mano",
     "pwaReal": "el visor (Capture) del Quartz no trae estos controles, o los hace de otra forma",
-    "aimPad": "Apuntar el foco: el centro es recto hacia abajo, arrastra hacia donde quieres que ilumine (el borde = horizontal). Míralo en el 3D."
+    "aimPad": "Apuntar el foco: el centro es recto hacia abajo, arrastra hacia donde quieres que ilumine (el borde = horizontal). Míralo en el 3D.",
+    "popout": "Abrir el visualizer en su propia ventana (arrástrala a un 2º monitor, F11 para pantalla completa)"
   },
   "run": {
     "title": "Ejecutar",

@@ -11,7 +11,7 @@ import { fixtureAttributeKeys } from '../../model/types'
 /** The 3D/2D visualiser as a Titan workspace window (the Quartz's Capture output lives on the
  *  touchscreen too). The rig render itself is faithful; the toolbar (venue, room lights, 2D,
  *  aim, effects Play/Pause) is a PWA aid, so it carries the coral PWA tag. */
-export function VisualiserWindow() {
+export function VisualiserWindow({ popped = false }: { popped?: boolean } = {}) {
   const { t } = useTranslation()
   const viewer = useShowStore((s) => s.viewer)
   const setViewer = useShowStore((s) => s.setViewer)
@@ -78,7 +78,12 @@ export function VisualiserWindow() {
           <button className={viewer === '3d' ? 'active' : ''} onClick={() => setViewer('3d')}>3D</button>
           <button className={viewer === '2d' ? 'active' : ''} onClick={() => setViewer('2d')}>2D</button>
         </div>
-        <button className="viz-hide" onClick={() => setViewerVisible(false)} title={t('visualizer.hide')}>✕</button>
+        {!popped && (
+          <>
+            <button className="viz-hide" onClick={() => window.open(`${window.location.pathname}?viz=1`, 'dmxsim-viz', 'width=1280,height=720')} title={t('visualizer.popout')}>⤢</button>
+            <button className="viz-hide" onClick={() => setViewerVisible(false)} title={t('visualizer.hide')}>✕</button>
+          </>
+        )}
       </div>
       <div className="viz-win-stage">
         {viewer === '3d' ? <Visualizer3D /> : <Visualizer2D />}

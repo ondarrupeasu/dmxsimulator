@@ -11,6 +11,7 @@ import { QuartzPanel } from './console/QuartzPanel'
 import { VisualiserWindow } from './console/VisualiserWindow'
 import { TourOverlay } from './TourOverlay'
 import { audioEngine } from '../engine/audio'
+import { startVizBroadcast } from '../store/vizSync'
 import { playbacksBySlot, activeStep } from '../model/cue'
 import './ui.css'
 
@@ -31,6 +32,8 @@ export function AppShell() {
   const setFold = useShowStore((s) => s.setFold)
   const monitorCollapsed = fold.monitor
   const viewerVisible = useShowStore((s) => s.viewerVisible)
+  // Broadcast live state to a popped-out Visualiser window (2nd monitor), if any.
+  useEffect(() => startVizBroadcast(useShowStore as never), [])
   useEffect(() => {
     const p = monitorRef.current
     if (!p) return
