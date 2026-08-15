@@ -6,7 +6,6 @@ import { PALETTE_LABELS } from '../../model/palette'
 import { EffectsPanel } from '../run/EffectsPanel'
 import { AudioPanel } from './AudioPanel'
 import { PlaybacksWindow } from './PlaybacksWindow'
-import { VisualiserWindow } from './VisualiserWindow'
 import { userNumberOf } from '../../model/types'
 import { TEMPLATES } from '../../model/templates'
 import { openPatchReport } from '../../model/report'
@@ -31,7 +30,6 @@ const TABS: { key: string; label: string }[] = [
   { key: 'playbacks', label: 'Playbacks' },
   { key: 'effects', label: 'Shapes' },
   { key: 'audio', label: 'Audio' },
-  { key: 'visualiser', label: 'Visualiser' },
 ]
 
 type SoftKey = {
@@ -338,8 +336,6 @@ export function QuartzScreen() {
         ))}
       </div>
     )
-  } else if (screen === 'visualiser') {
-    body = <VisualiserWindow />
   } else if (screen === 'audio') {
     body = <AudioPanel />
   } else if (screen === 'effects') {

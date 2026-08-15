@@ -52,7 +52,7 @@ function Key({
 }
 
 // Fixed executors 11–18 → the touchscreen workspace each opens (the ones we have windows for).
-const EXEC_SCREEN: Record<number, string> = { 11: 'intensity', 12: 'showlib', 13: 'playbacks', 15: 'visualiser', 16: 'colour', 17: 'groups' }
+const EXEC_SCREEN: Record<number, string> = { 11: 'intensity', 12: 'showlib', 13: 'playbacks', 16: 'colour', 17: 'groups' }
 // Silk-screen names of the fixed executors, for tooltips.
 const EXEC_FIXED_LABEL: Record<number, string> = {
   11: 'Attribute Editor', 12: 'Show Library', 13: 'Playbacks', 14: 'Channel Grid',

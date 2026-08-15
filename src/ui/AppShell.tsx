@@ -181,31 +181,41 @@ export function AppShell() {
               </div>
             </Panel>
             <PanelResizeHandle className="rz rz-h" />
-            {/* BOTTOM: the physical desk (left) + the PWA panel (DMX monitor / Patch, right, foldable). */}
+            {/* BOTTOM: the physical desk (left) + a right column stacking the Visualiser (big,
+               grows downward) over the foldable PWA panel (DMX monitor / Patch). Folding the PWA
+               panel gives its space to the Visualiser, not the desk. */}
             <Panel id="quartz-bottom" order={2} defaultSize={46} minSize={26}>
-              <PanelGroup direction="horizontal" autoSaveId="dmxsim-quartz-bottom-v2">
-                <Panel defaultSize={68} minSize={38}>
+              <PanelGroup direction="horizontal" autoSaveId="dmxsim-quartz-bottom-v3">
+                <Panel defaultSize={58} minSize={32}>
                   <div className="pane">
                     <QuartzPanel />
                   </div>
                 </Panel>
                 <PanelResizeHandle className="rz rz-v" />
-                <Panel
-                  ref={monitorRef} collapsible collapsedSize={4}
-                  defaultSize={32} minSize={16}
-                  onCollapse={() => setFold('monitor', true)}
-                  onExpand={() => setFold('monitor', false)}
-                >
-                  <div className="pane pwa-pane">
-                    <button
-                      className="pane-fold"
-                      title={monitorCollapsed ? t('common.expand') : t('common.collapse')}
-                      onClick={() => setFold('monitor', !monitorCollapsed)}
+                <Panel defaultSize={42} minSize={22}>
+                  <PanelGroup direction="vertical" autoSaveId="dmxsim-quartz-br-v1">
+                    <Panel defaultSize={64} minSize={24}>
+                      <div className="pane"><VisualiserWindow /></div>
+                    </Panel>
+                    <PanelResizeHandle className="rz rz-h" />
+                    <Panel
+                      ref={monitorRef} collapsible collapsedSize={5}
+                      defaultSize={36} minSize={16}
+                      onCollapse={() => setFold('monitor', true)}
+                      onExpand={() => setFold('monitor', false)}
                     >
-                      {monitorCollapsed ? '‹' : '›'}
-                    </button>
-                    {!monitorCollapsed && pwaPanel}
-                  </div>
+                      <div className="pane pwa-pane">
+                        <button
+                          className="pane-fold"
+                          title={monitorCollapsed ? t('common.expand') : t('common.collapse')}
+                          onClick={() => setFold('monitor', !monitorCollapsed)}
+                        >
+                          {monitorCollapsed ? '⌃' : '⌄'}
+                        </button>
+                        {!monitorCollapsed && pwaPanel}
+                      </div>
+                    </Panel>
+                  </PanelGroup>
                 </Panel>
               </PanelGroup>
             </Panel>

@@ -405,8 +405,8 @@ export function PatchView() {
               </button>
             </header>
             {!libCollapsed && (
-              <div className="patch-bar" title="Como en Titan: elige línea DMX y dirección de inicio (vacío = auto, la siguiente libre); Qty parchea varios seguidos y la dirección avanza sola.">
-                <label>Line
+              <div className="patch-bar" title="Como en Titan (DMX Line / Address / Quantity). Universe = la línea/salida DMX (1–4), NO el truss (el truss lo eliges arrastrando el fixture al montarlo). Address vacío = auto (siguiente libre); Qty parchea varios ya espaciados y la dirección avanza sola.">
+                <label>Universe
                   <select value={patchLine} onChange={(e) => setPatchLine(Number(e.target.value))}>
                     {UNIVERSES.map((u) => (<option key={u} value={u}>{u}</option>))}
                   </select>

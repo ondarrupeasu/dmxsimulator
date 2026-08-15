@@ -526,12 +526,9 @@ export const useShowStore = create<ShowState>()(
       rightPanel: 'monitor',
       setRightPanel: (p) => set({ rightPanel: p }),
       deskScreen: 'fixtures',
-      // Default mosaic: the Fixtures workspace on the left, the Visualiser (the desk's Capture
-      // output) on the right — so the 3D view is visible inside the Titan screen from the start.
-      deskWindows: [
-        { id: 'w-fx', screen: 'fixtures', pos: 'left' },
-        { id: 'w-viz', screen: 'visualiser', pos: 'right' },
-      ],
+      // Default mosaic: just the Fixtures workspace, full. The Visualiser is its own big pane
+      // (bottom-right), not a mosaic window, so it can grow independently of the desk.
+      deskWindows: [{ id: 'w-fx', screen: 'fixtures', pos: 'full' }],
       deskFocus: 'w-fx',
       // Setting "the desk screen" now means: point the FOCUSED window at that workspace.
       setDeskScreen: (screen) =>
@@ -946,6 +943,11 @@ export const useShowStore = create<ShowState>()(
         const existing = [...get().show.fixtures]
         const acc: PatchedFixture[] = []
         let count = existing.filter((f) => f.definitionId === definitionId).length
+        // Spread new fixtures along the default truss so they don't stack on one spot — the
+        // student then drags them where the real rig has them. Continues past what's already
+        // on that truss; wraps every 10 across the width (x ∈ [-0.9, 0.9]).
+        const truss = DEFAULT_TRUSS
+        let slot = existing.filter((f) => (f.truss ?? DEFAULT_TRUSS) === truss).length
         for (let i = 0; i < quantity; i++) {
           if (address + footprint - 1 > 512) break // no room left in this universe
           count += 1
@@ -957,8 +959,10 @@ export const useShowStore = create<ShowState>()(
             userNumber: nextUserNumber([...existing, ...acc]),
             universe,
             address,
-            position: { x: 0, y: 0.6, z: 0 },
+            truss,
+            position: { x: -0.9 + 0.2 * (slot % 10), y: 0.6, z: 0 },
           })
+          slot += 1
           address += footprint + offset // auto-increment past this fixture (+ gap)
         }
         if (acc.length) set((s) => ({ show: { ...s.show, fixtures: [...s.show.fixtures, ...acc] } }))
