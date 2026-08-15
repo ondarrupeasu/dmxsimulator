@@ -212,7 +212,7 @@ export function QuartzPanel() {
   const clearExecutor = useShowStore((s) => s.clearExecutor)
   const editExecutor = (n: number) => {
     const cur = executorLabels[n] ?? ''
-    const v = window.prompt(`Executor ${n} — escribe su etiqueta (vacío para borrar)`, cur)
+    const v = window.prompt(t('desk.execLabelPrompt', { n }), cur)
     if (v !== null) setExecutorLabel(n, v)
   }
   const hasProgrammer = useShowStore((s) => Object.keys(s.programmer).length > 0)
@@ -406,10 +406,10 @@ export function QuartzPanel() {
               const caption = execCaption(n)
               const lit = !!cue && isUp(cue.id)
               const title = cue
-                ? `Executor ${n}: ${cue.name} — clic para disparar/apagar (clic derecho: liberar)`
+                ? t('desk.execFire', { n, name: cue.name })
                 : hasProgrammer
-                  ? `Executor ${n} — clic para grabar el look actual aquí`
-                  : `Executor ${n} — clic para etiquetar`
+                  ? t('desk.execRecordHere', { n })
+                  : t('desk.execLabel', { n })
               return (
                 <Key
                   key={i} v="dark" narrow assignable={!caption} ledColor="blue" on={lit} dim={!!cue && !lit}
@@ -427,17 +427,17 @@ export function QuartzPanel() {
             if (scr) {
               const active = deskScreen === scr
               return <Key key={i} v="dark" narrow ledColor="blue" on={active} dim={!active}
-                title={`Executor ${n} — ${label} (abrir workspace)`} onClick={() => setScreen(scr)} />
+                title={t('desk.execWorkspace', { n, label })} onClick={() => setScreen(scr)} />
             }
             // 15 Visualiser: show/hide the Visualiser pane (like opening/closing Capture) —
             // bright when it's showing, dim when hidden.
             if (n === 15) {
               return <Key key={i} v="dark" narrow ledColor="blue" on={viewerVisible} dim={!viewerVisible}
-                title={`Executor ${n} — ${label} (mostrar/ocultar el visualizer)`} onClick={() => setViewerVisible(!viewerVisible)} />
+                title={t('desk.execViz', { n, label })} onClick={() => setViewerVisible(!viewerVisible)} />
             }
             // 14 Channel Grid / 18 Snap: fixed functions we haven't built yet — lit dim (assigned
             // on the real desk) but inert here, said so in the tooltip.
-            return <Key key={i} v="dark" narrow ledColor="blue" dim disabled title={`Executor ${n} — ${label} (función fija; aún no disponible en el simulador)`} />
+            return <Key key={i} v="dark" narrow ledColor="blue" dim disabled title={t('desk.execFixed', { n, label })} />
           })}
         </Box>
         <GridLabels x={648} y={172} w={640} cols={10} small items={['11\nAttribute\nEditor', '12\nShow\nLibrary', '13\nPlaybacks', '14\nChannel\nGrid', '15\nVisualiser', '16\nGroups +\nPalettes', '17\nFixtures\n+ Groups', '18\nSnap', execCaption(19) ? `19\n${execCaption(19)}` : '19', execCaption(20) ? `20\n${execCaption(20)}` : '20']} />
@@ -445,10 +445,10 @@ export function QuartzPanel() {
         {/* Fix / All / HiLight */}
         <GridLabels x={40} y={270} w={100} cols={2} items={['Fix −1', 'Fix +1']} above />
         <Box x={40} y={272} w={100} h={118} cols={2} rows={2} narrow>
-          <Key v="dark" narrow led={false} disabled={fixtures.length < 2} title="Fix −1 — fixture anterior" onClick={() => step(-1)} />
-          <Key v="dark" narrow led={false} disabled={fixtures.length < 2} title="Fix +1 — fixture siguiente" onClick={() => step(1)} />
-          <Key v="dark" narrow on={!noFx && selection.length === fixtures.length} disabled={noFx} title="All — seleccionar todo" onClick={() => select(fixtures.map((f) => f.id))} />
-          <Key v="dark" narrow ledColor="blue" on={highlight} title="Hi Light — resalta los fixtures seleccionados a tope (enclavado; no se guarda en el programmer). Clic para activar/desactivar." onClick={toggleHighlight} />
+          <Key v="dark" narrow led={false} disabled={fixtures.length < 2} title={t('desk.fixPrev')} onClick={() => step(-1)} />
+          <Key v="dark" narrow led={false} disabled={fixtures.length < 2} title={t('desk.fixNext')} onClick={() => step(1)} />
+          <Key v="dark" narrow on={!noFx && selection.length === fixtures.length} disabled={noFx} title={t('desk.all')} onClick={() => select(fixtures.map((f) => f.id))} />
+          <Key v="dark" narrow ledColor="blue" on={highlight} title={t('desk.hiLight')} onClick={toggleHighlight} />
         </Box>
         <GridLabels x={40} y={392} w={100} cols={2} items={['All', 'Hi\nLight']} subs={['Rem Dim', 'Lo Light']} />
 
@@ -457,8 +457,8 @@ export function QuartzPanel() {
         <Box x={178} y={272} w={452} h={118} cols={7} rows={2}>
           {ATTRIBUTES.map((a) => <Key key={a.name} v="white" on={a.name === attr} title={a.name} onClick={() => setAttr(a.name)} tour={a.name === 'Position' ? 'desk-position' : a.name === 'Colour' ? 'desk-colour' : undefined} />)}
           <Key v="white" title="Shape → Shapes" onClick={() => setScreen('effects')} tour="desk-shape" />
-          <Key v="white" title="ML Menu — menú Moving Light" onClick={() => setMenu('ml')} /><Key v="white" ledColor="red" on={blind} title="Blind — programar sin salida a escena" onClick={() => setBlind(!blind)} /><Key v="white" disabled={noSel || activeFns.length === 0} title={`Off — quitar ${active.name} de la selección`} onClick={() => clearSelectedFunctions(activeFns)} />
-          <Key v="white" ledColor="blue" on={fanMode} title="Fan — modo abanico: con él activo, gira una rueda y el atributo se reparte por la selección (el centro no cambia). Clic para activar/desactivar." onClick={toggleFanMode} /><Key v="white" disabled title="Options" /><Key v="dark" disabled title="Latch Menu" />
+          <Key v="white" title={t('desk.mlMenu')} onClick={() => setMenu('ml')} /><Key v="white" ledColor="red" on={blind} title={t('desk.blind')} onClick={() => setBlind(!blind)} /><Key v="white" disabled={noSel || activeFns.length === 0} title={t('desk.off', { attr: active.name })} onClick={() => clearSelectedFunctions(activeFns)} />
+          <Key v="white" ledColor="blue" on={fanMode} title={t('desk.fan')} onClick={toggleFanMode} /><Key v="white" disabled title="Options" /><Key v="dark" disabled title="Latch Menu" />
         </Box>
         <GridLabels x={178} y={392} w={452} cols={7} items={['Shape', 'ML\nMenu', 'Blind', 'Off', 'Fan', 'Options', 'Latch\nMenu']} />
 
@@ -467,7 +467,7 @@ export function QuartzPanel() {
         <Box x={658} y={272} w={386} h={118} cols={6} rows={2}>
           <Key v="dark" ledColor="red" on={recordArm || hasProgrammer} flash={recordArm} title={recordArm ? 'Record armado — parpadea esperando que elijas el fader donde grabar (pulsa Record otra vez para cancelar)' : 'Record — pulsa y luego elige el fader donde guardar'} onClick={() => { setMenu('record'); if (hasProgrammer || recordArm) armRecord() }} tour="desk-record" />
           <Key v="white" led={false} disabled={!hasActive || !hasProgrammer} title="Update" onClick={() => connectedId && updateCue(connectedId)} />
-          <Key v="white" led={false} disabled title="Edit" /><Key v="white" led={false} disabled title="Select If" /><Key v="white" led={false} title="Patch — abre el menú Patch y el panel de patch (PWA)" onClick={() => { setMenu('patch'); setRightPanel('patch') }} /><Key v="white" led={false} title="Disk — Save / Load / New Show" onClick={() => setMenu('disk')} />
+          <Key v="white" led={false} disabled title="Edit" /><Key v="white" led={false} disabled title="Select If" /><Key v="white" led={false} title={t('desk.patch')} onClick={() => { setMenu('patch'); setRightPanel('patch') }} /><Key v="white" led={false} title="Disk — Save / Load / New Show" onClick={() => setMenu('disk')} />
           <Key v="white" led={false} disabled={!hasActive} title="Delete" onClick={() => connectedId && deleteCue(connectedId)} />
           <Key v="white" led={false} disabled={!hasActive} title="Copy" onClick={() => connectedId && copyCue(connectedId)} />
           <Key v="white" led={false} disabled title="Move" /><Key v="white" led={false} disabled title="Unfold" /><Key v="white" led={false} disabled title="Include" />
@@ -479,7 +479,7 @@ export function QuartzPanel() {
         <GridLabels x={1074} y={270} w={122} cols={2} items={['Min/Max', 'Size/Pos']} subs={['Next', 'Other Screen']} above />
         <Box x={1074} y={272} w={122} h={118} cols={2} rows={2} narrow>
           <Key v="dark" narrow led={false} disabled title="Min/Max" /><Key v="dark" narrow led={false} disabled title="Size/Pos" />
-          <Key v="dark" narrow led={false} title="View/Open — abre Workspaces: recupera una disposición guardada o graba la actual (Record Workspace)" onClick={() => setMenu('view')} /><Key v="dark" narrow led={false} disabled title="Close/Control" />
+          <Key v="dark" narrow led={false} title={t('desk.viewOpen')} onClick={() => setMenu('view')} /><Key v="dark" narrow led={false} disabled title="Close/Control" />
         </Box>
         <GridLabels x={1074} y={392} w={122} cols={2} items={['View\n/Open', 'Close\nControl']} />
 
@@ -495,10 +495,10 @@ export function QuartzPanel() {
             // DIM (there's something stored here); occupied + up (or flashed) → BRIGHT. While
             // Record/Connect is armed, the valid targets FLASH to say "pick one".
             const armed = recordArm || connectArm
-            const title = recordArm ? (cue ? `Record over ${cue.name}` : 'Record here')
-              : connectArm ? (cue ? `Connect ${cue.name} al Go central` : 'Empty')
-              : cue ? `Flash ${cue.name} — ${flashed ? 'ON (clic para apagar)' : 'clic para encender'}. En la Quartz real es momentáneo (mantener pulsado); aquí es conmutador.` : 'Empty'
-            return <Key key={`t${i}`} v={recordArm ? 'red' : 'blue'} narrow ledBottom on={on} flash={armed} dim={!armed && !!cue && !on} hint={'QWERTYUIOP'[i]} disabled={(!recordArm && !connectArm && !cue) || (connectArm && !cue)} title={`${title} · tecla ${'QWERTYUIOP'[i]} (mantén para flash; varias a la vez)`}
+            const inner = recordArm ? (cue ? t('desk.recordOver', { name: cue.name }) : t('desk.recordHere'))
+              : connectArm ? (cue ? t('desk.connectTo', { name: cue.name }) : t('desk.empty'))
+              : cue ? t('desk.flashName', { name: cue.name, state: flashed ? t('desk.flashOn') : t('desk.flashClickOn') }) : t('desk.empty')
+            return <Key key={`t${i}`} v={recordArm ? 'red' : 'blue'} narrow ledBottom on={on} flash={armed} dim={!armed && !!cue && !on} hint={'QWERTYUIOP'[i]} disabled={(!recordArm && !connectArm && !cue) || (connectArm && !cue)} title={t('desk.flashKey', { label: inner, key: 'QWERTYUIOP'[i] })}
               onClick={recordArm ? () => recordCueAt(gi) : connectArm ? (cue ? () => connectPlayback(cue.id) : undefined) : cue ? () => flash(cue.id) : undefined} />
           })}
           {Array.from({ length: 10 }, (_, i) => {
@@ -506,9 +506,9 @@ export function QuartzPanel() {
             const swopped = !!cue && swopId === cue.id
             // Bottom button = SWOP (solo): this playback full, everything else off. Toggle here
             // for the same reason as Flash (no press-and-hold with a mouse).
-            const title = recordArm ? (cue ? `Record over ${cue.name}` : 'Record here')
-              : cue ? `Swop ${cue.name} — ${swopped ? 'ON (clic para apagar)' : 'solo, clic para encender'}. En la Quartz real es momentáneo; aquí es conmutador.` : 'Empty'
-            return <Key key={`b${i}`} v={recordArm || swopped ? 'red' : 'dark'} narrow led={swopped} ledBottom on={swopped} hint={'ASDFGHJKLÑ'[i]} disabled={!recordArm && !cue} title={`${title} · tecla ${'ASDFGHJKLÑ'[i]} (mantén para swop). Bloq Mayús + tecla = executor.`}
+            const inner = recordArm ? (cue ? t('desk.recordOver', { name: cue.name }) : t('desk.recordHere'))
+              : cue ? t('desk.swopName', { name: cue.name, state: swopped ? t('desk.swopOnState') : t('desk.swopClickOn') }) : t('desk.empty')
+            return <Key key={`b${i}`} v={recordArm || swopped ? 'red' : 'dark'} narrow led={swopped} ledBottom on={swopped} hint={'ASDFGHJKLÑ'[i]} disabled={!recordArm && !cue} title={t('desk.swopKey', { label: inner, key: 'ASDFGHJKLÑ'[i] })}
               onClick={recordArm ? () => recordCueAt(gi) : cue ? () => swop(cue.id) : undefined} />
           })}
         </Box>
@@ -548,26 +548,26 @@ export function QuartzPanel() {
         <Label x={652} y={736} w={58} text={'Connect\n/Cue'} align="right" /><Label x={848} y={736} w={56} text="Stop" align="left" />
         <Box x={714} y={594} w={130} h={178} cols={2} rows={3}>
           <Key v="white" led={false} disabled title="Live Time" /><Key v="white" led={false} disabled title="Next Time" />
-          <Key v="white" led={false} disabled={!hasActive} title="Prev Cue — paso anterior del playback conectado" onClick={goBack} />
-          <Key v="white" led={false} disabled={!hasActive} title="Next Cue — siguiente paso del playback conectado" onClick={go} />
-          <Key v="dark" ledColor="blue" on={connectArm} flash={connectArm} disabled={!playbacks.length} title={connectArm ? 'Connect armado — toca un playback para conectarlo al Go central (sin dispararlo)' : 'Connect/Cue — conecta un playback al transporte central sin dispararlo'} onClick={armConnect} /><Key v="dark" disabled={!hasActive} title="Stop — suelta el playback conectado" onClick={stopPlayback} />
+          <Key v="white" led={false} disabled={!hasActive} title={t('desk.prevCue')} onClick={goBack} />
+          <Key v="white" led={false} disabled={!hasActive} title={t('desk.nextCue')} onClick={go} />
+          <Key v="dark" ledColor="blue" on={connectArm} flash={connectArm} disabled={!playbacks.length} title={connectArm ? t('desk.connectArmed') : t('desk.connect')} onClick={armConnect} /><Key v="dark" disabled={!hasActive} title={t('desk.stop')} onClick={stopPlayback} />
         </Box>
         <Box x={749} y={766} w={60} h={62} cols={1} rows={1}>
-          <Key v="red" ledColor="red" on={hasActive} disabled={!hasActive} title="Go — avanza el playback conectado al siguiente cue" onClick={go} />
+          <Key v="red" ledColor="red" on={hasActive} disabled={!hasActive} title={t('desk.go')} onClick={go} />
         </Box>
         <Label x={725} y={832} w={108} text="Go" />
 
         {/* Keypad — one 6×4 grid so every row is evenly spaced */}
         <GridLabels x={916} y={488} w={258} cols={4} items={['Fixture', 'Palette', 'Macro', 'Group']} above />
         <Box x={916} y={498} w={258} h={330} cols={4} rows={6}>
-          <Key v="dark" title="Fixture — selección (la ventana de fixtures está a la derecha)" onClick={() => setMenu('root')} />
+          <Key v="dark" title={t('desk.fixtureKey')} onClick={() => setMenu('root')} />
           <Key v="dark" title="Palettes" onClick={() => { setScreen('colour'); setMenu('palette') }} />
-          <Key v="dark" disabled title="Macro" /><Key v="dark" title="Group — workspace de grupos" onClick={() => { setScreen('groups'); setMenu('group') }} />
-          <Key v="white" led={false} text="1" title="1" onClick={dig('1')} /><Key v="white" led={false} text="2" title="2" onClick={dig('2')} /><Key v="white" led={false} text="3" title="3" onClick={dig('3')} /><Key v="white" on={shift} avo text="avo" title="avo (Avolites) — segundas funciones (las azules). En la Quartz real se MANTIENE pulsado mientras pulsas otra tecla; aquí es conmutador (clic para activar/desactivar)." onClick={() => setShift((s) => !s)} />
-          <Key v="white" led={false} text="4" title="4" onClick={dig('4')} /><Key v="white" led={false} text="5" title="5" onClick={dig('5')} /><Key v="white" led={false} text="6" title="6" onClick={dig('6')} /><Key v="white" ledColor="blue" on={playbackFade > 0} text="TIME" title={`Time — fundido de Go: ${playbackFade}s (clic para cambiar; 0 = Snap)`} onClick={() => { const v = window.prompt('Tiempo de fundido en Go (segundos):', String(playbackFade)); if (v !== null) setPlaybackFade(Number(v.replace(',', '.')) || 0) }} />
-          <Key v="white" led={false} text="7" title="7" onClick={dig('7')} /><Key v="white" led={false} text="8" title="8" onClick={dig('8')} /><Key v="white" led={false} text="9" title="9" onClick={dig('9')} /><Key v="white" ledColor="red" on={hasProgrammer} text="CLEAR" title="Clear — vacía el programmer y deselecciona" onClick={() => { clearProgrammer(); select([]) }} />
-          <Key v="white" led={false} text="EXIT" title="Exit — salir al menú raíz / vaciar la línea" onClick={() => { cmdClear(); setMenu('root') }} /><Key v="white" led={false} text="0" title="0" onClick={dig('0')} /><Key v="white" led={false} text="ENTER" title="Enter — ejecutar la línea de comandos" onClick={commitCommand} /><Key v="white" led={false} text="." title="Punto — p. ej. @ . = 0%" onClick={dig('.')} />
-          <Key v="dark" led={false} title="Back — borrar" onClick={cmdBackspace} /><Key v="dark" led={false} disabled={noFx} title="Through — rango" onClick={() => cmdAppend(' Through ')} /><Key v="dark" led={false} disabled={noFx} title="And — añadir" onClick={() => cmdAppend(' And ')} /><Key v="dark" led={false} disabled={noSel && noFx} title="@ — intensidad (@ @ = full)" onClick={() => cmdAppend(' @ ')} />
+          <Key v="dark" disabled title="Macro" /><Key v="dark" title={t('desk.group')} onClick={() => { setScreen('groups'); setMenu('group') }} />
+          <Key v="white" led={false} text="1" title="1" onClick={dig('1')} /><Key v="white" led={false} text="2" title="2" onClick={dig('2')} /><Key v="white" led={false} text="3" title="3" onClick={dig('3')} /><Key v="white" on={shift} avo text="avo" title={t('desk.avo')} onClick={() => setShift((s) => !s)} />
+          <Key v="white" led={false} text="4" title="4" onClick={dig('4')} /><Key v="white" led={false} text="5" title="5" onClick={dig('5')} /><Key v="white" led={false} text="6" title="6" onClick={dig('6')} /><Key v="white" ledColor="blue" on={playbackFade > 0} text="TIME" title={t('desk.time', { secs: playbackFade })} onClick={() => { const v = window.prompt(t('desk.timePrompt'), String(playbackFade)); if (v !== null) setPlaybackFade(Number(v.replace(',', '.')) || 0) }} />
+          <Key v="white" led={false} text="7" title="7" onClick={dig('7')} /><Key v="white" led={false} text="8" title="8" onClick={dig('8')} /><Key v="white" led={false} text="9" title="9" onClick={dig('9')} /><Key v="white" ledColor="red" on={hasProgrammer} text="CLEAR" title={t('desk.clear')} onClick={() => { clearProgrammer(); select([]) }} />
+          <Key v="white" led={false} text="EXIT" title={t('desk.exit')} onClick={() => { cmdClear(); setMenu('root') }} /><Key v="white" led={false} text="0" title="0" onClick={dig('0')} /><Key v="white" led={false} text="ENTER" title={t('desk.enter')} onClick={commitCommand} /><Key v="white" led={false} text="." title={t('desk.dot')} onClick={dig('.')} />
+          <Key v="dark" led={false} title={t('desk.back')} onClick={cmdBackspace} /><Key v="dark" led={false} disabled={noFx} title={t('desk.through')} onClick={() => cmdAppend(' Through ')} /><Key v="dark" led={false} disabled={noFx} title={t('desk.and')} onClick={() => cmdAppend(' And ')} /><Key v="dark" led={false} disabled={noSel && noFx} title={t('desk.at')} onClick={() => cmdAppend(' @ ')} />
         </Box>
         <GridLabels x={916} y={832} w={258} cols={4} items={['Back', 'Through', 'And', '@']} subs={['Undo', '−%', '+%', 'Redo']} />
 
