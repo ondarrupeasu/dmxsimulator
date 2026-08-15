@@ -2,7 +2,7 @@ import { useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Panel, PanelGroup, PanelResizeHandle, type ImperativePanelHandle } from 'react-resizable-panels'
 import { useShowStore } from '../../store/showStore'
-import { fixtureFootprint, fixtureAttributeKeys, ATTRIBUTE_BANKS, type FixtureCategory } from '../../model/types'
+import { fixtureFootprint, fixtureAttributeKeys, ATTRIBUTE_BANKS, type FixtureCategory, type FixtureDefinition } from '../../model/types'
 import { getTrusses, DEFAULT_TRUSS } from '../../model/venue'
 
 const UNIVERSES = [1, 2, 3, 4] // the Quartz has four DMX outputs
@@ -77,6 +77,17 @@ export function PatchView() {
   const libRef = useRef<ImperativePanelHandle>(null)
   const [libCollapsed, setLibCollapsed] = useState(false)
   const [collapsedCats, setCollapsedCats] = useState<Set<string>>(new Set())
+  // Titan-style patch controls: DMX line (universe), start address (blank = auto next-free),
+  // and quantity. Adding advances the manual address by footprint×qty (auto-increment).
+  const [patchLine, setPatchLine] = useState(1)
+  const [patchAddr, setPatchAddr] = useState('')
+  const [patchQty, setPatchQty] = useState(1)
+  const doAdd = (def: FixtureDefinition) => {
+    const manual = patchAddr.trim() !== ''
+    const addr = manual ? Math.max(1, Math.min(512, parseInt(patchAddr, 10) || 1)) : undefined
+    addFixture(def.id, { universe: patchLine, address: addr, quantity: patchQty })
+    if (manual && addr !== undefined) setPatchAddr(String(Math.min(513, addr + fixtureFootprint(def, 0) * patchQty)))
+  }
   const toggleCat = (cat: string) =>
     setCollapsedCats((s) => {
       const n = new Set(s)
@@ -394,6 +405,23 @@ export function PatchView() {
               </button>
             </header>
             {!libCollapsed && (
+              <div className="patch-bar" title="Como en Titan: elige línea DMX y dirección de inicio (vacío = auto, la siguiente libre); Qty parchea varios seguidos y la dirección avanza sola.">
+                <label>Line
+                  <select value={patchLine} onChange={(e) => setPatchLine(Number(e.target.value))}>
+                    {UNIVERSES.map((u) => (<option key={u} value={u}>{u}</option>))}
+                  </select>
+                </label>
+                <label>Address
+                  <input type="text" inputMode="numeric" placeholder="auto" value={patchAddr}
+                    onChange={(e) => setPatchAddr(e.target.value.replace(/[^0-9]/g, ''))} />
+                </label>
+                <label>Qty
+                  <input type="number" min={1} max={96} value={patchQty}
+                    onChange={(e) => setPatchQty(Math.max(1, Math.min(96, Number(e.target.value) || 1)))} />
+                </label>
+              </div>
+            )}
+            {!libCollapsed && (
               <div className="scroll">
                 {groups.length === 0 ? (
                   <div className="prog-empty">{t('patch.noMatch')}</div>
@@ -420,7 +448,7 @@ export function PatchView() {
                                       {fp} {t('patch.channels')} · {def.modes[0]?.name}
                                     </div>
                                   </div>
-                                  <button className="lib-add" onClick={() => addFixture(def.id)}>
+                                  <button className="lib-add" onClick={() => doAdd(def)}>
                                     {t('patch.add')}
                                   </button>
                                 </div>

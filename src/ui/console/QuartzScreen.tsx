@@ -74,7 +74,7 @@ export function QuartzScreen() {
   const cmd = useShowStore((s) => s.cmd)
   const deskMenu = useShowStore((s) => s.deskMenu)
   const setMenu = useShowStore((s) => s.setDeskMenu)
-  const setMode = useShowStore((s) => s.setMode)
+  const setRightPanel = useShowStore((s) => s.setRightPanel)
   const exportShow = useShowStore((s) => s.exportShow)
   const importShow = useShowStore((s) => s.importShow)
   const resetShow = useShowStore((s) => s.resetShow)
@@ -244,7 +244,7 @@ export function QuartzScreen() {
         { k: 'D', label: 'Address =', kind: 'text', info: true },
         { k: 'E', label: 'Quantity', kind: 'text', info: true },
         { k: 'F', label: 'User Number =', kind: 'text', info: true },
-        { k: 'G', label: 'Open Patch View', kind: 'action', onClick: () => setMode('patch') },
+        { k: 'G', label: 'Open Patch Panel', sub: 'PWA', kind: 'action', onClick: () => setRightPanel('patch') },
       ],
     },
     palette: {

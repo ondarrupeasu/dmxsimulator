@@ -218,7 +218,10 @@ interface ShowState {
   setPlaybackPage: (page: number) => void
 
   // Patch
-  addFixture: (definitionId: string, opts?: { modeIndex?: number; address?: number }) => void
+  /** Patch one or more fixtures. Titan-style: `quantity` units are patched from `address`
+   *  (defaults to the next free slot) on `universe`, each auto-advancing by the footprint
+   *  (+ `offset` gap). Omit address for pure auto-patch. */
+  addFixture: (definitionId: string, opts?: { modeIndex?: number; address?: number; universe?: number; quantity?: number; offset?: number }) => void
   removeFixture: (instanceId: string) => void
   renameFixture: (instanceId: string, name: string) => void
   setFixturePosition: (instanceId: string, x: number, y: number) => void
@@ -935,20 +938,30 @@ export const useShowStore = create<ShowState>()(
         if (!def) return
         const modeIndex = opts?.modeIndex ?? 0
         const footprint = fixtureFootprint(def, modeIndex)
-        const address = opts?.address ?? get().findFreeAddress(footprint, 1)
+        const universe = opts?.universe ?? 1
+        const quantity = Math.max(1, Math.min(96, opts?.quantity ?? 1))
+        const offset = Math.max(0, opts?.offset ?? 0)
+        let address = opts?.address ?? get().findFreeAddress(footprint, universe)
         if (address == null) return // universe full
-        const count = get().show.fixtures.filter((f) => f.definitionId === definitionId).length
-        const fixture: PatchedFixture = {
-          id: nextInstanceId(),
-          definitionId,
-          modeIndex,
-          name: `${def.model} ${count + 1}`,
-          userNumber: nextUserNumber(get().show.fixtures),
-          universe: 1,
-          address,
-          position: { x: 0, y: 0.6, z: 0 },
+        const existing = [...get().show.fixtures]
+        const acc: PatchedFixture[] = []
+        let count = existing.filter((f) => f.definitionId === definitionId).length
+        for (let i = 0; i < quantity; i++) {
+          if (address + footprint - 1 > 512) break // no room left in this universe
+          count += 1
+          acc.push({
+            id: nextInstanceId(),
+            definitionId,
+            modeIndex,
+            name: `${def.model} ${count}`,
+            userNumber: nextUserNumber([...existing, ...acc]),
+            universe,
+            address,
+            position: { x: 0, y: 0.6, z: 0 },
+          })
+          address += footprint + offset // auto-increment past this fixture (+ gap)
         }
-        set((s) => ({ show: { ...s.show, fixtures: [...s.show.fixtures, fixture] } }))
+        if (acc.length) set((s) => ({ show: { ...s.show, fixtures: [...s.show.fixtures, ...acc] } }))
       },
 
       readdressByRigOrder: () =>
