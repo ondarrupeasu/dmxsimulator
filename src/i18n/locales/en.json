@@ -84,7 +84,8 @@
     "exportError": "Could not export.",
     "newShowPrompt": "New Show — name for the new show (leave empty to cancel):",
     "addWindow": "Open another mosaic window (up to 4 — like the Titan touchscreen)",
-    "winPopout": "Send to a new window (2nd monitor)"
+    "winPopout": "Send to a new window (2nd monitor)",
+    "openViz": "Show / hide it"
   },
   "fixturesWindow": {
     "title": "Fixtures",
@@ -154,7 +155,7 @@
     "note": "2D top view now; 3D (Three.js) in a later phase.",
     "aimTip": "Aim the fixture by hand (physical rigging — not DMX).",
     "aimUnit": "fixtures",
-    "hide": "Hide the visualiser (bring it back with executor 15 · Visualiser)",
+    "hide": "Close the visualiser (reopen from Open/View → Visualiser)",
     "pwaSim": "simulator aids: effects Play/Pause, load a venue, room lights, 2D view and aiming PARs by hand",
     "pwaReal": "the Quartz's visualiser (Capture) doesn't have these controls, or does them differently",
     "aimPad": "Aim the fixture: the centre is straight down, drag toward where you want it to light (the edge = horizontal). Watch it in the 3D.",

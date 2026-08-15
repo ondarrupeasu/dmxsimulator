@@ -84,7 +84,8 @@
     "exportError": "No se pudo exportar.",
     "newShowPrompt": "New Show — nombre del nuevo show (deja vacío para cancelar):",
     "addWindow": "Abrir otra ventana en mosaico (hasta 4 — como el touchscreen del Titan)",
-    "winPopout": "Enviar a una ventana nueva (2º monitor)"
+    "winPopout": "Enviar a una ventana nueva (2º monitor)",
+    "openViz": "Mostrar / ocultar"
   },
   "fixturesWindow": {
     "title": "Fixtures",
@@ -154,7 +155,7 @@
     "note": "Vista cenital 2D ahora; 3D (Three.js) en una fase posterior.",
     "aimTip": "Orientar el foco a mano (montaje físico — no es DMX).",
     "aimUnit": "focos",
-    "hide": "Ocultar el visualizer (vuelve a activarlo con el executor 15 · Visualiser)",
+    "hide": "Cerrar el visualizer (reábrelo en Open/View → Visualiser)",
     "pwaSim": "ayudas del simulador: Play/Pausa de efectos, cargar decorado, luces de sala, vista 2D y orientar PARs a mano",
     "pwaReal": "el visor (Capture) del Quartz no trae estos controles, o los hace de otra forma",
     "aimPad": "Apuntar el foco: el centro es recto hacia abajo, arrastra hacia donde quieres que ilumine (el borde = horizontal). Míralo en el 3D.",

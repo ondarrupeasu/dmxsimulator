@@ -84,7 +84,8 @@
     "exportError": "Ezin izan da esportatu.",
     "newShowPrompt": "New Show — show berriaren izena (utzi hutsik uzteko):",
     "addWindow": "Ireki mosaikoko beste leiho bat (4 arte — Titan-en touchscreen bezala)",
-    "winPopout": "Bidali leiho berri batera (2. monitorea)"
+    "winPopout": "Bidali leiho berri batera (2. monitorea)",
+    "openViz": "Erakutsi / ezkutatu"
   },
   "fixturesWindow": {
     "title": "Fixture-ak",
@@ -154,7 +155,7 @@
     "note": "2D goiko ikuspegia orain; 3D (Three.js) geroagoko fase batean.",
     "aimTip": "Fokua eskuz orientatu (muntaia fisikoa — ez da DMX).",
     "aimUnit": "foku",
-    "hide": "Ezkutatu visualizer-a (executor 15 · Visualiser-ekin itzuli)",
+    "hide": "Itxi visualizer-a (Open/View → Visualiser-etik berrireki)",
     "pwaSim": "simuladorearen laguntzak: efektuen Play/Pausa, dekoratua kargatu, aretoko argia, 2D ikuspegia eta PARak eskuz orientatu",
     "pwaReal": "Quartz-en bisoreak (Capture) ez ditu kontrol hauek, edo bestela egiten ditu",
     "aimPad": "Fokua apuntatu: erdia zuzen behera dago, arrastatu argiztatu nahi duzun tokira (ertza = horizontala). Ikusi 3Dan.",

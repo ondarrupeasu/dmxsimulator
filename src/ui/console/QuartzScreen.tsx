@@ -78,6 +78,8 @@ export function QuartzScreen({ solo }: { solo?: string } = {}) {
   const deskMenu = useShowStore((s) => s.deskMenu)
   const setMenu = useShowStore((s) => s.setDeskMenu)
   const setRightPanel = useShowStore((s) => s.setRightPanel)
+  const viewerVisible = useShowStore((s) => s.viewerVisible)
+  const setViewerVisible = useShowStore((s) => s.setViewerVisible)
   const exportShow = useShowStore((s) => s.exportShow)
   const importShow = useShowStore((s) => s.importShow)
   const resetShow = useShowStore((s) => s.resetShow)
@@ -205,8 +207,9 @@ export function QuartzScreen({ solo }: { solo?: string } = {}) {
     view: {
       title: 'Open / View — Workspaces',
       keys: [
-        { k: 'A', label: 'Record Workspace', sub: t('desk.subRecordWs'), kind: 'action', onClick: quickRecordWorkspace },
-        ...(['B', 'C', 'D', 'E', 'F', 'G'] as const).map((k, i) => {
+        { k: 'A', label: viewerVisible ? 'Visualiser ✓' : 'Visualiser', sub: t('desk.openViz'), kind: 'action', onClick: () => { setViewerVisible(!viewerVisible); setMenu('root') } },
+        { k: 'B', label: 'Record Workspace', sub: t('desk.subRecordWs'), kind: 'action', onClick: quickRecordWorkspace },
+        ...(['C', 'D', 'E', 'F', 'G'] as const).map((k, i) => {
           const ws = workspaces[i]
           return ws
             ? { k, label: ws.name, sub: t('desk.subRecall'), kind: 'action' as const, onClick: () => { recallWorkspace(ws.id); setMenu('root') } }
