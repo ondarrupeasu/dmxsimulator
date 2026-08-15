@@ -1014,6 +1014,8 @@
 .qd-cog-cell:hover { background: #24333f; }
 .qd-cog-cell.on { background: #3a86c0; color: #fff; border-color: #6ba8d6; }
 .qd-cog-cell:disabled { opacity: 0.28; cursor: not-allowed; }
+.qd-cog-move { grid-column: 1 / -1; margin-top: 3px; font-size: 10px; font-weight: 600; color: #cfe; background: #16283c; border: 1px solid var(--pwa-accent, #3d6ea5); border-radius: 4px; padding: 3px 6px; cursor: pointer; }
+.qd-cog-move:hover { background: #1d3350; }
 .qd-ext-empty { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; text-align: center; padding: 10%; color: #7f95a8; font-size: 13px; line-height: 1.5; }
 .qd-tab-add { font-size: 11px; font-weight: 700; padding: 2px 7px; color: #123; background: linear-gradient(180deg, #eaf6ff, #cfe6f7); border: 1px solid #6ba8d6; border-top-color: #f7fdff; border-radius: 4px; cursor: pointer; margin-left: 4px; }
 .qd-tab-add:disabled { opacity: 0.4; cursor: default; }

@@ -34,7 +34,6 @@ export function AppShell() {
   const viewerVisible = useShowStore((s) => s.viewerVisible)
   // Broadcast live state to the external-monitor window (2nd display), if open.
   useEffect(() => startExtBroadcast(useShowStore as never), [])
-  const viewerLocation = useShowStore((s) => s.viewerLocation)
   useEffect(() => {
     const p = monitorRef.current
     if (!p) return
@@ -198,7 +197,7 @@ export function AppShell() {
                When the Visualiser is switched off (from the Titan), the PWA panel fills the
                whole right column (grows up). */}
             <Panel id="quartz-right" order={2} defaultSize={44} minSize={24}>
-              {viewerVisible && viewerLocation === 'dock' ? (
+              {viewerVisible ? (
                 <PanelGroup direction="vertical" autoSaveId="dmxsim-quartz-right-v3">
                   <Panel defaultSize={62} minSize={22}>
                     <div className="pane"><VisualiserWindow /></div>

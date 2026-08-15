@@ -551,9 +551,6 @@ export function QuartzScreen({ extMonitor }: { extMonitor?: boolean } = {}) {
                     <span className="qd-win-name">{tabLabel(w.screen)}</span>
                     <span className="qd-win-tools">
                       <button className="qd-win-btn" title={t('desk.winCog')} onClick={(e) => { e.stopPropagation(); setCogFor(cogFor === w.id ? null : w.id) }} onPointerDown={(e) => e.stopPropagation()}>⚙</button>
-                      {(extConnected || monitor === 'ext') && (
-                        <button className="qd-win-btn" title={monitor === 'ext' ? t('desk.winToMain') : t('desk.winToExt')} onClick={(e) => { e.stopPropagation(); sendOther() }} onPointerDown={(e) => e.stopPropagation()}>⤢</button>
-                      )}
                       <button className="qd-win-btn" title={t('desk.winClose')} onClick={(e) => { e.stopPropagation(); close() }} onPointerDown={(e) => e.stopPropagation()}>✕</button>
                     </span>
                     {cogFor === w.id && (
@@ -570,6 +567,11 @@ export function QuartzScreen({ extMonitor }: { extMonitor?: boolean } = {}) {
                             >{g.label}</button>
                           )
                         })}
+                        {(extConnected || monitor === 'ext') && (
+                          <button className="qd-cog-move" title={monitor === 'ext' ? t('desk.winToMain') : t('desk.winToExt')} onClick={() => { sendOther(); setCogFor(null) }}>
+                            {monitor === 'ext' ? '← Monitor 1' : 'Monitor 2 →'}
+                          </button>
+                        )}
                       </div>
                     )}
                   </div>

@@ -29,6 +29,24 @@ export type WinPos = 'full' | 'left' | 'right' | 'top' | 'bottom' | 'tl' | 'tr' 
  *  (percent l/t/w/h) overrides it when the window has been freely dragged/resized. */
 export interface DeskWindow { id: string; screen: string; pos: WinPos; rect?: { l: number; t: number; w: number; h: number }; monitor?: 'main' | 'ext' }
 
+/** Place window `id` on monitor `mon` without covering the windows already there: empty target
+ *  → full; if the only one there is full, shrink it to a quarter so the newcomer fits; then the
+ *  newcomer takes the first free quarter. Keeps the "windows don't overlap" rule on both screens. */
+function tileInto(windows: DeskWindow[], id: string, mon: 'main' | 'ext'): DeskWindow[] {
+  let wins = windows
+  const onTarget = wins.filter((w) => w.id !== id && (w.monitor ?? 'main') === mon)
+  const place = (pos: WinPos) => wins.map((w) => (w.id === id ? { ...w, monitor: mon, rect: undefined, pos } : w))
+  if (onTarget.length === 0) return place('full')
+  // Second window: stack — the existing one goes on top, the newcomer below (e.g. visualiser
+  // over fixtures). This is the common 2-window arrangement on the external monitor.
+  if (onTarget.length === 1 && !onTarget[0].rect && onTarget[0].pos === 'full') {
+    wins = wins.map((w) => (w.id === onTarget[0].id ? { ...w, pos: 'top' as WinPos } : w))
+    return wins.map((w) => (w.id === id ? { ...w, monitor: mon, rect: undefined, pos: 'bottom' as WinPos } : w))
+  }
+  const taken = new Set(onTarget.map((w) => w.pos))
+  return place((['tl', 'tr', 'bl', 'br'] as WinPos[]).find((q) => !taken.has(q)) ?? 'full')
+}
+
 /** A Titan "Workspace": a named snapshot of the on-screen window layout (the whole mosaic). */
 export interface DeskWorkspace {
   id: string
@@ -565,10 +583,7 @@ export const useShowStore = create<ShowState>()(
       // Send a window to the external monitor (or bring it back). Give it a fresh full-screen
       // rect on arrival so it doesn't inherit a cramped position; focus it.
       moveWindowMonitor: (id, monitor) =>
-        set((s) => ({
-          deskWindows: s.deskWindows.map((w) => (w.id === id ? { ...w, monitor, rect: undefined, pos: 'full' as WinPos } : w)),
-          deskFocus: id,
-        })),
+        set((s) => ({ deskWindows: tileInto(s.deskWindows, id, monitor), deskFocus: id })),
       focusWindow: (id) =>
         set((s) => {
           const w = s.deskWindows.find((x) => x.id === id)
@@ -1302,7 +1317,7 @@ export const useShowStore = create<ShowState>()(
           const without = s.deskWindows.filter((w) => w.id !== 'w-viz-ext')
           if (loc === 'ext') {
             const win: DeskWindow = { id: 'w-viz-ext', screen: 'visualiser', pos: 'full', monitor: 'ext' }
-            return { viewerLocation: 'ext', deskWindows: [...without, win], deskFocus: 'w-viz-ext' }
+            return { viewerLocation: 'ext', deskWindows: tileInto([...without, win], 'w-viz-ext', 'ext'), deskFocus: 'w-viz-ext' }
           }
           return { viewerLocation: 'dock', deskWindows: without }
         }),
