@@ -7,7 +7,9 @@
     "collapse": "Plegar",
     "expand": "Expandir",
     "language": "Idioma",
-    "reset": "Reiniciar show"
+    "reset": "Reiniciar show",
+    "zones": "Ver calco",
+    "hideZones": "Ocultar calco"
   },
   "fixturesWindow": {
     "title": "Fixtures",

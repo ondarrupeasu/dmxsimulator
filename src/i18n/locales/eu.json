@@ -7,7 +7,9 @@
     "collapse": "Tolestu",
     "expand": "Zabaldu",
     "language": "Hizkuntza",
-    "reset": "Berrezarri show-a"
+    "reset": "Berrezarri show-a",
+    "zones": "Erakutsi kalkoa",
+    "hideZones": "Ezkutatu kalkoa"
   },
   "fixturesWindow": {
     "title": "Fixture-ak",

@@ -7,7 +7,9 @@
     "collapse": "Collapse",
     "expand": "Expand",
     "language": "Language",
-    "reset": "Reset show"
+    "reset": "Reset show",
+    "zones": "Show trace",
+    "hideZones": "Hide trace"
   },
   "fixturesWindow": {
     "title": "Fixtures",

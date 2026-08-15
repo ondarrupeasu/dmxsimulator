@@ -15,6 +15,7 @@ export function VisualiserWindow() {
   const { t } = useTranslation()
   const viewer = useShowStore((s) => s.viewer)
   const setViewer = useShowStore((s) => s.setViewer)
+  const setViewerVisible = useShowStore((s) => s.setViewerVisible)
   const viewLights = useShowStore((s) => s.viewLights)
   const setViewLights = useShowStore((s) => s.setViewLights)
   const venueUrl = useShowStore((s) => s.venueUrl)
@@ -80,6 +81,7 @@ export function VisualiserWindow() {
           <button className={viewer === '3d' ? 'active' : ''} onClick={() => setViewer('3d')}>3D</button>
           <button className={viewer === '2d' ? 'active' : ''} onClick={() => setViewer('2d')}>2D</button>
         </div>
+        <button className="viz-hide" onClick={() => setViewerVisible(false)} title="Ocultar el visualizer (vuelve a activarlo con el executor 15 · Visualiser)">✕</button>
       </div>
       <div className="viz-win-stage">
         {viewer === '3d' ? <Visualizer3D /> : <Visualizer2D />}

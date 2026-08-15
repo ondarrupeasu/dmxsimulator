@@ -284,6 +284,11 @@ interface ShowState {
   // (Titan's saved window layouts) can restore it along with the rest of the arrangement.
   viewer: '2d' | '3d'
   setViewer: (v: '2d' | '3d') => void
+  // Whether the Visualiser pane is shown. Toggled from the Titan (executor 15 / its hide
+  // button), like opening/closing the Capture workspace. When off, the PWA panel fills the
+  // right column. Persisted so it survives a reload.
+  viewerVisible: boolean
+  setViewerVisible: (v: boolean) => void
   // Which of the right-column panes are folded away. Single source of truth so a View can
   // fold/unfold them; AppShell mirrors these onto the resizable-panel handles.
   fold: { screen: boolean; fixtures: boolean; monitor: boolean }
@@ -1268,6 +1273,8 @@ export const useShowStore = create<ShowState>()(
 
       viewer: '3d',
       setViewer: (v) => set({ viewer: v }),
+      viewerVisible: true,
+      setViewerVisible: (v) => set({ viewerVisible: v }),
       fold: { screen: false, fixtures: false, monitor: false },
       setFold: (key, val) => set((s) => (s.fold[key] === val ? {} : { fold: { ...s.fold, [key]: val } })),
       // Saved Workspaces (Open/View → Record Workspace). Empty by default — the student
@@ -1510,6 +1517,7 @@ export const useShowStore = create<ShowState>()(
         executorCues: s.executorCues,
         workspaces: s.workspaces,
         viewer: s.viewer,
+        viewerVisible: s.viewerVisible,
         deskWindows: s.deskWindows,
         deskFocus: s.deskFocus,
       }),

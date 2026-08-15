@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useShowStore } from '../../store/showStore'
 import { playbacksBySlot } from '../../model/cue'
 import { useSelectedValue, useSelectionFunctions } from './useSelectedValue'
@@ -159,6 +160,7 @@ const ZONES: { name: string; x: number; y: number; w: number; h: number; c: stri
 ]
 
 export function QuartzPanel() {
+  const { t } = useTranslation()
   // Avo = the Titan "shift". No physical desk, so it latches: click to hold the
   // second functions on, click again to release. State is shown loudly (see badge).
   const [shift, setShift] = useState(false)
@@ -167,6 +169,8 @@ export function QuartzPanel() {
   const setAttr = useShowStore((s) => s.setDeskAttr)
   const setScreen = useShowStore((s) => s.setDeskScreen)
   const setRightPanel = useShowStore((s) => s.setRightPanel)
+  const viewerVisible = useShowStore((s) => s.viewerVisible)
+  const setViewerVisible = useShowStore((s) => s.setViewerVisible)
   const deskScreen = useShowStore((s) => s.deskScreen)
   const setMenu = useShowStore((s) => s.setDeskMenu)
   const selection = useShowStore((s) => s.selection)
@@ -356,7 +360,7 @@ export function QuartzPanel() {
   return (
     <div className="qpanel">
       <button className="qcal-zonetoggle" onClick={() => setShowZones((s) => !s)}>
-        {showZones ? 'Ocultar zonas' : 'Ver zonas'}
+        {showZones ? t('common.hideZones') : t('common.zones')}
       </button>
       <div className={`qcal${shift ? ' shift' : ''}${swopId ? ' swopping' : ''}`}>
         {(shift || flashIds.length > 0 || swopId || connectArm || fanMode) && (
@@ -425,7 +429,12 @@ export function QuartzPanel() {
               return <Key key={i} v="dark" narrow ledColor="blue" on={active} dim={!active}
                 title={`Executor ${n} — ${label} (abrir workspace)`} onClick={() => setScreen(scr)} />
             }
-            // 15 Visualiser opens the Visualiser workspace, like 11-13/16-17.
+            // 15 Visualiser: show/hide the Visualiser pane (like opening/closing Capture) —
+            // bright when it's showing, dim when hidden.
+            if (n === 15) {
+              return <Key key={i} v="dark" narrow ledColor="blue" on={viewerVisible} dim={!viewerVisible}
+                title={`Executor ${n} — ${label} (mostrar/ocultar el visualizer)`} onClick={() => setViewerVisible(!viewerVisible)} />
+            }
             // 14 Channel Grid / 18 Snap: fixed functions we haven't built yet — lit dim (assigned
             // on the real desk) but inert here, said so in the tooltip.
             return <Key key={i} v="dark" narrow ledColor="blue" dim disabled title={`Executor ${n} — ${label} (función fija; aún no disponible en el simulador)`} />
