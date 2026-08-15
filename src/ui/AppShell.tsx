@@ -32,6 +32,7 @@ export function AppShell() {
   const setFold = useShowStore((s) => s.setFold)
   const monitorCollapsed = fold.monitor
   const viewerVisible = useShowStore((s) => s.viewerVisible)
+  const setViewerVisible = useShowStore((s) => s.setViewerVisible)
   // Broadcast live state to a popped-out Visualiser window (2nd monitor), if any.
   useEffect(() => startVizBroadcast(useShowStore as never), [])
   useEffect(() => {
@@ -126,6 +127,7 @@ export function AppShell() {
       <div className="pwa-tabs">
         <button className={rightPanel === 'monitor' ? 'on' : ''} onClick={() => setRightPanel('monitor')}>DMX Monitor</button>
         <button className={rightPanel === 'patch' ? 'on' : ''} onClick={() => setRightPanel('patch')}>Patch</button>
+        <button className={`pwa-viztoggle${viewerVisible ? ' on' : ''}`} onClick={() => setViewerVisible(!viewerVisible)} title={t('visualizer.toggle')}>▣ Visualiser</button>
         <span className="pwa-tabs-tag" title={t('common.pwaTag')}>PWA</span>
       </div>
       <div className="pwa-panel-body">

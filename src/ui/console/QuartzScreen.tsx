@@ -444,6 +444,14 @@ export function QuartzScreen({ solo }: { solo?: string } = {}) {
     const sx = e.clientX
     const sy = e.clientY
     const s0 = { ...start }
+    // Titan doesn't stack windows — keep a safety gap between them. A proposed rect that would
+    // overlap a sibling (on the same monitor, minus this window) is rejected so windows "bump".
+    const GAP = 1.5
+    const others = () => useShowStore.getState().deskWindows
+      .filter((o) => o.id !== w.id)
+      .map((o) => o.rect ?? POS_RECT[o.pos])
+    const overlaps = (a: { l: number; t: number; w: number; h: number }) =>
+      others().some((b) => !(a.l + a.w + GAP <= b.l || b.l + b.w + GAP <= a.l || a.t + a.h + GAP <= b.t || b.t + b.h + GAP <= a.t))
     const onMove = (ev: PointerEvent) => {
       const dxp = ((ev.clientX - sx) / box.width) * 100
       const dyp = ((ev.clientY - sy) / box.height) * 100
@@ -455,7 +463,9 @@ export function QuartzScreen({ solo }: { solo?: string } = {}) {
         ww = Math.max(18, Math.min(100 - s0.l, s0.w + dxp))
         h = Math.max(18, Math.min(100 - s0.t, s0.h + dyp))
       }
-      setWindowRect(w.id, { l, t, w: ww, h })
+      const cand = { l, t, w: ww, h }
+      if (overlaps(cand)) return // would sit on another window — don't apply this step
+      setWindowRect(w.id, cand)
     }
     const onUp = () => {
       window.removeEventListener('pointermove', onMove)

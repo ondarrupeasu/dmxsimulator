@@ -158,7 +158,8 @@
     "pwaSim": "simuladorearen laguntzak: efektuen Play/Pausa, dekoratua kargatu, aretoko argia, 2D ikuspegia eta PARak eskuz orientatu",
     "pwaReal": "Quartz-en bisoreak (Capture) ez ditu kontrol hauek, edo bestela egiten ditu",
     "aimPad": "Fokua apuntatu: erdia zuzen behera dago, arrastatu argiztatu nahi duzun tokira (ertza = horizontala). Ikusi 3Dan.",
-    "popout": "Ireki visualizer-a bere leihoan (eraman 2. monitorera, F11 pantaila osorako)"
+    "popout": "Ireki visualizer-a bere leihoan (eraman 2. monitorera, F11 pantaila osorako)",
+    "toggle": "Erakutsi / ezkutatu visualizer-a"
   },
   "run": {
     "title": "Exekutatu",
