@@ -79,6 +79,7 @@ export function QuartzScreen({ extMonitor }: { extMonitor?: boolean } = {}) {
   const clearSelection = useShowStore((s) => s.clearSelection)
   const clearProgrammer = useShowStore((s) => s.clearProgrammer)
   const locateSelected = useShowStore((s) => s.locateSelected)
+  const flipSelected = useShowStore((s) => s.flipSelected)
   const highlight = useShowStore((s) => s.highlight)
   const toggleHighlight = useShowStore((s) => s.toggleHighlight)
   const programmer = useShowStore((s) => s.programmer)
@@ -207,6 +208,9 @@ export function QuartzScreen({ extMonitor }: { extMonitor?: boolean } = {}) {
   const noFx = fixtures.length === 0
   const noSel = selection.length === 0
   const progActive = Object.keys(programmer).length > 0
+  // A moving head (has pan/tilt) is selected → Flip is available.
+  const definitions = useShowStore((s) => s.definitions)
+  const hasMover = fixtures.some((pf) => selection.includes(pf.id) && (definitions[pf.definitionId]?.modes[pf.modeIndex]?.channels ?? []).some((c) => c.function === 'pan' || c.function === 'tilt'))
   // Screens reachable from a Disk/menu softkey rather than a workspace tab (no tab lights up for them).
   const EXTRA_SCREENS = ['showlib']
   const norm = (raw: string) => (TABS.some((tb) => tb.key === raw) || EXTRA_SCREENS.includes(raw) ? raw : 'groups')
@@ -327,7 +331,7 @@ export function QuartzScreen({ extMonitor }: { extMonitor?: boolean } = {}) {
       title: 'ML Menu',
       keys: [
         { k: 'A', label: 'Align', kind: 'menu', info: true },
-        { k: 'B', label: 'Flip', kind: 'action', info: true },
+        { k: 'B', label: 'Flip', sub: t('desk.flipSub'), kind: 'action', onClick: flipSelected, disabled: !hasMover },
         { k: 'C', label: 'Macros', kind: 'menu', info: true },
         { k: 'D' },
         { k: 'E' },

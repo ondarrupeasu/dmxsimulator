@@ -106,7 +106,8 @@
     "winToExt": "Enviar a la pantalla externa (2º monitor)",
     "winToMain": "Devolver a la pantalla principal",
     "extMonitor": "Conectar / desconectar el 2º monitor",
-    "extEmpty": "Monitor externo conectado. Envía ventanas aquí desde la pantalla principal con ⤢ (en la barra de una ventana, o en el visualizer)."
+    "extEmpty": "Monitor externo conectado. Envía ventanas aquí desde la pantalla principal con ⤢ (en la barra de una ventana, o en el visualizer).",
+    "flipSub": "Posición de yugo alternativa"
   },
   "fixturesWindow": {
     "title": "Fixtures",

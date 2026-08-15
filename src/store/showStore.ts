@@ -285,6 +285,8 @@ interface ShowState {
   setSelectedByFunction: (fn: string, value: number) => void
   /** Remove the given channel functions from the selection's programmer (the Off key). */
   clearSelectedFunctions: (fns: string[]) => void
+  /** Flip Pan and Tilt on the selected moving heads (the alternate yoke position). */
+  flipSelected: () => void
   /** Spread a function 0→255 across the selection in rig order (legacy one-shot). */
   fanSelected: (fn: string) => void
   /** Fan MODE (Titan): while on, turning a wheel FANS that attribute across the selection
@@ -1300,6 +1302,39 @@ export const useShowStore = create<ShowState>()(
             })
             if (Object.keys(edits).length) programmer[id] = edits
             else delete programmer[id]
+          }
+          return { programmer }
+        }),
+
+      flipSelected: () =>
+        set((s) => {
+          // Flip Pan and Tilt (Titan): the other yoke position that aims the beam the SAME way —
+          // pan +180° (a third of the ±270° range) and tilt mirrored. Works on the current value.
+          const programmer = { ...s.programmer }
+          for (const id of s.selection) {
+            const pf = s.show.fixtures.find((f) => f.id === id)
+            const channels = pf && s.definitions[pf.definitionId]?.modes[pf.modeIndex]?.channels
+            if (!channels) continue
+            const idxOf = (fn: string) => channels.findIndex((c) => c.function === fn)
+            const panI = idxOf('pan'), panFI = idxOf('panFine'), tiltI = idxOf('tilt'), tiltFI = idxOf('tiltFine')
+            if (panI < 0 && tiltI < 0) continue // not a moving head — nothing to flip
+            const edits = { ...(programmer[id] ?? {}) }
+            const valOf = (i: number) => (i >= 0 ? (edits[i] ?? channels[i].defaultValue ?? 0) : 0)
+            const fracOf = (msb: number, fine: number, hasFine: boolean) => (hasFine ? (msb * 256 + fine) / 65535 : msb / 255)
+            const writeFrac = (i: number, fi: number, frac: number) => {
+              const f = Math.max(0, Math.min(1, frac))
+              if (fi >= 0) { const raw = Math.round(f * 65535); edits[i] = (raw >> 8) & 0xff; edits[fi] = raw & 0xff }
+              else edits[i] = Math.round(f * 255)
+            }
+            if (panI >= 0) {
+              const frac = fracOf(valOf(panI), valOf(panFI), panFI >= 0)
+              writeFrac(panI, panFI, frac + 1 / 3 <= 1 ? frac + 1 / 3 : frac - 1 / 3) // +180° in a ±270° range
+            }
+            if (tiltI >= 0) {
+              const frac = fracOf(valOf(tiltI), valOf(tiltFI), tiltFI >= 0)
+              writeFrac(tiltI, tiltFI, 1 - frac) // mirror tilt
+            }
+            programmer[id] = edits
           }
           return { programmer }
         }),
