@@ -14,7 +14,7 @@ import { openPatchReport } from '../../model/report'
 import { openPlot } from '../../model/plot'
 import { exportMvr } from '../../model/mvr'
 import { exportGltf } from '../../model/gltf-export'
-import { openExtMonitor } from '../../store/vizSync'
+import { openExtMonitor, closeExtMonitor } from '../../store/vizSync'
 import { VisualiserWindow } from './VisualiserWindow'
 
 const PALETTE_KINDS: PaletteKind[] = ['colour', 'position', 'gobo', 'beam', 'intensity']
@@ -83,6 +83,22 @@ export function QuartzScreen({ extMonitor }: { extMonitor?: boolean } = {}) {
   const setRightPanel = useShowStore((s) => s.setRightPanel)
   const viewerVisible = useShowStore((s) => s.viewerVisible)
   const setViewerVisible = useShowStore((s) => s.setViewerVisible)
+  const extConnected = useShowStore((s) => s.extConnected)
+  const setExtConnected = useShowStore((s) => s.setExtConnected)
+  // Connect/disconnect the external monitor (Titan's Display Setup). Connecting opens its window;
+  // disconnecting closes it and brings any windows on it (incl. the visualiser) back to the desk.
+  const toggleExtMonitor = () => {
+    if (extConnected) {
+      closeExtMonitor()
+      useShowStore.getState().deskWindows.filter((w) => w.monitor === 'ext' && w.id !== 'w-viz-ext').forEach((w) => moveWindowMonitor(w.id, 'main'))
+      if (useShowStore.getState().viewerLocation === 'ext') setViewerLocation('dock')
+      setExtConnected(false)
+    } else {
+      openExtMonitor()
+      setExtConnected(true)
+    }
+    setMenu('root')
+  }
   const exportShow = useShowStore((s) => s.exportShow)
   const importShow = useShowStore((s) => s.importShow)
   const resetShow = useShowStore((s) => s.resetShow)
@@ -211,8 +227,9 @@ export function QuartzScreen({ extMonitor }: { extMonitor?: boolean } = {}) {
       title: 'Open / View — Workspaces',
       keys: [
         { k: 'A', label: viewerVisible ? 'Visualiser ✓' : 'Visualiser', sub: t('desk.openViz'), kind: 'action', onClick: () => { setViewerVisible(!viewerVisible); setMenu('root') } },
-        { k: 'B', label: 'Record Workspace', sub: t('desk.subRecordWs'), kind: 'action', onClick: quickRecordWorkspace },
-        ...(['C', 'D', 'E', 'F', 'G'] as const).map((k, i) => {
+        { k: 'B', label: extConnected ? 'External Monitor ✓' : 'External Monitor', sub: t('desk.extMonitor'), kind: 'action', onClick: toggleExtMonitor },
+        { k: 'C', label: 'Record Workspace', sub: t('desk.subRecordWs'), kind: 'action', onClick: quickRecordWorkspace },
+        ...(['D', 'E', 'F', 'G'] as const).map((k, i) => {
           const ws = workspaces[i]
           return ws
             ? { k, label: ws.name, sub: t('desk.subRecall'), kind: 'action' as const, onClick: () => { recallWorkspace(ws.id); setMenu('root') } }
@@ -537,7 +554,9 @@ export function QuartzScreen({ extMonitor }: { extMonitor?: boolean } = {}) {
                     <span className="qd-win-name">{tabLabel(w.screen)}</span>
                     <span className="qd-win-tools">
                       <button className="qd-win-btn" title={t('desk.winCog')} onClick={(e) => { e.stopPropagation(); setCogFor(cogFor === w.id ? null : w.id) }} onPointerDown={(e) => e.stopPropagation()}>⚙</button>
-                      <button className="qd-win-btn" title={monitor === 'ext' ? t('desk.winToMain') : t('desk.winToExt')} onClick={(e) => { e.stopPropagation(); sendOther() }} onPointerDown={(e) => e.stopPropagation()}>⤢</button>
+                      {(extConnected || monitor === 'ext') && (
+                        <button className="qd-win-btn" title={monitor === 'ext' ? t('desk.winToMain') : t('desk.winToExt')} onClick={(e) => { e.stopPropagation(); sendOther() }} onPointerDown={(e) => e.stopPropagation()}>⤢</button>
+                      )}
                       <button className="qd-win-btn" title={t('desk.winClose')} onClick={(e) => { e.stopPropagation(); close() }} onPointerDown={(e) => e.stopPropagation()}>✕</button>
                     </span>
                     {cogFor === w.id && (

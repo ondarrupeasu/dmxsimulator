@@ -87,7 +87,8 @@
     "winPopout": "Enviar a una ventana nueva (2º monitor)",
     "openViz": "Mostrar / ocultar",
     "winToExt": "Enviar a la pantalla externa (2º monitor)",
-    "winToMain": "Devolver a la pantalla principal"
+    "winToMain": "Devolver a la pantalla principal",
+    "extMonitor": "Conectar / desconectar el 2º monitor"
   },
   "fixturesWindow": {
     "title": "Fixtures",

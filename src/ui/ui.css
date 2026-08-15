@@ -997,7 +997,7 @@
 .qscreen-body { flex: 1; position: relative; overflow: hidden; min-height: 0; background: var(--tt-bg); }
 /* Mosaic: each workspace window is absolutely positioned to its standard slot. A single
    full window carries no chrome (identical to the pre-mosaic look). */
-.qd-win { position: absolute; display: flex; flex-direction: column; min-height: 0; overflow: hidden; padding: 2px; }
+.qd-win { position: absolute; display: flex; flex-direction: column; min-height: 0; overflow: hidden; padding: 2px; border: 1px solid #3a4653; border-radius: 4px; }
 .qd-win.focused { outline: 1.5px solid var(--coral, #ff6b5e); outline-offset: -1.5px; border-radius: 4px; }
 .qd-win-bar { flex: 0 0 auto; display: flex; align-items: center; gap: 6px; padding: 1px 4px 2px; position: relative; cursor: move; touch-action: none; }
 /* Free-resize grip (bottom-right corner) — Titan's Resize Window. */

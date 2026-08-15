@@ -87,7 +87,8 @@
     "winPopout": "Bidali leiho berri batera (2. monitorea)",
     "openViz": "Erakutsi / ezkutatu",
     "winToExt": "Bidali kanpoko pantailara (2. monitorea)",
-    "winToMain": "Itzuli pantaila nagusira"
+    "winToMain": "Itzuli pantaila nagusira",
+    "extMonitor": "Konektatu / deskonektatu 2. pantaila"
   },
   "fixturesWindow": {
     "title": "Fixture-ak",

@@ -108,6 +108,10 @@ interface ShowState {
   // readers/setters of deskScreen — executors, DMX-monitor click, tabs — keep working).
   deskScreen: string
   setDeskScreen: (s: string) => void
+  // Titan "External Display" (System → Display Setup): you connect the 2nd monitor first, then
+  // send windows to it. Here "connected" = the external-monitor browser window is open.
+  extConnected: boolean
+  setExtConnected: (v: boolean) => void
   // The PWA side panel (bottom-right, blue) toggles between the DMX monitor and the Patch tool.
   // Patch is a PWA aid (Titan patches via menus, not a window), so it lives here, not in the desk.
   rightPanel: 'monitor' | 'patch'
@@ -536,6 +540,8 @@ export const useShowStore = create<ShowState>()(
 
       deskAttr: 'Intensity',
       setDeskAttr: (a) => set({ deskAttr: a }),
+      extConnected: false,
+      setExtConnected: (v) => set({ extConnected: v }),
       rightPanel: 'monitor',
       setRightPanel: (p) => set({ rightPanel: p }),
       deskScreen: 'fixtures',

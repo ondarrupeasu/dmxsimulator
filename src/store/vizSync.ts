@@ -76,6 +76,24 @@ export const noopStorage = { getItem: () => null, setItem: () => {}, removeItem:
 export const isExtMonitor = () =>
   typeof window !== 'undefined' && new URLSearchParams(window.location.search).get(EXT_PARAM) === '1'
 
-/** Open (or focus) the external-monitor window. Called when a window is first sent to it. */
-export const openExtMonitor = () =>
-  window.open(`${window.location.pathname}?${EXT_PARAM}=1`, 'dmxsim-ext', 'width=1280,height=720')
+/** Open (or focus) the external-monitor window. If the browser exposes the Window Management
+ *  API and there's a 2nd screen, place the window on it filling the whole screen (asks for the
+ *  "window management" permission once); otherwise it opens as a normal window you drag over.
+ *  True borderless fullscreen still needs F11 inside that window — the browser won't force it. */
+let extWin: Window | null = null
+export const openExtMonitor = () => {
+  const url = `${window.location.pathname}?${EXT_PARAM}=1`
+  const w = window.open(url, 'dmxsim-ext', 'width=1280,height=720')
+  extWin = w
+  const api = window as unknown as { getScreenDetails?: () => Promise<{ screens: Array<{ isPrimary: boolean; availLeft: number; availTop: number; availWidth: number; availHeight: number }> }> }
+  if (w && api.getScreenDetails) {
+    api.getScreenDetails().then((d) => {
+      const ext = d.screens.find((s) => !s.isPrimary)
+      if (ext) { try { w.moveTo(ext.availLeft, ext.availTop); w.resizeTo(ext.availWidth, ext.availHeight) } catch { /* blocked */ } }
+    }).catch(() => { /* permission denied — leave it as a normal window */ })
+  }
+  return w
+}
+
+/** Disconnect the external monitor — close its window (Titan's Display Setup → Disconnected). */
+export const closeExtMonitor = () => { try { extWin?.close() } catch { /* ignore */ } extWin = null }
