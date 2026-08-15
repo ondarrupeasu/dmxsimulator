@@ -83,7 +83,8 @@
     "fileError": "Could not read the file.",
     "exportError": "Could not export.",
     "newShowPrompt": "New Show — name for the new show (leave empty to cancel):",
-    "addWindow": "Open another mosaic window (up to 4 — like the Titan touchscreen)"
+    "addWindow": "Open another mosaic window (up to 4 — like the Titan touchscreen)",
+    "winPopout": "Send to a new window (2nd monitor)"
   },
   "fixturesWindow": {
     "title": "Fixtures",

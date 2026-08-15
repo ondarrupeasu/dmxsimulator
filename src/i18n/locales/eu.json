@@ -83,7 +83,8 @@
     "fileError": "Ezin izan da fitxategia irakurri.",
     "exportError": "Ezin izan da esportatu.",
     "newShowPrompt": "New Show — show berriaren izena (utzi hutsik uzteko):",
-    "addWindow": "Ireki mosaikoko beste leiho bat (4 arte — Titan-en touchscreen bezala)"
+    "addWindow": "Ireki mosaikoko beste leiho bat (4 arte — Titan-en touchscreen bezala)",
+    "winPopout": "Bidali leiho berri batera (2. monitorea)"
   },
   "fixturesWindow": {
     "title": "Fixture-ak",

@@ -6,7 +6,7 @@ import type { StoreApi } from 'zustand'
  *  sent only when its reference changes; the light per-frame data (programmer, levels, clock)
  *  goes out on every change. */
 const CHANNEL = 'dmxsim-viz'
-export const VIZ_PARAM = 'viz' // ?viz=1 → this window is the popout
+export const WIN_PARAM = 'win' // ?win=<screen> → this window is a popped-out workspace/visualiser
 
 // Rig / library / stored looks — big, change rarely.
 const STATIC_KEYS = ['show', 'definitions', 'playbacks', 'palettes', 'groups', 'effects', 'executorCues'] as const
@@ -58,5 +58,12 @@ export const noopStorage = {
   removeItem: () => {},
 }
 
-export const isVizPopout = () =>
-  typeof window !== 'undefined' && new URLSearchParams(window.location.search).get(VIZ_PARAM) === '1'
+/** The workspace this window is a popout of (?win=…), or null if it's the main window. Any
+ *  Titan workspace ('fixtures', 'groups', 'colour', …, 'visualiser') can be sent to its own
+ *  window and dragged to a 2nd monitor — like moving a window to the external display. */
+export const popoutScreen = (): string | null =>
+  typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get(WIN_PARAM) : null
+
+/** Open a workspace in its own window (2nd-monitor / external-display equivalent). */
+export const openPopout = (screen: string) =>
+  window.open(`${window.location.pathname}?${WIN_PARAM}=${screen}`, `dmxsim-${screen}`, 'width=1280,height=720')

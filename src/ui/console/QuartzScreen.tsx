@@ -14,6 +14,7 @@ import { openPatchReport } from '../../model/report'
 import { openPlot } from '../../model/plot'
 import { exportMvr } from '../../model/mvr'
 import { exportGltf } from '../../model/gltf-export'
+import { openPopout } from '../../store/vizSync'
 
 const PALETTE_KINDS: PaletteKind[] = ['colour', 'position', 'gobo', 'beam', 'intensity']
 
@@ -52,7 +53,7 @@ const askLegend = (current: string, apply: (name: string) => void) => {
 /** The Quartz touchscreen — Titan-style: workspace windows of hand-legended buttons
  * on the left, the A–G softkey column (physical-look keys) on the right, and the
  * command line along the bottom. */
-export function QuartzScreen() {
+export function QuartzScreen({ solo }: { solo?: string } = {}) {
   const { t } = useTranslation()
   const rawScreen = useShowStore((s) => s.deskScreen)
   const setScreen = useShowStore((s) => s.setDeskScreen)
@@ -425,6 +426,10 @@ export function QuartzScreen() {
   ]
   const tabLabel = (scr: string) => TABS.find((tb) => tb.key === norm(scr))?.label ?? scr
 
+  // Popped-out workspace (its own window for a 2nd monitor): just this one workspace, full.
+  if (solo) return <div className="qscreen-solo">{renderBody(solo)}</div>
+
+
   // Free window drag/resize (like Titan's Resize Window): drag the title bar to move, the
   // bottom-right grip to resize. Deltas are converted to % of the mosaic body so the rect
   // stays layout-independent. Clamped to the screen with sensible minimums.
@@ -503,6 +508,7 @@ export function QuartzScreen() {
                     <span className="qd-win-name">{tabLabel(w.screen)}</span>
                     <span className="qd-win-tools">
                       <button className="qd-win-btn" title={t('desk.winCog')} onClick={(e) => { e.stopPropagation(); setCogFor(cogFor === w.id ? null : w.id) }} onPointerDown={(e) => e.stopPropagation()}>⚙</button>
+                      <button className="qd-win-btn" title={t('desk.winPopout')} onClick={(e) => { e.stopPropagation(); openPopout(w.screen) }} onPointerDown={(e) => e.stopPropagation()}>⤢</button>
                       <button className="qd-win-btn" title={t('desk.winClose')} onClick={(e) => { e.stopPropagation(); closeWindow(w.id) }} onPointerDown={(e) => e.stopPropagation()}>✕</button>
                     </span>
                     {cogFor === w.id && (
