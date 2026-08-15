@@ -1837,3 +1837,10 @@
 }
 .qd-ctxmenu button:hover { background: #1c2b39; }
 .qd-ctxmenu button.on { color: #16131a; background: var(--coral); font-weight: 700; }
+
+/* Titan palette: window chrome + in-desk selections are BLUE (the real Titan has no coral —
+   that's reserved for PWA extras). Overrides the coral defaults above. */
+.qd-win.focused { outline-color: #4aa3ff; }
+.qd-win-grip { background: linear-gradient(135deg, transparent 45%, #4aa3ff 45%, #4aa3ff 60%, transparent 60%); }
+.qd-ctxmenu button.on { color: #fff; background: #3a86c0; }
+.qd-cell.legend-pick { outline-color: #4aa3ff; }
