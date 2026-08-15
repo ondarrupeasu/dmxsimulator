@@ -85,7 +85,9 @@
     "newShowPrompt": "New Show — nombre del nuevo show (deja vacío para cancelar):",
     "addWindow": "Abrir otra ventana en mosaico (hasta 4 — como el touchscreen del Titan)",
     "winPopout": "Enviar a una ventana nueva (2º monitor)",
-    "openViz": "Mostrar / ocultar"
+    "openViz": "Mostrar / ocultar",
+    "winToExt": "Enviar a la pantalla externa (2º monitor)",
+    "winToMain": "Devolver a la pantalla principal"
   },
   "fixturesWindow": {
     "title": "Fixtures",
@@ -159,7 +161,7 @@
     "pwaSim": "ayudas del simulador: Play/Pausa de efectos, cargar decorado, luces de sala, vista 2D y orientar PARs a mano",
     "pwaReal": "el visor (Capture) del Quartz no trae estos controles, o los hace de otra forma",
     "aimPad": "Apuntar el foco: el centro es recto hacia abajo, arrastra hacia donde quieres que ilumine (el borde = horizontal). Míralo en el 3D.",
-    "popout": "Abrir el visualizer en su propia ventana (arrástrala a un 2º monitor, F11 para pantalla completa)",
+    "popout": "Enviar el visualizer a la pantalla externa (2º monitor)",
     "toggle": "Mostrar / ocultar el visualizer"
   },
   "run": {

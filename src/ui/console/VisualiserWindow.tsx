@@ -7,7 +7,7 @@ import { AimPad } from './AimPad'
 import { PwaTag } from '../PwaTag'
 import { VENUE_PRESETS } from '../../model/venues'
 import { fixtureAttributeKeys } from '../../model/types'
-import { openPopout } from '../../store/vizSync'
+import { openExtMonitor } from '../../store/vizSync'
 
 /** The 3D/2D visualiser as a Titan workspace window (the Quartz's Capture output lives on the
  *  touchscreen too). The rig render itself is faithful; the toolbar (venue, room lights, 2D,
@@ -17,6 +17,7 @@ export function VisualiserWindow({ popped = false }: { popped?: boolean } = {}) 
   const viewer = useShowStore((s) => s.viewer)
   const setViewer = useShowStore((s) => s.setViewer)
   const setViewerVisible = useShowStore((s) => s.setViewerVisible)
+  const setViewerLocation = useShowStore((s) => s.setViewerLocation)
   const viewLights = useShowStore((s) => s.viewLights)
   const setViewLights = useShowStore((s) => s.setViewLights)
   const venueUrl = useShowStore((s) => s.venueUrl)
@@ -81,7 +82,7 @@ export function VisualiserWindow({ popped = false }: { popped?: boolean } = {}) 
         </div>
         {!popped && (
           <>
-            <button className="viz-hide" onClick={() => openPopout('visualiser')} title={t('visualizer.popout')}>⤢</button>
+            <button className="viz-hide" onClick={() => { setViewerLocation('ext'); openExtMonitor() }} title={t('visualizer.popout')}>⤢</button>
             <button className="viz-hide" onClick={() => setViewerVisible(false)} title={t('visualizer.hide')}>✕</button>
           </>
         )}

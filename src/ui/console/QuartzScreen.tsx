@@ -14,7 +14,8 @@ import { openPatchReport } from '../../model/report'
 import { openPlot } from '../../model/plot'
 import { exportMvr } from '../../model/mvr'
 import { exportGltf } from '../../model/gltf-export'
-import { openPopout } from '../../store/vizSync'
+import { openExtMonitor } from '../../store/vizSync'
+import { VisualiserWindow } from './VisualiserWindow'
 
 const PALETTE_KINDS: PaletteKind[] = ['colour', 'position', 'gobo', 'beam', 'intensity']
 
@@ -53,7 +54,7 @@ const askLegend = (current: string, apply: (name: string) => void) => {
 /** The Quartz touchscreen — Titan-style: workspace windows of hand-legended buttons
  * on the left, the A–G softkey column (physical-look keys) on the right, and the
  * command line along the bottom. */
-export function QuartzScreen({ solo }: { solo?: string } = {}) {
+export function QuartzScreen({ extMonitor }: { extMonitor?: boolean } = {}) {
   const { t } = useTranslation()
   const rawScreen = useShowStore((s) => s.deskScreen)
   const setScreen = useShowStore((s) => s.setDeskScreen)
@@ -62,6 +63,8 @@ export function QuartzScreen({ solo }: { solo?: string } = {}) {
   const focusWindow = useShowStore((s) => s.focusWindow)
   const setWindowPos = useShowStore((s) => s.setWindowPos)
   const setWindowRect = useShowStore((s) => s.setWindowRect)
+  const moveWindowMonitor = useShowStore((s) => s.moveWindowMonitor)
+  const setViewerLocation = useShowStore((s) => s.setViewerLocation)
   const addWindow = useShowStore((s) => s.addWindow)
   const closeWindow = useShowStore((s) => s.closeWindow)
   const selection = useShowStore((s) => s.selection)
@@ -326,6 +329,7 @@ export function QuartzScreen({ solo }: { solo?: string } = {}) {
   )
 
   const renderBody = (rawScr: string): React.ReactNode => {
+    if (rawScr === 'visualiser') return <VisualiserWindow popped />
     const screen = norm(rawScr)
     const kind = kindOf(rawScr)
     let body: React.ReactNode
@@ -427,10 +431,12 @@ export function QuartzScreen({ solo }: { solo?: string } = {}) {
     { pos: 'left', label: '▌' }, { pos: 'full', label: '□' }, { pos: 'right', label: '▐' },
     { pos: 'bl', label: '◱' }, { pos: 'bottom', label: '▄' }, { pos: 'br', label: '◲' },
   ]
-  const tabLabel = (scr: string) => TABS.find((tb) => tb.key === norm(scr))?.label ?? scr
+  const tabLabel = (scr: string) =>
+    scr === 'visualiser' ? 'Visualiser' : (TABS.find((tb) => tb.key === scr)?.label ?? TABS.find((tb) => tb.key === norm(scr))?.label ?? scr)
 
-  // Popped-out workspace (its own window for a 2nd monitor): just this one workspace, full.
-  if (solo) return <div className="qscreen-solo">{renderBody(solo)}</div>
+  // This screen shows the windows on ITS monitor: the main touchscreen, or the external one.
+  const monitor: 'main' | 'ext' = extMonitor ? 'ext' : 'main'
+  const windows = deskWindows.filter((w) => (w.monitor ?? 'main') === monitor)
 
 
   // Free window drag/resize (like Titan's Resize Window): drag the title bar to move, the
@@ -479,8 +485,9 @@ export function QuartzScreen({ solo }: { solo?: string } = {}) {
   }
 
   return (
-    <div className="qscreen" data-tour="titan-screen">
+    <div className={`qscreen${extMonitor ? ' qscreen--ext' : ''}`} data-tour="titan-screen">
       <input ref={showFileRef} type="file" accept=".json,.mvr,.gdtf,application/json" style={{ display: 'none' }} onChange={onShowFile} />
+      {!extMonitor && (
       <div className="qscreen-head">
         <span className="qd-brand">Avolites Quartz</span>
         <span className="qd-titan">TITAN</span>
@@ -502,27 +509,36 @@ export function QuartzScreen({ solo }: { solo?: string } = {}) {
           >⊞</button>
         </div>
       </div>
+      )}
 
       <div className="qscreen-main">
         <div className="qscreen-body" ref={bodyRef}>
-          {deskWindows.map((w) => {
+          {windows.map((w) => {
             const r = w.rect ?? POS_RECT[w.pos]
             const focused = w.id === deskFocus
-            const single = deskWindows.length === 1
+            const single = windows.length === 1
+            const isViz = w.id === 'w-viz-ext'
+            const sendOther = () => { // ⤢ move to the other monitor (visualiser has its own home)
+              if (isViz) { setViewerLocation('dock'); return }
+              const to = monitor === 'ext' ? 'main' : 'ext'
+              moveWindowMonitor(w.id, to)
+              if (to === 'ext') openExtMonitor()
+            }
+            const close = () => { if (isViz) setViewerLocation('dock'); else closeWindow(w.id) }
             return (
               <div
                 key={w.id}
-                className={`qd-win${focused && !single ? ' focused' : ''}`}
+                className={`qd-win${focused ? ' focused' : ''}`}
                 style={{ left: `${r.l}%`, top: `${r.t}%`, width: `${r.w}%`, height: `${r.h}%`, zIndex: focused ? 2 : 1 }}
                 onMouseDown={() => { if (!focused) focusWindow(w.id) }}
               >
-                {!single && (
+                {(
                   <div className="qd-win-bar" onPointerDown={(e) => startWinDrag(e, w, 'move')} title={t('desk.winMove')}>
                     <span className="qd-win-name">{tabLabel(w.screen)}</span>
                     <span className="qd-win-tools">
                       <button className="qd-win-btn" title={t('desk.winCog')} onClick={(e) => { e.stopPropagation(); setCogFor(cogFor === w.id ? null : w.id) }} onPointerDown={(e) => e.stopPropagation()}>⚙</button>
-                      <button className="qd-win-btn" title={t('desk.winPopout')} onClick={(e) => { e.stopPropagation(); openPopout(w.screen) }} onPointerDown={(e) => e.stopPropagation()}>⤢</button>
-                      <button className="qd-win-btn" title={t('desk.winClose')} onClick={(e) => { e.stopPropagation(); closeWindow(w.id) }} onPointerDown={(e) => e.stopPropagation()}>✕</button>
+                      <button className="qd-win-btn" title={monitor === 'ext' ? t('desk.winToMain') : t('desk.winToExt')} onClick={(e) => { e.stopPropagation(); sendOther() }} onPointerDown={(e) => e.stopPropagation()}>⤢</button>
+                      <button className="qd-win-btn" title={t('desk.winClose')} onClick={(e) => { e.stopPropagation(); close() }} onPointerDown={(e) => e.stopPropagation()}>✕</button>
                     </span>
                     {cogFor === w.id && (
                       <div className="qd-cog" onMouseDown={(e) => e.stopPropagation()} onPointerDown={(e) => e.stopPropagation()}>
@@ -547,6 +563,7 @@ export function QuartzScreen({ solo }: { solo?: string } = {}) {
           })}
         </div>
 
+        {!extMonitor && (
         <div className="qscreen-soft">
           <div className="qsk-menu">{menu.title}</div>
           {menu.keys.map((sk) => {
@@ -574,8 +591,10 @@ export function QuartzScreen({ solo }: { solo?: string } = {}) {
             )
           })}
         </div>
+        )}
       </div>
 
+      {!extMonitor && (
       <div className="qscreen-cmd">
         <span className="qcmd-prompt">›</span>
         {cmd ? (
@@ -594,6 +613,7 @@ export function QuartzScreen({ solo }: { solo?: string } = {}) {
           {progActive ? '● Programmer active' : 'Programmer clear'}
         </span>
       </div>
+      )}
     </div>
   )
 }

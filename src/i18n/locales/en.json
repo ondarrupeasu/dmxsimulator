@@ -85,7 +85,9 @@
     "newShowPrompt": "New Show — name for the new show (leave empty to cancel):",
     "addWindow": "Open another mosaic window (up to 4 — like the Titan touchscreen)",
     "winPopout": "Send to a new window (2nd monitor)",
-    "openViz": "Show / hide it"
+    "openViz": "Show / hide it",
+    "winToExt": "Send to the external monitor (2nd display)",
+    "winToMain": "Bring back to the main screen"
   },
   "fixturesWindow": {
     "title": "Fixtures",
@@ -159,7 +161,7 @@
     "pwaSim": "simulator aids: effects Play/Pause, load a venue, room lights, 2D view and aiming PARs by hand",
     "pwaReal": "the Quartz's visualiser (Capture) doesn't have these controls, or does them differently",
     "aimPad": "Aim the fixture: the centre is straight down, drag toward where you want it to light (the edge = horizontal). Watch it in the 3D.",
-    "popout": "Open the visualiser in its own window (drag it to a 2nd monitor, F11 for fullscreen)",
+    "popout": "Send the visualiser to the external monitor (2nd display)",
     "toggle": "Show / hide the visualiser"
   },
   "run": {

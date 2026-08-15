@@ -1,21 +1,20 @@
 import type { StoreApi } from 'zustand'
 
-/** Live sync of the render-relevant show state to a popped-out Visualiser window (a separate
- *  browser window on a 2nd monitor). The main window BROADCASTS state; the popout MIRRORS it.
- *  Same-origin BroadcastChannel — no server. Heavy, rarely-changing data (the rig itself) is
- *  sent only when its reference changes; the light per-frame data (programmer, levels, clock)
- *  goes out on every change. */
+/** Live link between the main window and the "external monitor" window (a 2nd display). The
+ *  MAIN window is the single source of truth: it broadcasts state; the external window mirrors
+ *  it for rendering and FORWARDS every user action back to the main store (so there's no
+ *  divergence — like Titan, where the external monitor is another view of the one show). */
 const CHANNEL = 'dmxsim-viz'
-export const WIN_PARAM = 'win' // ?win=<screen> → this window is a popped-out workspace/visualiser
+export const EXT_PARAM = 'ext' // ?ext=1 → this window is the external monitor
 
 // Rig / library / stored looks — big, change rarely.
 const STATIC_KEYS = ['show', 'definitions', 'playbacks', 'palettes', 'groups', 'effects', 'executorCues'] as const
-// Live output — small, changes often (incl. the animation clock `now`). NOTE: pure per-screen
-// VIEW toggles (viewLights, viewer 2D/3D) are deliberately NOT synced, so a popped-out window
-// keeps its own room-lights / 2D-3D choice instead of being overwritten by the main window.
+// Live output + view state — small, changes often (incl. the animation clock `now`). Includes
+// deskWindows so the external monitor knows which windows are on it and where.
 const DYN_KEYS = [
   'programmer', 'playbackLevels', 'firedLevels', 'fades', 'flashIds', 'swopId', 'selection',
-  'now', 'highlight', 'venueUrl', 'venueName', 'blind', 'playing',
+  'now', 'highlight', 'viewLights', 'viewer', 'venueUrl', 'venueName', 'blind', 'playing',
+  'deskWindows', 'deskFocus', 'viewerVisible', 'viewerLocation', 'deskScreen', 'deskMenu', 'deskAttr',
 ] as const
 
 type AnyState = Record<string, unknown>
@@ -25,14 +24,20 @@ const pick = (s: AnyState, keys: readonly string[]) => {
   return o
 }
 
-/** Call in the MAIN window: start broadcasting state to any popout. Returns a stop fn. */
-export function startVizBroadcast(store: StoreApi<AnyState>): () => void {
+/** MAIN window: broadcast state to the external monitor + apply the actions it forwards back. */
+export function startExtBroadcast(store: StoreApi<AnyState>): () => void {
   let ch: BroadcastChannel
   try { ch = new BroadcastChannel(CHANNEL) } catch { return () => {} }
   const sendStatic = (s: AnyState) => ch.postMessage({ t: 'static', d: pick(s, STATIC_KEYS) })
   const sendDyn = (s: AnyState) => ch.postMessage({ t: 'dyn', d: pick(s, DYN_KEYS) })
-  // A freshly-opened popout says hello → send it everything at once.
-  ch.onmessage = (e) => { if (e.data?.t === 'hello') { const s = store.getState(); sendStatic(s); sendDyn(s) } }
+  ch.onmessage = (e) => {
+    const m = e.data
+    if (m?.t === 'hello') { const s = store.getState(); sendStatic(s); sendDyn(s) }
+    else if (m?.t === 'action') {
+      const fn = store.getState()[m.fn]
+      if (typeof fn === 'function') (fn as (...a: unknown[]) => void)(...(m.args ?? []))
+    }
+  }
   let prev = STATIC_KEYS.map((k) => store.getState()[k])
   const unsub = store.subscribe((s) => {
     const now = STATIC_KEYS.map((k) => (s as AnyState)[k])
@@ -43,29 +48,34 @@ export function startVizBroadcast(store: StoreApi<AnyState>): () => void {
   return () => { unsub(); ch.close() }
 }
 
-/** Call in the POPOUT window: mirror the broadcast state into the local store. */
-export function startVizReceive(store: StoreApi<AnyState>): () => void {
+/** EXTERNAL-MONITOR window: mirror the main window's state, and forward every store action
+ *  (button press, drag, toggle…) back to the main so it stays the single source of truth. */
+export function startExtReceive(store: StoreApi<AnyState>): () => void {
   let ch: BroadcastChannel
   try { ch = new BroadcastChannel(CHANNEL) } catch { return () => {} }
   ch.onmessage = (e) => { if (e.data?.t === 'static' || e.data?.t === 'dyn') store.setState(e.data.d) }
+  // Override every action (function-valued state field) to forward to the main window instead
+  // of mutating this mirror. Getters that return a value used elsewhere are left local.
+  const READ_ONLY = new Set(['exportShow', 'importShow', 'findFreeAddress'])
+  const s = store.getState()
+  const overrides: AnyState = {}
+  for (const k of Object.keys(s)) {
+    if (typeof s[k] === 'function' && !READ_ONLY.has(k)) {
+      overrides[k] = (...args: unknown[]) => ch.postMessage({ t: 'action', fn: k, args })
+    }
+  }
+  store.setState(overrides)
   ch.postMessage({ t: 'hello' })
   return () => ch.close()
 }
 
-/** A storage that never writes — used in the popout so its mirrored setState()s don't clobber
- *  the main window's persisted show in the shared localStorage. */
-export const noopStorage = {
-  getItem: () => null,
-  setItem: () => {},
-  removeItem: () => {},
-}
+/** A storage that never writes — the external window is a mirror; it must not clobber the
+ *  main window's persisted show in the shared localStorage. */
+export const noopStorage = { getItem: () => null, setItem: () => {}, removeItem: () => {} }
 
-/** The workspace this window is a popout of (?win=…), or null if it's the main window. Any
- *  Titan workspace ('fixtures', 'groups', 'colour', …, 'visualiser') can be sent to its own
- *  window and dragged to a 2nd monitor — like moving a window to the external display. */
-export const popoutScreen = (): string | null =>
-  typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get(WIN_PARAM) : null
+export const isExtMonitor = () =>
+  typeof window !== 'undefined' && new URLSearchParams(window.location.search).get(EXT_PARAM) === '1'
 
-/** Open a workspace in its own window (2nd-monitor / external-display equivalent). */
-export const openPopout = (screen: string) =>
-  window.open(`${window.location.pathname}?${WIN_PARAM}=${screen}`, `dmxsim-${screen}`, 'width=1280,height=720')
+/** Open (or focus) the external-monitor window. Called when a window is first sent to it. */
+export const openExtMonitor = () =>
+  window.open(`${window.location.pathname}?${EXT_PARAM}=1`, 'dmxsim-ext', 'width=1280,height=720')

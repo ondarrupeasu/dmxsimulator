@@ -27,7 +27,7 @@ export type AppMode = 'patch' | 'program'
 export type WinPos = 'full' | 'left' | 'right' | 'top' | 'bottom' | 'tl' | 'tr' | 'bl' | 'br'
 /** One workspace window on the Titan touchscreen. `pos` is a standard slot (Cog); `rect`
  *  (percent l/t/w/h) overrides it when the window has been freely dragged/resized. */
-export interface DeskWindow { id: string; screen: string; pos: WinPos; rect?: { l: number; t: number; w: number; h: number } }
+export interface DeskWindow { id: string; screen: string; pos: WinPos; rect?: { l: number; t: number; w: number; h: number }; monitor?: 'main' | 'ext' }
 
 /** A Titan "Workspace": a named snapshot of the on-screen window layout (the whole mosaic). */
 export interface DeskWorkspace {
@@ -118,6 +118,8 @@ interface ShowState {
   deskFocus: string
   setWindowPos: (id: string, pos: WinPos) => void
   setWindowRect: (id: string, rect: { l: number; t: number; w: number; h: number }) => void
+  /** Move a window between the main touchscreen and the external monitor (2nd display). */
+  moveWindowMonitor: (id: string, monitor: 'main' | 'ext') => void
   focusWindow: (id: string) => void
   addWindow: (screen?: string) => void
   closeWindow: (id: string) => void
@@ -289,6 +291,10 @@ interface ShowState {
   // right column. Persisted so it survives a reload.
   viewerVisible: boolean
   setViewerVisible: (v: boolean) => void
+  // Where the visualiser lives: 'dock' = the right-hand pane on the main screen; 'ext' = a tile
+  // on the external monitor (2nd display). Moving it to 'ext' hides the dock pane.
+  viewerLocation: 'dock' | 'ext'
+  setViewerLocation: (loc: 'dock' | 'ext') => void
   // Which of the right-column panes are folded away. Single source of truth so a View can
   // fold/unfold them; AppShell mirrors these onto the resizable-panel handles.
   fold: { screen: boolean; fixtures: boolean; monitor: boolean }
@@ -550,6 +556,13 @@ export const useShowStore = create<ShowState>()(
       // Cog picks a standard slot → drop any free rect so the standard position takes over.
       setWindowPos: (id, pos) => set((s) => ({ deskWindows: s.deskWindows.map((w) => (w.id === id ? { ...w, pos, rect: undefined } : w)) })),
       setWindowRect: (id, rect) => set((s) => ({ deskWindows: s.deskWindows.map((w) => (w.id === id ? { ...w, rect } : w)) })),
+      // Send a window to the external monitor (or bring it back). Give it a fresh full-screen
+      // rect on arrival so it doesn't inherit a cramped position; focus it.
+      moveWindowMonitor: (id, monitor) =>
+        set((s) => ({
+          deskWindows: s.deskWindows.map((w) => (w.id === id ? { ...w, monitor, rect: undefined, pos: 'full' as WinPos } : w)),
+          deskFocus: id,
+        })),
       focusWindow: (id) =>
         set((s) => {
           const w = s.deskWindows.find((x) => x.id === id)
@@ -1275,6 +1288,18 @@ export const useShowStore = create<ShowState>()(
       setViewer: (v) => set({ viewer: v }),
       viewerVisible: true,
       setViewerVisible: (v) => set({ viewerVisible: v }),
+      viewerLocation: 'dock',
+      // Move the visualiser to the external monitor (a 'visualiser' tile there) or back to the
+      // dock pane on the main screen. Keeps a single 'w-viz-ext' window for the ext tile.
+      setViewerLocation: (loc) =>
+        set((s) => {
+          const without = s.deskWindows.filter((w) => w.id !== 'w-viz-ext')
+          if (loc === 'ext') {
+            const win: DeskWindow = { id: 'w-viz-ext', screen: 'visualiser', pos: 'full', monitor: 'ext' }
+            return { viewerLocation: 'ext', deskWindows: [...without, win], deskFocus: 'w-viz-ext' }
+          }
+          return { viewerLocation: 'dock', deskWindows: without }
+        }),
       fold: { screen: false, fixtures: false, monitor: false },
       setFold: (key, val) => set((s) => (s.fold[key] === val ? {} : { fold: { ...s.fold, [key]: val } })),
       // Saved Workspaces (Open/View → Record Workspace). Empty by default — the student
@@ -1518,6 +1543,7 @@ export const useShowStore = create<ShowState>()(
         workspaces: s.workspaces,
         viewer: s.viewer,
         viewerVisible: s.viewerVisible,
+        viewerLocation: s.viewerLocation,
         deskWindows: s.deskWindows,
         deskFocus: s.deskFocus,
       }),

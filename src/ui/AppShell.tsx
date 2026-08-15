@@ -11,7 +11,7 @@ import { QuartzPanel } from './console/QuartzPanel'
 import { VisualiserWindow } from './console/VisualiserWindow'
 import { TourOverlay } from './TourOverlay'
 import { audioEngine } from '../engine/audio'
-import { startVizBroadcast } from '../store/vizSync'
+import { startExtBroadcast } from '../store/vizSync'
 import { playbacksBySlot, activeStep } from '../model/cue'
 import './ui.css'
 
@@ -32,8 +32,9 @@ export function AppShell() {
   const setFold = useShowStore((s) => s.setFold)
   const monitorCollapsed = fold.monitor
   const viewerVisible = useShowStore((s) => s.viewerVisible)
-  // Broadcast live state to a popped-out Visualiser window (2nd monitor), if any.
-  useEffect(() => startVizBroadcast(useShowStore as never), [])
+  // Broadcast live state to the external-monitor window (2nd display), if open.
+  useEffect(() => startExtBroadcast(useShowStore as never), [])
+  const viewerLocation = useShowStore((s) => s.viewerLocation)
   useEffect(() => {
     const p = monitorRef.current
     if (!p) return
@@ -197,7 +198,7 @@ export function AppShell() {
                When the Visualiser is switched off (from the Titan), the PWA panel fills the
                whole right column (grows up). */}
             <Panel id="quartz-right" order={2} defaultSize={44} minSize={24}>
-              {viewerVisible ? (
+              {viewerVisible && viewerLocation === 'dock' ? (
                 <PanelGroup direction="vertical" autoSaveId="dmxsim-quartz-right-v3">
                   <Panel defaultSize={62} minSize={22}>
                     <div className="pane"><VisualiserWindow /></div>

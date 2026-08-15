@@ -85,7 +85,9 @@
     "newShowPrompt": "New Show — show berriaren izena (utzi hutsik uzteko):",
     "addWindow": "Ireki mosaikoko beste leiho bat (4 arte — Titan-en touchscreen bezala)",
     "winPopout": "Bidali leiho berri batera (2. monitorea)",
-    "openViz": "Erakutsi / ezkutatu"
+    "openViz": "Erakutsi / ezkutatu",
+    "winToExt": "Bidali kanpoko pantailara (2. monitorea)",
+    "winToMain": "Itzuli pantaila nagusira"
   },
   "fixturesWindow": {
     "title": "Fixture-ak",
@@ -159,7 +161,7 @@
     "pwaSim": "simuladorearen laguntzak: efektuen Play/Pausa, dekoratua kargatu, aretoko argia, 2D ikuspegia eta PARak eskuz orientatu",
     "pwaReal": "Quartz-en bisoreak (Capture) ez ditu kontrol hauek, edo bestela egiten ditu",
     "aimPad": "Fokua apuntatu: erdia zuzen behera dago, arrastatu argiztatu nahi duzun tokira (ertza = horizontala). Ikusi 3Dan.",
-    "popout": "Ireki visualizer-a bere leihoan (eraman 2. monitorera, F11 pantaila osorako)",
+    "popout": "Bidali visualizer-a kanpoko pantailara (2. monitorea)",
     "toggle": "Erakutsi / ezkutatu visualizer-a"
   },
   "run": {

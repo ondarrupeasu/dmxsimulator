@@ -1,24 +1,21 @@
 import { useEffect } from 'react'
 import { useShowStore } from '../store/showStore'
-import { startVizReceive, noopStorage } from '../store/vizSync'
-import { VisualiserWindow } from './console/VisualiserWindow'
+import { startExtReceive, noopStorage } from '../store/vizSync'
 import { QuartzScreen } from './console/QuartzScreen'
 import './ui.css'
 
-/** A Titan workspace opened in its own window (?win=<screen>), for a 2nd monitor — the
- *  external-display equivalent. It mirrors the main window's live state over a BroadcastChannel
- *  and renders just that one workspace, full-window. It never writes to localStorage (noop
- *  storage) so it can't clobber the main show. */
-export function VizPopout({ screen }: { screen: string }) {
+/** The external monitor (?ext=1) — a 2nd display you drag windows onto (visualiser, fixtures…)
+ *  and arrange like Titan's external monitor. It mirrors the main window's state and forwards
+ *  every action back to it (single source of truth), and never persists (noop storage). */
+export function ExtMonitor() {
   useEffect(() => {
-    // Stop this window persisting — it's a read-only mirror sharing the same origin storage.
     try { useShowStore.persist.setOptions({ storage: noopStorage as never }) } catch { /* ignore */ }
-    const stop = startVizReceive(useShowStore as never)
+    const stop = startExtReceive(useShowStore as never)
     return stop
   }, [])
   return (
     <div className="viz-popout">
-      {screen === 'visualiser' ? <VisualiserWindow popped /> : <QuartzScreen solo={screen} />}
+      <QuartzScreen extMonitor />
     </div>
   )
 }
