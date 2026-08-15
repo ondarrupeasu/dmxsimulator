@@ -1,4 +1,6 @@
 import { useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
+import i18n from '../../i18n'
 import { useShowStore } from '../../store/showStore'
 import type { PaletteKind } from '../../model/palette'
 import type { WinPos, DeskWindow } from '../../store/showStore'
@@ -43,7 +45,7 @@ type SoftKey = {
 }
 
 const askLegend = (current: string, apply: (name: string) => void) => {
-  const name = window.prompt('Nombre (legend):', current)
+  const name = window.prompt(i18n.t('desk.legendPrompt'), current)
   if (name !== null && name.trim()) apply(name.trim())
 }
 
@@ -51,6 +53,7 @@ const askLegend = (current: string, apply: (name: string) => void) => {
  * on the left, the A–G softkey column (physical-look keys) on the right, and the
  * command line along the bottom. */
 export function QuartzScreen() {
+  const { t } = useTranslation()
   const rawScreen = useShowStore((s) => s.deskScreen)
   const setScreen = useShowStore((s) => s.setDeskScreen)
   const deskWindows = useShowStore((s) => s.deskWindows)
@@ -88,7 +91,7 @@ export function QuartzScreen() {
   // Titan "Record Workspace" (Open/View → Record Workspace): stores the current window
   // layout (the mosaic + viewer + folded panes) under a name so you can recall it later.
   const quickRecordWorkspace = () => {
-    const name = window.prompt('Nombre del Workspace:', `Workspace ${workspaces.length + 1}`)
+    const name = window.prompt(t('desk.wsNamePrompt'), `Workspace ${workspaces.length + 1}`)
     if (name != null && name.trim()) recordWorkspace(name)
   }
   // The Disk menu, faithful to Titan (Save / Load / New Show). A browser can't write to the
@@ -122,13 +125,13 @@ export function QuartzScreen() {
         const { importGdtfFile } = await import('../../model/gdtf-import')
         const def = await importGdtfFile(await f.arrayBuffer())
         addDefinitions([def])
-        alert(`Fixture añadido a la librería: ${def.manufacturer} ${def.model}`)
+        alert(t('desk.gdtfAdded', { name: `${def.manufacturer} ${def.model}` }))
       } else if (!importShow(JSON.parse(await f.text()))) {
-        alert('Ese archivo no es un show válido.')
+        alert(t('desk.fileInvalid'))
       }
       setMenu('root')
     } catch {
-      alert('No se pudo leer el archivo.')
+      alert(t('desk.fileError'))
     }
   }
   // Export / Reports — the same formats the app offered, now on the desk's Disk menu.
@@ -142,10 +145,10 @@ export function QuartzScreen() {
     URL.revokeObjectURL(url)
     setMenu('root')
   }
-  const runExport = (p: Promise<void>) => { void p.catch(() => alert('No se pudo exportar.')); setMenu('root') }
+  const runExport = (p: Promise<void>) => { void p.catch(() => alert(t('desk.exportError'))); setMenu('root') }
   const newShow = () => {
     // Titan asks for the new show's name here; keep that flow (the name also shows in Patch).
-    const name = window.prompt('New Show — nombre del nuevo show (deja vacío para cancelar):', '')
+    const name = window.prompt(t('desk.newShowPrompt'), '')
     if (name && name.trim()) {
       resetShow()
       setShowMeta({ name: name.trim() })
@@ -191,7 +194,7 @@ export function QuartzScreen() {
       keys: [
         { k: 'A', label: 'All', sub: 'Select all', kind: 'action', onClick: () => select(fixtures.map((f) => f.id)), disabled: noFx },
         { k: 'B', label: 'Locate', sub: 'Home values', kind: 'action', onClick: locateSelected, disabled: noSel },
-        { k: 'C', label: highlight ? 'Highlight ✓' : 'Highlight', sub: 'Ver selección', kind: 'action', onClick: toggleHighlight },
+        { k: 'C', label: highlight ? 'Highlight ✓' : 'Highlight', sub: t('desk.subHighlight'), kind: 'action', onClick: toggleHighlight },
         { k: 'D', label: 'Clear', sub: 'Programmer', kind: 'action', onClick: clearAll, disabled: noSel && !progActive },
         { k: 'E', label: 'Set Legend', kind: 'text', info: true },
         { k: 'F', label: 'Open / View', sub: 'Workspaces', kind: 'menu', onClick: () => setMenu('view') },
@@ -201,11 +204,11 @@ export function QuartzScreen() {
     view: {
       title: 'Open / View — Workspaces',
       keys: [
-        { k: 'A', label: 'Record Workspace', sub: 'Guarda el mosaico', kind: 'action', onClick: quickRecordWorkspace },
+        { k: 'A', label: 'Record Workspace', sub: t('desk.subRecordWs'), kind: 'action', onClick: quickRecordWorkspace },
         ...(['B', 'C', 'D', 'E', 'F', 'G'] as const).map((k, i) => {
           const ws = workspaces[i]
           return ws
-            ? { k, label: ws.name, sub: 'Recuperar', kind: 'action' as const, onClick: () => { recallWorkspace(ws.id); setMenu('root') } }
+            ? { k, label: ws.name, sub: t('desk.subRecall'), kind: 'action' as const, onClick: () => { recallWorkspace(ws.id); setMenu('root') } }
             : { k }
         }),
       ],
@@ -273,13 +276,13 @@ export function QuartzScreen() {
     disk: {
       title: 'Disk',
       keys: [
-        { k: 'A', label: 'Save Show', sub: 'Descarga .json', kind: 'action', onClick: saveShow },
-        { k: 'B', label: 'Save Show As…', sub: 'Descarga .json', kind: 'action', onClick: saveShow },
-        { k: 'C', label: 'Load Show', sub: 'Abre .json', kind: 'action', onClick: loadShow },
-        { k: 'D', label: 'New Show', sub: 'Borra y empieza', kind: 'action', onClick: newShow },
+        { k: 'A', label: 'Save Show', sub: t('desk.subDownloadJson'), kind: 'action', onClick: saveShow },
+        { k: 'B', label: 'Save Show As…', sub: t('desk.subDownloadJson'), kind: 'action', onClick: saveShow },
+        { k: 'C', label: 'Load Show', sub: t('desk.subOpenJson'), kind: 'action', onClick: loadShow },
+        { k: 'D', label: 'New Show', sub: t('desk.subNewShow'), kind: 'action', onClick: newShow },
         { k: 'E', label: 'Import', sub: '.json · MVR · GDTF', kind: 'action', onClick: loadShow },
         { k: 'F', label: 'Export / Reports', kind: 'menu', onClick: () => setMenu('export') },
-        { k: 'G', label: 'Show Library', sub: 'Shows de ejemplo', kind: 'action', onClick: () => { setScreen('showlib'); setMenu('root') } },
+        { k: 'G', label: 'Show Library', sub: t('desk.subShows'), kind: 'action', onClick: () => { setScreen('showlib'); setMenu('root') } },
       ],
     },
     export: {
@@ -366,8 +369,8 @@ export function QuartzScreen() {
     body = (
       <div className="qd-showlib">
         <div className="qd-showlib-head">
-          <span>Show Library — shows de ejemplo</span>
-          <button className="qd-slk-btn" onClick={loadShow}>Importar archivo…</button>
+          <span>{t('desk.showLibHeader')}</span>
+          <button className="qd-slk-btn" onClick={loadShow}>{t('desk.importFile')}</button>
         </div>
         <div className="qd-showlib-grid">
           {TEMPLATES.map((tpl) => (
@@ -477,7 +480,7 @@ export function QuartzScreen() {
             className="qd-tab-add"
             onClick={() => addWindow()}
             disabled={deskWindows.length >= 4}
-            title="Abrir otra ventana en mosaico (hasta 4 — como el touchscreen del Titan)"
+            title={t('desk.addWindow')}
           >⊞</button>
         </div>
       </div>
@@ -496,11 +499,11 @@ export function QuartzScreen() {
                 onMouseDown={() => { if (!focused) focusWindow(w.id) }}
               >
                 {!single && (
-                  <div className="qd-win-bar" onPointerDown={(e) => startWinDrag(e, w, 'move')} title="Arrastra para mover la ventana">
+                  <div className="qd-win-bar" onPointerDown={(e) => startWinDrag(e, w, 'move')} title={t('desk.winMove')}>
                     <span className="qd-win-name">{tabLabel(w.screen)}</span>
                     <span className="qd-win-tools">
-                      <button className="qd-win-btn" title="Window Appearance (posición/tamaño)" onClick={(e) => { e.stopPropagation(); setCogFor(cogFor === w.id ? null : w.id) }} onPointerDown={(e) => e.stopPropagation()}>⚙</button>
-                      <button className="qd-win-btn" title="Cerrar esta ventana" onClick={(e) => { e.stopPropagation(); closeWindow(w.id) }} onPointerDown={(e) => e.stopPropagation()}>✕</button>
+                      <button className="qd-win-btn" title={t('desk.winCog')} onClick={(e) => { e.stopPropagation(); setCogFor(cogFor === w.id ? null : w.id) }} onPointerDown={(e) => e.stopPropagation()}>⚙</button>
+                      <button className="qd-win-btn" title={t('desk.winClose')} onClick={(e) => { e.stopPropagation(); closeWindow(w.id) }} onPointerDown={(e) => e.stopPropagation()}>✕</button>
                     </span>
                     {cogFor === w.id && (
                       <div className="qd-cog" onMouseDown={(e) => e.stopPropagation()} onPointerDown={(e) => e.stopPropagation()}>
@@ -518,7 +521,7 @@ export function QuartzScreen() {
                 )}
                 <div className="qd-win-body">{renderBody(w.screen)}</div>
                 {!single && (
-                  <div className="qd-win-grip" title="Arrastra para redimensionar" onPointerDown={(e) => { e.stopPropagation(); startWinDrag(e, w, 'resize') }} />
+                  <div className="qd-win-grip" title={t('desk.winResize')} onPointerDown={(e) => { e.stopPropagation(); startWinDrag(e, w, 'resize') }} />
                 )}
               </div>
             )
@@ -531,7 +534,7 @@ export function QuartzScreen() {
             const suffix = sk.kind === 'menu' ? ' ▸' : sk.kind === 'text' ? ' …' : ''
             return (
               <div key={sk.k} className={`qskrow${sk.info ? ' info' : ''}${sk.label ? '' : ' blank'}`}>
-                <span className="qsk-lbl" title={sk.info ? 'Opción real del menú Titan (referencia)' : sk.sub}>
+                <span className="qsk-lbl" title={sk.info ? t('desk.refOption') : sk.sub}>
                   {sk.label ? (
                     <>
                       {sk.label}

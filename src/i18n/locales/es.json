@@ -9,7 +9,9 @@
     "language": "Idioma",
     "reset": "Reiniciar show",
     "zones": "Ver calco",
-    "hideZones": "Ocultar calco"
+    "hideZones": "Ocultar calco",
+    "appver": "Versión en ejecución",
+    "pwaTag": "Herramientas del simulador (PWA) — no forman parte de la mesa Quartz"
   },
   "desk": {
     "fixPrev": "Fix −1 — fixture anterior",
@@ -59,7 +61,29 @@
     "execFire": "Executor {{n}}: {{name}} — clic para disparar/apagar (clic derecho: liberar)",
     "execRecordHere": "Executor {{n}} — clic para grabar el look actual aquí",
     "execLabel": "Executor {{n}} — clic para etiquetar",
-    "execLabelPrompt": "Executor {{n}} — escribe su etiqueta (vacío para borrar)"
+    "execLabelPrompt": "Executor {{n}} — escribe su etiqueta (vacío para borrar)",
+    "subHighlight": "Ver selección",
+    "subRecordWs": "Guarda el mosaico",
+    "subRecall": "Recuperar",
+    "subDownloadJson": "Descarga .json",
+    "subOpenJson": "Abre .json",
+    "subNewShow": "Borra y empieza",
+    "subShows": "Shows de ejemplo",
+    "winMove": "Arrastra para mover la ventana",
+    "winCog": "Window Appearance (posición/tamaño)",
+    "winClose": "Cerrar esta ventana",
+    "winResize": "Arrastra para redimensionar",
+    "refOption": "Opción real del menú Titan (referencia)",
+    "showLibHeader": "Show Library — shows de ejemplo",
+    "importFile": "Importar archivo…",
+    "wsNamePrompt": "Nombre del Workspace:",
+    "legendPrompt": "Nombre (legend):",
+    "gdtfAdded": "Fixture añadido a la librería: {{name}}",
+    "fileInvalid": "Ese archivo no es un show válido.",
+    "fileError": "No se pudo leer el archivo.",
+    "exportError": "No se pudo exportar.",
+    "newShowPrompt": "New Show — nombre del nuevo show (deja vacío para cancelar):",
+    "addWindow": "Abrir otra ventana en mosaico (hasta 4 — como el touchscreen del Titan)"
   },
   "fixturesWindow": {
     "title": "Fixtures",
@@ -104,7 +128,9 @@
     "channels": "ch",
     "empty": "Aún no hay fixtures — añade uno desde la librería.",
     "name": "Nombre",
-    "source": "Origen"
+    "source": "Origen",
+    "barTip": "Como en Titan (DMX Line / Address / Quantity). Universe = la línea/salida DMX (1–4), NO el truss (el truss lo eliges arrastrando el fixture al montarlo). Address vacío = auto (siguiente libre); Qty parchea varios ya espaciados y la dirección avanza sola.",
+    "spaceTip": "Reparte los fixtures mostrados por el ancho del truss"
   },
   "monitor": {
     "title": "Monitor DMX",
@@ -124,7 +150,13 @@
     "title": "Visor",
     "roomLights": "Luz de sala",
     "top": "Vista cenital",
-    "note": "Vista cenital 2D ahora; 3D (Three.js) en una fase posterior."
+    "note": "Vista cenital 2D ahora; 3D (Three.js) en una fase posterior.",
+    "aimTip": "Orientar el foco a mano (montaje físico — no es DMX).",
+    "aimUnit": "focos",
+    "hide": "Ocultar el visualizer (vuelve a activarlo con el executor 15 · Visualiser)",
+    "pwaSim": "ayudas del simulador: Play/Pausa de efectos, cargar decorado, luces de sala, vista 2D y orientar PARs a mano",
+    "pwaReal": "el visor (Capture) del Quartz no trae estos controles, o los hace de otra forma",
+    "aimPad": "Apuntar el foco: el centro es recto hacia abajo, arrastra hacia donde quieres que ilumine (el borde = horizontal). Míralo en el 3D."
   },
   "run": {
     "title": "Ejecutar",
@@ -140,5 +172,14 @@
     "save": "Guardar",
     "load": "Cargar",
     "invalid": "Ese archivo no es un show válido de DMXSimulatoR."
+  },
+  "playbacks": {
+    "tapTip": "Tap Tempo — marca el tempo con varios clics y el BPM se ajusta solo"
+  },
+  "audio": {
+    "lineIn": "La opción fiel: en la Quartz real es el jack de audio (line-in) integrado. Aquí usa el micro / entrada de línea del ordenador.",
+    "sysAudio": "Solo Chrome / Brave / Edge, compartiendo una PESTAÑA del mismo navegador (Safari/Firefox no lo permiten).",
+    "demo": "Monta un ejemplo: graba 2 looks con intensidad (rojo/azul) y los mapea a graves/agudos. Carga un track y súbele el volumen para verlo.",
+    "bandEnable": "Enable: activa/desactiva el trigger de esta banda"
   }
 }

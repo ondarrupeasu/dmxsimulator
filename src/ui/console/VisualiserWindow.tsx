@@ -54,10 +54,7 @@ export function VisualiserWindow() {
   return (
     <div className="viz-win">
       <div className="viz-win-tools">
-        <PwaTag
-          sim="ayudas del simulador: Play/Pausa de efectos, cargar decorado, luces de sala, vista 2D y orientar PARs a mano"
-          real="el visor (Capture) del Quartz no trae estos controles, o los hace de otra forma"
-        />
+        <PwaTag sim={t('visualizer.pwaSim')} real={t('visualizer.pwaReal')} />
         {effectsCount > 0 && (
           <button className="play-toggle" onClick={() => setPlaying(!playing)} title={playing ? 'Pause effects' : 'Play effects'}>
             {playing ? '❚❚' : '▶'}
@@ -81,13 +78,13 @@ export function VisualiserWindow() {
           <button className={viewer === '3d' ? 'active' : ''} onClick={() => setViewer('3d')}>3D</button>
           <button className={viewer === '2d' ? 'active' : ''} onClick={() => setViewer('2d')}>2D</button>
         </div>
-        <button className="viz-hide" onClick={() => setViewerVisible(false)} title="Ocultar el visualizer (vuelve a activarlo con el executor 15 · Visualiser)">✕</button>
+        <button className="viz-hide" onClick={() => setViewerVisible(false)} title={t('visualizer.hide')}>✕</button>
       </div>
       <div className="viz-win-stage">
         {viewer === '3d' ? <Visualizer3D /> : <Visualizer2D />}
         {viewer === '3d' && selAimable.length > 0 && (
-          <div className="viz-aim" title="Orientar el foco a mano (montaje físico — no es DMX).">
-            <span className="viz-aim-cap">Aim ↺ {selAimable.length > 1 ? `${selAimable.length} focos` : selAimable[0].name}</span>
+          <div className="viz-aim" title={t('visualizer.aimTip')}>
+            <span className="viz-aim-cap">Aim ↺ {selAimable.length > 1 ? `${selAimable.length} ${t('visualizer.aimUnit')}` : selAimable[0].name}</span>
             <AimPad pan={aim.pan} tilt={aim.tilt} onChange={(p, tt) => selAimable.forEach((f) => setFixtureAim(f.id, p, tt))} />
           </div>
         )}

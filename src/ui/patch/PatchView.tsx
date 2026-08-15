@@ -211,7 +211,7 @@ export function PatchView() {
                             setFixturePosition(it.pf.id, x, it.pf.position.y ?? 0.6)
                           })
                         }}
-                        title="Space the fixtures shown evenly across the truss width"
+                        title={t('patch.spaceTip')}
                       >
                         ⇹ Space
                       </button>
@@ -408,7 +408,7 @@ export function PatchView() {
               </button>
             </header>
             {!libCollapsed && (
-              <div className="patch-bar" title="Como en Titan (DMX Line / Address / Quantity). Universe = la línea/salida DMX (1–4), NO el truss (el truss lo eliges arrastrando el fixture al montarlo). Address vacío = auto (siguiente libre); Qty parchea varios ya espaciados y la dirección avanza sola.">
+              <div className="patch-bar" title={t('patch.barTip')}>
                 <label>Truss
                   <select value={patchTrussSafe} onChange={(e) => setPatchTruss(Number(e.target.value))}>
                     {trusses.map((tr) => (<option key={tr.id} value={tr.id}>{tr.name}</option>))}

@@ -123,7 +123,7 @@ export function AppShell() {
       <div className="pwa-tabs">
         <button className={rightPanel === 'monitor' ? 'on' : ''} onClick={() => setRightPanel('monitor')}>DMX Monitor</button>
         <button className={rightPanel === 'patch' ? 'on' : ''} onClick={() => setRightPanel('patch')}>Patch</button>
-        <span className="pwa-tabs-tag" title="Herramientas del simulador (PWA) — no forman parte de la mesa Quartz">PWA</span>
+        <span className="pwa-tabs-tag" title={t('common.pwaTag')}>PWA</span>
       </div>
       <div className="pwa-panel-body">
         {rightPanel === 'monitor' ? <DmxMonitor universe={1} /> : <PatchView />}
@@ -139,7 +139,7 @@ export function AppShell() {
           <h1>
             <span className="accent">DMX</span>Simulato<span className="accent">R</span>
           </h1>
-          <span className="appver" title="Versión en ejecución">v{__APP_VERSION__} · {__BUILD_COMMIT__}</span>
+          <span className="appver" title={t('common.appver')}>v{__APP_VERSION__} · {__BUILD_COMMIT__}</span>
         </div>
 
         <div className="spacer" />

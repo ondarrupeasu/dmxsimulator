@@ -9,7 +9,9 @@
     "language": "Language",
     "reset": "Reset show",
     "zones": "Show trace",
-    "hideZones": "Hide trace"
+    "hideZones": "Hide trace",
+    "appver": "Running version",
+    "pwaTag": "Simulator tools (PWA) — not part of the Quartz desk"
   },
   "desk": {
     "fixPrev": "Fix −1 — previous fixture",
@@ -59,7 +61,29 @@
     "execFire": "Executor {{n}}: {{name}} — click to fire/kill (right-click: release)",
     "execRecordHere": "Executor {{n}} — click to record the current look here",
     "execLabel": "Executor {{n}} — click to label",
-    "execLabelPrompt": "Executor {{n}} — type its label (empty to clear)"
+    "execLabelPrompt": "Executor {{n}} — type its label (empty to clear)",
+    "subHighlight": "See selection",
+    "subRecordWs": "Save the mosaic",
+    "subRecall": "Recall",
+    "subDownloadJson": "Downloads .json",
+    "subOpenJson": "Opens .json",
+    "subNewShow": "Wipes and starts",
+    "subShows": "Example shows",
+    "winMove": "Drag to move the window",
+    "winCog": "Window Appearance (position/size)",
+    "winClose": "Close this window",
+    "winResize": "Drag to resize",
+    "refOption": "Real Titan menu option (reference)",
+    "showLibHeader": "Show Library — example shows",
+    "importFile": "Import file…",
+    "wsNamePrompt": "Workspace name:",
+    "legendPrompt": "Name (legend):",
+    "gdtfAdded": "Fixture added to the library: {{name}}",
+    "fileInvalid": "That file isn't a valid show.",
+    "fileError": "Could not read the file.",
+    "exportError": "Could not export.",
+    "newShowPrompt": "New Show — name for the new show (leave empty to cancel):",
+    "addWindow": "Open another mosaic window (up to 4 — like the Titan touchscreen)"
   },
   "fixturesWindow": {
     "title": "Fixtures",
@@ -104,7 +128,9 @@
     "channels": "ch",
     "empty": "No fixtures yet — add one from the library.",
     "name": "Name",
-    "source": "Source"
+    "source": "Source",
+    "barTip": "Like Titan (DMX Line / Address / Quantity). Universe = the DMX line/output (1–4), NOT the truss (choose the truss by dragging the fixture when rigging it). Address blank = auto (next free); Qty patches several already spaced and the address auto-advances.",
+    "spaceTip": "Space the fixtures shown evenly across the truss width"
   },
   "monitor": {
     "title": "DMX monitor",
@@ -124,7 +150,13 @@
     "title": "Visualizer",
     "roomLights": "Room lights",
     "top": "Top view",
-    "note": "2D top view now; 3D (Three.js) in a later phase."
+    "note": "2D top view now; 3D (Three.js) in a later phase.",
+    "aimTip": "Aim the fixture by hand (physical rigging — not DMX).",
+    "aimUnit": "fixtures",
+    "hide": "Hide the visualiser (bring it back with executor 15 · Visualiser)",
+    "pwaSim": "simulator aids: effects Play/Pause, load a venue, room lights, 2D view and aiming PARs by hand",
+    "pwaReal": "the Quartz's visualiser (Capture) doesn't have these controls, or does them differently",
+    "aimPad": "Aim the fixture: the centre is straight down, drag toward where you want it to light (the edge = horizontal). Watch it in the 3D."
   },
   "run": {
     "title": "Run",
@@ -140,5 +172,14 @@
     "save": "Save",
     "load": "Load",
     "invalid": "That file isn't a valid DMXSimulatoR show."
+  },
+  "playbacks": {
+    "tapTip": "Tap Tempo — tap the beat a few times and the BPM follows"
+  },
+  "audio": {
+    "lineIn": "The faithful option: on the real Quartz it's the built-in audio jack (line-in). Here it uses the computer's mic / line input.",
+    "sysAudio": "Only Chrome / Brave / Edge, sharing a TAB of the same browser (Safari/Firefox don’t allow it).",
+    "demo": "Sets up an example: records 2 looks with intensity (red/blue) and maps them to bass/treble. Load a track and turn the volume up to see it.",
+    "bandEnable": "Enable: turns this band’s trigger on/off"
   }
 }

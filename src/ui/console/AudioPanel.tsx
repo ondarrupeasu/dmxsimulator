@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useShowStore } from '../../store/showStore'
 import { audioEngine, AUDIO_BANDS } from '../../engine/audio'
 import { playbacksBySlot } from '../../model/cue'
@@ -12,6 +13,7 @@ const bandLabel = (hz: number) => (hz >= 1000 ? `${hz / 1000}k` : `${hz}`)
  *  Loading an mp3/aac file is a SIMULATOR-ONLY convenience (the real desk only has the
  *  physical line-in jack) — flagged with the PWA marker so students know it's not on Titan. */
 export function AudioPanel() {
+  const { t } = useTranslation()
   const enabled = useShowStore((s) => s.audioEnabled)
   const setEnabled = useShowStore((s) => s.setAudioEnabled)
   const autoGain = useShowStore((s) => s.audioAutoGain)
@@ -93,10 +95,10 @@ export function AudioPanel() {
   return (
     <div className="audio-panel">
       <div className="audio-row audio-src">
-        <button className="audio-mic" title="La opción fiel: en la Quartz real es el jack de audio (line-in) integrado. Aquí usa el micro / entrada de línea del ordenador." onClick={useMic}>🎙 Line-in / Mic</button>
+        <button className="audio-mic" title={t('audio.lineIn')} onClick={useMic}>🎙 Line-in / Mic</button>
         <button className="audio-file pwa-only" onClick={() => fileRef.current?.click()}>♪ Track (mp3/aac)
           <PwaTag sim="cargas un archivo de audio y las bandas reaccionan a él" real="no carga archivos: solo entra sonido por el jack line-in físico" /></button>
-        <button className="audio-sys pwa-only" title="Solo Chrome / Brave / Edge, compartiendo una PESTAÑA del mismo navegador (Safari/Firefox no lo permiten)." onClick={useSystem}>🖥 Audio del sistema
+        <button className="audio-sys pwa-only" title={t('audio.sysAudio')} onClick={useSystem}>🖥 Audio del sistema
           <PwaTag sim="captura el sonido de una pestaña del navegador (Chrome/Brave/Edge) como si fuera el line-in" real="no existe: el sonido entra solo por el jack físico de audio" /></button>
         <input ref={fileRef} type="file" accept="audio/*" style={{ display: 'none' }} onChange={onFile} />
         <span className="audio-lbl">{source === 'none' ? 'No source' : audioEngine.label}</span>
@@ -126,7 +128,7 @@ export function AudioPanel() {
 
       <div className="section-label audio-s2l-head">
         <span>Sound to Light — bands fire the playback you map</span>
-        <button className="audio-demo pwa-only" title="Monta un ejemplo: graba 2 looks con intensidad (rojo/azul) y los mapea a graves/agudos. Carga un track y súbele el volumen para verlo."
+        <button className="audio-demo pwa-only" title={t('audio.demo')}
           onClick={() => setupAudioDemo()}>⚡ Demo<PwaTag sim="crea 2 escenas y las mapea de un clic para probar" real="en la mesa montas tú las escenas y las asignas a las bandas" /></button>
       </div>
       <div className="audio-bands">
@@ -144,7 +146,7 @@ export function AudioPanel() {
               <input className="ab-tset" type="range" min={0} max={1} step={0.02}
                 value={b.threshold} disabled={b.auto} onChange={(e) => setThreshold(i, Number(e.target.value))} />
               <div className="ab-switches">
-                <label title="Enable: activa/desactiva el trigger de esta banda">
+                <label title={t('audio.bandEnable')}>
                   <input type="checkbox" checked={b.enabled} onChange={(e) => setBandEnabled(i, e.target.checked)} /> En
                 </label>
                 <label title="Auto: ajusta el nivel de disparo solo cuando no hay triggers">

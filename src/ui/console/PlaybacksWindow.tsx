@@ -1,4 +1,5 @@
 import { useRef } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useShowStore } from '../../store/showStore'
 import { playbacksBySlot } from '../../model/cue'
 
@@ -6,6 +7,7 @@ import { playbacksBySlot } from '../../model/cue'
  *  a single cue, or a multi-step CUE LIST / CHASE. Click a card to fire it (connect + Go);
  *  the central Go/Prev/Stop then step the connected one, exactly like the real desk. */
 export function PlaybacksWindow() {
+  const { t } = useTranslation()
   const playbacks = useShowStore((s) => s.playbacks)
   const connectedId = useShowStore((s) => s.connectedId)
   const goCue = useShowStore((s) => s.goCue)
@@ -62,7 +64,7 @@ export function PlaybacksWindow() {
                         <input type="number" min={20} max={600} value={p.bpm ?? 120}
                           onChange={(e) => setBpm(p.id, Number(e.target.value))} /> BPM
                       </label>
-                      <button className="pb-tap" title="Tap Tempo — marca el tempo con varios clics y el BPM se ajusta solo" onClick={() => tapTempo(p.id)}>Tap</button>
+                      <button className="pb-tap" title={t('playbacks.tapTip')} onClick={() => tapTempo(p.id)}>Tap</button>
                     </>
                   )}
                 </>

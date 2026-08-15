@@ -9,7 +9,9 @@
     "language": "Hizkuntza",
     "reset": "Berrezarri show-a",
     "zones": "Erakutsi kalkoa",
-    "hideZones": "Ezkutatu kalkoa"
+    "hideZones": "Ezkutatu kalkoa",
+    "appver": "Exekuzioko bertsioa",
+    "pwaTag": "Simuladorearen tresnak (PWA) — ez dira Quartz mahaiaren parte"
   },
   "desk": {
     "fixPrev": "Fix −1 — aurreko fixturea",
@@ -59,7 +61,29 @@
     "execFire": "Executor {{n}}: {{name}} — klik jaurtitzeko/itzaltzeko (eskuin-klik: askatu)",
     "execRecordHere": "Executor {{n}} — klik oraingo look-a hemen grabatzeko",
     "execLabel": "Executor {{n}} — klik etiketatzeko",
-    "execLabelPrompt": "Executor {{n}} — idatzi bere etiketa (hutsik ezabatzeko)"
+    "execLabelPrompt": "Executor {{n}} — idatzi bere etiketa (hutsik ezabatzeko)",
+    "subHighlight": "Ikusi hautaketa",
+    "subRecordWs": "Gorde mosaikoa",
+    "subRecall": "Berreskuratu",
+    "subDownloadJson": ".json deskargatzen du",
+    "subOpenJson": ".json irekitzen du",
+    "subNewShow": "Ezabatu eta hasi",
+    "subShows": "Adibide-showak",
+    "winMove": "Arrastatu leihoa mugitzeko",
+    "winCog": "Window Appearance (kokapena/tamaina)",
+    "winClose": "Itxi leiho hau",
+    "winResize": "Arrastatu tamaina aldatzeko",
+    "refOption": "Titan menuko benetako aukera (erreferentzia)",
+    "showLibHeader": "Show Library — adibide-showak",
+    "importFile": "Inportatu fitxategia…",
+    "wsNamePrompt": "Workspace-aren izena:",
+    "legendPrompt": "Izena (legend):",
+    "gdtfAdded": "Fixturea liburutegira gehitu da: {{name}}",
+    "fileInvalid": "Fitxategi hori ez da baliozko show bat.",
+    "fileError": "Ezin izan da fitxategia irakurri.",
+    "exportError": "Ezin izan da esportatu.",
+    "newShowPrompt": "New Show — show berriaren izena (utzi hutsik uzteko):",
+    "addWindow": "Ireki mosaikoko beste leiho bat (4 arte — Titan-en touchscreen bezala)"
   },
   "fixturesWindow": {
     "title": "Fixture-ak",
@@ -104,7 +128,9 @@
     "channels": "kan",
     "empty": "Oraindik ez dago fixturerik — gehitu bat liburutegitik.",
     "name": "Izena",
-    "source": "Jatorria"
+    "source": "Jatorria",
+    "barTip": "Titan bezala (DMX Line / Address / Quantity). Universe = DMX lerroa/irteera (1–4), EZ truss-a (truss-a fixturea arrastatuz aukeratzen da muntatzean). Address hutsik = auto (hurrengo librea); Qty-k hainbat parcheatzen ditu jada tartekatuta eta helbidea bakarrik aurreratzen da.",
+    "spaceTip": "Banatu erakutsitako fixtureak truss-aren zabaleran"
   },
   "monitor": {
     "title": "DMX monitorea",
@@ -124,7 +150,13 @@
     "title": "Bisorea",
     "roomLights": "Aretoko argia",
     "top": "Goiko ikuspegia",
-    "note": "2D goiko ikuspegia orain; 3D (Three.js) geroagoko fase batean."
+    "note": "2D goiko ikuspegia orain; 3D (Three.js) geroagoko fase batean.",
+    "aimTip": "Fokua eskuz orientatu (muntaia fisikoa — ez da DMX).",
+    "aimUnit": "foku",
+    "hide": "Ezkutatu visualizer-a (executor 15 · Visualiser-ekin itzuli)",
+    "pwaSim": "simuladorearen laguntzak: efektuen Play/Pausa, dekoratua kargatu, aretoko argia, 2D ikuspegia eta PARak eskuz orientatu",
+    "pwaReal": "Quartz-en bisoreak (Capture) ez ditu kontrol hauek, edo bestela egiten ditu",
+    "aimPad": "Fokua apuntatu: erdia zuzen behera dago, arrastatu argiztatu nahi duzun tokira (ertza = horizontala). Ikusi 3Dan."
   },
   "run": {
     "title": "Exekutatu",
@@ -140,5 +172,14 @@
     "save": "Gorde",
     "load": "Kargatu",
     "invalid": "Fitxategi hori ez da baliozko DMXSimulatoR show bat."
+  },
+  "playbacks": {
+    "tapTip": "Tap Tempo — jo erritmoa hainbat aldiz eta BPMa doitzen da"
+  },
+  "audio": {
+    "lineIn": "Aukera fidela: Quartz errealean audio-jack (line-in) integratua da. Hemen ordenagailuaren mikrofonoa / linea-sarrera erabiltzen du.",
+    "sysAudio": "Chrome / Brave / Edge soilik, nabigatzaile bereko FITXA bat partekatuz (Safari/Firefox-ek ez dute onartzen).",
+    "demo": "Adibide bat prestatzen du: intentsitatedun 2 look grabatzen ditu (gorria/urdina) eta baxu/altuei lotzen dizkie. Kargatu track bat eta igo bolumena ikusteko.",
+    "bandEnable": "Enable: banda honen triggerra aktibatu/desaktibatu"
   }
 }

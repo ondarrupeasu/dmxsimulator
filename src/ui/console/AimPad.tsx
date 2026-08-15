@@ -1,4 +1,5 @@
 import { useRef } from 'react'
+import { useTranslation } from 'react-i18next'
 
 /** A tiny POLAR pad to AIM a non-moving fixture (a PAR, profile…) — drag to point it, like
  *  angling it by hand on the truss. The CENTRE is straight down; drag toward where you want it
@@ -6,6 +7,7 @@ import { useRef } from 'react'
  *  the horizon, like a real hung fixture); the drag direction is the pan (360°, free). Not a
  *  DMX attribute (the desk can't move these); watch the beam swing in the 3D viewer. */
 export function AimPad({ pan, tilt, onChange }: { pan: number; tilt: number; onChange: (pan: number, tilt: number) => void }) {
+  const { t } = useTranslation()
   const ref = useRef<HTMLDivElement>(null)
   const apply = (clientX: number, clientY: number) => {
     const el = ref.current
@@ -37,7 +39,7 @@ export function AimPad({ pan, tilt, onChange }: { pan: number; tilt: number; onC
   const dotY = 50 - Math.cos(a) * rad * 50
   return (
     <div className="aim-wrap" onPointerDown={(e) => e.stopPropagation()}>
-      <div className="aim-pad" ref={ref} onPointerDown={onDown} title="Apuntar el foco: el centro es recto hacia abajo, arrastra hacia donde quieres que ilumine (el borde = horizontal). Míralo en el 3D.">
+      <div className="aim-pad" ref={ref} onPointerDown={onDown} title={t('visualizer.aimPad')}>
         <span className="aim-dot" style={{ left: `${dotX}%`, top: `${dotY}%` }} />
       </div>
       <span className="aim-read">
