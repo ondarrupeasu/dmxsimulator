@@ -88,7 +88,8 @@
     "openViz": "Show / hide it",
     "winToExt": "Send to the external monitor (2nd display)",
     "winToMain": "Bring back to the main screen",
-    "extMonitor": "Connect / disconnect the 2nd display"
+    "extMonitor": "Connect / disconnect the 2nd display",
+    "extEmpty": "External monitor connected. Send windows here from the main screen with ⤢ (on a window bar, or the visualiser)."
   },
   "fixturesWindow": {
     "title": "Fixtures",

@@ -97,7 +97,6 @@ export function QuartzScreen({ extMonitor }: { extMonitor?: boolean } = {}) {
       openExtMonitor()
       setExtConnected(true)
     }
-    setMenu('root')
   }
   const exportShow = useShowStore((s) => s.exportShow)
   const importShow = useShowStore((s) => s.importShow)
@@ -226,7 +225,7 @@ export function QuartzScreen({ extMonitor }: { extMonitor?: boolean } = {}) {
     view: {
       title: 'Open / View — Workspaces',
       keys: [
-        { k: 'A', label: viewerVisible ? 'Visualiser ✓' : 'Visualiser', sub: t('desk.openViz'), kind: 'action', onClick: () => { setViewerVisible(!viewerVisible); setMenu('root') } },
+        { k: 'A', label: viewerVisible ? 'Visualiser ✓' : 'Visualiser', sub: t('desk.openViz'), kind: 'action', onClick: () => setViewerVisible(!viewerVisible) },
         { k: 'B', label: extConnected ? 'External Monitor ✓' : 'External Monitor', sub: t('desk.extMonitor'), kind: 'action', onClick: toggleExtMonitor },
         { k: 'C', label: 'Record Workspace', sub: t('desk.subRecordWs'), kind: 'action', onClick: quickRecordWorkspace },
         ...(['D', 'E', 'F', 'G'] as const).map((k, i) => {
@@ -454,6 +453,12 @@ export function QuartzScreen({ extMonitor }: { extMonitor?: boolean } = {}) {
   // This screen shows the windows on ITS monitor: the main touchscreen, or the external one.
   const monitor: 'main' | 'ext' = extMonitor ? 'ext' : 'main'
   const windows = deskWindows.filter((w) => (w.monitor ?? 'main') === monitor)
+  type Rect = { l: number; t: number; w: number; h: number }
+  // Standard AABB overlap (windows touching edge-to-edge do NOT count as overlapping).
+  const rectsOverlap = (a: Rect, b: Rect) => a.l < b.l + b.w && a.l + a.w > b.l && a.t < b.t + b.h && a.t + a.h > b.t
+  const otherRects = (id: string) => windows.filter((w) => w.id !== id).map((w) => w.rect ?? POS_RECT[w.pos])
+  // Would placing window `id` at `rect` sit on top of another window on this monitor?
+  const wouldOverlap = (id: string, rect: Rect) => otherRects(id).some((b) => rectsOverlap(rect, b))
 
 
   // Free window drag/resize (like Titan's Resize Window): drag the title bar to move, the
@@ -470,14 +475,6 @@ export function QuartzScreen({ extMonitor }: { extMonitor?: boolean } = {}) {
     const sx = e.clientX
     const sy = e.clientY
     const s0 = { ...start }
-    // Titan doesn't stack windows — keep a safety gap between them. A proposed rect that would
-    // overlap a sibling (on the same monitor, minus this window) is rejected so windows "bump".
-    const GAP = 1.5
-    const others = () => useShowStore.getState().deskWindows
-      .filter((o) => o.id !== w.id)
-      .map((o) => o.rect ?? POS_RECT[o.pos])
-    const overlaps = (a: { l: number; t: number; w: number; h: number }) =>
-      others().some((b) => !(a.l + a.w + GAP <= b.l || b.l + b.w + GAP <= a.l || a.t + a.h + GAP <= b.t || b.t + b.h + GAP <= a.t))
     const onMove = (ev: PointerEvent) => {
       const dxp = ((ev.clientX - sx) / box.width) * 100
       const dyp = ((ev.clientY - sy) / box.height) * 100
@@ -490,7 +487,7 @@ export function QuartzScreen({ extMonitor }: { extMonitor?: boolean } = {}) {
         h = Math.max(18, Math.min(100 - s0.t, s0.h + dyp))
       }
       const cand = { l, t, w: ww, h }
-      if (overlaps(cand)) return // would sit on another window — don't apply this step
+      if (wouldOverlap(w.id, cand)) return // would sit on another window — don't apply this step
       setWindowRect(w.id, cand)
     }
     const onUp = () => {
@@ -561,14 +558,18 @@ export function QuartzScreen({ extMonitor }: { extMonitor?: boolean } = {}) {
                     </span>
                     {cogFor === w.id && (
                       <div className="qd-cog" onMouseDown={(e) => e.stopPropagation()} onPointerDown={(e) => e.stopPropagation()}>
-                        {POS_GRID.map((g) => (
-                          <button
-                            key={g.pos}
-                            className={`qd-cog-cell${!w.rect && w.pos === g.pos ? ' on' : ''}`}
-                            title={g.pos}
-                            onClick={() => { setWindowPos(w.id, g.pos); setCogFor(null) }}
-                          >{g.label}</button>
-                        ))}
+                        {POS_GRID.map((g) => {
+                          const clash = wouldOverlap(w.id, POS_RECT[g.pos]) // would cover another window
+                          return (
+                            <button
+                              key={g.pos}
+                              className={`qd-cog-cell${!w.rect && w.pos === g.pos ? ' on' : ''}`}
+                              title={g.pos}
+                              disabled={clash}
+                              onClick={() => { setWindowPos(w.id, g.pos); setCogFor(null) }}
+                            >{g.label}</button>
+                          )
+                        })}
                       </div>
                     )}
                   </div>
@@ -580,6 +581,9 @@ export function QuartzScreen({ extMonitor }: { extMonitor?: boolean } = {}) {
               </div>
             )
           })}
+          {extMonitor && windows.length === 0 && (
+            <div className="qd-ext-empty">{t('desk.extEmpty')}</div>
+          )}
         </div>
 
         {!extMonitor && (

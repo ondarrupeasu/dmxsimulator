@@ -88,7 +88,8 @@
     "openViz": "Erakutsi / ezkutatu",
     "winToExt": "Bidali kanpoko pantailara (2. monitorea)",
     "winToMain": "Itzuli pantaila nagusira",
-    "extMonitor": "Konektatu / deskonektatu 2. pantaila"
+    "extMonitor": "Konektatu / deskonektatu 2. pantaila",
+    "extEmpty": "Kanpoko monitorea konektatuta. Bidali leihoak hona pantaila nagusitik ⤢ botoiarekin (leiho baten barran, edo visualizer-ean)."
   },
   "fixturesWindow": {
     "title": "Fixture-ak",
