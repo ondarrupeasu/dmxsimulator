@@ -27,7 +27,7 @@ export type AppMode = 'patch' | 'program'
 export type WinPos = 'full' | 'left' | 'right' | 'top' | 'bottom' | 'tl' | 'tr' | 'bl' | 'br'
 /** One workspace window on the Titan touchscreen. `pos` is a standard slot (Cog); `rect`
  *  (percent l/t/w/h) overrides it when the window has been freely dragged/resized. */
-export interface DeskWindow { id: string; screen: string; pos: WinPos; rect?: { l: number; t: number; w: number; h: number }; monitor?: 'main' | 'ext' }
+export interface DeskWindow { id: string; screen: string; pos: WinPos; rect?: { l: number; t: number; w: number; h: number }; monitor?: 'main' | 'ext'; btnSize?: number; textSize?: number }
 
 /** Place window `id` on monitor `mon` without covering the windows already there: empty target
  *  → full; if the only one there is full, shrink it to a quarter so the newcomer fits; then the
@@ -140,6 +140,8 @@ interface ShowState {
   deskFocus: string
   setWindowPos: (id: string, pos: WinPos) => void
   setWindowRect: (id: string, rect: { l: number; t: number; w: number; h: number }) => void
+  /** Cog (Window Appearance): step a window's button size (0–4) or text size (0–3). */
+  nudgeWindowSize: (id: string, kind: 'btn' | 'text', delta: number) => void
   /** Move a window between the main touchscreen and the external monitor (2nd display). */
   moveWindowMonitor: (id: string, monitor: 'main' | 'ext') => void
   focusWindow: (id: string) => void
@@ -631,6 +633,19 @@ export const useShowStore = create<ShowState>()(
       // Cog picks a standard slot → drop any free rect so the standard position takes over.
       setWindowPos: (id, pos) => set((s) => ({ deskWindows: s.deskWindows.map((w) => (w.id === id ? { ...w, pos, rect: undefined } : w)) })),
       setWindowRect: (id, rect) => set((s) => ({ deskWindows: s.deskWindows.map((w) => (w.id === id ? { ...w, rect } : w)) })),
+      nudgeWindowSize: (id, kind, delta) =>
+        set((s) => {
+          const max = kind === 'btn' ? 4 : 3
+          const def = kind === 'btn' ? 2 : 1
+          return {
+            deskWindows: s.deskWindows.map((w) => {
+              if (w.id !== id) return w
+              const cur = (kind === 'btn' ? w.btnSize : w.textSize) ?? def
+              const next = Math.max(0, Math.min(max, cur + delta))
+              return kind === 'btn' ? { ...w, btnSize: next } : { ...w, textSize: next }
+            }),
+          }
+        }),
       // Send a window to the external monitor (or bring it back). Give it a fresh full-screen
       // rect on arrival so it doesn't inherit a cramped position; focus it.
       moveWindowMonitor: (id, monitor) =>

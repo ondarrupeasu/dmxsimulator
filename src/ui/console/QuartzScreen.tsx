@@ -20,6 +20,9 @@ import { VisualiserWindow } from './VisualiserWindow'
 const PALETTE_KINDS: PaletteKind[] = ['colour', 'position', 'gobo', 'beam', 'intensity']
 // Attribute-bank letter for a palette kind (Titan's IPCGB tags on palettes).
 const KIND_LETTER: Record<PaletteKind, string> = { intensity: 'I', position: 'P', colour: 'C', gobo: 'G', beam: 'B' }
+// Cog (Window Appearance) button/text size steps → CSS scale factors.
+const BTN_SCALE = [0.75, 0.9, 1, 1.2, 1.45]
+const TXT_SCALE = [0.85, 1, 1.15, 1.3]
 
 // Touchscreen workspace tabs. Fixtures is also its own docked window on the right,
 // but it lives here too so selection works from the screen like the physical desk.
@@ -65,6 +68,7 @@ export function QuartzScreen({ extMonitor }: { extMonitor?: boolean } = {}) {
   const focusWindow = useShowStore((s) => s.focusWindow)
   const setWindowPos = useShowStore((s) => s.setWindowPos)
   const setWindowRect = useShowStore((s) => s.setWindowRect)
+  const nudgeWindowSize = useShowStore((s) => s.nudgeWindowSize)
   const moveWindowMonitor = useShowStore((s) => s.moveWindowMonitor)
   const setViewerLocation = useShowStore((s) => s.setViewerLocation)
   const addWindow = useShowStore((s) => s.addWindow)
@@ -213,6 +217,8 @@ export function QuartzScreen({ extMonitor }: { extMonitor?: boolean } = {}) {
   const palKind = kind
   // Cog (Window Appearance) popover: which window's position picker is open.
   const [cogFor, setCogFor] = useState<string | null>(null)
+  // Right-click context menu on a Fixtures window (Titan sets the corner display here, not the Cog).
+  const [ctxFx, setCtxFx] = useState<{ x: number; y: number } | null>(null)
 
   const clearAll = () => {
     clearSelection()
@@ -585,8 +591,9 @@ export function QuartzScreen({ extMonitor }: { extMonitor?: boolean } = {}) {
               <div
                 key={w.id}
                 className={`qd-win${focused ? ' focused' : ''}`}
-                style={{ left: `${r.l}%`, top: `${r.t}%`, width: `${r.w}%`, height: `${r.h}%`, zIndex: focused ? 2 : 1 }}
+                style={{ left: `${r.l}%`, top: `${r.t}%`, width: `${r.w}%`, height: `${r.h}%`, zIndex: focused ? 2 : 1, ['--qd-btn' as string]: BTN_SCALE[w.btnSize ?? 2], ['--qd-txt' as string]: TXT_SCALE[w.textSize ?? 1] }}
                 onMouseDown={() => { if (!focused) focusWindow(w.id) }}
+                onContextMenu={norm(w.screen) === 'fixtures' ? (e) => { e.preventDefault(); focusWindow(w.id); setCtxFx({ x: e.clientX, y: e.clientY }) } : undefined}
               >
                 {(
                   <div className="qd-win-bar" onPointerDown={(e) => startWinDrag(e, w, 'move')} title={t('desk.winMove')}>
@@ -614,14 +621,17 @@ export function QuartzScreen({ extMonitor }: { extMonitor?: boolean } = {}) {
                             {monitor === 'ext' ? '← Monitor 1' : 'Monitor 2 →'}
                           </button>
                         )}
-                        {/* Fixtures windows: what the button corner shows (Titan's window option). */}
-                        {norm(w.screen) === 'fixtures' && (
-                          <div className="qd-cog-fxlabel" title={t('desk.cornerTip')}>
-                            <button className={fixtureLabel === 'user' ? 'on' : ''} onClick={() => setFixtureLabel('user')}>User #</button>
-                            <button className={fixtureLabel === 'address' ? 'on' : ''} onClick={() => setFixtureLabel('address')}>DMX</button>
-                            <button className={fixtureLabel === 'hidden' ? 'on' : ''} onClick={() => setFixtureLabel('hidden')}>Hidden</button>
-                          </div>
-                        )}
+                        {/* Button + text size, like Titan's Window Appearance options. */}
+                        <div className="qd-cog-size" title={t('desk.btnSize')}>
+                          <span>{t('desk.btnSizeLabel')}</span>
+                          <button onClick={() => nudgeWindowSize(w.id, 'btn', -1)} disabled={(w.btnSize ?? 2) <= 0}>−</button>
+                          <button onClick={() => nudgeWindowSize(w.id, 'btn', +1)} disabled={(w.btnSize ?? 2) >= 4}>+</button>
+                        </div>
+                        <div className="qd-cog-size" title={t('desk.textSize')}>
+                          <span>{t('desk.textSizeLabel')}</span>
+                          <button onClick={() => nudgeWindowSize(w.id, 'text', -1)} disabled={(w.textSize ?? 1) <= 0}>−</button>
+                          <button onClick={() => nudgeWindowSize(w.id, 'text', +1)} disabled={(w.textSize ?? 1) >= 3}>+</button>
+                        </div>
                       </div>
                     )}
                   </div>
@@ -637,6 +647,20 @@ export function QuartzScreen({ extMonitor }: { extMonitor?: boolean } = {}) {
             <div className="qd-ext-empty">{t('desk.extEmpty')}</div>
           )}
         </div>
+
+        {ctxFx && (
+          <>
+            <div className="qd-ctx-backdrop" onMouseDown={() => setCtxFx(null)} onContextMenu={(e) => { e.preventDefault(); setCtxFx(null) }} />
+            <div className="qd-ctxmenu" style={{ left: ctxFx.x, top: ctxFx.y }}>
+              <div className="qd-ctx-title">{t('desk.cornerTitle')}</div>
+              {(['user', 'address', 'hidden'] as const).map((v) => (
+                <button key={v} className={fixtureLabel === v ? 'on' : ''} onClick={() => { setFixtureLabel(v); setCtxFx(null) }}>
+                  {v === 'user' ? 'User Number' : v === 'address' ? 'DMX Address' : 'Hidden'}
+                </button>
+              ))}
+            </div>
+          </>
+        )}
 
         {!extMonitor && (
         <div className="qscreen-soft">
