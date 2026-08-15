@@ -25,8 +25,9 @@ export type AppMode = 'patch' | 'program'
 
 /** Standard Titan window positions (Cog / Window Appearance): quarters, halves, full. */
 export type WinPos = 'full' | 'left' | 'right' | 'top' | 'bottom' | 'tl' | 'tr' | 'bl' | 'br'
-/** One workspace window on the Titan touchscreen: a workspace shown at a standard position. */
-export interface DeskWindow { id: string; screen: string; pos: WinPos }
+/** One workspace window on the Titan touchscreen. `pos` is a standard slot (Cog); `rect`
+ *  (percent l/t/w/h) overrides it when the window has been freely dragged/resized. */
+export interface DeskWindow { id: string; screen: string; pos: WinPos; rect?: { l: number; t: number; w: number; h: number } }
 
 /** A Titan "Workspace": a named snapshot of the on-screen window layout (the whole mosaic). */
 export interface DeskWorkspace {
@@ -116,6 +117,7 @@ interface ShowState {
   deskWindows: DeskWindow[]
   deskFocus: string
   setWindowPos: (id: string, pos: WinPos) => void
+  setWindowRect: (id: string, rect: { l: number; t: number; w: number; h: number }) => void
   focusWindow: (id: string) => void
   addWindow: (screen?: string) => void
   closeWindow: (id: string) => void
@@ -221,7 +223,7 @@ interface ShowState {
   /** Patch one or more fixtures. Titan-style: `quantity` units are patched from `address`
    *  (defaults to the next free slot) on `universe`, each auto-advancing by the footprint
    *  (+ `offset` gap). Omit address for pure auto-patch. */
-  addFixture: (definitionId: string, opts?: { modeIndex?: number; address?: number; universe?: number; quantity?: number; offset?: number }) => void
+  addFixture: (definitionId: string, opts?: { modeIndex?: number; address?: number; universe?: number; quantity?: number; offset?: number; truss?: number }) => void
   removeFixture: (instanceId: string) => void
   renameFixture: (instanceId: string, name: string) => void
   setFixturePosition: (instanceId: string, x: number, y: number) => void
@@ -540,7 +542,9 @@ export const useShowStore = create<ShowState>()(
           }
           return { deskWindows: s.deskWindows.map((w) => (w.id === focus ? { ...w, screen } : w)), deskScreen: screen }
         }),
-      setWindowPos: (id, pos) => set((s) => ({ deskWindows: s.deskWindows.map((w) => (w.id === id ? { ...w, pos } : w)) })),
+      // Cog picks a standard slot → drop any free rect so the standard position takes over.
+      setWindowPos: (id, pos) => set((s) => ({ deskWindows: s.deskWindows.map((w) => (w.id === id ? { ...w, pos, rect: undefined } : w)) })),
+      setWindowRect: (id, rect) => set((s) => ({ deskWindows: s.deskWindows.map((w) => (w.id === id ? { ...w, rect } : w)) })),
       focusWindow: (id) =>
         set((s) => {
           const w = s.deskWindows.find((x) => x.id === id)
@@ -946,7 +950,7 @@ export const useShowStore = create<ShowState>()(
         // Spread new fixtures along the default truss so they don't stack on one spot — the
         // student then drags them where the real rig has them. Continues past what's already
         // on that truss; wraps every 10 across the width (x ∈ [-0.9, 0.9]).
-        const truss = DEFAULT_TRUSS
+        const truss = opts?.truss ?? DEFAULT_TRUSS
         let slot = existing.filter((f) => (f.truss ?? DEFAULT_TRUSS) === truss).length
         for (let i = 0; i < quantity; i++) {
           if (address + footprint - 1 > 512) break // no room left in this universe

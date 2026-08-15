@@ -172,50 +172,46 @@ export function AppShell() {
 
       <div className="workspace">
         {quartzDocked ? (
-          <PanelGroup direction="vertical" id="quartz-v" autoSaveId="dmxsim-quartz-v3">
-            {/* TOP: the Titan touchscreen, full width — mosaic (incl. the Visualiser window,
-               the desk's Capture output) on the left, A–G softkeys on the right. Always visible. */}
-            <Panel id="quartz-screen" order={1} defaultSize={54} minSize={28}>
-              <div className="pane">
-                <QuartzScreen />
-              </div>
-            </Panel>
-            <PanelResizeHandle className="rz rz-h" />
-            {/* BOTTOM: the physical desk (left) + a right column stacking the Visualiser (big,
-               grows downward) over the foldable PWA panel (DMX monitor / Patch). Folding the PWA
-               panel gives its space to the Visualiser, not the desk. */}
-            <Panel id="quartz-bottom" order={2} defaultSize={46} minSize={26}>
-              <PanelGroup direction="horizontal" autoSaveId="dmxsim-quartz-bottom-v3">
-                <Panel defaultSize={58} minSize={32}>
-                  <div className="pane">
-                    <QuartzPanel />
-                  </div>
+          <PanelGroup direction="horizontal" id="quartz-cols" autoSaveId="dmxsim-quartz-cols-v1">
+            {/* LEFT column: the Titan touchscreen (top, with the A–G softkeys on its right edge)
+               over the physical desk (bottom). Resizing between them touches only these two —
+               the visualiser (right column) is unaffected. */}
+            <Panel id="quartz-left" order={1} defaultSize={56} minSize={30}>
+              <PanelGroup direction="vertical" autoSaveId="dmxsim-quartz-left-v5">
+                <Panel defaultSize={46} minSize={22}>
+                  <div className="pane"><QuartzScreen /></div>
                 </Panel>
-                <PanelResizeHandle className="rz rz-v" />
-                <Panel defaultSize={42} minSize={22}>
-                  <PanelGroup direction="vertical" autoSaveId="dmxsim-quartz-br-v1">
-                    <Panel defaultSize={64} minSize={24}>
-                      <div className="pane"><VisualiserWindow /></div>
-                    </Panel>
-                    <PanelResizeHandle className="rz rz-h" />
-                    <Panel
-                      ref={monitorRef} collapsible collapsedSize={5}
-                      defaultSize={36} minSize={16}
-                      onCollapse={() => setFold('monitor', true)}
-                      onExpand={() => setFold('monitor', false)}
+                <PanelResizeHandle className="rz rz-h" />
+                <Panel defaultSize={54} minSize={26}>
+                  <div className="pane"><QuartzPanel /></div>
+                </Panel>
+              </PanelGroup>
+            </Panel>
+            <PanelResizeHandle className="rz rz-v" />
+            {/* RIGHT column: the Visualiser (top) over the foldable PWA panel (DMX monitor /
+               Patch, bottom). Folding the panel gives the whole right side to the visualiser. */}
+            <Panel id="quartz-right" order={2} defaultSize={44} minSize={24}>
+              <PanelGroup direction="vertical" autoSaveId="dmxsim-quartz-right-v3">
+                <Panel defaultSize={62} minSize={22}>
+                  <div className="pane"><VisualiserWindow /></div>
+                </Panel>
+                <PanelResizeHandle className="rz rz-h" />
+                <Panel
+                  ref={monitorRef} collapsible collapsedSize={5}
+                  defaultSize={38} minSize={16}
+                  onCollapse={() => setFold('monitor', true)}
+                  onExpand={() => setFold('monitor', false)}
+                >
+                  <div className="pane pwa-pane">
+                    <button
+                      className="pane-fold"
+                      title={monitorCollapsed ? t('common.expand') : t('common.collapse')}
+                      onClick={() => setFold('monitor', !monitorCollapsed)}
                     >
-                      <div className="pane pwa-pane">
-                        <button
-                          className="pane-fold"
-                          title={monitorCollapsed ? t('common.expand') : t('common.collapse')}
-                          onClick={() => setFold('monitor', !monitorCollapsed)}
-                        >
-                          {monitorCollapsed ? '⌃' : '⌄'}
-                        </button>
-                        {!monitorCollapsed && pwaPanel}
-                      </div>
-                    </Panel>
-                  </PanelGroup>
+                      {monitorCollapsed ? '⌃' : '⌄'}
+                    </button>
+                    {!monitorCollapsed && pwaPanel}
+                  </div>
                 </Panel>
               </PanelGroup>
             </Panel>

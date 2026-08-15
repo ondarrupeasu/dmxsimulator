@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react'
 import { useShowStore } from '../../store/showStore'
 import type { PaletteKind } from '../../model/palette'
-import type { WinPos } from '../../store/showStore'
+import type { WinPos, DeskWindow } from '../../store/showStore'
 import { PALETTE_LABELS } from '../../model/palette'
 import { EffectsPanel } from '../run/EffectsPanel'
 import { AudioPanel } from './AudioPanel'
@@ -57,6 +57,7 @@ export function QuartzScreen() {
   const deskFocus = useShowStore((s) => s.deskFocus)
   const focusWindow = useShowStore((s) => s.focusWindow)
   const setWindowPos = useShowStore((s) => s.setWindowPos)
+  const setWindowRect = useShowStore((s) => s.setWindowRect)
   const addWindow = useShowStore((s) => s.addWindow)
   const closeWindow = useShowStore((s) => s.closeWindow)
   const selection = useShowStore((s) => s.selection)
@@ -421,6 +422,41 @@ export function QuartzScreen() {
   ]
   const tabLabel = (scr: string) => TABS.find((tb) => tb.key === norm(scr))?.label ?? scr
 
+  // Free window drag/resize (like Titan's Resize Window): drag the title bar to move, the
+  // bottom-right grip to resize. Deltas are converted to % of the mosaic body so the rect
+  // stays layout-independent. Clamped to the screen with sensible minimums.
+  const bodyRef = useRef<HTMLDivElement>(null)
+  const startWinDrag = (e: React.PointerEvent, w: DeskWindow, mode: 'move' | 'resize') => {
+    const host = bodyRef.current
+    if (!host) return
+    e.preventDefault()
+    focusWindow(w.id)
+    const box = host.getBoundingClientRect()
+    const start = w.rect ?? POS_RECT[w.pos]
+    const sx = e.clientX
+    const sy = e.clientY
+    const s0 = { ...start }
+    const onMove = (ev: PointerEvent) => {
+      const dxp = ((ev.clientX - sx) / box.width) * 100
+      const dyp = ((ev.clientY - sy) / box.height) * 100
+      let { l, t, w: ww, h } = s0
+      if (mode === 'move') {
+        l = Math.max(0, Math.min(100 - ww, s0.l + dxp))
+        t = Math.max(0, Math.min(100 - h, s0.t + dyp))
+      } else {
+        ww = Math.max(18, Math.min(100 - s0.l, s0.w + dxp))
+        h = Math.max(18, Math.min(100 - s0.t, s0.h + dyp))
+      }
+      setWindowRect(w.id, { l, t, w: ww, h })
+    }
+    const onUp = () => {
+      window.removeEventListener('pointermove', onMove)
+      window.removeEventListener('pointerup', onUp)
+    }
+    window.addEventListener('pointermove', onMove)
+    window.addEventListener('pointerup', onUp)
+  }
+
   return (
     <div className="qscreen" data-tour="titan-screen">
       <input ref={showFileRef} type="file" accept=".json,.mvr,.gdtf,application/json" style={{ display: 'none' }} onChange={onShowFile} />
@@ -447,9 +483,9 @@ export function QuartzScreen() {
       </div>
 
       <div className="qscreen-main">
-        <div className="qscreen-body">
+        <div className="qscreen-body" ref={bodyRef}>
           {deskWindows.map((w) => {
-            const r = POS_RECT[w.pos]
+            const r = w.rect ?? POS_RECT[w.pos]
             const focused = w.id === deskFocus
             const single = deskWindows.length === 1
             return (
@@ -460,18 +496,18 @@ export function QuartzScreen() {
                 onMouseDown={() => { if (!focused) focusWindow(w.id) }}
               >
                 {!single && (
-                  <div className="qd-win-bar">
+                  <div className="qd-win-bar" onPointerDown={(e) => startWinDrag(e, w, 'move')} title="Arrastra para mover la ventana">
                     <span className="qd-win-name">{tabLabel(w.screen)}</span>
                     <span className="qd-win-tools">
-                      <button className="qd-win-btn" title="Window Appearance (posición/tamaño)" onClick={(e) => { e.stopPropagation(); setCogFor(cogFor === w.id ? null : w.id) }}>⚙</button>
-                      <button className="qd-win-btn" title="Cerrar esta ventana" onClick={(e) => { e.stopPropagation(); closeWindow(w.id) }}>✕</button>
+                      <button className="qd-win-btn" title="Window Appearance (posición/tamaño)" onClick={(e) => { e.stopPropagation(); setCogFor(cogFor === w.id ? null : w.id) }} onPointerDown={(e) => e.stopPropagation()}>⚙</button>
+                      <button className="qd-win-btn" title="Cerrar esta ventana" onClick={(e) => { e.stopPropagation(); closeWindow(w.id) }} onPointerDown={(e) => e.stopPropagation()}>✕</button>
                     </span>
                     {cogFor === w.id && (
-                      <div className="qd-cog" onMouseDown={(e) => e.stopPropagation()}>
+                      <div className="qd-cog" onMouseDown={(e) => e.stopPropagation()} onPointerDown={(e) => e.stopPropagation()}>
                         {POS_GRID.map((g) => (
                           <button
                             key={g.pos}
-                            className={`qd-cog-cell${w.pos === g.pos ? ' on' : ''}`}
+                            className={`qd-cog-cell${!w.rect && w.pos === g.pos ? ' on' : ''}`}
                             title={g.pos}
                             onClick={() => { setWindowPos(w.id, g.pos); setCogFor(null) }}
                           >{g.label}</button>
@@ -481,6 +517,9 @@ export function QuartzScreen() {
                   </div>
                 )}
                 <div className="qd-win-body">{renderBody(w.screen)}</div>
+                {!single && (
+                  <div className="qd-win-grip" title="Arrastra para redimensionar" onPointerDown={(e) => { e.stopPropagation(); startWinDrag(e, w, 'resize') }} />
+                )}
               </div>
             )
           })}

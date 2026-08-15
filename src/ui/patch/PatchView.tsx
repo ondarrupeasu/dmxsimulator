@@ -82,10 +82,13 @@ export function PatchView() {
   const [patchLine, setPatchLine] = useState(1)
   const [patchAddr, setPatchAddr] = useState('')
   const [patchQty, setPatchQty] = useState(1)
+  const [patchTruss, setPatchTruss] = useState(DEFAULT_TRUSS)
+  // Keep the chosen truss valid if trusses are added/removed.
+  const patchTrussSafe = trusses.some((tr) => tr.id === patchTruss) ? patchTruss : (trusses[0]?.id ?? DEFAULT_TRUSS)
   const doAdd = (def: FixtureDefinition) => {
     const manual = patchAddr.trim() !== ''
     const addr = manual ? Math.max(1, Math.min(512, parseInt(patchAddr, 10) || 1)) : undefined
-    addFixture(def.id, { universe: patchLine, address: addr, quantity: patchQty })
+    addFixture(def.id, { universe: patchLine, address: addr, quantity: patchQty, truss: patchTrussSafe })
     if (manual && addr !== undefined) setPatchAddr(String(Math.min(513, addr + fixtureFootprint(def, 0) * patchQty)))
   }
   const toggleCat = (cat: string) =>
@@ -406,6 +409,11 @@ export function PatchView() {
             </header>
             {!libCollapsed && (
               <div className="patch-bar" title="Como en Titan (DMX Line / Address / Quantity). Universe = la línea/salida DMX (1–4), NO el truss (el truss lo eliges arrastrando el fixture al montarlo). Address vacío = auto (siguiente libre); Qty parchea varios ya espaciados y la dirección avanza sola.">
+                <label>Truss
+                  <select value={patchTrussSafe} onChange={(e) => setPatchTruss(Number(e.target.value))}>
+                    {trusses.map((tr) => (<option key={tr.id} value={tr.id}>{tr.name}</option>))}
+                  </select>
+                </label>
                 <label>Universe
                   <select value={patchLine} onChange={(e) => setPatchLine(Number(e.target.value))}>
                     {UNIVERSES.map((u) => (<option key={u} value={u}>{u}</option>))}
