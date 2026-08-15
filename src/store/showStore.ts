@@ -314,6 +314,12 @@ interface ShowState {
   legendArm: boolean
   setLegendArm: (v: boolean) => void
 
+  // Record Mask (Titan): which attribute banks a Record stores. All-on = record everything;
+  // turn a bank off to, e.g., record a Colour-only cue. Applies to cue/executor recording.
+  recordMask: RecordMask
+  toggleRecordMask: (kind: PaletteKind) => void
+  clearRecordMask: () => void
+
   // Visualiser toggle (2D plan ↔ 3D). Lifted into the store so a recalled Workspace/View
   // (Titan's saved window layouts) can restore it along with the rest of the arrangement.
   viewer: '2d' | '3d'
@@ -403,6 +409,34 @@ function snapProgrammer(s: { programmer: ProgrammerValues }): ProgrammerValues {
   const values: ProgrammerValues = {}
   for (const id in s.programmer) values[id] = { ...s.programmer[id] }
   return values
+}
+export type RecordMask = Record<PaletteKind, boolean>
+/** Inverse of PALETTE_FUNCTIONS: channel function → its attribute bank (kind). */
+const FUNCTION_KIND: Record<string, PaletteKind> = (() => {
+  const m: Record<string, PaletteKind> = {}
+  for (const k of Object.keys(PALETTE_FUNCTIONS) as PaletteKind[]) for (const fn of PALETTE_FUNCTIONS[k]) m[fn] = k
+  return m
+})()
+/** Like snapProgrammer, but drops channels whose attribute bank is masked OUT (Titan's Record
+ *  Mask). A full mask (every bank on) records everything, including unclassified functions;
+ *  once any bank is off, only enabled banks are stored (unclassified functions are kept). */
+function snapProgrammerMasked(s: { programmer: ProgrammerValues; show: Show; definitions: Record<string, FixtureDefinition>; recordMask: RecordMask }): ProgrammerValues {
+  const base = snapProgrammer(s)
+  if ((Object.values(s.recordMask) as boolean[]).every(Boolean)) return base
+  const out: ProgrammerValues = {}
+  for (const id in base) {
+    const pf = s.show.fixtures.find((f) => f.id === id)
+    const channels = pf && s.definitions[pf.definitionId]?.modes[pf.modeIndex]?.channels
+    if (!channels) { out[id] = base[id]; continue }
+    const kept: Record<number, number> = {}
+    for (const idxStr in base[id]) {
+      const idx = Number(idxStr)
+      const kind = FUNCTION_KIND[channels[idx]?.function]
+      if (!kind || s.recordMask[kind]) kept[idx] = base[id][idx] // unclassified functions stay
+    }
+    if (Object.keys(kept).length) out[id] = kept
+  }
+  return out
 }
 /** Deep-copy the running shapes (so a cue keeps its own effect instances). */
 function snapEffects(s: { effects: Effect[] }): Effect[] {
@@ -638,14 +672,14 @@ export const useShowStore = create<ShowState>()(
         set((s) => {
           // Plain Record → a NEW one-step playback on the first free slot.
           const slot = firstFreePlaybackSlot(s.playbacks)
-          return { playbacks: [...s.playbacks, makePlayback(nextInstanceId(), slot, snapProgrammer(s), snapEffects(s))] }
+          return { playbacks: [...s.playbacks, makePlayback(nextInstanceId(), slot, snapProgrammerMasked(s), snapEffects(s))] }
         }),
 
       recordArm: false,
       armRecord: () => set((s) => ({ recordArm: !s.recordArm })),
       recordCueAt: (index) =>
         set((s) => {
-          const values = snapProgrammer(s)
+          const values = snapProgrammerMasked(s)
           const effects = snapEffects(s)
           const existing = playbacksBySlot(s.playbacks)[index]
           if (existing) {
@@ -949,7 +983,7 @@ export const useShowStore = create<ShowState>()(
       recordExecutor: (n) =>
         set((s) => {
           if (Object.keys(s.programmer).length === 0) return s
-          const pb = makePlayback(nextInstanceId(), -1, snapProgrammer(s), snapEffects(s))
+          const pb = makePlayback(nextInstanceId(), -1, snapProgrammerMasked(s), snapEffects(s))
           pb.executor = true // lives on the executor button, not a fader slot
           pb.name = s.executorLabels[n] ?? `Exec ${n}`
           pb.steps[0].name = pb.name
@@ -1322,6 +1356,9 @@ export const useShowStore = create<ShowState>()(
       setViewLightsExt: (v) => set({ viewLightsExt: v }),
       legendArm: false,
       setLegendArm: (v) => set({ legendArm: v }),
+      recordMask: { intensity: true, position: true, colour: true, gobo: true, beam: true },
+      toggleRecordMask: (kind) => set((s) => ({ recordMask: { ...s.recordMask, [kind]: !s.recordMask[kind] } })),
+      clearRecordMask: () => set({ recordMask: { intensity: true, position: true, colour: true, gobo: true, beam: true } }),
 
       viewer: '3d',
       setViewer: (v) => set({ viewer: v }),

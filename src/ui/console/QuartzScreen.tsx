@@ -190,6 +190,10 @@ export function QuartzScreen({ extMonitor }: { extMonitor?: boolean } = {}) {
   const renameFixture = useShowStore((s) => s.renameFixture)
   const legendArm = useShowStore((s) => s.legendArm)
   const setLegendArm = useShowStore((s) => s.setLegendArm)
+  const recordMask = useShowStore((s) => s.recordMask)
+  const toggleRecordMask = useShowStore((s) => s.toggleRecordMask)
+  const clearRecordMask = useShowStore((s) => s.clearRecordMask)
+  const maskActive = !(Object.values(recordMask) as boolean[]).every(Boolean)
 
   const fixtures = show.fixtures
   const noFx = fixtures.length === 0
@@ -243,12 +247,24 @@ export function QuartzScreen({ extMonitor }: { extMonitor?: boolean } = {}) {
       title: 'Record',
       keys: [
         { k: 'A', label: 'Record Mode', sub: 'By Fixture', kind: 'option', info: true },
-        { k: 'B', label: 'Set Mask', kind: 'menu', info: true },
-        { k: 'C', label: 'Clear Record Mask', kind: 'action', info: true },
+        { k: 'B', label: maskActive ? 'Set Mask •' : 'Set Mask', sub: t('desk.maskSub'), kind: 'menu', onClick: () => setMenu('mask') },
+        { k: 'C', label: 'Clear Record Mask', kind: 'action', onClick: clearRecordMask, disabled: !maskActive },
         { k: 'D', label: 'Convert to Chase', kind: 'action', info: true },
         { k: 'E', label: 'Convert to Cue List', kind: 'action', info: true },
         { k: 'F' },
         { k: 'G' },
+      ],
+    },
+    mask: {
+      title: 'Record Mask — banks to store',
+      keys: [
+        { k: 'A', label: `Intensity ${recordMask.intensity ? '✓' : '✗'}`, kind: 'action', onClick: () => toggleRecordMask('intensity') },
+        { k: 'B', label: `Position ${recordMask.position ? '✓' : '✗'}`, kind: 'action', onClick: () => toggleRecordMask('position') },
+        { k: 'C', label: `Colour ${recordMask.colour ? '✓' : '✗'}`, kind: 'action', onClick: () => toggleRecordMask('colour') },
+        { k: 'D', label: `Gobo ${recordMask.gobo ? '✓' : '✗'}`, kind: 'action', onClick: () => toggleRecordMask('gobo') },
+        { k: 'E', label: `Beam ${recordMask.beam ? '✓' : '✗'}`, kind: 'action', onClick: () => toggleRecordMask('beam') },
+        { k: 'F', label: 'Clear Mask', sub: t('desk.maskClear'), kind: 'action', onClick: clearRecordMask, disabled: !maskActive },
+        { k: 'G', label: 'Back', kind: 'menu', onClick: () => setMenu('record') },
       ],
     },
     group: {
@@ -652,6 +668,11 @@ export function QuartzScreen({ extMonitor }: { extMonitor?: boolean } = {}) {
         )}
         <span className="qcmd-cursor" />
         <span className="qscreen-spacer" />
+        {maskActive && (
+          <span className="qcmd-mask" title={t('desk.maskActive')}>
+            Mask: {(['intensity', 'position', 'colour', 'gobo', 'beam'] as const).filter((k) => recordMask[k]).map((k) => k[0].toUpperCase()).join('·') || '—'}
+          </span>
+        )}
         <span className={`qcmd-stat${progActive ? ' live' : ''}`}>
           {progActive ? '● Programmer active' : 'Programmer clear'}
         </span>

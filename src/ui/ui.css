@@ -1785,3 +1785,9 @@
 /* "Set Legend" armed: cells are pickable to rename — flag them with a coral cue + crosshair. */
 .qd-cell.legend-pick { outline: 1px dashed var(--coral, #ff7a6b); outline-offset: -1px; }
 .qd-cell.legend-pick .qd-cell-hit { cursor: crosshair; }
+
+/* Record Mask active indicator in the command line (only some attribute banks will be stored). */
+.qcmd-mask {
+  margin-right: 10px; padding: 1px 7px; border-radius: 3px; font-size: 10px; font-weight: 700;
+  color: #ffcf6b; background: rgba(255, 176, 60, 0.14); border: 1px solid #6b5320; white-space: nowrap;
+}
