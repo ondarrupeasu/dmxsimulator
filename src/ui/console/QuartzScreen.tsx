@@ -600,15 +600,16 @@ export function QuartzScreen({ extMonitor }: { extMonitor?: boolean } = {}) {
                     <>
                       {sk.label}
                       {suffix}
+                      {sk.info && <span className="qsk-ref" title={t('desk.refOption')}>ref</span>}
                       {sk.kind === 'option' && sk.sub && <span className="qsk-opt">{sk.sub}</span>}
                     </>
                   ) : null}
                 </span>
                 <button
                   className="qsk-key"
-                  disabled={!sk.label || sk.disabled}
+                  disabled={!sk.label || sk.disabled || sk.info}
                   onClick={sk.onClick}
-                  title={sk.label ?? ''}
+                  title={sk.info ? t('desk.refOption') : (sk.label ?? '')}
                 >
                   {sk.k}
                 </button>

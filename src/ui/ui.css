@@ -1210,7 +1210,15 @@
 }
 .qskrow { color: #e6e6ea; }
 .qsk-lbl { color: #e6e6ea; }
-.qskrow.info .qsk-lbl { font-weight: 500; color: #9aa0a8; }
+.qskrow.info .qsk-lbl { font-weight: 500; color: #8b9099; }
+/* Reference-only menu options (mirror the real Titan menus but not yet implemented here):
+   the A–G key is disabled and dimmed, and a small "ref" pill flags it as unavailable. */
+.qskrow.info .qsk-key { opacity: 0.4; }
+.qsk-ref {
+  margin-left: 5px; padding: 0 4px; border-radius: 3px;
+  font-size: 7.5px; font-weight: 700; letter-spacing: 0.4px; text-transform: uppercase;
+  color: #8b9099; background: rgba(255, 255, 255, 0.06); border: 1px solid #3a4048;
+}
 .qsk-opt { font-size: 9px; font-weight: 700; color: #7fc0f0; }
 /* The dark charcoal physical key with the A–G letter (Titan's on-screen softkeys). */
 .qsk-key {
