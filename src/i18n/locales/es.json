@@ -107,7 +107,9 @@
     "winToMain": "Devolver a la pantalla principal",
     "extMonitor": "Conectar / desconectar el 2º monitor",
     "extEmpty": "Monitor externo conectado. Envía ventanas aquí desde la pantalla principal con ⤢ (en la barra de una ventana, o en el visualizer).",
-    "flipSub": "Posición de yugo alternativa"
+    "flipSub": "Posición de yugo alternativa",
+    "alignSub": "Copiar atributos de una referencia",
+    "alignPick": "toca el fixture de referencia a copiar"
   },
   "fixturesWindow": {
     "title": "Fixtures",

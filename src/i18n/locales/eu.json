@@ -107,7 +107,9 @@
     "winToMain": "Itzuli pantaila nagusira",
     "extMonitor": "Konektatu / deskonektatu 2. pantaila",
     "extEmpty": "Kanpoko monitorea konektatuta. Bidali leihoak hona pantaila nagusitik ⤢ botoiarekin (leiho baten barran, edo visualizer-ean).",
-    "flipSub": "Uztarri-posizio alternatiboa"
+    "flipSub": "Uztarri-posizio alternatiboa",
+    "alignSub": "Kopiatu atributuak erreferentzia batetik",
+    "alignPick": "ukitu erreferentziazko fixturea kopiatzeko"
   },
   "fixturesWindow": {
     "title": "Fixture-ak",

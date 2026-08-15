@@ -107,7 +107,9 @@
     "winToMain": "Bring back to the main screen",
     "extMonitor": "Connect / disconnect the 2nd display",
     "extEmpty": "External monitor connected. Send windows here from the main screen with ⤢ (on a window bar, or the visualiser).",
-    "flipSub": "Alternate yoke position"
+    "flipSub": "Alternate yoke position",
+    "alignSub": "Copy attributes from a reference",
+    "alignPick": "touch the reference fixture to copy from"
   },
   "fixturesWindow": {
     "title": "Fixtures",

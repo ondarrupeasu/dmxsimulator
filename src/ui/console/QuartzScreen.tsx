@@ -80,6 +80,9 @@ export function QuartzScreen({ extMonitor }: { extMonitor?: boolean } = {}) {
   const clearProgrammer = useShowStore((s) => s.clearProgrammer)
   const locateSelected = useShowStore((s) => s.locateSelected)
   const flipSelected = useShowStore((s) => s.flipSelected)
+  const alignArm = useShowStore((s) => s.alignArm)
+  const setAlignArm = useShowStore((s) => s.setAlignArm)
+  const alignFrom = useShowStore((s) => s.alignFrom)
   const highlight = useShowStore((s) => s.highlight)
   const toggleHighlight = useShowStore((s) => s.toggleHighlight)
   const programmer = useShowStore((s) => s.programmer)
@@ -330,7 +333,7 @@ export function QuartzScreen({ extMonitor }: { extMonitor?: boolean } = {}) {
     ml: {
       title: 'ML Menu',
       keys: [
-        { k: 'A', label: 'Align', kind: 'menu', info: true },
+        { k: 'A', label: alignArm ? 'Align ✓' : 'Align', sub: t('desk.alignSub'), kind: 'action', onClick: () => setAlignArm(!alignArm), disabled: selection.length < 2 },
         { k: 'B', label: 'Flip', sub: t('desk.flipSub'), kind: 'action', onClick: flipSelected, disabled: !hasMover },
         { k: 'C', label: 'Macros', kind: 'menu', info: true },
         { k: 'D' },
@@ -411,11 +414,15 @@ export function QuartzScreen({ extMonitor }: { extMonitor?: boolean } = {}) {
     ) : (
       <div className="qd-ws-grid">
         {fixtures.map((pf, i) => (
-          <div key={pf.id} className={`qd-cell ws-fixture${selection.includes(pf.id) ? ' active' : ''}${legendArm ? ' legend-pick' : ''}`}>
+          <div key={pf.id} className={`qd-cell ws-fixture${selection.includes(pf.id) ? ' active' : ''}${legendArm ? ' legend-pick' : ''}${alignArm && selection.includes(pf.id) ? ' align-pick' : ''}`}>
             <button
               className="qd-cell-hit"
-              onClick={legendArm ? () => { askLegend(pf.name, (n) => renameFixture(pf.id, n)); setLegendArm(false) } : () => toggleSelect(pf.id)}
-              title={legendArm ? t('desk.setLegendPick') : `${pf.name} — nº ${userNumberOf(fixtures, i)} · DMX ${pf.universe}.${pf.address} (teclea ${userNumberOf(fixtures, i)} para seleccionarlo)`}
+              onClick={
+                alignArm && selection.includes(pf.id) ? () => alignFrom(pf.id)
+                : legendArm ? () => { askLegend(pf.name, (n) => renameFixture(pf.id, n)); setLegendArm(false) }
+                : () => toggleSelect(pf.id)
+              }
+              title={alignArm && selection.includes(pf.id) ? t('desk.alignPick') : legendArm ? t('desk.setLegendPick') : `${pf.name} — nº ${userNumberOf(fixtures, i)} · DMX ${pf.universe}.${pf.address} (teclea ${userNumberOf(fixtures, i)} para seleccionarlo)`}
             >
               {fixtureLabel !== 'hidden' && (
                 <span className="qd-usernum">{fixtureLabel === 'address' ? `${pf.universe}.${pf.address}` : userNumberOf(fixtures, i)}</span>
@@ -716,7 +723,12 @@ export function QuartzScreen({ extMonitor }: { extMonitor?: boolean } = {}) {
       {!extMonitor && (
       <div className="qscreen-cmd">
         <span className="qcmd-prompt">›</span>
-        {legendArm ? (
+        {alignArm ? (
+          <span className="qcmd-line">
+            <span className="qcmd-kw">Align</span>
+            <span className="qcmd-sel">{t('desk.alignPick')}</span>
+          </span>
+        ) : legendArm ? (
           <span className="qcmd-line">
             <span className="qcmd-kw">Set Legend</span>
             <span className="qcmd-sel">{t('desk.setLegendPick')}</span>

@@ -1844,3 +1844,6 @@
 .qd-win-grip { background: linear-gradient(135deg, transparent 45%, #4aa3ff 45%, #4aa3ff 60%, transparent 60%); }
 .qd-ctxmenu button.on { color: #fff; background: #3a86c0; }
 .qd-cell.legend-pick { outline-color: #4aa3ff; }
+/* Align armed: the selected fixtures are pickable as the copy-from reference. */
+.qd-cell.align-pick { outline: 1px dashed #4aa3ff; outline-offset: -1px; }
+.qd-cell.align-pick .qd-cell-hit { cursor: copy; }

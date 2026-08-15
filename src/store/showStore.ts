@@ -287,6 +287,12 @@ interface ShowState {
   clearSelectedFunctions: (fns: string[]) => void
   /** Flip Pan and Tilt on the selected moving heads (the alternate yoke position). */
   flipSelected: () => void
+  /** Align Fixtures (Titan): armed, waiting for you to touch the reference fixture to copy from. */
+  alignArm: boolean
+  setAlignArm: (v: boolean) => void
+  /** Copy the reference fixture's programmed attributes (filtered by the Record Mask) onto the
+   *  other selected fixtures, by function so it works across fixture types. Disarms Align. */
+  alignFrom: (referenceId: string) => void
   /** Spread a function 0→255 across the selection in rig order (legacy one-shot). */
   fanSelected: (fn: string) => void
   /** Fan MODE (Titan): while on, turning a wheel FANS that attribute across the selection
@@ -1337,6 +1343,33 @@ export const useShowStore = create<ShowState>()(
             programmer[id] = edits
           }
           return { programmer }
+        }),
+
+      alignArm: false,
+      setAlignArm: (v) => set({ alignArm: v }),
+      alignFrom: (referenceId) =>
+        set((s) => {
+          const ref = s.show.fixtures.find((f) => f.id === referenceId)
+          const refCh = ref && s.definitions[ref.definitionId]?.modes[ref.modeIndex]?.channels
+          if (!refCh) return { alignArm: false }
+          const maskFull = (Object.values(s.recordMask) as boolean[]).every(Boolean)
+          const masked = (fn: string) => { const k = FUNCTION_KIND[fn]; return !k || maskFull || s.recordMask[k] }
+          // Reference's programmed attribute values, by function (skip banks masked out).
+          const refEdits = s.programmer[referenceId] ?? {}
+          const funcVals: Record<string, number> = {}
+          refCh.forEach((c, i) => { if (i in refEdits && masked(c.function)) funcVals[c.function] = refEdits[i] })
+          // Copy onto the OTHER selected fixtures, matching by function (works across types).
+          const programmer = { ...s.programmer }
+          for (const id of s.selection) {
+            if (id === referenceId) continue
+            const pf = s.show.fixtures.find((f) => f.id === id)
+            const channels = pf && s.definitions[pf.definitionId]?.modes[pf.modeIndex]?.channels
+            if (!channels) continue
+            const edits = { ...(programmer[id] ?? {}) }
+            channels.forEach((c, i) => { if (c.function in funcVals) edits[i] = funcVals[c.function] })
+            programmer[id] = edits
+          }
+          return { programmer, alignArm: false }
         }),
 
       fanSelected: (fn) =>
