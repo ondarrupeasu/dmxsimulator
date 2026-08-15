@@ -78,6 +78,8 @@
     "winClose": "Close this window",
     "winResize": "Drag to resize",
     "refOption": "Real Titan menu option (reference)",
+    "setLegendSub": "Rename an item",
+    "setLegendPick": "touch an item to rename it",
     "showLibHeader": "Show Library — example shows",
     "importFile": "Import file…",
     "wsNamePrompt": "Workspace name:",

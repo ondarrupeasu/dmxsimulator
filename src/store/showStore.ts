@@ -309,6 +309,11 @@ interface ShowState {
   viewLightsExt: boolean
   setViewLightsExt: (v: boolean) => void
 
+  // "Set Legend" armed (Titan's Set Legend flow): the desk waits for you to touch a handle
+  // (group, palette, fixture…) and then names it. Transient — never persisted.
+  legendArm: boolean
+  setLegendArm: (v: boolean) => void
+
   // Visualiser toggle (2D plan ↔ 3D). Lifted into the store so a recalled Workspace/View
   // (Titan's saved window layouts) can restore it along with the rest of the arrangement.
   viewer: '2d' | '3d'
@@ -1315,6 +1320,8 @@ export const useShowStore = create<ShowState>()(
       setViewLights: (v) => set({ viewLights: v }),
       viewLightsExt: false,
       setViewLightsExt: (v) => set({ viewLightsExt: v }),
+      legendArm: false,
+      setLegendArm: (v) => set({ legendArm: v }),
 
       viewer: '3d',
       setViewer: (v) => set({ viewer: v }),

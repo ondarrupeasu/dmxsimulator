@@ -78,6 +78,8 @@
     "winClose": "Itxi leiho hau",
     "winResize": "Arrastatu tamaina aldatzeko",
     "refOption": "Titan menuko benetako aukera (erreferentzia)",
+    "setLegendSub": "Berrizendatu elementu bat",
+    "setLegendPick": "ukitu elementu bat berrizendatzeko",
     "showLibHeader": "Show Library — adibide-showak",
     "importFile": "Inportatu fitxategia…",
     "wsNamePrompt": "Workspace-aren izena:",

@@ -78,6 +78,8 @@
     "winClose": "Cerrar esta ventana",
     "winResize": "Arrastra para redimensionar",
     "refOption": "Opción real del menú Titan (referencia)",
+    "setLegendSub": "Renombrar un elemento",
+    "setLegendPick": "toca un elemento para renombrarlo",
     "showLibHeader": "Show Library — shows de ejemplo",
     "importFile": "Importar archivo…",
     "wsNamePrompt": "Nombre del Workspace:",

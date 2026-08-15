@@ -1781,3 +1781,7 @@
   width: 8px;
   height: 90px;
 }
+
+/* "Set Legend" armed: cells are pickable to rename — flag them with a coral cue + crosshair. */
+.qd-cell.legend-pick { outline: 1px dashed var(--coral, #ff7a6b); outline-offset: -1px; }
+.qd-cell.legend-pick .qd-cell-hit { cursor: crosshair; }

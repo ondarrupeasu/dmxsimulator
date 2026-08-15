@@ -187,6 +187,9 @@ export function QuartzScreen({ extMonitor }: { extMonitor?: boolean } = {}) {
   const applyPalette = useShowStore((s) => s.applyPalette)
   const deletePalette = useShowStore((s) => s.deletePalette)
   const renamePalette = useShowStore((s) => s.renamePalette)
+  const renameFixture = useShowStore((s) => s.renameFixture)
+  const legendArm = useShowStore((s) => s.legendArm)
+  const setLegendArm = useShowStore((s) => s.setLegendArm)
 
   const fixtures = show.fixtures
   const noFx = fixtures.length === 0
@@ -217,7 +220,7 @@ export function QuartzScreen({ extMonitor }: { extMonitor?: boolean } = {}) {
         { k: 'B', label: 'Locate', sub: 'Home values', kind: 'action', onClick: locateSelected, disabled: noSel },
         { k: 'C', label: highlight ? 'Highlight ✓' : 'Highlight', sub: t('desk.subHighlight'), kind: 'action', onClick: toggleHighlight },
         { k: 'D', label: 'Clear', sub: 'Programmer', kind: 'action', onClick: clearAll, disabled: noSel && !progActive },
-        { k: 'E', label: 'Set Legend', kind: 'text', info: true },
+        { k: 'E', label: legendArm ? 'Set Legend ✓' : 'Set Legend', sub: t('desk.setLegendSub'), kind: 'action', onClick: () => setLegendArm(!legendArm) },
         { k: 'F', label: 'Open / View', sub: 'Workspaces', kind: 'menu', onClick: () => setMenu('view') },
         { k: 'G' },
       ],
@@ -252,7 +255,7 @@ export function QuartzScreen({ extMonitor }: { extMonitor?: boolean } = {}) {
       title: 'Group',
       keys: [
         { k: 'A', label: 'Record Group', kind: 'action', onClick: recordGroup, disabled: noSel },
-        { k: 'B', label: 'Provide a Legend', kind: 'text', info: true },
+        { k: 'B', label: legendArm ? 'Provide a Legend ✓' : 'Provide a Legend', sub: t('desk.setLegendSub'), kind: 'action', onClick: () => setLegendArm(!legendArm) },
         { k: 'C', label: 'Recall Group', kind: 'menu', info: true },
         { k: 'D', label: 'Fixture Order', kind: 'menu', info: true },
         { k: 'E', label: 'Edit Layout', kind: 'menu', info: true },
@@ -280,7 +283,7 @@ export function QuartzScreen({ extMonitor }: { extMonitor?: boolean } = {}) {
         { k: 'C', label: 'Global / Shared', kind: 'option', info: true },
         { k: 'D', label: 'Record By…', kind: 'option', info: true },
         { k: 'E', label: 'Nested Palettes', kind: 'option', info: true },
-        { k: 'F', label: 'Provide a Legend', kind: 'text', info: true },
+        { k: 'F', label: legendArm ? 'Provide a Legend ✓' : 'Provide a Legend', sub: t('desk.setLegendSub'), kind: 'action', onClick: () => setLegendArm(!legendArm) },
         { k: 'G' },
       ],
     },
@@ -334,8 +337,13 @@ export function QuartzScreen({ extMonitor }: { extMonitor?: boolean } = {}) {
     onDelete: () => void,
     opts: { active?: boolean; colorClass?: string; disabled?: boolean } = {},
   ) => (
-    <div key={id} className={`qd-cell${opts.active ? ' active' : ''} ${opts.colorClass ?? ''}`}>
-      <button className="qd-cell-hit" onClick={onClick} disabled={opts.disabled} title={legend}>
+    <div key={id} className={`qd-cell${opts.active ? ' active' : ''}${legendArm ? ' legend-pick' : ''} ${opts.colorClass ?? ''}`}>
+      <button
+        className="qd-cell-hit"
+        onClick={legendArm ? () => { onRename(); setLegendArm(false) } : onClick}
+        disabled={opts.disabled && !legendArm}
+        title={legendArm ? t('desk.setLegendPick') : legend}
+      >
         {legend}
       </button>
       <span className="qd-ipcg">I P C G B E S FX</span>
@@ -355,8 +363,12 @@ export function QuartzScreen({ extMonitor }: { extMonitor?: boolean } = {}) {
     ) : (
       <div className="qd-ws-grid">
         {fixtures.map((pf, i) => (
-          <div key={pf.id} className={`qd-cell ws-fixture${selection.includes(pf.id) ? ' active' : ''}`}>
-            <button className="qd-cell-hit" onClick={() => toggleSelect(pf.id)} title={`${pf.name} — nº ${userNumberOf(fixtures, i)} (teclea ${userNumberOf(fixtures, i)} para seleccionarlo)`}>
+          <div key={pf.id} className={`qd-cell ws-fixture${selection.includes(pf.id) ? ' active' : ''}${legendArm ? ' legend-pick' : ''}`}>
+            <button
+              className="qd-cell-hit"
+              onClick={legendArm ? () => { askLegend(pf.name, (n) => renameFixture(pf.id, n)); setLegendArm(false) } : () => toggleSelect(pf.id)}
+              title={legendArm ? t('desk.setLegendPick') : `${pf.name} — nº ${userNumberOf(fixtures, i)} (teclea ${userNumberOf(fixtures, i)} para seleccionarlo)`}
+            >
               <span className="qd-usernum">{userNumberOf(fixtures, i)}</span>
               {pf.name}
             </button>
@@ -623,7 +635,12 @@ export function QuartzScreen({ extMonitor }: { extMonitor?: boolean } = {}) {
       {!extMonitor && (
       <div className="qscreen-cmd">
         <span className="qcmd-prompt">›</span>
-        {cmd ? (
+        {legendArm ? (
+          <span className="qcmd-line">
+            <span className="qcmd-kw">Set Legend</span>
+            <span className="qcmd-sel">{t('desk.setLegendPick')}</span>
+          </span>
+        ) : cmd ? (
           <span className="qcmd-line"><span className="qcmd-typed">{cmd}</span></span>
         ) : noSel ? (
           <span className="qcmd-hint">Fixture</span>
