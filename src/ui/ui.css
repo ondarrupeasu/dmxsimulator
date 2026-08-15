@@ -757,7 +757,9 @@
 .viz-hide { margin-left: 2px; font-size: 12px; line-height: 1; color: var(--text-dim); background: transparent; border: 1px solid var(--border); border-radius: 4px; padding: 2px 7px; cursor: pointer; }
 .viz-hide:hover { color: var(--text); border-color: var(--coral); }
 .viz-win-stage { flex: 1; min-height: 0; position: relative; overflow: hidden; }
-.viz-win-stage > * { width: 100%; height: 100%; }
+/* Only the renderer fills the stage — NOT the aim overlay (which is a small absolute corner
+   box; stretching it to 100% painted its near-opaque background over the whole viewer). */
+.viz-win-stage > *:not(.viz-aim) { width: 100%; height: 100%; }
 .qd-muted { color: var(--text-faint); font-size: 12px; }
 
 /* Touchscreen tabs (Fixtures / palette windows) */
