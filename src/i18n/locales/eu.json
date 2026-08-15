@@ -3,6 +3,10 @@
     "title": "DMXSimulatoR",
     "tagline": "Ikasi DMX praktikatuz"
   },
+  "tour": {
+    "launch": "Bisita gidatua: piztu zure lehen truss-a urratsez urrats",
+    "launchLabel": "❔ Tutoriala"
+  },
   "common": {
     "collapse": "Tolestu",
     "expand": "Zabaldu",

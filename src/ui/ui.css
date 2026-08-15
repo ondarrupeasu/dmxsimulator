@@ -66,6 +66,14 @@
   font-weight: 600;
 }
 
+/* Guided-tour launcher in the top bar (a PWA learning aid). */
+.tour-launch {
+  border: 1px solid var(--coral); background: transparent; color: var(--coral);
+  padding: 4px 12px; border-radius: var(--radius-sm); font-weight: 600; font-size: 12px;
+  cursor: pointer; white-space: nowrap;
+}
+.tour-launch:hover { background: var(--coral); color: #16131a; }
+
 /* ---- Body: left panel + right column ---- */
 .body {
   flex: 1;

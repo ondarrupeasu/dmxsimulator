@@ -78,7 +78,7 @@ export function VisualiserWindow({ popped = false }: { popped?: boolean } = {}) 
               {venueUrl && <option value="__custom">{venueName}</option>}
               <option value="__file">Load glTF…</option>
             </select>
-            <button className={`ghost-btn${viewLights ? ' active' : ''}`} onClick={() => setViewLights(!viewLights)} title={t('visualizer.roomLights')}>
+            <button className={`ghost-btn${viewLights ? ' active' : ''}`} data-tour="room-lights" onClick={() => setViewLights(!viewLights)} title={t('visualizer.roomLights')}>
               💡
             </button>
           </>
@@ -96,7 +96,7 @@ export function VisualiserWindow({ popped = false }: { popped?: boolean } = {}) 
           </>
         )}
       </div>
-      <div className="viz-win-stage">
+      <div className="viz-win-stage" data-tour="visualizer">
         {viewer === '3d' ? <Visualizer3D ext={ext} /> : <Visualizer2D />}
         {viewer === '3d' && selAimable.length > 0 && (
           <div className="viz-aim" title={t('visualizer.aimTip')}>

@@ -10,6 +10,7 @@ import { QuartzScreen } from './console/QuartzScreen'
 import { QuartzPanel } from './console/QuartzPanel'
 import { VisualiserWindow } from './console/VisualiserWindow'
 import { TourOverlay } from './TourOverlay'
+import { useTour } from '../store/tourStore'
 import { audioEngine } from '../engine/audio'
 import { startExtBroadcast } from '../store/vizSync'
 import { playbacksBySlot, activeStep } from '../model/cue'
@@ -32,6 +33,7 @@ export function AppShell() {
   const setFold = useShowStore((s) => s.setFold)
   const monitorCollapsed = fold.monitor
   const viewerVisible = useShowStore((s) => s.viewerVisible)
+  const startTour = useTour((s) => s.start)
   // Broadcast live state to the external-monitor window (2nd display), if open.
   useEffect(() => startExtBroadcast(useShowStore as never), [])
   useEffect(() => {
@@ -161,7 +163,11 @@ export function AppShell() {
 
         <div className="spacer" />
 
-        {/* Tutorial hidden until it's reworked for the unified desk layout (targets stale nodes). */}
+        {quartzDocked && (
+          <button className="tour-launch" onClick={() => startTour()} title={t('tour.launch')}>
+            {t('tour.launchLabel')}
+          </button>
+        )}
 
         <select
           value={i18n.language}

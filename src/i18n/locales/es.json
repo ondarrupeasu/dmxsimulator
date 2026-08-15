@@ -3,6 +3,10 @@
     "title": "DMXSimulatoR",
     "tagline": "Aprende DMX practicando"
   },
+  "tour": {
+    "launch": "Tour guiado: enciende tu primer truss paso a paso",
+    "launchLabel": "❔ Tutorial"
+  },
   "common": {
     "collapse": "Plegar",
     "expand": "Expandir",

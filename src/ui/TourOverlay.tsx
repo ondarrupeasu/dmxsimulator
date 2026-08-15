@@ -1,81 +1,79 @@
 import { useEffect, useState } from 'react'
 import { useTour } from '../store/tourStore'
 import { useShowStore } from '../store/showStore'
-import type { AppMode } from '../store/showStore'
 
 interface Step {
   target?: string // data-tour value to spotlight; omitted = centred card
-  mode?: AppMode // switch the app to this mode when the step opens
+  enter?: () => void // prepare the desk (open a window/panel) when the step opens
   title: string
   body: string
 }
 
-// A first-truss walkthrough: patch → select → locate → position → colour →
-// intensity → record → effect. Each step spotlights the button/zone to use.
+// A first-truss walkthrough on the unified Quartz desk: patch → select → locate →
+// position → colour → intensity → record → executors → groups → effect → blind →
+// visualiser. Each step spotlights the key/zone to use and opens the right window.
+const focusScreen = (screen: string) => useShowStore.getState().setDeskScreen(screen)
 const STEPS: Step[] = [
   {
     title: 'Montar un truss de luces',
-    body: 'Te guío para encender tu primer truss: seleccionar, posición, color, intensidad, grabar un cue, executors, grupos, un efecto y modo blind. Haz cada paso tú mismo (se resalta el sitio) o pulsa Siguiente para leerlo.',
+    body: 'Te guío para encender tu primer truss: añadir focos, seleccionar, posición, color, intensidad, grabar un cue, executors, grupos, un efecto y modo Blind. Haz cada paso tú mismo (se resalta el sitio) o pulsa Siguiente para leerlo.',
   },
-  { mode: 'patch', target: 'mode-patch', title: 'Patch', body: 'Estás en Patch: aquí eliges y colocas las luces del rig.' },
   {
-    mode: 'patch',
     target: 'library',
+    enter: () => useShowStore.getState().setRightPanel('patch'),
     title: 'Añade luces',
-    body: 'Pulsa “Add” en algún foco (un Moving head o un PAR). Aparece en el rig, y en la lista puedes asignarle truss (Front/Mid/Back/FOH) y universo.',
+    body: 'Se ha abierto el panel Patch (PWA). Pulsa “Add” en algún foco (un Moving head o un PAR): aparece en el rig, y puedes asignarle truss (Front/Mid/Back/FOH), universo y dirección. En la mesa real esto se hace desde el menú Patch.',
   },
-  { mode: 'program', target: 'mode-program', title: 'Program', body: 'Pasa a Program para controlar las luces que has puesto.' },
   {
-    mode: 'program',
     target: 'fixtures',
+    enter: () => focusScreen('fixtures'),
     title: 'Selecciona',
-    body: 'Elige una o varias luces haciendo clic aquí. En la mesa también puedes teclear en el numpad: Fixture 1 Through 4 Enter. Y en el monitor DMX, un clic en un canal selecciona su foco y salta al atributo.',
+    body: 'En la ventana Fixtures (pantalla Titan) elige una o varias luces con un clic. En la mesa también puedes teclear en el numpad: Fixture 1 Through 4 Enter. Y en el monitor DMX, un clic en un canal selecciona su foco.',
   },
   {
-    mode: 'program',
     target: 'desk-locate',
     title: 'Locate',
     body: 'Pulsa Locate: enciende las luces seleccionadas en su posición base para poder verlas en el visor.',
   },
-  { mode: 'program', target: 'desk-position', title: 'Posición', body: 'Selecciona el atributo Position…' },
-  { mode: 'program', target: 'desk-wheel', title: 'Ruedas', body: '…y arrastra las ruedas (arriba-izquierda) para orientar el pan/tilt de los focos. Con Fan abanicas los valores por la selección.' },
+  { target: 'desk-position', title: 'Position', body: 'Selecciona el atributo Position…' },
+  { target: 'desk-wheel', title: 'Ruedas', body: '…y arrastra las ruedas (arriba-izquierda) para orientar el pan/tilt de los focos. Con Fan abanicas los valores por la selección.' },
   {
-    mode: 'program',
     target: 'desk-colour',
-    title: 'Color',
+    title: 'Colour',
     body: 'Atributo Colour: cambia el color con las ruedas, o graba/aplica una paleta desde la pantalla Titan.',
   },
-  { mode: 'program', target: 'desk-fader', title: 'Intensidad', body: 'Sube un fader de playback (o usa el atributo Intensity) para dar intensidad. Cada fader es el máster de su cue.' },
+  { target: 'desk-fader', title: 'Intensidad', body: 'Sube un fader de playback (o usa el atributo Intensity) para dar intensidad. Cada fader es el máster de su cue.' },
   {
-    mode: 'program',
     target: 'desk-record',
     title: 'Graba un cue',
     body: 'Pulsa Record para guardar este look como un cue. Después lo disparas con Go o con su fader; aparece en la pestaña Playbacks de la pantalla.',
   },
   {
-    mode: 'program',
+    target: 'desk-executors',
     title: 'Executors',
-    body: 'En la fila de arriba de la mesa: con un look en el programmer, pulsa un executor vacío para grabarlo en ese botón. Pulsándolo lo disparas/apagas; clic derecho lo libera. Son tus playbacks a un toque.',
+    body: 'La fila de arriba de la mesa: con un look en el programmer, pulsa un executor vacío para grabarlo en ese botón. Pulsándolo lo disparas/apagas; clic derecho lo libera. Son tus playbacks a un toque.',
   },
   {
-    mode: 'program',
+    target: 'titan-screen',
+    enter: () => focusScreen('groups'),
     title: 'Grupos y paletas',
-    body: 'En la pantalla Titan (arriba-izquierda), la pestaña Groups guarda selecciones (Record Group) para reusarlas; Colour/Position… guardan paletas. Clic aplica, ✎ renombra el nombre a mano.',
+    body: 'En la pantalla Titan, la ventana Groups guarda selecciones (Record Group) para reusarlas; Colour/Position… guardan paletas. Clic aplica, ✎ renombra a mano.',
   },
-  { mode: 'program', target: 'desk-shape', title: 'Efecto', body: 'Shape abre los efectos (Shapes): añade movimiento o un cambio de color automático.' },
+  { target: 'desk-shape', title: 'Efecto', body: 'Shape abre los efectos (Shapes): añade movimiento o un cambio de color automático.' },
   {
-    mode: 'program',
+    target: 'desk-blind',
     title: 'Blind',
     body: 'La tecla Blind te deja programar el siguiente look sin que salga a la salida real (el monitor DMX se congela); lo previsualizas en el visor 3D. Útil para preparar cambios en directo.',
   },
   {
-    mode: 'program',
     target: 'room-lights',
+    enter: () => useShowStore.getState().setViewerVisible(true),
     title: 'Luz de sala',
-    body: 'En el visor, “Luz de sala” enciende la sala para ver dónde está cada foco (con su nombre y dirección DMX). Apágala para diseñar el look a oscuras.',
+    body: 'En el visor, la 💡 enciende la sala para ver dónde está cada foco (con su nombre y dirección DMX). Apágala para diseñar el look a oscuras.',
   },
   {
     target: 'visualizer',
+    enter: () => useShowStore.getState().setViewerVisible(true),
     title: '¡Listo! 🎉',
     body: 'Has montado un truss con posición, color, intensidad, un cue, executors, grupos y un efecto. Repite para más trusses o carga un show de ejemplo desde el menú Disk → Show Library de la mesa. ¡A jugar!',
   },
@@ -85,14 +83,13 @@ const PAD = 8
 
 export function TourOverlay() {
   const { active, step, next, prev, stop } = useTour()
-  const setMode = useShowStore((s) => s.setMode)
   const [rect, setRect] = useState<DOMRect | null>(null)
   const s = STEPS[step]
 
-  // Switch to the step's mode as it opens.
+  // Prepare the desk for this step (open the right window/panel) as it opens.
   useEffect(() => {
-    if (active && s?.mode) setMode(s.mode)
-  }, [active, step, s?.mode, setMode])
+    if (active && s?.enter) s.enter()
+  }, [active, step, s])
 
   // Measure the spotlight target. Re-measure across a few frames so the highlight
   // never lags a step behind while the layout (mode switch, panel reflow) settles.

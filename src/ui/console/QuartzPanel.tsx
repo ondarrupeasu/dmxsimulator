@@ -457,7 +457,7 @@ export function QuartzPanel() {
         <Box x={178} y={272} w={452} h={118} cols={7} rows={2}>
           {ATTRIBUTES.map((a) => <Key key={a.name} v="white" on={a.name === attr} title={a.name} onClick={() => setAttr(a.name)} tour={a.name === 'Position' ? 'desk-position' : a.name === 'Colour' ? 'desk-colour' : undefined} />)}
           <Key v="white" title="Shape → Shapes" onClick={() => setScreen('effects')} tour="desk-shape" />
-          <Key v="white" title={t('desk.mlMenu')} onClick={() => setMenu('ml')} /><Key v="white" ledColor="red" on={blind} title={t('desk.blind')} onClick={() => setBlind(!blind)} /><Key v="white" disabled={noSel || activeFns.length === 0} title={t('desk.off', { attr: active.name })} onClick={() => clearSelectedFunctions(activeFns)} />
+          <Key v="white" title={t('desk.mlMenu')} onClick={() => setMenu('ml')} /><Key v="white" ledColor="red" on={blind} title={t('desk.blind')} onClick={() => setBlind(!blind)} tour="desk-blind" /><Key v="white" disabled={noSel || activeFns.length === 0} title={t('desk.off', { attr: active.name })} onClick={() => clearSelectedFunctions(activeFns)} />
           <Key v="white" ledColor="blue" on={fanMode} title={t('desk.fan')} onClick={toggleFanMode} /><Key v="white" disabled title="Options" /><Key v="dark" disabled title="Latch Menu" />
         </Box>
         <GridLabels x={178} y={392} w={452} cols={7} items={['Shape', 'ML\nMenu', 'Blind', 'Off', 'Fan', 'Options', 'Latch\nMenu']} />
