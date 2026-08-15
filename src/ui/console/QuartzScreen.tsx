@@ -195,6 +195,8 @@ export function QuartzScreen({ extMonitor }: { extMonitor?: boolean } = {}) {
   const recordMask = useShowStore((s) => s.recordMask)
   const toggleRecordMask = useShowStore((s) => s.toggleRecordMask)
   const clearRecordMask = useShowStore((s) => s.clearRecordMask)
+  const fixtureLabel = useShowStore((s) => s.fixtureLabel)
+  const setFixtureLabel = useShowStore((s) => s.setFixtureLabel)
   const maskActive = !(Object.values(recordMask) as boolean[]).every(Boolean)
 
   const fixtures = show.fixtures
@@ -393,9 +395,11 @@ export function QuartzScreen({ extMonitor }: { extMonitor?: boolean } = {}) {
             <button
               className="qd-cell-hit"
               onClick={legendArm ? () => { askLegend(pf.name, (n) => renameFixture(pf.id, n)); setLegendArm(false) } : () => toggleSelect(pf.id)}
-              title={legendArm ? t('desk.setLegendPick') : `${pf.name} — nº ${userNumberOf(fixtures, i)} (teclea ${userNumberOf(fixtures, i)} para seleccionarlo)`}
+              title={legendArm ? t('desk.setLegendPick') : `${pf.name} — nº ${userNumberOf(fixtures, i)} · DMX ${pf.universe}.${pf.address} (teclea ${userNumberOf(fixtures, i)} para seleccionarlo)`}
             >
-              <span className="qd-usernum">{userNumberOf(fixtures, i)}</span>
+              {fixtureLabel !== 'hidden' && (
+                <span className="qd-usernum">{fixtureLabel === 'address' ? `${pf.universe}.${pf.address}` : userNumberOf(fixtures, i)}</span>
+              )}
               {pf.name}
             </button>
           </div>
@@ -609,6 +613,14 @@ export function QuartzScreen({ extMonitor }: { extMonitor?: boolean } = {}) {
                           <button className="qd-cog-move" title={monitor === 'ext' ? t('desk.winToMain') : t('desk.winToExt')} onClick={() => { sendOther(); setCogFor(null) }}>
                             {monitor === 'ext' ? '← Monitor 1' : 'Monitor 2 →'}
                           </button>
+                        )}
+                        {/* Fixtures windows: what the button corner shows (Titan's window option). */}
+                        {norm(w.screen) === 'fixtures' && (
+                          <div className="qd-cog-fxlabel" title={t('desk.cornerTip')}>
+                            <button className={fixtureLabel === 'user' ? 'on' : ''} onClick={() => setFixtureLabel('user')}>User #</button>
+                            <button className={fixtureLabel === 'address' ? 'on' : ''} onClick={() => setFixtureLabel('address')}>DMX</button>
+                            <button className={fixtureLabel === 'hidden' ? 'on' : ''} onClick={() => setFixtureLabel('hidden')}>Hidden</button>
+                          </div>
                         )}
                       </div>
                     )}

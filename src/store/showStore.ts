@@ -314,6 +314,11 @@ interface ShowState {
   legendArm: boolean
   setLegendArm: (v: boolean) => void
 
+  // What the corner of each Fixtures-window button shows (Titan: User Number Shown / DMX Address
+  // Shown / User Number Hidden). Set from the window's Cog (Window Appearance) menu.
+  fixtureLabel: 'user' | 'address' | 'hidden'
+  setFixtureLabel: (v: 'user' | 'address' | 'hidden') => void
+
   // Record Mask (Titan): which attribute banks a Record stores. All-on = record everything;
   // turn a bank off to, e.g., record a Colour-only cue. Applies to cue/executor recording.
   recordMask: RecordMask
@@ -1356,6 +1361,8 @@ export const useShowStore = create<ShowState>()(
       setViewLightsExt: (v) => set({ viewLightsExt: v }),
       legendArm: false,
       setLegendArm: (v) => set({ legendArm: v }),
+      fixtureLabel: 'user',
+      setFixtureLabel: (v) => set({ fixtureLabel: v }),
       recordMask: { intensity: true, position: true, colour: true, gobo: true, beam: true },
       toggleRecordMask: (kind) => set((s) => ({ recordMask: { ...s.recordMask, [kind]: !s.recordMask[kind] } })),
       clearRecordMask: () => set({ recordMask: { intensity: true, position: true, colour: true, gobo: true, beam: true } }),
@@ -1626,6 +1633,7 @@ export const useShowStore = create<ShowState>()(
         workspaces: s.workspaces,
         viewer: s.viewer,
         viewerExt: s.viewerExt,
+        fixtureLabel: s.fixtureLabel,
         viewerVisible: s.viewerVisible,
         viewerLocation: s.viewerLocation,
         deskWindows: s.deskWindows,

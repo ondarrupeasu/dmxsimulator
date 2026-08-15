@@ -84,6 +84,7 @@
     "maskClear": "Store all banks",
     "maskActive": "Record Mask active — only the shown banks are stored when you Record",
     "ipcgTip": "Attribute banks this palette stores (I/P/C/G/B)",
+    "cornerTip": "What the fixture button corner shows: User Number, DMX Address, or Hidden",
     "showLibHeader": "Show Library — example shows",
     "importFile": "Import file…",
     "wsNamePrompt": "Workspace name:",
