@@ -83,6 +83,7 @@
     "maskSub": "Which banks a Record stores",
     "maskClear": "Store all banks",
     "maskActive": "Record Mask active — only the shown banks are stored when you Record",
+    "ipcgTip": "Attribute banks this palette stores (I/P/C/G/B)",
     "showLibHeader": "Show Library — example shows",
     "importFile": "Import file…",
     "wsNamePrompt": "Workspace name:",

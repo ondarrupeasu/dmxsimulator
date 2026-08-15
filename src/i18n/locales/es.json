@@ -83,6 +83,7 @@
     "maskSub": "Qué bancos guarda un Record",
     "maskClear": "Guardar todos los bancos",
     "maskActive": "Máscara de grabación activa — al grabar solo se guardan los bancos mostrados",
+    "ipcgTip": "Bancos de atributos que guarda esta paleta (I/P/C/G/B)",
     "showLibHeader": "Show Library — shows de ejemplo",
     "importFile": "Importar archivo…",
     "wsNamePrompt": "Nombre del Workspace:",

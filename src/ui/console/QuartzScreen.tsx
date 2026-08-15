@@ -18,6 +18,8 @@ import { openExtMonitor, closeExtMonitor } from '../../store/vizSync'
 import { VisualiserWindow } from './VisualiserWindow'
 
 const PALETTE_KINDS: PaletteKind[] = ['colour', 'position', 'gobo', 'beam', 'intensity']
+// Attribute-bank letter for a palette kind (Titan's IPCGB tags on palettes).
+const KIND_LETTER: Record<PaletteKind, string> = { intensity: 'I', position: 'P', colour: 'C', gobo: 'G', beam: 'B' }
 
 // Touchscreen workspace tabs. Fixtures is also its own docked window on the right,
 // but it lives here too so selection works from the screen like the physical desk.
@@ -351,7 +353,7 @@ export function QuartzScreen({ extMonitor }: { extMonitor?: boolean } = {}) {
     onClick: () => void,
     onRename: () => void,
     onDelete: () => void,
-    opts: { active?: boolean; colorClass?: string; disabled?: boolean } = {},
+    opts: { active?: boolean; colorClass?: string; disabled?: boolean; ipcg?: string } = {},
   ) => (
     <div key={id} className={`qd-cell${opts.active ? ' active' : ''}${legendArm ? ' legend-pick' : ''} ${opts.colorClass ?? ''}`}>
       <button
@@ -362,7 +364,15 @@ export function QuartzScreen({ extMonitor }: { extMonitor?: boolean } = {}) {
       >
         {legend}
       </button>
-      <span className="qd-ipcg">I P C G B E S FX</span>
+      {/* Like Titan: only PALETTES carry the attribute-bank letters, and only the ones the
+         palette actually stores are lit. Groups (a selection, not stored attributes) get none. */}
+      {opts.ipcg !== undefined && (
+        <span className="qd-ipcg" title={t('desk.ipcgTip')}>
+          {['I', 'P', 'C', 'G', 'B'].map((l) => (
+            <span key={l} className={opts.ipcg!.includes(l) ? 'on' : ''}>{l}</span>
+          ))}
+        </span>
+      )}
       <button className="qd-cell-edit" onClick={onRename} title="Rename legend">✎</button>
       <button className="qd-cell-del" onClick={onDelete} title="Delete">✕</button>
     </div>
@@ -445,7 +455,7 @@ export function QuartzScreen({ extMonitor }: { extMonitor?: boolean } = {}) {
             () => applyPalette(p.id),
             () => askLegend(p.name, (n) => renamePalette(p.id, n)),
             () => deletePalette(p.id),
-            { colorClass: `ws-${kind}`, disabled: noSel },
+            { colorClass: `ws-${kind}`, disabled: noSel, ipcg: KIND_LETTER[p.kind] },
           ),
         )}
         <button

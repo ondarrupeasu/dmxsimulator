@@ -83,6 +83,7 @@
     "maskSub": "Record-ek zein banku gordetzen dituen",
     "maskClear": "Gorde banku guztiak",
     "maskActive": "Grabazio-maskara aktibo — grabatzean erakutsitako bankuak baino ez dira gordetzen",
+    "ipcgTip": "Paleta honek gordetzen dituen atributu-bankuak (I/P/C/G/B)",
     "showLibHeader": "Show Library — adibide-showak",
     "importFile": "Inportatu fitxategia…",
     "wsNamePrompt": "Workspace-aren izena:",
