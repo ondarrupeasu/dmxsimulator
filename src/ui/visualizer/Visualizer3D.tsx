@@ -223,6 +223,23 @@ function makeGoboTextures(): THREE.CanvasTexture[] {
 }
 const GOBO_TEX = makeGoboTextures()
 
+/** Prism split pattern: a bright core + 3 satellites (a 3-facet prism throws the beam into
+ *  several). Dropped onto the floor pool while the prism is engaged, like a real prism split. */
+const PRISM_TEX = (() => {
+  const cv = document.createElement('canvas')
+  cv.width = cv.height = 128
+  const ctx = cv.getContext('2d')!
+  ctx.fillStyle = '#000'
+  ctx.fillRect(0, 0, 128, 128)
+  ctx.fillStyle = '#fff'
+  ctx.translate(64, 64)
+  ctx.beginPath(); ctx.arc(0, 0, 15, 0, 7); ctx.fill() // core beam
+  for (let i = 0; i < 3; i++) { ctx.save(); ctx.rotate((i * 2 * Math.PI) / 3); ctx.beginPath(); ctx.arc(0, -34, 13, 0, 7); ctx.fill(); ctx.restore() } // 3 facets
+  const tex = new THREE.CanvasTexture(cv)
+  tex.center.set(0.5, 0.5)
+  return tex
+})()
+
 /** A fixture model. Moving heads get a base + panning yoke + tilting head; other
  *  kinds get a static can on a yoke. Either way the beam lives in the tilt part. */
 function buildFixture(movingHead: boolean): FxObj {
@@ -692,17 +709,20 @@ export function Visualizer3D({ ext = false }: { ext?: boolean } = {}) {
         }
         // Beam width from zoom + iris: zoom opens/closes the cone, iris pinches it toward a
         // pinspot. Scale X/Z (width) independently of Y (length) so the cone angle changes.
+        // Prism spreads the beam a touch (it fans light into facets).
+        const prismOn = vs.prism !== undefined && vs.prism > 0.15
         const zoomF = vs.zoom !== undefined ? 0.45 + vs.zoom * 1.45 : 1
         const irisF = vs.iris !== undefined ? 0.18 + vs.iris * 0.82 : 1
-        const widthF = zoomF * irisF
+        const widthF = zoomF * irisF * (prismOn ? 1 + vs.prism! * 0.35 : 1)
         fx.beam.scale.set(length * widthF, length, length * widthF)
 
         const on = vs.intensity > 0.01
         fx.beam.visible = on
         if (on) {
           fx.beamMat.color.copy(col)
-          // Haze makes the shaft of light visible in the air — beams get more opaque.
-          fx.beamMat.opacity = Math.min(0.95, vs.intensity * (vs.strobing ? 0.25 : 0.55) * (1 + 1.4 * hazeLevel))
+          // Haze makes the shaft of light visible in the air — beams get more opaque; a prism
+          // splits it into several shafts, so the column reads a little brighter.
+          fx.beamMat.opacity = Math.min(0.95, vs.intensity * (vs.strobing ? 0.25 : 0.55) * (1 + 1.4 * hazeLevel) * (prismOn ? 1.15 : 1))
         }
 
         // Pool where the beam lands — an ellipse (a tilted beam cuts the surface obliquely).
@@ -714,20 +734,25 @@ export function Visualizer3D({ ext = false }: { ext?: boolean } = {}) {
         const goboTex = vs.gobo !== undefined && vs.gobo >= 8
           ? GOBO_TEX[Math.min(GOBO_TEX.length - 1, Math.floor((vs.gobo / 256) * GOBO_TEX.length))]
           : null
-        if (on && (onStage || goboTex)) {
+        // A gobo pattern wins the pool; else a prism drops its facet split. Either shows the
+        // shaped light on the floor even off the deck (a plain disc there would look wrong).
+        const patternTex = goboTex ?? (prismOn ? PRISM_TEX : null)
+        if (on && (onStage || patternTex)) {
           fx.pool.visible = true
           fx.pool.position.set(landX, (onStage ? STAGE_TOP : 0) + 0.02, landZ)
           const vert = Math.max(0.2, -down.y) // cos of angle from vertical
           const floorAngle = Math.atan2(down.z, down.x)
           fx.pool.rotation.set(-Math.PI / 2, 0, -floorAngle)
-          fx.pool.scale.set((length / vert) * widthF, length * widthF, 1)
+          // Focus: a defocused beam spreads its pool wider and washes it out; sharp = tight+bright.
+          const focusF = vs.focus ?? 1
+          const spread = 1 + (1 - focusF) * 0.35
+          fx.pool.scale.set((length / vert) * widthF * spread, length * widthF * spread, 1)
           fx.poolMat.color.copy(col)
-          fx.poolMat.opacity = vs.intensity * 0.35
-          if (fx.poolMat.alphaMap !== goboTex) {
-            fx.poolMat.alphaMap = goboTex
+          if (fx.poolMat.alphaMap !== patternTex) {
+            fx.poolMat.alphaMap = patternTex
             fx.poolMat.needsUpdate = true
           }
-          if (goboTex) fx.poolMat.opacity = vs.intensity * 0.55 // patterned pool reads brighter
+          fx.poolMat.opacity = vs.intensity * (patternTex ? 0.55 : 0.35) * (0.8 + 0.2 * focusF)
         } else {
           fx.pool.visible = false
         }
