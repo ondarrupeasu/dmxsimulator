@@ -335,8 +335,12 @@ function buildFixture(movingHead: boolean): FxObj {
   return { group, panPart, tiltPart, body, edges, hit, halo, beam, beamMat, pool, poolMat }
 }
 
-export function Visualizer3D() {
+export function Visualizer3D({ ext = false }: { ext?: boolean } = {}) {
   const mountRef = useRef<HTMLDivElement>(null)
+  // Which visualiser instance's room-lights to follow (dock vs external monitor). Kept in a ref
+  // so the long-lived render loop always reads the current instance without re-mounting.
+  const extRef = useRef(ext)
+  extRef.current = ext
 
   useEffect(() => {
     const mount = mountRef.current
@@ -539,7 +543,7 @@ export function Visualizer3D() {
       // Reconcile the optional venue (preset or loaded glTF) when it changes.
       reconcileVenue(state.venueUrl, show.venuePreset)
       // House/work lights toggle: lit room + lighter background, or dark beams-only.
-      const lit = state.viewLights
+      const lit = extRef.current ? state.viewLightsExt : state.viewLights
       workHemi.intensity = lit ? 1.6 : 0
       workDir.intensity = lit ? 0.55 : 0
       scene.background = lit ? BG_LIT : BG_DARK

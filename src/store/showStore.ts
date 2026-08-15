@@ -301,13 +301,20 @@ interface ShowState {
   setDeskMenu: (m: string) => void
 
   // 3D viewer "house/work lights": lit room to see the rig, off to design the look.
+  // The dock (monitor 1) and the external monitor (monitor 2) are INDEPENDENT visualisers —
+  // like two separate Capture windows — so each keeps its own room-lights and 2D/3D. The plain
+  // `viewLights`/`viewer` are the dock's; `viewLightsExt`/`viewerExt` are the ext monitor's.
   viewLights: boolean
   setViewLights: (v: boolean) => void
+  viewLightsExt: boolean
+  setViewLightsExt: (v: boolean) => void
 
   // Visualiser toggle (2D plan ↔ 3D). Lifted into the store so a recalled Workspace/View
   // (Titan's saved window layouts) can restore it along with the rest of the arrangement.
   viewer: '2d' | '3d'
   setViewer: (v: '2d' | '3d') => void
+  viewerExt: '2d' | '3d'
+  setViewerExt: (v: '2d' | '3d') => void
   // Whether the Visualiser pane is shown. Toggled from the Titan (executor 15 / its hide
   // button), like opening/closing the Capture workspace. When off, the PWA panel fills the
   // right column. Persisted so it survives a reload.
@@ -1306,9 +1313,13 @@ export const useShowStore = create<ShowState>()(
 
       viewLights: false,
       setViewLights: (v) => set({ viewLights: v }),
+      viewLightsExt: false,
+      setViewLightsExt: (v) => set({ viewLightsExt: v }),
 
       viewer: '3d',
       setViewer: (v) => set({ viewer: v }),
+      viewerExt: '3d',
+      setViewerExt: (v) => set({ viewerExt: v }),
       viewerVisible: true,
       setViewerVisible: (v) => set({ viewerVisible: v }),
       viewerLocation: 'dock',
@@ -1319,7 +1330,12 @@ export const useShowStore = create<ShowState>()(
           const without = s.deskWindows.filter((w) => w.id !== 'w-viz-ext')
           if (loc === 'ext') {
             const win: DeskWindow = { id: 'w-viz-ext', screen: 'visualiser', pos: 'full', monitor: 'ext' }
-            return { viewerLocation: 'ext', deskWindows: tileInto([...without, win], 'w-viz-ext', 'ext'), deskFocus: 'w-viz-ext' }
+            // Seed the ext monitor's visualiser from the dock's current look so it doesn't jump;
+            // from here on the two are independent.
+            return {
+              viewerLocation: 'ext', deskWindows: tileInto([...without, win], 'w-viz-ext', 'ext'), deskFocus: 'w-viz-ext',
+              viewerExt: s.viewer, viewLightsExt: s.viewLights,
+            }
           }
           return { viewerLocation: 'dock', deskWindows: without }
         }),
@@ -1565,6 +1581,7 @@ export const useShowStore = create<ShowState>()(
         executorCues: s.executorCues,
         workspaces: s.workspaces,
         viewer: s.viewer,
+        viewerExt: s.viewerExt,
         viewerVisible: s.viewerVisible,
         viewerLocation: s.viewerLocation,
         deskWindows: s.deskWindows,

@@ -13,13 +13,20 @@ import { fixtureAttributeKeys } from '../../model/types'
  *  aim, effects Play/Pause) is a PWA aid, so it carries the coral PWA tag. */
 export function VisualiserWindow({ popped = false }: { popped?: boolean } = {}) {
   const { t } = useTranslation()
-  const viewer = useShowStore((s) => s.viewer)
-  const setViewer = useShowStore((s) => s.setViewer)
+  // `popped` === the external-monitor (monitor 2) instance, which is fully independent from the
+  // dock (monitor 1): its own 2D/3D and room-lights, so you can run e.g. 2D here + 3D there.
+  const ext = popped
+  const viewer = useShowStore((s) => (ext ? s.viewerExt : s.viewer))
+  const setViewerMain = useShowStore((s) => s.setViewer)
+  const setViewerExt = useShowStore((s) => s.setViewerExt)
+  const setViewer = ext ? setViewerExt : setViewerMain
   const setViewerVisible = useShowStore((s) => s.setViewerVisible)
   const setViewerLocation = useShowStore((s) => s.setViewerLocation)
   const extConnected = useShowStore((s) => s.extConnected)
-  const viewLights = useShowStore((s) => s.viewLights)
-  const setViewLights = useShowStore((s) => s.setViewLights)
+  const viewLights = useShowStore((s) => (ext ? s.viewLightsExt : s.viewLights))
+  const setViewLightsMain = useShowStore((s) => s.setViewLights)
+  const setViewLightsExt = useShowStore((s) => s.setViewLightsExt)
+  const setViewLights = ext ? setViewLightsExt : setViewLightsMain
   const venueUrl = useShowStore((s) => s.venueUrl)
   const venueName = useShowStore((s) => s.venueName)
   const venuePreset = useShowStore((s) => s.show.venuePreset)
@@ -90,7 +97,7 @@ export function VisualiserWindow({ popped = false }: { popped?: boolean } = {}) 
         )}
       </div>
       <div className="viz-win-stage">
-        {viewer === '3d' ? <Visualizer3D /> : <Visualizer2D />}
+        {viewer === '3d' ? <Visualizer3D ext={ext} /> : <Visualizer2D />}
         {viewer === '3d' && selAimable.length > 0 && (
           <div className="viz-aim" title={t('visualizer.aimTip')}>
             <span className="viz-aim-cap">Aim ↺ {selAimable.length > 1 ? `${selAimable.length} ${t('visualizer.aimUnit')}` : selAimable[0].name}</span>

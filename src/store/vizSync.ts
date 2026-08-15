@@ -13,7 +13,7 @@ const STATIC_KEYS = ['show', 'definitions', 'playbacks', 'palettes', 'groups', '
 // deskWindows so the external monitor knows which windows are on it and where.
 const DYN_KEYS = [
   'programmer', 'playbackLevels', 'firedLevels', 'fades', 'flashIds', 'swopId', 'selection',
-  'now', 'highlight', 'viewLights', 'viewer', 'venueUrl', 'venueName', 'blind', 'playing',
+  'now', 'highlight', 'viewLights', 'viewer', 'viewLightsExt', 'viewerExt', 'venueUrl', 'venueName', 'blind', 'playing',
   'deskWindows', 'deskFocus', 'viewerVisible', 'viewerLocation', 'deskScreen', 'deskMenu', 'deskAttr',
 ] as const
 
