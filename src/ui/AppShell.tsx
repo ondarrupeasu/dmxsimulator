@@ -10,7 +10,6 @@ import { QuartzScreen } from './console/QuartzScreen'
 import { QuartzPanel } from './console/QuartzPanel'
 import { VisualiserWindow } from './console/VisualiserWindow'
 import { TourOverlay } from './TourOverlay'
-import { useTour } from '../store/tourStore'
 import { audioEngine } from '../engine/audio'
 import { playbacksBySlot, activeStep } from '../model/cue'
 import './ui.css'
@@ -21,7 +20,6 @@ export function AppShell() {
   const { t, i18n } = useTranslation()
   const mode = useShowStore((s) => s.mode)
   const setMode = useShowStore((s) => s.setMode)
-  const startTour = useTour((t) => t.start)
   const consoleId = useShowStore((s) => s.consoleId)
 
   // The only foldable secondary pane now is the PWA DMX monitor (the Titan screen + desk stay
@@ -159,9 +157,7 @@ export function AppShell() {
 
         <div className="spacer" />
 
-        <button className="tour-start" onClick={startTour} title="Tutorial guiado paso a paso">
-          🎓 Tutorial
-        </button>
+        {/* Tutorial hidden until it's reworked for the unified desk layout (targets stale nodes). */}
 
         <select
           value={i18n.language}

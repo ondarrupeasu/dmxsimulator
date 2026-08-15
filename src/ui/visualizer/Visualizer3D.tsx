@@ -609,7 +609,9 @@ export function Visualizer3D() {
           // Aim the output nozzle toward stage centre (flip when placed on the right).
           hz.rotation.y = pf.position.x > 0.1 ? Math.PI : 0
           const selLed = hz.userData.selLed as THREE.Sprite | undefined
-          if (selLed) selLed.visible = selSet.has(pf.id)
+          if (selLed) selLed.visible = false
+          const hzBox = hz.userData.box as THREE.Mesh | undefined
+          if (hzBox) (hzBox.material as THREE.MeshStandardMaterial).emissive.setHex(selSet.has(pf.id) ? 0x123b4a : 0x0c0c10)
           continue
         }
         let fx = fxMap.get(pf.id)
@@ -642,8 +644,11 @@ export function Visualizer3D() {
         const home = place(pf.position.x, pf.truss, trusses)
         fx.group.position.copy(home)
 
-        // Selection — just a soft coral halo around the fixture (not the whole body).
-        fx.halo.visible = selSet.has(pf.id)
+        // Selection — Capture/Titan style: highlight the FIXTURE itself (cyan outline + a lift
+        // on the body) rather than a floating dot, so you see which lamp is selected on the rig.
+        const selected = selSet.has(pf.id)
+        fx.halo.visible = false
+        ;(fx.edges.material as THREE.LineBasicMaterial).color.setHex(selected ? 0x3fd0f2 : 0x8a8b95)
 
         const vs = computeVisualState(def, pf.modeIndex, outById.get(pf.id) ?? [])
         const col = new THREE.Color(vs.color.r / 255, vs.color.g / 255, vs.color.b / 255)
@@ -725,7 +730,7 @@ export function Visualizer3D() {
 
         // Body stays dark so only the beam carries colour — but lift it a touch under
         // work lights so you can clearly see each fixture on the truss.
-        ;(fx.body.material as THREE.MeshStandardMaterial).emissive.setHex(lit ? 0x15151b : 0x000000)
+        ;(fx.body.material as THREE.MeshStandardMaterial).emissive.setHex(selected ? 0x123b4a : lit ? 0x15151b : 0x000000)
       }
 
       // Drift the haze puffs (they slowly billow + rise) while a hazer is up. Uses
