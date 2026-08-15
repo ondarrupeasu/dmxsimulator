@@ -10,10 +10,12 @@ export const WIN_PARAM = 'win' // ?win=<screen> → this window is a popped-out 
 
 // Rig / library / stored looks — big, change rarely.
 const STATIC_KEYS = ['show', 'definitions', 'playbacks', 'palettes', 'groups', 'effects', 'executorCues'] as const
-// Live output + view state — small, change often (incl. the animation clock `now`).
+// Live output — small, changes often (incl. the animation clock `now`). NOTE: pure per-screen
+// VIEW toggles (viewLights, viewer 2D/3D) are deliberately NOT synced, so a popped-out window
+// keeps its own room-lights / 2D-3D choice instead of being overwritten by the main window.
 const DYN_KEYS = [
   'programmer', 'playbackLevels', 'firedLevels', 'fades', 'flashIds', 'swopId', 'selection',
-  'now', 'highlight', 'viewLights', 'viewer', 'venueUrl', 'venueName', 'blind', 'playing',
+  'now', 'highlight', 'venueUrl', 'venueName', 'blind', 'playing',
 ] as const
 
 type AnyState = Record<string, unknown>
