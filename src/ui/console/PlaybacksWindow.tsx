@@ -18,6 +18,14 @@ export function PlaybacksWindow() {
   const setMode = useShowStore((s) => s.setPlaybackMode)
   const setBpm = useShowStore((s) => s.setPlaybackBpm)
   const progActive = useShowStore((s) => Object.keys(s.programmer).length > 0)
+  const playbackPage = useShowStore((s) => s.playbackPage)
+  const setPlaybackPage = useShowStore((s) => s.setPlaybackPage)
+  // Titan's roller: the on-screen page display for the 10 physical playback faders. Prev/next
+  // steps the page; tapping the number jumps to a page (Go Page).
+  const jumpPage = () => {
+    const v = window.prompt(t('playbacks.goPagePrompt'), String(playbackPage + 1))
+    if (v != null) { const n = parseInt(v, 10); if (n >= 1) setPlaybackPage(n - 1) }
+  }
 
   // Tap Tempo: tap the button in time and the chase's BPM follows. We average the recent
   // intervals (taps older than 2s are dropped, so you can start a new count any time).
@@ -36,11 +44,19 @@ export function PlaybacksWindow() {
 
   const bySlot = playbacksBySlot(playbacks)
 
+  const pageStart = playbackPage * 10
   return (
-    <div className="pb-grid">
+    <div className="pb-win">
+      <div className="pb-pagebar" title={t('playbacks.pageTip')}>
+        <span className="pb-pagelabel">{t('playbacks.faderPage')}</span>
+        <button className="pb-ico" onClick={() => setPlaybackPage(Math.max(0, playbackPage - 1))} disabled={playbackPage === 0} title="− Page">◀</button>
+        <button className="pb-pagenum" onClick={jumpPage} title={t('playbacks.pageTip')}>{playbackPage + 1}</button>
+        <button className="pb-ico" onClick={() => setPlaybackPage(playbackPage + 1)} title="+ Page">▶</button>
+      </div>
+      <div className="pb-grid">
       {bySlot.map((p, slot) =>
         p ? (
-          <div key={p.id} className={`pb-card${p.id === connectedId ? ' connected' : ''}`}>
+          <div key={p.id} className={`pb-card${p.id === connectedId ? ' connected' : ''}${slot >= pageStart && slot < pageStart + 10 ? ' on-page' : ''}`}>
             <div className="pb-head">
               <button className="pb-fire" title={`Fire ${p.name} (connect + Go)`} onClick={() => goCue(p.id)}>
                 <span className="pb-slot">{slot + 1}</span>
@@ -84,13 +100,14 @@ export function PlaybacksWindow() {
             )}
           </div>
         ) : (
-          <div key={`empty-${slot}`} className="pb-card empty"><span className="pb-slot dim">{slot + 1}</span></div>
+          <div key={`empty-${slot}`} className={`pb-card empty${slot >= pageStart && slot < pageStart + 10 ? ' on-page' : ''}`}><span className="pb-slot dim">{slot + 1}</span></div>
         ),
       )}
       <button className="pb-card rec" onClick={recordCue} disabled={!progActive}
         title="Record the programmer as a new playback (Record onto an existing fader appends a cue to its list)">
         ＋ Record Cue
       </button>
+      </div>
     </div>
   )
 }

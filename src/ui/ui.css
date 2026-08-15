@@ -1791,3 +1791,19 @@
   margin-right: 10px; padding: 1px 7px; border-radius: 3px; font-size: 10px; font-weight: 700;
   color: #ffcf6b; background: rgba(255, 176, 60, 0.14); border: 1px solid #6b5320; white-space: nowrap;
 }
+
+/* Playbacks window: the on-screen fader-page display (Titan's roller). */
+.pb-win { display: flex; flex-direction: column; height: 100%; min-height: 0; }
+.pb-win .pb-grid { flex: 1 1 auto; min-height: 0; overflow: auto; }
+.pb-pagebar {
+  flex: 0 0 auto; display: flex; align-items: center; gap: 6px;
+  padding: 4px 8px; border-bottom: 1px solid var(--border);
+}
+.pb-pagelabel { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: var(--text-dim); }
+.pb-pagenum {
+  min-width: 30px; padding: 1px 8px; border-radius: 4px; font-size: 13px; font-weight: 800;
+  color: #7fd0f2; background: rgba(60, 200, 245, 0.12); border: 1px solid #2b5568; cursor: pointer;
+}
+.pb-pagenum:hover { border-color: #7fb8dd; }
+/* Cards whose slot sits on the current fader page — a subtle rail so you see what the faders hold. */
+.pb-card.on-page { box-shadow: inset 2px 0 0 rgba(127, 208, 242, 0.55); }

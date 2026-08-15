@@ -192,7 +192,10 @@
     "invalid": "Fitxategi hori ez da baliozko DMXSimulatoR show bat."
   },
   "playbacks": {
-    "tapTip": "Tap Tempo — jo erritmoa hainbat aldiz eta BPMa doitzen da"
+    "tapTip": "Tap Tempo — jo erritmoa hainbat aldiz eta BPMa doitzen da",
+    "faderPage": "Fader orria",
+    "pageTip": "Playback fader fisikoek kontrolatzen duten 10eko orria. ◀ ▶ orria aldatzen dute; zenbakia ukitu jauzi egiteko (Go Page).",
+    "goPagePrompt": "Joan fader orri zenbakira:"
   },
   "audio": {
     "lineIn": "Aukera fidela: Quartz errealean audio-jack (line-in) integratua da. Hemen ordenagailuaren mikrofonoa / linea-sarrera erabiltzen du.",

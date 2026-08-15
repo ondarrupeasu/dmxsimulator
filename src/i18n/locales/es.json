@@ -192,7 +192,10 @@
     "invalid": "Ese archivo no es un show válido de DMXSimulatoR."
   },
   "playbacks": {
-    "tapTip": "Tap Tempo — marca el tempo con varios clics y el BPM se ajusta solo"
+    "tapTip": "Tap Tempo — marca el tempo con varios clics y el BPM se ajusta solo",
+    "faderPage": "Página de faders",
+    "pageTip": "Qué página de 10 controlan los faders físicos de playback. ◀ ▶ cambian de página; toca el número para saltar (Go Page).",
+    "goPagePrompt": "Ir a la página de faders número:"
   },
   "audio": {
     "lineIn": "La opción fiel: en la Quartz real es el jack de audio (line-in) integrado. Aquí usa el micro / entrada de línea del ordenador.",

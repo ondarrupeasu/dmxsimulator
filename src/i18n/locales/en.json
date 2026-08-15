@@ -192,7 +192,10 @@
     "invalid": "That file isn't a valid DMXSimulatoR show."
   },
   "playbacks": {
-    "tapTip": "Tap Tempo — tap the beat a few times and the BPM follows"
+    "tapTip": "Tap Tempo — tap the beat a few times and the BPM follows",
+    "faderPage": "Fader page",
+    "pageTip": "Which page of 10 the physical playback faders control. ◀ ▶ change page; tap the number to jump (Go Page).",
+    "goPagePrompt": "Go to fader page number:"
   },
   "audio": {
     "lineIn": "The faithful option: on the real Quartz it's the built-in audio jack (line-in). Here it uses the computer's mic / line input.",
