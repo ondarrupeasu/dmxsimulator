@@ -1847,3 +1847,6 @@
 /* Align armed: the selected fixtures are pickable as the copy-from reference. */
 .qd-cell.align-pick { outline: 1px dashed #4aa3ff; outline-offset: -1px; }
 .qd-cell.align-pick .qd-cell-hit { cursor: copy; }
+/* Convert to Chase/Cue List armed: playback cards are pickable to convert. */
+.pb-card.convert-pick { outline: 1px dashed #4aa3ff; outline-offset: -1px; }
+.pb-card.convert-pick .pb-fire { cursor: cell; }

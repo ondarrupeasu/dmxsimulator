@@ -109,7 +109,9 @@
     "extEmpty": "Kanpoko monitorea konektatuta. Bidali leihoak hona pantaila nagusitik ⤢ botoiarekin (leiho baten barran, edo visualizer-ean).",
     "flipSub": "Uztarri-posizio alternatiboa",
     "alignSub": "Kopiatu atributuak erreferentzia batetik",
-    "alignPick": "ukitu erreferentziazko fixturea kopiatzeko"
+    "alignPick": "ukitu erreferentziazko fixturea kopiatzeko",
+    "convertSub": "Ukitu playback bat bihurtzeko",
+    "convertPick": "ukitu playback bat bihurtzeko"
   },
   "fixturesWindow": {
     "title": "Fixture-ak",
@@ -205,7 +207,9 @@
     "tapTip": "Tap Tempo — jo erritmoa hainbat aldiz eta BPMa doitzen da",
     "faderPage": "Fader orria",
     "pageTip": "Playback fader fisikoek kontrolatzen duten 10eko orria. ◀ ▶ orria aldatzen dute; zenbakia ukitu jauzi egiteko (Go Page).",
-    "goPagePrompt": "Joan fader orri zenbakira:"
+    "goPagePrompt": "Joan fader orri zenbakira:",
+    "convertChasePick": "Bihurtu playback hau Chase-ra",
+    "convertListPick": "Bihurtu playback hau Cue List-era"
   },
   "audio": {
     "lineIn": "Aukera fidela: Quartz errealean audio-jack (line-in) integratua da. Hemen ordenagailuaren mikrofonoa / linea-sarrera erabiltzen du.",

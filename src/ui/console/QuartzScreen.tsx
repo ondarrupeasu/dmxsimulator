@@ -83,6 +83,9 @@ export function QuartzScreen({ extMonitor }: { extMonitor?: boolean } = {}) {
   const alignArm = useShowStore((s) => s.alignArm)
   const setAlignArm = useShowStore((s) => s.setAlignArm)
   const alignFrom = useShowStore((s) => s.alignFrom)
+  const convertArm = useShowStore((s) => s.convertArm)
+  const setConvertArm = useShowStore((s) => s.setConvertArm)
+  const playbacksCount = useShowStore((s) => s.playbacks.length)
   const highlight = useShowStore((s) => s.highlight)
   const toggleHighlight = useShowStore((s) => s.toggleHighlight)
   const programmer = useShowStore((s) => s.programmer)
@@ -276,8 +279,8 @@ export function QuartzScreen({ extMonitor }: { extMonitor?: boolean } = {}) {
         { k: 'A', label: 'Record Mode', sub: 'By Fixture', kind: 'option', info: true },
         { k: 'B', label: maskActive ? 'Set Mask •' : 'Set Mask', sub: t('desk.maskSub'), kind: 'menu', onClick: () => setMenu('mask') },
         { k: 'C', label: 'Clear Record Mask', kind: 'action', onClick: clearRecordMask, disabled: !maskActive },
-        { k: 'D', label: 'Convert to Chase', kind: 'action', info: true },
-        { k: 'E', label: 'Convert to Cue List', kind: 'action', info: true },
+        { k: 'D', label: convertArm === 'chase' ? 'Convert to Chase ✓' : 'Convert to Chase', sub: t('desk.convertSub'), kind: 'action', onClick: () => setConvertArm(convertArm === 'chase' ? null : 'chase'), disabled: playbacksCount === 0 },
+        { k: 'E', label: convertArm === 'list' ? 'Convert to Cue List ✓' : 'Convert to Cue List', sub: t('desk.convertSub'), kind: 'action', onClick: () => setConvertArm(convertArm === 'list' ? null : 'list'), disabled: playbacksCount === 0 },
         { k: 'F' },
         { k: 'G' },
       ],
@@ -723,7 +726,12 @@ export function QuartzScreen({ extMonitor }: { extMonitor?: boolean } = {}) {
       {!extMonitor && (
       <div className="qscreen-cmd">
         <span className="qcmd-prompt">›</span>
-        {alignArm ? (
+        {convertArm ? (
+          <span className="qcmd-line">
+            <span className="qcmd-kw">{convertArm === 'chase' ? 'Convert to Chase' : 'Convert to Cue List'}</span>
+            <span className="qcmd-sel">{t('desk.convertPick')}</span>
+          </span>
+        ) : alignArm ? (
           <span className="qcmd-line">
             <span className="qcmd-kw">Align</span>
             <span className="qcmd-sel">{t('desk.alignPick')}</span>

@@ -14,7 +14,7 @@ const STATIC_KEYS = ['show', 'definitions', 'playbacks', 'palettes', 'groups', '
 const DYN_KEYS = [
   'programmer', 'playbackLevels', 'firedLevels', 'fades', 'flashIds', 'swopId', 'selection',
   'now', 'highlight', 'viewLights', 'viewer', 'viewLightsExt', 'viewerExt', 'venueUrl', 'venueName', 'blind', 'playing',
-  'deskWindows', 'deskFocus', 'viewerVisible', 'viewerLocation', 'deskScreen', 'deskMenu', 'deskAttr', 'legendArm', 'fixtureLabel', 'alignArm',
+  'deskWindows', 'deskFocus', 'viewerVisible', 'viewerLocation', 'deskScreen', 'deskMenu', 'deskAttr', 'legendArm', 'fixtureLabel', 'alignArm', 'convertArm',
 ] as const
 
 type AnyState = Record<string, unknown>

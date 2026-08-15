@@ -17,6 +17,8 @@ export function PlaybacksWindow() {
   const recordCue = useShowStore((s) => s.recordCue)
   const setMode = useShowStore((s) => s.setPlaybackMode)
   const setBpm = useShowStore((s) => s.setPlaybackBpm)
+  const convertArm = useShowStore((s) => s.convertArm)
+  const setConvertArm = useShowStore((s) => s.setConvertArm)
   const progActive = useShowStore((s) => Object.keys(s.programmer).length > 0)
   const playbackPage = useShowStore((s) => s.playbackPage)
   const setPlaybackPage = useShowStore((s) => s.setPlaybackPage)
@@ -56,9 +58,13 @@ export function PlaybacksWindow() {
       <div className="pb-grid">
       {bySlot.map((p, slot) =>
         p ? (
-          <div key={p.id} className={`pb-card${p.id === connectedId ? ' connected' : ''}${slot >= pageStart && slot < pageStart + 10 ? ' on-page' : ''}`}>
+          <div key={p.id} className={`pb-card${p.id === connectedId ? ' connected' : ''}${slot >= pageStart && slot < pageStart + 10 ? ' on-page' : ''}${convertArm ? ' convert-pick' : ''}`}>
             <div className="pb-head">
-              <button className="pb-fire" title={`Fire ${p.name} (connect + Go)`} onClick={() => goCue(p.id)}>
+              <button
+                className="pb-fire"
+                title={convertArm ? t(convertArm === 'chase' ? 'playbacks.convertChasePick' : 'playbacks.convertListPick') : `Fire ${p.name} (connect + Go)`}
+                onClick={convertArm ? () => { setMode(p.id, convertArm); setConvertArm(null) } : () => goCue(p.id)}
+              >
                 <span className="pb-slot">{slot + 1}</span>
                 <span className="pb-name">{p.name}</span>
               </button>

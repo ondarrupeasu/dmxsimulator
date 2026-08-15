@@ -290,6 +290,9 @@ interface ShowState {
   /** Align Fixtures (Titan): armed, waiting for you to touch the reference fixture to copy from. */
   alignArm: boolean
   setAlignArm: (v: boolean) => void
+  /** Convert to Chase / Cue List armed (Record menu): touch a playback to convert its mode. */
+  convertArm: 'chase' | 'list' | null
+  setConvertArm: (m: 'chase' | 'list' | null) => void
   /** Copy the reference fixture's programmed attributes (filtered by the Record Mask) onto the
    *  other selected fixtures, by function so it works across fixture types. Disarms Align. */
   alignFrom: (referenceId: string) => void
@@ -1347,6 +1350,8 @@ export const useShowStore = create<ShowState>()(
 
       alignArm: false,
       setAlignArm: (v) => set({ alignArm: v }),
+      convertArm: null,
+      setConvertArm: (m) => set({ convertArm: m }),
       alignFrom: (referenceId) =>
         set((s) => {
           const ref = s.show.fixtures.find((f) => f.id === referenceId)

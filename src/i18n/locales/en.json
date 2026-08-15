@@ -109,7 +109,9 @@
     "extEmpty": "External monitor connected. Send windows here from the main screen with ⤢ (on a window bar, or the visualiser).",
     "flipSub": "Alternate yoke position",
     "alignSub": "Copy attributes from a reference",
-    "alignPick": "touch the reference fixture to copy from"
+    "alignPick": "touch the reference fixture to copy from",
+    "convertSub": "Touch a playback to convert",
+    "convertPick": "touch a playback to convert"
   },
   "fixturesWindow": {
     "title": "Fixtures",
@@ -205,7 +207,9 @@
     "tapTip": "Tap Tempo — tap the beat a few times and the BPM follows",
     "faderPage": "Fader page",
     "pageTip": "Which page of 10 the physical playback faders control. ◀ ▶ change page; tap the number to jump (Go Page).",
-    "goPagePrompt": "Go to fader page number:"
+    "goPagePrompt": "Go to fader page number:",
+    "convertChasePick": "Convert this playback to a Chase",
+    "convertListPick": "Convert this playback to a Cue List"
   },
   "audio": {
     "lineIn": "The faithful option: on the real Quartz it's the built-in audio jack (line-in). Here it uses the computer's mic / line input.",
