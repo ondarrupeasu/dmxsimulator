@@ -591,20 +591,22 @@ export const useShowStore = create<ShowState>()(
         }),
       addWindow: (screen) =>
         set((s) => {
-          // Drop the new window into the first free quarter; if the desk is a single full
-          // window, shrink it to the top-left quarter so both are visible (Titan-like tiling).
-          const taken = new Set(s.deskWindows.map((w) => w.pos))
-          const quarters: WinPos[] = ['tl', 'tr', 'bl', 'br']
-          let windows = s.deskWindows
-          if (windows.length === 1 && windows[0].pos === 'full') {
-            windows = [{ ...windows[0], pos: 'tl' }]
+          // ⊞ adds to the MAIN monitor. Count/tile only main windows (the external monitor's
+          // windows are independent, so a full 2nd monitor never blocks adding on the 1st).
+          const others = s.deskWindows.filter((w) => (w.monitor ?? 'main') !== 'main')
+          let mains = s.deskWindows.filter((w) => (w.monitor ?? 'main') === 'main')
+          if (mains.length >= 4) return {} // 2×2 grid is full on this monitor
+          const taken = new Set(mains.map((w) => w.pos))
+          // A lone full window shrinks to the top-left quarter so both are visible.
+          if (mains.length === 1 && mains[0].pos === 'full') {
+            mains = [{ ...mains[0], pos: 'tl' }]
             taken.clear()
             taken.add('tl')
           }
-          const free = quarters.find((q) => !taken.has(q)) ?? 'br'
-          const id = `w-${Date.now().toString(36)}-${windows.length}`
+          const free = (['tl', 'tr', 'bl', 'br'] as WinPos[]).find((q) => !taken.has(q)) ?? 'br'
+          const id = `w-${Date.now().toString(36)}-${mains.length}`
           const scr = screen ?? s.deskScreen ?? 'groups'
-          return { deskWindows: [...windows, { id, screen: scr, pos: free }], deskFocus: id, deskScreen: scr }
+          return { deskWindows: [...others, ...mains, { id, screen: scr, pos: free, monitor: 'main' }], deskFocus: id, deskScreen: scr }
         }),
       closeWindow: (id) =>
         set((s) => {

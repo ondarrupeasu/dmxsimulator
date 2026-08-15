@@ -518,7 +518,7 @@ export function QuartzScreen({ extMonitor }: { extMonitor?: boolean } = {}) {
           <button
             className="qd-tab-add"
             onClick={() => addWindow()}
-            disabled={deskWindows.length >= 4}
+            disabled={windows.length >= 4}
             title={t('desk.addWindow')}
           >⊞</button>
         </div>
