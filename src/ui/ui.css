@@ -1812,7 +1812,8 @@
 .qd-cog-size { grid-column: 1 / -1; display: flex; align-items: center; gap: 4px; margin-top: 3px; }
 .qd-cog-size span { flex: 1; font-size: 9px; font-weight: 700; color: var(--text-dim); text-transform: uppercase; letter-spacing: .4px; }
 .qd-cog-size button {
-  width: 20px; height: 18px; border-radius: 3px; font-size: 13px; font-weight: 700; line-height: 1;
+  width: 20px; height: 18px; padding: 0; border-radius: 3px; font-size: 13px; font-weight: 700; line-height: 1;
+  display: flex; align-items: center; justify-content: center;
   color: #bcd; background: #1a2530; border: 1px solid #2f4457; cursor: pointer;
 }
 .qd-cog-size button:disabled { opacity: 0.3; cursor: default; }
