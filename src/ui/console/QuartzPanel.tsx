@@ -34,16 +34,16 @@ const ATTRIBUTES: { name: string; wheels: string[][] }[] = [
 
 type V = 'white' | 'dark' | 'blue' | 'red'
 function Key({
-  v = 'dark', led = true, ledColor, ledBottom, on, dim, flash, text, hint, avo, narrow, assignable, disabled, title, onClick, onContextMenu, tour,
+  v = 'dark', led = true, ledColor, ledBottom, on, dim, flash, text, hint, avo, narrow, assignable, disabled, title, onClick, onContextMenu, onPointerDown, tour,
 }: {
   v?: V; led?: boolean; ledColor?: 'red' | 'blue'; ledBottom?: boolean; on?: boolean; dim?: boolean; flash?: boolean
   text?: string; hint?: string; avo?: boolean; narrow?: boolean; assignable?: boolean; disabled?: boolean; title?: string
-  onClick?: () => void; onContextMenu?: (e: React.MouseEvent) => void; tour?: string
+  onClick?: () => void; onContextMenu?: (e: React.MouseEvent) => void; onPointerDown?: (e: React.PointerEvent) => void; tour?: string
 }) {
   return (
     <button
       className={`ck ck-${v}${ledBottom ? ' ledb' : ''}${narrow ? ' narrow' : ''}${assignable ? ' assignable' : ''}${avo ? ' ck-avo' : ''}`}
-      disabled={disabled} title={title} onClick={onClick} onContextMenu={onContextMenu} data-tour={tour}
+      disabled={disabled} title={title} onClick={onClick} onContextMenu={onContextMenu} onPointerDown={onPointerDown} data-tour={tour}
     >
       {led && <span className={`ckled${on ? ' on' : ''}${dim ? ' dim' : ''}${flash ? ' flash' : ''}${ledColor ? ' ' + ledColor : ''}`} />}
       {text != null && <span className="cktext">{text}</span>}
@@ -199,8 +199,16 @@ export function QuartzPanel() {
   const setPlaybackLevel = useShowStore((s) => s.setPlaybackLevel)
   const fades = useShowStore((s) => s.fades)
   const killPlayback = useShowStore((s) => s.killPlayback)
-  const flash = useShowStore((s) => s.flash)
-  const swop = useShowStore((s) => s.swop)
+  const setFlash = useShowStore((s) => s.setFlash)
+  const setSwop = useShowStore((s) => s.setSwop)
+  // Mouse Flash/Swop = momentary (like the real desk and our keyboard): held down while pressed,
+  // released on pointer-up anywhere. (Was a click-toggle before — the reported bug.)
+  const momentary = (kind: 'flash' | 'swop', id: string) => {
+    const setter = kind === 'flash' ? setFlash : setSwop
+    setter(id, true)
+    const up = () => { setter(id, false); window.removeEventListener('pointerup', up) }
+    window.addEventListener('pointerup', up)
+  }
   const flashIds = useShowStore((s) => s.flashIds)
   const swopId = useShowStore((s) => s.swopId)
   const playbackFade = useShowStore((s) => s.playbackFade)
@@ -499,7 +507,8 @@ export function QuartzPanel() {
               : connectArm ? (cue ? t('desk.connectTo', { name: cue.name }) : t('desk.empty'))
               : cue ? t('desk.flashName', { name: cue.name, state: flashed ? t('desk.flashOn') : t('desk.flashClickOn') }) : t('desk.empty')
             return <Key key={`t${i}`} v={recordArm ? 'red' : 'blue'} narrow ledBottom on={on} flash={armed} dim={!armed && !!cue && !on} hint={'QWERTYUIOP'[i]} disabled={(!recordArm && !connectArm && !cue) || (connectArm && !cue)} title={t('desk.flashKey', { label: inner, key: 'QWERTYUIOP'[i] })}
-              onClick={recordArm ? () => recordCueAt(gi) : connectArm ? (cue ? () => connectPlayback(cue.id) : undefined) : cue ? () => flash(cue.id) : undefined} />
+              onClick={recordArm ? () => recordCueAt(gi) : connectArm && cue ? () => connectPlayback(cue.id) : undefined}
+              onPointerDown={!recordArm && !connectArm && cue ? () => momentary('flash', cue.id) : undefined} />
           })}
           {Array.from({ length: 10 }, (_, i) => {
             const gi = playbackPage * 10 + i; const cue = bySlot[gi]
@@ -509,7 +518,8 @@ export function QuartzPanel() {
             const inner = recordArm ? (cue ? t('desk.recordOver', { name: cue.name }) : t('desk.recordHere'))
               : cue ? t('desk.swopName', { name: cue.name, state: swopped ? t('desk.swopOnState') : t('desk.swopClickOn') }) : t('desk.empty')
             return <Key key={`b${i}`} v={recordArm || swopped ? 'red' : 'dark'} narrow led={swopped} ledBottom on={swopped} hint={'ASDFGHJKLÑ'[i]} disabled={!recordArm && !cue} title={t('desk.swopKey', { label: inner, key: 'ASDFGHJKLÑ'[i] })}
-              onClick={recordArm ? () => recordCueAt(gi) : cue ? () => swop(cue.id) : undefined} />
+              onClick={recordArm ? () => recordCueAt(gi) : undefined}
+              onPointerDown={!recordArm && cue ? () => momentary('swop', cue.id) : undefined} />
           })}
         </Box>
 
