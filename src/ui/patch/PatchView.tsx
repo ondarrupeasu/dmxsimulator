@@ -128,7 +128,7 @@ export function PatchView() {
                   <span>Name</span>
                   <input
                     value={show.name}
-                    placeholder="Untitled show"
+                    placeholder={t('patch.phShow')}
                     onChange={(e) => setShowMeta({ name: e.target.value })}
                   />
                 </label>
@@ -136,7 +136,7 @@ export function PatchView() {
                   <span>Venue</span>
                   <input
                     value={show.venue ?? ''}
-                    placeholder="e.g. CIFP Tartanga"
+                    placeholder={t('patch.phVenue')}
                     onChange={(e) => setShowMeta({ venue: e.target.value })}
                   />
                 </label>
@@ -144,7 +144,7 @@ export function PatchView() {
                   <span>Designer</span>
                   <input
                     value={show.designer ?? ''}
-                    placeholder="Drawn by…"
+                    placeholder={t('patch.phDesigner')}
                     onChange={(e) => setShowMeta({ designer: e.target.value })}
                   />
                 </label>
@@ -285,7 +285,7 @@ export function PatchView() {
                             {def?.model} · {t('patch.address')} {pf.address}–{end}
                           </div>
                           {def && (
-                            <div className="patch-attrs" title="Bancos de atributos del fixture (Intensity · Position · Colour · Gobo · Beam · Effect · Special)">
+                            <div className="patch-attrs" title={t('patch.attrsTip')}>
                               {(() => {
                                 const has = fixtureAttributeKeys(def, pf.modeIndex)
                                 return ATTRIBUTE_BANKS.map((b) => (

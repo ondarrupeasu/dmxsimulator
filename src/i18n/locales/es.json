@@ -19,7 +19,9 @@
     "zones": "Ver calco",
     "hideZones": "Ocultar calco",
     "appver": "Versión en ejecución",
-    "pwaTag": "Herramientas del simulador (PWA) — no forman parte de la mesa Quartz"
+    "pwaTag": "Herramientas del simulador (PWA) — no forman parte de la mesa Quartz",
+    "pwaTitle": "Exclusivo del simulador.\n▸ Aquí: {{sim}}\n▸ En la Quartz real: {{real}}",
+    "hwTitle": "Solo en el Quartz físico.\n▸ {{why}}"
   },
   "desk": {
     "fixPrev": "Fix −1 — fixture anterior",
@@ -118,13 +120,19 @@
     "convertPick": "toca un playback para convertirlo",
     "orderSub": "Toca los fixtures en el orden que quieras",
     "orderPick": "toca los fixtures en orden",
-    "masterclassCard": "Rig + grupos, paletas, cues, un chase, executors y un shape — toda la mesa en un show (ver el manual)"
+    "masterclassCard": "Rig + grupos, paletas, cues, un chase, executors y un shape — toda la mesa en un show (ver el manual)",
+    "renameLegend": "Renombrar",
+    "deleteCell": "Eliminar",
+    "recordGroupTip": "Graba la selección actual como grupo",
+    "patchFirst": "Patchea fixtures primero.",
+    "recordPaletteTip": "Graba una paleta de {{kind}} desde el programmer"
   },
   "fixturesWindow": {
     "title": "Fixtures",
     "all": "Todo",
     "clear": "Limpiar",
-    "empty": "Patchea fixtures primero."
+    "empty": "Patchea fixtures primero.",
+    "aimByHand": "Orientable a mano"
   },
   "modes": {
     "patch": "Patch",
@@ -165,11 +173,16 @@
     "name": "Nombre",
     "source": "Origen",
     "barTip": "Como en Titan (DMX Line / Address / Quantity). Universe = la línea/salida DMX (1–4), NO el truss (el truss lo eliges arrastrando el fixture al montarlo). Address vacío = auto (siguiente libre); Qty parchea varios ya espaciados y la dirección avanza sola.",
-    "spaceTip": "Reparte los fixtures mostrados por el ancho del truss"
+    "spaceTip": "Reparte los fixtures mostrados por el ancho del truss",
+    "attrsTip": "Bancos de atributos del fixture (Intensity · Position · Colour · Gobo · Beam · Effect · Special)",
+    "phShow": "Show sin título",
+    "phVenue": "p.ej. CIFP Tartanga",
+    "phDesigner": "Diseñado por…"
   },
   "monitor": {
     "title": "Monitor DMX",
-    "subtitle": "Valores en vivo — universo {{universe}}"
+    "subtitle": "Valores en vivo — universo {{universe}}",
+    "blindTip": "Blind: el programmer no sale a la salida real"
   },
   "program": {
     "title": "Programador",
@@ -193,7 +206,10 @@
     "pwaReal": "el visor (Capture) del Quartz no trae estos controles, o los hace de otra forma",
     "aimPad": "Apuntar el foco: el centro es recto hacia abajo, arrastra hacia donde quieres que ilumine (el borde = horizontal). Míralo en el 3D.",
     "popout": "Enviar el visualizer a la pantalla externa (2º monitor)",
-    "toggle": "Mostrar / ocultar el visualizer"
+    "toggle": "Mostrar / ocultar el visualizer",
+    "elevTip": "Alzado: el lado desde el que se mira",
+    "resetView": "Restablecer zoom / encuadre",
+    "aimReset": "Centrar"
   },
   "run": {
     "title": "Ejecutar",
@@ -216,12 +232,21 @@
     "pageTip": "Qué página de 10 controlan los faders físicos de playback. ◀ ▶ cambian de página; toca el número para saltar (Go Page).",
     "goPagePrompt": "Ir a la página de faders número:",
     "convertChasePick": "Convertir este playback en Chase",
-    "convertListPick": "Convertir este playback en Cue List"
+    "convertListPick": "Convertir este playback en Cue List",
+    "deletePb": "Eliminar playback",
+    "listTip": "Cue list — avanza con Go",
+    "chaseTip": "Chase — automático por BPM",
+    "bpmTip": "Tempo del chase (BPM)",
+    "deleteStep": "Eliminar este cue",
+    "recordCueTip": "Graba el programmer como un playback nuevo (Record sobre un fader existente añade un cue a su lista)",
+    "renamePrompt": "Nombre del playback:"
   },
   "audio": {
     "lineIn": "La opción fiel: en la Quartz real es el jack de audio (line-in) integrado. Aquí usa el micro / entrada de línea del ordenador.",
     "sysAudio": "Solo Chrome / Brave / Edge, compartiendo una PESTAÑA del mismo navegador (Safari/Firefox no lo permiten).",
     "demo": "Monta un ejemplo: graba 2 looks con intensidad (rojo/azul) y los mapea a graves/agudos. Carga un track y súbele el volumen para verlo.",
-    "bandEnable": "Enable: activa/desactiva el trigger de esta banda"
+    "bandEnable": "Enable: activa/desactiva el trigger de esta banda",
+    "autoGainTip": "Auto Gain: la mesa ajusta la ganancia sola",
+    "autoTrigTip": "Auto: ajusta el nivel de disparo solo cuando no hay triggers"
   }
 }

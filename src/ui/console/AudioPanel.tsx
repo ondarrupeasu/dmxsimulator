@@ -121,7 +121,7 @@ export function AudioPanel() {
         <span>Gain</span>
         <input type="range" min={0.5} max={4} step={0.1} value={gain} disabled={autoGain}
           onChange={(e) => { const v = Number(e.target.value); audioEngine.gain = v; setGainState(v) }} />
-        <label className="audio-enable" title="Auto Gain: la mesa ajusta la ganancia sola">
+        <label className="audio-enable" title={t('audio.autoGainTip')}>
           <input type="checkbox" checked={autoGain} onChange={(e) => setAutoGain(e.target.checked)} /> Auto Gain
         </label>
       </div>
@@ -149,7 +149,7 @@ export function AudioPanel() {
                 <label title={t('audio.bandEnable')}>
                   <input type="checkbox" checked={b.enabled} onChange={(e) => setBandEnabled(i, e.target.checked)} /> En
                 </label>
-                <label title="Auto: ajusta el nivel de disparo solo cuando no hay triggers">
+                <label title={t('audio.autoTrigTip')}>
                   <input type="checkbox" checked={b.auto} onChange={(e) => setBandAuto(i, e.target.checked)} /> Auto
                 </label>
               </div>

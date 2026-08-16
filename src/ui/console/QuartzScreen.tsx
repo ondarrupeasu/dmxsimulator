@@ -426,8 +426,8 @@ export function QuartzScreen({ extMonitor }: { extMonitor?: boolean } = {}) {
           ))}
         </span>
       )}
-      <button className="qd-cell-edit" onClick={onRename} title="Rename legend">✎</button>
-      <button className="qd-cell-del" onClick={onDelete} title="Delete">✕</button>
+      <button className="qd-cell-edit" onClick={onRename} title={t('desk.renameLegend')}>✎</button>
+      <button className="qd-cell-del" onClick={onDelete} title={t('desk.deleteCell')}>✕</button>
     </div>
   )
 
@@ -438,7 +438,7 @@ export function QuartzScreen({ extMonitor }: { extMonitor?: boolean } = {}) {
     let body: React.ReactNode
     if (screen === 'fixtures') {
     body = noFx ? (
-      <div className="qd-muted" style={{ padding: 10 }}>Patch fixtures first (Patch mode).</div>
+      <div className="qd-muted" style={{ padding: 10 }}>{t('desk.patchFirst')}</div>
     ) : (
       <div className="qd-ws-grid">
         {fixtures.map((pf, i) => (
@@ -482,7 +482,7 @@ export function QuartzScreen({ extMonitor }: { extMonitor?: boolean } = {}) {
             { active: sameSel && !noSel, colorClass: 'ws-group' },
           )
         })}
-        <button className="qd-cell rec" onClick={recordGroup} disabled={noSel} title="Record the current selection as a group">
+        <button className="qd-cell rec" onClick={recordGroup} disabled={noSel} title={t('desk.recordGroupTip')}>
           ＋ Record Group
         </button>
       </div>
@@ -528,7 +528,7 @@ export function QuartzScreen({ extMonitor }: { extMonitor?: boolean } = {}) {
           className="qd-cell rec"
           onClick={() => recordPalette(kind)}
           disabled={noSel}
-          title={`Record a ${PALETTE_LABELS[kind]} palette from the programmer`}
+          title={t('desk.recordPaletteTip', { kind: PALETTE_LABELS[kind] })}
         >
           ＋ Record {PALETTE_LABELS[kind]}
         </button>

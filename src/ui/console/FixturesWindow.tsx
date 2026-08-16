@@ -84,7 +84,7 @@ export function FixturesWindow() {
                     >
                       <span className="qd-fx-name">
                         {pf.name}
-                        {aimable && <span className="qd-fx-aimicon" title="Orientable a mano">⌖</span>}
+                        {aimable && <span className="qd-fx-aimicon" title={t('fixturesWindow.aimByHand')}>⌖</span>}
                       </span>
                       <span className="qd-fx-def">{definitions[pf.definitionId]?.model}</span>
                       <span className="qd-fx-attrs">

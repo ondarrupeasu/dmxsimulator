@@ -46,7 +46,7 @@ export function AimPad({ pan, tilt, onChange }: { pan: number; tilt: number; onC
         <span className="aim-field">Pan<b>{pan}°</b></span>
         <span className="aim-field">Tilt<b>{tilt}°</b></span>
       </span>
-      <button className="aim-reset" title="Centrar" onPointerDown={(e) => e.stopPropagation()} onClick={(e) => { e.stopPropagation(); onChange(0, 0) }}>⌖</button>
+      <button className="aim-reset" title={t('visualizer.aimReset')} onPointerDown={(e) => e.stopPropagation()} onClick={(e) => { e.stopPropagation(); onChange(0, 0) }}>⌖</button>
     </div>
   )
 }

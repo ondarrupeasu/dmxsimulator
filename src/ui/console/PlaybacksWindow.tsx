@@ -68,8 +68,8 @@ export function PlaybacksWindow() {
                 <span className="pb-slot">{slot + 1}</span>
                 <span className="pb-name">{p.name}</span>
               </button>
-              <button className="pb-ico" title="Rename" onClick={() => { const n = window.prompt('Nombre del playback:', p.name); if (n != null) renameCue(p.id, n.trim() || p.name) }}>✎</button>
-              <button className="pb-ico" title="Delete playback" onClick={() => deleteCue(p.id)}>✕</button>
+              <button className="pb-ico" title={t('desk.renameLegend')} onClick={() => { const n = window.prompt(t('playbacks.renamePrompt'), p.name); if (n != null) renameCue(p.id, n.trim() || p.name) }}>✎</button>
+              <button className="pb-ico" title={t('playbacks.deletePb')} onClick={() => deleteCue(p.id)}>✕</button>
             </div>
 
             <div className="pb-meta">
@@ -77,12 +77,12 @@ export function PlaybacksWindow() {
               {p.steps.length > 1 && (
                 <>
                   <span className="pb-seg">
-                    <button className={p.mode === 'list' ? 'on' : ''} onClick={() => setMode(p.id, 'list')} title="Cue list — stepped by Go">List</button>
-                    <button className={p.mode === 'chase' ? 'on' : ''} onClick={() => setMode(p.id, 'chase')} title="Chase — auto-timed by BPM">Chase</button>
+                    <button className={p.mode === 'list' ? 'on' : ''} onClick={() => setMode(p.id, 'list')} title={t('playbacks.listTip')}>List</button>
+                    <button className={p.mode === 'chase' ? 'on' : ''} onClick={() => setMode(p.id, 'chase')} title={t('playbacks.chaseTip')}>Chase</button>
                   </span>
                   {p.mode === 'chase' && (
                     <>
-                      <label className="pb-bpm" title="Chase tempo (BPM)">
+                      <label className="pb-bpm" title={t('playbacks.bpmTip')}>
                         <input type="number" min={20} max={600} value={p.bpm ?? 120}
                           onChange={(e) => setBpm(p.id, Number(e.target.value))} /> BPM
                       </label>
@@ -99,7 +99,7 @@ export function PlaybacksWindow() {
                   <li key={st.id} className={i === p.current ? 'live' : ''}>
                     <span className="pb-stepno">{st.number}</span>
                     <span className="pb-stepname">{st.name}</span>
-                    <button className="pb-ico sm" title="Delete this cue" onClick={() => deleteStep(p.id, st.id)}>✕</button>
+                    <button className="pb-ico sm" title={t('playbacks.deleteStep')} onClick={() => deleteStep(p.id, st.id)}>✕</button>
                   </li>
                 ))}
               </ol>
@@ -110,7 +110,7 @@ export function PlaybacksWindow() {
         ),
       )}
       <button className="pb-card rec" onClick={recordCue} disabled={!progActive}
-        title="Record the programmer as a new playback (Record onto an existing fader appends a cue to its list)">
+        title={t('playbacks.recordCueTip')}>
         ＋ Record Cue
       </button>
       </div>

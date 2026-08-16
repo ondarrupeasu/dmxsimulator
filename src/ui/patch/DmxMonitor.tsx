@@ -136,7 +136,7 @@ export function DmxMonitor({ universe = 1 }: { universe?: number }) {
       <header className="mon-header">
         <h2>{t('monitor.title')}</h2>
         {universes.length <= 1 && <span className="sub">{t('monitor.subtitle', { universe: uni })}</span>}
-        {blind && <span className="blind-badge" title="Blind: el programmer no sale a la salida real">BLIND</span>}
+        {blind && <span className="blind-badge" title={t('monitor.blindTip')}>BLIND</span>}
         {universes.length > 1 && (
           <div className="vh-tools">
             {universes.map((u) => (

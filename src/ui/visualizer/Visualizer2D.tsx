@@ -1,4 +1,5 @@
 import { useMemo, useState, useRef, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useShowStore, useEffectiveProgrammer } from '../../store/showStore'
 import { computeFixtureOutputs } from '../../engine/dmx'
 import { computeVisualState } from '../../engine/render'
@@ -24,6 +25,7 @@ const planY = (z: number) => PLAN.top + ((z - Z_MIN) / (Z_MAX - Z_MIN)) * PLAN.h
 const elevY = (y: number) => ELEV.top + ELEV.h - (y / Y_MAX) * ELEV.h
 
 export function Visualizer2D() {
+  const { t } = useTranslation()
   const show = useShowStore((s) => s.show)
   const definitions = useShowStore((s) => s.definitions)
   const effective = useEffectiveProgrammer()
@@ -214,12 +216,12 @@ export function Visualizer2D() {
       <button
         className="v2-sidetoggle"
         onClick={() => setFromRight((v) => !v)}
-        title="Alzado: lado desde el que se mira"
+        title={t('visualizer.elevTip')}
       >
         {fromRight ? 'Alzado: desde la dcha ▶' : '◀ Alzado: desde la izq'}
       </button>
       {zoomed && (
-        <button className="v2-reset" onClick={resetView} title="Reset zoom / pan">
+        <button className="v2-reset" onClick={resetView} title={t('visualizer.resetView')}>
           ⤢ Reset view
         </button>
       )}

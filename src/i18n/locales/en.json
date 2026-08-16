@@ -19,7 +19,9 @@
     "zones": "Show trace",
     "hideZones": "Hide trace",
     "appver": "Running version",
-    "pwaTag": "Simulator tools (PWA) — not part of the Quartz desk"
+    "pwaTag": "Simulator tools (PWA) — not part of the Quartz desk",
+    "pwaTitle": "Simulator-only.\n▸ Here: {{sim}}\n▸ On the real Quartz: {{real}}",
+    "hwTitle": "Physical Quartz only.\n▸ {{why}}"
   },
   "desk": {
     "fixPrev": "Fix −1 — previous fixture",
@@ -118,13 +120,19 @@
     "convertPick": "touch a playback to convert",
     "orderSub": "Tap fixtures in the order you want",
     "orderPick": "tap the fixtures in order",
-    "masterclassCard": "Rig + groups, palettes, cues, a chase, executors and a shape — the full desk in one show (see the manual)"
+    "masterclassCard": "Rig + groups, palettes, cues, a chase, executors and a shape — the full desk in one show (see the manual)",
+    "renameLegend": "Rename legend",
+    "deleteCell": "Delete",
+    "recordGroupTip": "Record the current selection as a group",
+    "patchFirst": "Patch fixtures first.",
+    "recordPaletteTip": "Record a {{kind}} palette from the programmer"
   },
   "fixturesWindow": {
     "title": "Fixtures",
     "all": "All",
     "clear": "Clear",
-    "empty": "Patch fixtures first."
+    "empty": "Patch fixtures first.",
+    "aimByHand": "Aim by hand"
   },
   "modes": {
     "patch": "Patch",
@@ -165,11 +173,16 @@
     "name": "Name",
     "source": "Source",
     "barTip": "Like Titan (DMX Line / Address / Quantity). Universe = the DMX line/output (1–4), NOT the truss (choose the truss by dragging the fixture when rigging it). Address blank = auto (next free); Qty patches several already spaced and the address auto-advances.",
-    "spaceTip": "Space the fixtures shown evenly across the truss width"
+    "spaceTip": "Space the fixtures shown evenly across the truss width",
+    "attrsTip": "Fixture attribute banks (Intensity · Position · Colour · Gobo · Beam · Effect · Special)",
+    "phShow": "Untitled show",
+    "phVenue": "e.g. CIFP Tartanga",
+    "phDesigner": "Drawn by…"
   },
   "monitor": {
     "title": "DMX monitor",
-    "subtitle": "Live channel values — universe {{universe}}"
+    "subtitle": "Live channel values — universe {{universe}}",
+    "blindTip": "Blind: the programmer isn't sent to the live output"
   },
   "program": {
     "title": "Programmer",
@@ -193,7 +206,10 @@
     "pwaReal": "the Quartz's visualiser (Capture) doesn't have these controls, or does them differently",
     "aimPad": "Aim the fixture: the centre is straight down, drag toward where you want it to light (the edge = horizontal). Watch it in the 3D.",
     "popout": "Send the visualiser to the external monitor (2nd display)",
-    "toggle": "Show / hide the visualiser"
+    "toggle": "Show / hide the visualiser",
+    "elevTip": "Elevation: the side you view from",
+    "resetView": "Reset zoom / pan",
+    "aimReset": "Centre"
   },
   "run": {
     "title": "Run",
@@ -216,12 +232,21 @@
     "pageTip": "Which page of 10 the physical playback faders control. ◀ ▶ change page; tap the number to jump (Go Page).",
     "goPagePrompt": "Go to fader page number:",
     "convertChasePick": "Convert this playback to a Chase",
-    "convertListPick": "Convert this playback to a Cue List"
+    "convertListPick": "Convert this playback to a Cue List",
+    "deletePb": "Delete playback",
+    "listTip": "Cue list — stepped by Go",
+    "chaseTip": "Chase — auto-timed by BPM",
+    "bpmTip": "Chase tempo (BPM)",
+    "deleteStep": "Delete this cue",
+    "recordCueTip": "Record the programmer as a new playback (Record onto an existing fader appends a cue to its list)",
+    "renamePrompt": "Playback name:"
   },
   "audio": {
     "lineIn": "The faithful option: on the real Quartz it's the built-in audio jack (line-in). Here it uses the computer's mic / line input.",
     "sysAudio": "Only Chrome / Brave / Edge, sharing a TAB of the same browser (Safari/Firefox don’t allow it).",
     "demo": "Sets up an example: records 2 looks with intensity (red/blue) and maps them to bass/treble. Load a track and turn the volume up to see it.",
-    "bandEnable": "Enable: turns this band’s trigger on/off"
+    "bandEnable": "Enable: turns this band’s trigger on/off",
+    "autoGainTip": "Auto Gain: the desk sets the gain itself",
+    "autoTrigTip": "Auto: sets the trigger level itself while there are no triggers"
   }
 }
