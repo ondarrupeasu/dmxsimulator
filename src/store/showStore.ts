@@ -122,6 +122,8 @@ interface ShowState {
   // Quartz desk UI state (shared between its screen + button panel)
   deskAttr: string
   setDeskAttr: (a: string) => void
+  /** Wheel page within the current attribute bank (re-pressing the bank key cycles pages). */
+  deskWheelPage: number
   // The focused window's workspace (kept in sync with deskWindows/deskFocus so the many
   // readers/setters of deskScreen — executors, DMX-monitor click, tabs — keep working).
   deskScreen: string
@@ -643,7 +645,9 @@ export const useShowStore = create<ShowState>()(
         }),
 
       deskAttr: 'Intensity',
-      setDeskAttr: (a) => set({ deskAttr: a }),
+      deskWheelPage: 0,
+      // Pressing the current bank again pages its wheels; a different bank resets to page 0.
+      setDeskAttr: (a) => set((s) => (a === s.deskAttr ? { deskWheelPage: s.deskWheelPage + 1 } : { deskAttr: a, deskWheelPage: 0 })),
       extConnected: false,
       setExtConnected: (v) => set({ extConnected: v }),
       rightPanel: 'monitor',

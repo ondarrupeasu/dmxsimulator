@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useShowStore } from '../../store/showStore'
 import { playbacksBySlot } from '../../model/cue'
+import { ATTRIBUTE_BANKS, wheelPageFns, bankFunctions, wheelPageCount } from '../../model/attributes'
 import { useSelectedValue, useSelectionFunctions } from './useSelectedValue'
 
 /**
@@ -22,16 +23,6 @@ const clamp = (v: number) => Math.max(0, Math.min(255, v))
 
 // Attribute banks → up to 3 wheels each (Titan groups shutter/strobe with Intensity,
 // iris/prism/zoom/focus with Beam). Colour still needs pages for RGBW+A/UV — noted.
-const ATTRIBUTES: { name: string; wheels: string[][] }[] = [
-  { name: 'Intensity', wheels: [['dimmer', 'haze'], ['shutter', 'strobe']] },
-  { name: 'Position', wheels: [['pan'], ['tilt']] },
-  { name: 'Colour', wheels: [['red', 'colorWheel'], ['green', 'amber'], ['blue', 'white']] },
-  { name: 'Gobo', wheels: [['gobo'], ['goboRotation']] },
-  { name: 'Beam', wheels: [['prism', 'iris'], ['zoom'], ['focus']] },
-  { name: 'Effect', wheels: [] },
-  { name: 'Special', wheels: [] },
-]
-
 type V = 'white' | 'dark' | 'blue' | 'red'
 function Key({
   v = 'dark', led = true, ledColor, ledBottom, on, dim, flash, text, hint, avo, narrow, assignable, disabled, title, onClick, onContextMenu, onPointerDown, tour,
@@ -167,6 +158,7 @@ export function QuartzPanel() {
   const [showZones, setShowZones] = useState(false)
   const attr = useShowStore((s) => s.deskAttr)
   const setAttr = useShowStore((s) => s.setDeskAttr)
+  const wheelPage = useShowStore((s) => s.deskWheelPage)
   const setScreen = useShowStore((s) => s.setDeskScreen)
   const setRightPanel = useShowStore((s) => s.setRightPanel)
   const viewerVisible = useShowStore((s) => s.viewerVisible)
@@ -345,9 +337,9 @@ export function QuartzPanel() {
     }
   }, [])
 
-  const active = ATTRIBUTES.find((a) => a.name === attr) ?? ATTRIBUTES[0]
-  const wheelFns = [0, 1, 2].map((i) => active.wheels[i]?.find((fn) => present.has(fn)))
-  const activeFns = active.wheels.flat() // every function in the active attribute bank
+  const wheelFns = wheelPageFns(attr, present, wheelPage)
+  const activeFns = bankFunctions(attr, present) // every function in the active attribute bank (this selection)
+  const wheelPages = wheelPageCount(attr, present)
   const noSel = selection.length === 0
   const noFx = fixtures.length === 0
   // Step the selection to the previous/next patched fixture (Fix −1 / Fix +1).
@@ -463,9 +455,9 @@ export function QuartzPanel() {
         {/* Attribute bank 7×2 */}
         <GridLabels x={178} y={270} w={452} cols={7} items={['Intensity', 'Position', 'Colour', 'Gobo', 'Beam', 'Effect', 'Special']} above />
         <Box x={178} y={272} w={452} h={118} cols={7} rows={2}>
-          {ATTRIBUTES.map((a) => <Key key={a.name} v="white" on={a.name === attr} title={a.name} onClick={() => setAttr(a.name)} tour={a.name === 'Position' ? 'desk-position' : a.name === 'Colour' ? 'desk-colour' : undefined} />)}
+          {ATTRIBUTE_BANKS.map((a) => <Key key={a.name} v="white" on={a.name === attr} title={a.name === attr && wheelPages > 1 ? `${a.name} — page ${((wheelPage % wheelPages) + wheelPages) % wheelPages + 1}/${wheelPages} (press again to page)` : a.name} onClick={() => setAttr(a.name)} tour={a.name === 'Position' ? 'desk-position' : a.name === 'Colour' ? 'desk-colour' : undefined} />)}
           <Key v="white" title="Shape → Shapes" onClick={() => setScreen('effects')} tour="desk-shape" />
-          <Key v="white" title={t('desk.mlMenu')} onClick={() => setMenu('ml')} /><Key v="white" ledColor="red" on={blind} title={t('desk.blind')} onClick={() => setBlind(!blind)} tour="desk-blind" /><Key v="white" disabled={noSel || activeFns.length === 0} title={t('desk.off', { attr: active.name })} onClick={() => clearSelectedFunctions(activeFns)} />
+          <Key v="white" title={t('desk.mlMenu')} onClick={() => setMenu('ml')} /><Key v="white" ledColor="red" on={blind} title={t('desk.blind')} onClick={() => setBlind(!blind)} tour="desk-blind" /><Key v="white" disabled={noSel || activeFns.length === 0} title={t('desk.off', { attr })} onClick={() => clearSelectedFunctions(activeFns)} />
           <Key v="white" ledColor="blue" on={fanMode} title={t('desk.fan')} onClick={toggleFanMode} /><Key v="white" disabled title="Options" /><Key v="dark" disabled title="Latch Menu" />
         </Box>
         <GridLabels x={178} y={392} w={452} cols={7} items={['Shape', 'ML\nMenu', 'Blind', 'Off', 'Fan', 'Options', 'Latch\nMenu']} />

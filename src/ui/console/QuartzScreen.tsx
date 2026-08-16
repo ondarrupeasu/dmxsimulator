@@ -16,7 +16,8 @@ import { exportMvr } from '../../model/mvr'
 import { exportGltf } from '../../model/gltf-export'
 import { openExtMonitor, closeExtMonitor } from '../../store/vizSync'
 import { VisualiserWindow } from './VisualiserWindow'
-import { bankByName } from '../../model/attributes'
+import { wheelPageFns, wheelPageCount } from '../../model/attributes'
+import { useSelectionFunctions } from './useSelectedValue'
 
 const PALETTE_KINDS: PaletteKind[] = ['colour', 'position', 'gobo', 'beam', 'intensity']
 // Attribute-bank letter for a palette kind (Titan's IPCGB tags on palettes).
@@ -228,25 +229,27 @@ export function QuartzScreen({ extMonitor }: { extMonitor?: boolean } = {}) {
   // A moving head (has pan/tilt) is selected → Flip is available.
   const definitions = useShowStore((s) => s.definitions)
   const hasMover = fixtures.some((pf) => selection.includes(pf.id) && (definitions[pf.definitionId]?.modes[pf.modeIndex]?.channels ?? []).some((c) => c.function === 'pan' || c.function === 'tilt'))
-  // Wheel display (Titan's on-screen encoder readout): for the current attribute bank, what each
-  // of the 3 wheels controls on the selection and its value. First selected fixture that has the
-  // function wins (the bank keys pick the wheel functions the same way).
-  const activeBank = bankByName(deskAttr)
+  // Wheel display (Titan's on-screen encoder readout): for the current attribute bank + wheel
+  // page, what each of the 3 wheels controls on the selection and its value. Re-pressing the
+  // bank key pages (deskWheelPage) so e.g. Colour reaches White/CTO on page 2.
+  const present = useSelectionFunctions()
+  const deskWheelPage = useShowStore((s) => s.deskWheelPage)
   const selFx = fixtures.filter((pf) => selection.includes(pf.id))
-  const wheelInfo = activeBank.wheels.map((slotFns) => {
+  const wheelPages = wheelPageCount(deskAttr, present)
+  const wheelInfo = wheelPageFns(deskAttr, present, deskWheelPage).map((fn) => {
+    if (!fn) return null
     for (const pf of selFx) {
       const chs = definitions[pf.definitionId]?.modes[pf.modeIndex]?.channels ?? []
-      for (const fn of slotFns) {
-        const idx = chs.findIndex((c) => c.function === fn && !c.fine)
-        if (idx >= 0) {
-          const value = programmer[pf.id]?.[idx] ?? chs[idx].defaultValue ?? 0
-          const cap = chs[idx].capabilities?.find((c) => value >= c.rangeStart && value <= c.rangeEnd)
-          return { fn, label: chs[idx].name, value, capLabel: cap?.label }
-        }
+      const idx = chs.findIndex((c) => c.function === fn && !c.fine)
+      if (idx >= 0) {
+        const value = programmer[pf.id]?.[idx] ?? chs[idx].defaultValue ?? 0
+        const cap = chs[idx].capabilities?.find((c) => value >= c.rangeStart && value <= c.rangeEnd)
+        return { fn, label: chs[idx].name, value, capLabel: cap?.label }
       }
     }
     return null
   })
+  const anyWheel = wheelInfo.some(Boolean)
   const nudgeWheel = (fn: string, delta: number, cur: number) => setSelectedByFunction(fn, Math.max(0, Math.min(255, cur + delta)))
   // Macros the selection actually has (from control-channel capabilities in each personality).
   const macroLabels = [...new Set(fixtures.filter((pf) => selection.includes(pf.id)).flatMap((pf) =>
@@ -778,9 +781,9 @@ export function QuartzScreen({ extMonitor }: { extMonitor?: boolean } = {}) {
         )}
       </div>
 
-      {!extMonitor && !noSel && activeBank.wheels.length > 0 && (
+      {!extMonitor && !noSel && anyWheel && (
         <div className="qscreen-wheels" title={t('desk.wheelsTip')}>
-          <span className="qwh-bank">{deskAttr}</span>
+          <span className="qwh-bank">{deskAttr}{wheelPages > 1 ? ` ${((deskWheelPage % wheelPages) + wheelPages) % wheelPages + 1}/${wheelPages}` : ''}</span>
           {wheelInfo.map((w, i) => (
             <div key={i} className={`qwh${w ? '' : ' empty'}`}>
               {w ? (
