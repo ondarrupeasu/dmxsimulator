@@ -15,10 +15,10 @@ const panF = (): ChannelDefinition => ({ name: 'Pan Fine', function: 'panFine', 
 const tilt = (): ChannelDefinition => ({ name: 'Tilt', function: 'tilt', defaultValue: 128, highlightValue: 128 })
 const tiltF = (): ChannelDefinition => ({ name: 'Tilt Fine', function: 'tiltFine', defaultValue: 0, fine: true })
 const dimmer = (): ChannelDefinition => ({ name: 'Dimmer', function: 'dimmer', defaultValue: 0, highlightValue: 255 })
-const red = (): ChannelDefinition => ({ name: 'Red', function: 'red', defaultValue: 0, highlightValue: 255 })
-const green = (): ChannelDefinition => ({ name: 'Green', function: 'green', defaultValue: 0, highlightValue: 255 })
-const blue = (): ChannelDefinition => ({ name: 'Blue', function: 'blue', defaultValue: 0, highlightValue: 255 })
-const white = (): ChannelDefinition => ({ name: 'White', function: 'white', defaultValue: 0, highlightValue: 255 })
+const red = (): ChannelDefinition => ({ name: 'Red', function: 'red', defaultValue: 0 })
+const green = (): ChannelDefinition => ({ name: 'Green', function: 'green', defaultValue: 0 })
+const blue = (): ChannelDefinition => ({ name: 'Blue', function: 'blue', defaultValue: 0 })
+const white = (): ChannelDefinition => ({ name: 'White', function: 'white', defaultValue: 0 })
 const ctrl = (name: string, defaultValue = 0): ChannelDefinition => ({ name, function: 'control', defaultValue })
 /** A real mechanical shutter/strobe: open by default (255 sits in the "open" band). */
 const shutter = (): ChannelDefinition => ({
@@ -109,7 +109,7 @@ export const TARTANGA_FIXTURES: FixtureDefinition[] = [
         name: '6 DMX',
         channels: [
           red(), green(), blue(),
-          { name: 'Amber', function: 'amber', defaultValue: 0, highlightValue: 255 },
+          { name: 'Amber', function: 'amber', defaultValue: 0 },
           dimmer(),
           ctrl('Strobe / Programs'),
         ],
@@ -156,10 +156,10 @@ export const TARTANGA_FIXTURES: FixtureDefinition[] = [
         name: '7 DMX',
         channels: [
           { name: 'Master Dimmer', function: 'dimmer', defaultValue: 0, highlightValue: 255 },
-          { name: 'Eye 1 Warm White', function: 'amber', defaultValue: 0, highlightValue: 255 },
-          { name: 'Eye 1 Cold White', function: 'white', defaultValue: 0, highlightValue: 255 },
-          { name: 'Eye 2 Warm White', function: 'amber', defaultValue: 0, highlightValue: 255 },
-          { name: 'Eye 2 Cold White', function: 'white', defaultValue: 0, highlightValue: 255 },
+          { name: 'Eye 1 Warm White', function: 'amber', defaultValue: 0 },
+          { name: 'Eye 1 Cold White', function: 'white', defaultValue: 0 },
+          { name: 'Eye 2 Warm White', function: 'amber', defaultValue: 0 },
+          { name: 'Eye 2 Cold White', function: 'white', defaultValue: 0 },
           ctrl('Strobe'),
           ctrl('Modes'),
         ],
