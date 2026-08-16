@@ -86,6 +86,10 @@ export function QuartzScreen({ extMonitor }: { extMonitor?: boolean } = {}) {
   const convertArm = useShowStore((s) => s.convertArm)
   const setConvertArm = useShowStore((s) => s.setConvertArm)
   const playbacksCount = useShowStore((s) => s.playbacks.length)
+  const orderArm = useShowStore((s) => s.orderArm)
+  const orderSeq = useShowStore((s) => s.orderSeq)
+  const setOrderArm = useShowStore((s) => s.setOrderArm)
+  const orderTap = useShowStore((s) => s.orderTap)
   const highlight = useShowStore((s) => s.highlight)
   const toggleHighlight = useShowStore((s) => s.toggleHighlight)
   const programmer = useShowStore((s) => s.programmer)
@@ -303,7 +307,7 @@ export function QuartzScreen({ extMonitor }: { extMonitor?: boolean } = {}) {
         { k: 'A', label: 'Record Group', kind: 'action', onClick: recordGroup, disabled: noSel },
         { k: 'B', label: legendArm ? 'Provide a Legend ✓' : 'Provide a Legend', sub: t('desk.setLegendSub'), kind: 'action', onClick: () => setLegendArm(!legendArm) },
         { k: 'C', label: 'Recall Group', kind: 'menu', info: true },
-        { k: 'D', label: 'Fixture Order', kind: 'menu', info: true },
+        { k: 'D', label: orderArm ? 'Fixture Order ✓' : 'Fixture Order', sub: t('desk.orderSub'), kind: 'action', onClick: () => setOrderArm(!orderArm), disabled: selection.length < 2 },
         { k: 'E', label: 'Edit Layout', kind: 'menu', info: true },
         { k: 'F' },
         { k: 'G' },
@@ -417,17 +421,20 @@ export function QuartzScreen({ extMonitor }: { extMonitor?: boolean } = {}) {
     ) : (
       <div className="qd-ws-grid">
         {fixtures.map((pf, i) => (
-          <div key={pf.id} className={`qd-cell ws-fixture${selection.includes(pf.id) ? ' active' : ''}${legendArm ? ' legend-pick' : ''}${alignArm && selection.includes(pf.id) ? ' align-pick' : ''}`}>
+          <div key={pf.id} className={`qd-cell ws-fixture${selection.includes(pf.id) ? ' active' : ''}${legendArm ? ' legend-pick' : ''}${alignArm && selection.includes(pf.id) ? ' align-pick' : ''}${orderArm && selection.includes(pf.id) ? ' order-pick' : ''}`}>
             <button
               className="qd-cell-hit"
               onClick={
-                alignArm && selection.includes(pf.id) ? () => alignFrom(pf.id)
+                orderArm && selection.includes(pf.id) ? () => orderTap(pf.id)
+                : alignArm && selection.includes(pf.id) ? () => alignFrom(pf.id)
                 : legendArm ? () => { askLegend(pf.name, (n) => renameFixture(pf.id, n)); setLegendArm(false) }
                 : () => toggleSelect(pf.id)
               }
-              title={alignArm && selection.includes(pf.id) ? t('desk.alignPick') : legendArm ? t('desk.setLegendPick') : `${pf.name} — nº ${userNumberOf(fixtures, i)} · DMX ${pf.universe}.${pf.address} (teclea ${userNumberOf(fixtures, i)} para seleccionarlo)`}
+              title={orderArm && selection.includes(pf.id) ? t('desk.orderPick') : alignArm && selection.includes(pf.id) ? t('desk.alignPick') : legendArm ? t('desk.setLegendPick') : `${pf.name} — nº ${userNumberOf(fixtures, i)} · DMX ${pf.universe}.${pf.address} (teclea ${userNumberOf(fixtures, i)} para seleccionarlo)`}
             >
-              {fixtureLabel !== 'hidden' && (
+              {orderArm && selection.includes(pf.id) ? (
+                <span className="qd-usernum qd-ordernum">{orderSeq.indexOf(pf.id) >= 0 ? orderSeq.indexOf(pf.id) + 1 : '·'}</span>
+              ) : fixtureLabel !== 'hidden' && (
                 <span className="qd-usernum">{fixtureLabel === 'address' ? `${pf.universe}.${pf.address}` : userNumberOf(fixtures, i)}</span>
               )}
               {pf.name}
@@ -726,7 +733,12 @@ export function QuartzScreen({ extMonitor }: { extMonitor?: boolean } = {}) {
       {!extMonitor && (
       <div className="qscreen-cmd">
         <span className="qcmd-prompt">›</span>
-        {convertArm ? (
+        {orderArm ? (
+          <span className="qcmd-line">
+            <span className="qcmd-kw">Fixture Order</span>
+            <span className="qcmd-sel">{t('desk.orderPick')} — {orderSeq.length}/{selection.length}</span>
+          </span>
+        ) : convertArm ? (
           <span className="qcmd-line">
             <span className="qcmd-kw">{convertArm === 'chase' ? 'Convert to Chase' : 'Convert to Cue List'}</span>
             <span className="qcmd-sel">{t('desk.convertPick')}</span>

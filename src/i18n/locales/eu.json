@@ -111,7 +111,9 @@
     "alignSub": "Kopiatu atributuak erreferentzia batetik",
     "alignPick": "ukitu erreferentziazko fixturea kopiatzeko",
     "convertSub": "Ukitu playback bat bihurtzeko",
-    "convertPick": "ukitu playback bat bihurtzeko"
+    "convertPick": "ukitu playback bat bihurtzeko",
+    "orderSub": "Ukitu fixtureak nahi duzun ordenan",
+    "orderPick": "ukitu fixtureak ordenan"
   },
   "fixturesWindow": {
     "title": "Fixture-ak",

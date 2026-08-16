@@ -111,7 +111,9 @@
     "alignSub": "Copy attributes from a reference",
     "alignPick": "touch the reference fixture to copy from",
     "convertSub": "Touch a playback to convert",
-    "convertPick": "touch a playback to convert"
+    "convertPick": "touch a playback to convert",
+    "orderSub": "Tap fixtures in the order you want",
+    "orderPick": "tap the fixtures in order"
   },
   "fixturesWindow": {
     "title": "Fixtures",

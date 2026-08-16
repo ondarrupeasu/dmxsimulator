@@ -293,6 +293,12 @@ interface ShowState {
   /** Convert to Chase / Cue List armed (Record menu): touch a playback to convert its mode. */
   convertArm: 'chase' | 'list' | null
   setConvertArm: (m: 'chase' | 'list' | null) => void
+  /** Fixture Order mode (Titan): tap the selected fixtures in the order you want; that becomes
+   *  the selection order used by fans/effects. `orderSeq` is the sequence being built. */
+  orderArm: boolean
+  orderSeq: string[]
+  setOrderArm: (v: boolean) => void
+  orderTap: (instanceId: string) => void
   /** Copy the reference fixture's programmed attributes (filtered by the Record Mask) onto the
    *  other selected fixtures, by function so it works across fixture types. Disarms Align. */
   alignFrom: (referenceId: string) => void
@@ -1352,6 +1358,20 @@ export const useShowStore = create<ShowState>()(
       setAlignArm: (v) => set({ alignArm: v }),
       convertArm: null,
       setConvertArm: (m) => set({ convertArm: m }),
+      orderArm: false,
+      orderSeq: [],
+      setOrderArm: (v) =>
+        set((s) => {
+          // Turning it OFF applies the tapped order: reorder the selection so tapped fixtures come
+          // first (in tap order), untapped ones keep their order after — no fixture is lost.
+          if (!v && s.orderSeq.length) {
+            const rest = s.selection.filter((id) => !s.orderSeq.includes(id))
+            return { orderArm: false, selection: [...s.orderSeq, ...rest], orderSeq: [] }
+          }
+          return { orderArm: v, orderSeq: [] }
+        }),
+      orderTap: (instanceId) =>
+        set((s) => ({ orderSeq: s.orderSeq.includes(instanceId) ? s.orderSeq.filter((x) => x !== instanceId) : [...s.orderSeq, instanceId] })),
       alignFrom: (referenceId) =>
         set((s) => {
           const ref = s.show.fixtures.find((f) => f.id === referenceId)

@@ -111,7 +111,9 @@
     "alignSub": "Copiar atributos de una referencia",
     "alignPick": "toca el fixture de referencia a copiar",
     "convertSub": "Toca un playback para convertirlo",
-    "convertPick": "toca un playback para convertirlo"
+    "convertPick": "toca un playback para convertirlo",
+    "orderSub": "Toca los fixtures en el orden que quieras",
+    "orderPick": "toca los fixtures en orden"
   },
   "fixturesWindow": {
     "title": "Fixtures",

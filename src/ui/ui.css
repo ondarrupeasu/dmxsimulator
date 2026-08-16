@@ -1850,3 +1850,8 @@
 /* Convert to Chase/Cue List armed: playback cards are pickable to convert. */
 .pb-card.convert-pick { outline: 1px dashed #4aa3ff; outline-offset: -1px; }
 .pb-card.convert-pick .pb-fire { cursor: cell; }
+/* Fixture Order armed: selected fixtures are tappable to set their sequence; the corner shows
+   the order number (or · until tapped). */
+.qd-cell.order-pick { outline: 1px dashed #4aa3ff; outline-offset: -1px; }
+.qd-cell.order-pick .qd-cell-hit { cursor: pointer; }
+.qd-ordernum { background: #3a86c0 !important; color: #fff !important; }
