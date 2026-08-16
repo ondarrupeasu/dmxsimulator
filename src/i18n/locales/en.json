@@ -125,7 +125,8 @@
     "deleteCell": "Delete",
     "recordGroupTip": "Record the current selection as a group",
     "patchFirst": "Patch fixtures first.",
-    "recordPaletteTip": "Record a {{kind}} palette from the programmer"
+    "recordPaletteTip": "Record a {{kind}} palette from the programmer",
+    "wheelsTip": "What each wheel controls now and its value (for the current attribute bank)"
   },
   "fixturesWindow": {
     "title": "Fixtures",

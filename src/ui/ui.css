@@ -1875,3 +1875,30 @@
 .tour-menu > button:hover, .tour-menu > a:hover { background: rgba(255,255,255,.06); }
 .tour-menu b { color: var(--text); font-size: 13px; font-weight: 600; }
 .tour-menu small { color: var(--text-dim); font-size: 11px; }
+
+/* Wheel display (Titan encoder readout): what the 3 wheels control now + value, for the bank. */
+.qscreen-wheels {
+  flex: 0 0 auto; display: flex; align-items: stretch; gap: 6px; padding: 5px 8px;
+  border-top: 1px solid var(--border); background: var(--bg-elev, #0f151d);
+}
+.qwh-bank {
+  display: flex; align-items: center; padding: 0 8px; font-size: 10px; font-weight: 800;
+  letter-spacing: .08em; text-transform: uppercase; color: #7fd0f2;
+  border-right: 1px solid var(--border);
+}
+.qwh {
+  flex: 1 1 0; min-width: 0; display: grid; grid-template-columns: 1fr auto; grid-template-rows: auto auto;
+  align-items: center; gap: 0 6px; padding: 3px 8px; border-radius: 6px;
+  background: rgba(127,208,242,.06); border: 1px solid #24384a;
+}
+.qwh.empty { background: transparent; border-color: transparent; }
+.qwh-name { grid-column: 1; grid-row: 1; font-size: 10px; color: var(--text-dim); text-transform: uppercase; letter-spacing: .04em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.qwh-val { grid-column: 1; grid-row: 2; font-size: 17px; font-weight: 700; color: #eaf3ff; font-variant-numeric: tabular-nums; }
+.qwh-arrows { grid-column: 2; grid-row: 1 / span 2; display: flex; flex-direction: column; gap: 2px; }
+.qwh-arrows button {
+  width: 22px; height: 16px; padding: 0; line-height: 1; font-size: 9px; cursor: pointer;
+  color: #bcd; background: #1a2530; border: 1px solid #2f4457; border-radius: 3px;
+  display: flex; align-items: center; justify-content: center;
+}
+.qwh-arrows button:hover { border-color: #7fb8dd; }
+.qwh-none { grid-column: 1 / span 2; text-align: center; color: var(--text-faint); }

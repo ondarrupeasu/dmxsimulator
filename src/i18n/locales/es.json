@@ -125,7 +125,8 @@
     "deleteCell": "Eliminar",
     "recordGroupTip": "Graba la selección actual como grupo",
     "patchFirst": "Patchea fixtures primero.",
-    "recordPaletteTip": "Graba una paleta de {{kind}} desde el programmer"
+    "recordPaletteTip": "Graba una paleta de {{kind}} desde el programmer",
+    "wheelsTip": "Qué controla cada rueda ahora y su valor (del banco de atributos activo)"
   },
   "fixturesWindow": {
     "title": "Fixtures",

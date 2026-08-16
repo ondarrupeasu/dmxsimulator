@@ -125,7 +125,8 @@
     "deleteCell": "Ezabatu",
     "recordGroupTip": "Grabatu uneko hautaketa talde gisa",
     "patchFirst": "Patcheatu fixtureak lehenik.",
-    "recordPaletteTip": "Grabatu {{kind}} paleta bat programmer-etik"
+    "recordPaletteTip": "Grabatu {{kind}} paleta bat programmer-etik",
+    "wheelsTip": "Gurpil bakoitzak zer kontrolatzen duen orain eta bere balioa (atributu-banku aktiboan)"
   },
   "fixturesWindow": {
     "title": "Fixture-ak",
