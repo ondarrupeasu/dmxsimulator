@@ -1648,9 +1648,9 @@ export const useShowStore = create<ShowState>()(
         }),
 
       exportShow: () => {
-        const { show, programmer, effects, palettes } = get()
+        const { show, programmer, effects, palettes, groups, playbacks, executorLabels, executorCues } = get()
         return JSON.stringify(
-          { app: 'DMXSimulatoR', version: 1, show, programmer, effects, palettes },
+          { app: 'DMXSimulatoR', version: 2, show, programmer, effects, palettes, groups, playbacks, executorLabels, executorCues },
           null,
           2,
         )
@@ -1663,20 +1663,31 @@ export const useShowStore = create<ShowState>()(
           programmer?: ProgrammerValues
           effects?: Effect[]
           palettes?: Palette[]
+          groups?: Group[]
+          playbacks?: Playback[]
+          executorLabels?: Record<number, string>
+          executorCues?: Record<number, string>
         }
         if (!d.show || !Array.isArray(d.show.fixtures)) return false
         // Drop fixtures whose definition isn't in the library (unknown import).
         const defs = get().definitions
         const fixtures = d.show.fixtures.filter((f) => defs[f.definitionId])
+        const live = new Set(fixtures.map((f) => f.id))
+        // Keep only groups/playbacks that reference surviving fixtures.
+        const groups = (d.groups ?? []).map((g) => ({ ...g, fixtureIds: g.fixtureIds.filter((id) => live.has(id)) }))
         set({
           show: { ...d.show, fixtures },
           programmer: d.programmer ?? {},
           effects: d.effects ?? [],
           palettes: d.palettes ?? [],
+          groups,
+          playbacks: d.playbacks ?? [],
+          executorLabels: d.executorLabels ?? {},
+          executorCues: d.executorCues ?? {},
           now: 0,
           selection: [],
-          playbacks: [],
           connectedId: null,
+          playbackLevels: {},
           firedLevels: {},
           fades: {},
           flashIds: [],
