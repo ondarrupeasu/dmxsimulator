@@ -25,9 +25,9 @@ const tilt = (): ChannelDefinition => ({ name: 'Tilt', function: 'tilt', default
 const tiltF = (): ChannelDefinition => ({ name: 'Tilt Fine', function: 'tiltFine', defaultValue: 0, fine: true })
 const dimmer = (): ChannelDefinition => ({ name: 'Dimmer', function: 'dimmer', defaultValue: 0, highlightValue: 255 })
 const rgb = (): ChannelDefinition[] => [
-  { name: 'Red', function: 'red', defaultValue: 0 },
-  { name: 'Green', function: 'green', defaultValue: 0 },
-  { name: 'Blue', function: 'blue', defaultValue: 0 },
+  { name: 'Red', function: 'red', defaultValue: 0, highlightValue: 255 },
+  { name: 'Green', function: 'green', defaultValue: 0, highlightValue: 255 },
+  { name: 'Blue', function: 'blue', defaultValue: 0, highlightValue: 255 },
 ]
 
 export const COMMON_FIXTURES: FixtureDefinition[] = [
@@ -44,7 +44,7 @@ export const COMMON_FIXTURES: FixtureDefinition[] = [
         channels: [
           pan(), panF(), tilt(), tiltF(), shutter16(), dimmer(),
           ...rgb(),
-          { name: 'White', function: 'white', defaultValue: 0 },
+          { name: 'White', function: 'white', defaultValue: 0, highlightValue: 255 },
           { name: 'Colour Temp', function: 'colorTemp', defaultValue: 128 },
           { name: 'Zoom', function: 'zoom', defaultValue: 128 },
           { name: 'Function', function: 'control', defaultValue: 0 },
@@ -90,7 +90,7 @@ export const COMMON_FIXTURES: FixtureDefinition[] = [
         channels: [
           pan(), panF(), tilt(), tiltF(), dimmer(), shutter16(),
           ...rgb(),
-          { name: 'White', function: 'white', defaultValue: 0 },
+          { name: 'White', function: 'white', defaultValue: 0, highlightValue: 255 },
           { name: 'Colour Macro', function: 'colorWheel', defaultValue: 0 },
           { name: 'Colour Temp', function: 'colorTemp', defaultValue: 128 },
           { name: 'Zoom', function: 'zoom', defaultValue: 128 },
@@ -136,8 +136,8 @@ export const COMMON_FIXTURES: FixtureDefinition[] = [
         channels: [
           dimmer(), shutter16(),
           ...rgb(),
-          { name: 'Amber', function: 'amber', defaultValue: 0 },
-          { name: 'White', function: 'white', defaultValue: 0 },
+          { name: 'Amber', function: 'amber', defaultValue: 0, highlightValue: 255 },
+          { name: 'White', function: 'white', defaultValue: 0, highlightValue: 255 },
           { name: 'UV', function: 'uv', defaultValue: 0 },
         ],
       },
