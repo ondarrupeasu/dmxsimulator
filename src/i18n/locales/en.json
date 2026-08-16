@@ -113,7 +113,8 @@
     "convertSub": "Touch a playback to convert",
     "convertPick": "touch a playback to convert",
     "orderSub": "Tap fixtures in the order you want",
-    "orderPick": "tap the fixtures in order"
+    "orderPick": "tap the fixtures in order",
+    "masterclassCard": "Rig + groups, palettes, cues, a chase, executors and a shape — the full desk in one show (see the manual)"
   },
   "fixturesWindow": {
     "title": "Fixtures",

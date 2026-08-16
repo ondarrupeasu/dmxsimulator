@@ -113,7 +113,8 @@
     "convertSub": "Toca un playback para convertirlo",
     "convertPick": "toca un playback para convertirlo",
     "orderSub": "Toca los fixtures en el orden que quieras",
-    "orderPick": "toca los fixtures en orden"
+    "orderPick": "toca los fixtures en orden",
+    "masterclassCard": "Rig + grupos, paletas, cues, un chase, executors y un shape — toda la mesa en un show (ver el manual)"
   },
   "fixturesWindow": {
     "title": "Fixtures",

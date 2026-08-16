@@ -122,6 +122,7 @@ export function QuartzScreen({ extMonitor }: { extMonitor?: boolean } = {}) {
   const setShow = useShowStore((s) => s.setShow)
   const addDefinitions = useShowStore((s) => s.addDefinitions)
   const loadTemplate = useShowStore((s) => s.loadTemplate)
+  const loadMasterclass = useShowStore((s) => s.loadMasterclass)
   const workspaces = useShowStore((s) => s.workspaces)
   const recallWorkspace = useShowStore((s) => s.recallWorkspace)
   const recordWorkspace = useShowStore((s) => s.recordWorkspace)
@@ -478,6 +479,10 @@ export function QuartzScreen({ extMonitor }: { extMonitor?: boolean } = {}) {
           <button className="qd-slk-btn" onClick={loadShow}>{t('desk.importFile')}</button>
         </div>
         <div className="qd-showlib-grid">
+          <button className="qd-showcard qd-showcard-master" onClick={() => { loadMasterclass(); setScreen('fixtures') }}>
+            <b>🎓 Masterclass — todo en uno</b>
+            <small>{t('desk.masterclassCard')}</small>
+          </button>
           {TEMPLATES.map((tpl) => (
             <button key={tpl.id} className="qd-showcard" onClick={() => { loadTemplate(tpl.id); setScreen('fixtures') }}>
               <b>{tpl.name}</b>

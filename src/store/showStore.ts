@@ -408,6 +408,9 @@ interface ShowState {
 
   // Show file / templates
   loadTemplate: (templateId: string) => void
+  /** Build the "Masterclass" lesson show — a rig fully programmed with groups, palettes, cues,
+   *  a chase, executors and a shape, exercising every desk feature (see the accompanying manual). */
+  loadMasterclass: () => void
   setShow: (show: Show, programmer?: ProgrammerValues) => void
   /** Serialize the current show to a JSON string for download. */
   exportShow: () => string
@@ -1639,6 +1642,66 @@ export const useShowStore = create<ShowState>()(
           playbackPage: 0,
           templateId,
         })
+      },
+
+      loadMasterclass: () => {
+        const api = get()
+        api.resetShow()
+        set({ groups: [], palettes: [], playbacks: [], effects: [], programmer: {}, selection: [], executorCues: {}, executorLabels: {}, recordByFixture: true })
+        api.addFixture('generic-rgbw-par', { quantity: 4 }) // richer colour wash → 6 PARs
+        const fx = () => get().show.fixtures
+        const chOf = (f: PatchedFixture) => get().definitions[f.definitionId]?.modes[f.modeIndex]?.channels ?? []
+        const hasFn = (f: PatchedFixture, fn: string) => chOf(f).some((c) => c.function === fn)
+        const movers = () => fx().filter((f) => hasFn(f, 'pan'))
+        const pars = () => fx().filter((f) => hasFn(f, 'red'))
+        const sel = (arr: PatchedFixture[]) => set({ selection: arr.map((f) => f.id) })
+        const clearP = () => set({ programmer: {} })
+        const setF = (fn: string, v: number) => get().setSelectedByFunction(fn, v)
+
+        // Groups
+        sel(movers()); api.recordGroup()
+        sel(pars()); api.recordGroup()
+        sel(fx()); api.recordGroup()
+        const gg = get().groups
+        get().renameGroup(gg[0].id, 'Movers'); get().renameGroup(gg[1].id, 'Colour Wash'); get().renameGroup(gg[2].id, 'Everything')
+
+        // Colour palettes (on the wash)
+        const col = (r: number, gr: number, b: number) => { sel(pars()); clearP(); setF('red', r); setF('green', gr); setF('blue', b); get().recordPalette('colour') }
+        col(255, 0, 0); col(0, 255, 0); col(0, 0, 255); col(255, 120, 0)
+        const cps = get().palettes.filter((p) => p.kind === 'colour')
+        ;['Red', 'Green', 'Blue', 'Amber'].forEach((n, i) => cps[i] && get().renamePalette(cps[i].id, n))
+
+        // Position palettes (on the movers)
+        sel(movers()); clearP(); api.locateSelected(); setF('tilt', 190); get().recordPalette('position')
+        sel(movers()); get().fanSelected('pan'); get().recordPalette('position')
+        const pps = get().palettes.filter((p) => p.kind === 'position')
+        ;['Tilt Down', 'Pan Fan'].forEach((n, i) => pps[i] && get().renamePalette(pps[i].id, n))
+
+        const pbAt = (slot: number) => get().playbacks.find((p) => p.slot === slot)
+        // PB0 Warm Wash
+        sel(pars()); clearP(); setF('dimmer', 255); setF('red', 255); setF('green', 120); setF('blue', 0); get().recordCueAt(0)
+        get().renameCue(pbAt(0)!.id, 'Warm Wash')
+        // PB1 Colour Chase (3 steps R/G/B → chase @120)
+        sel(pars())
+        clearP(); setF('dimmer', 255); setF('red', 255); setF('green', 0); setF('blue', 0); get().recordCueAt(1)
+        clearP(); setF('dimmer', 255); setF('red', 0); setF('green', 255); setF('blue', 0); get().recordCueAt(1)
+        clearP(); setF('dimmer', 255); setF('red', 0); setF('green', 0); setF('blue', 255); get().recordCueAt(1)
+        const chase = pbAt(1)!; get().renameCue(chase.id, 'Colour Chase'); get().setPlaybackMode(chase.id, 'chase'); get().setPlaybackBpm(chase.id, 120)
+        // PB2 Mover Beams
+        sel(movers()); clearP(); api.locateSelected(); setF('dimmer', 255); setF('colorWheel', 36); setF('tilt', 190); get().recordCueAt(2)
+        get().renameCue(pbAt(2)!.id, 'Mover Beams')
+        // PB3 Ballyhoo (movers + circle shape captured into the cue)
+        sel(movers()); clearP(); api.locateSelected(); setF('dimmer', 255); get().addEffect('circle'); get().recordCueAt(3)
+        get().renameCue(pbAt(3)!.id, 'Ballyhoo'); set({ effects: [] })
+
+        // Executors (one-touch looks)
+        sel(pars()); clearP(); setF('dimmer', 255); setF('blue', 255); setF('red', 0); setF('green', 0)
+        get().setExecutorLabel(1, 'Blue Wash'); get().recordExecutor(1)
+        sel(movers()); clearP(); api.locateSelected(); setF('dimmer', 255); setF('colorWheel', 80)
+        get().setExecutorLabel(2, 'Movers On'); get().recordExecutor(2)
+
+        api.setShowMeta({ name: 'Masterclass — todo en uno' })
+        set({ programmer: {}, selection: [], templateId: 'masterclass', deskScreen: 'fixtures' })
       },
 
       setShow: (show, programmer = {}) =>

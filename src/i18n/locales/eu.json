@@ -113,7 +113,8 @@
     "convertSub": "Ukitu playback bat bihurtzeko",
     "convertPick": "ukitu playback bat bihurtzeko",
     "orderSub": "Ukitu fixtureak nahi duzun ordenan",
-    "orderPick": "ukitu fixtureak ordenan"
+    "orderPick": "ukitu fixtureak ordenan",
+    "masterclassCard": "Rig + taldeak, paletak, cue-ak, chase bat, executor-ak eta shape bat — mahai osoa show batean ( ikus eskuliburua)"
   },
   "fixturesWindow": {
     "title": "Fixture-ak",

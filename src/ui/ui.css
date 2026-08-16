@@ -1855,3 +1855,6 @@
 .qd-cell.order-pick { outline: 1px dashed #4aa3ff; outline-offset: -1px; }
 .qd-cell.order-pick .qd-cell-hit { cursor: pointer; }
 .qd-ordernum { background: #3a86c0 !important; color: #fff !important; }
+
+/* Masterclass demo card in Show Library — a coral-tinted highlight (it's a PWA learning aid). */
+.qd-showcard-master { border-color: var(--coral); box-shadow: inset 0 0 0 1px rgba(255,122,107,0.35); }
