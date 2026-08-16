@@ -212,6 +212,8 @@ export function QuartzScreen({ extMonitor }: { extMonitor?: boolean } = {}) {
   const clearRecordMask = useShowStore((s) => s.clearRecordMask)
   const fixtureLabel = useShowStore((s) => s.fixtureLabel)
   const setFixtureLabel = useShowStore((s) => s.setFixtureLabel)
+  const recordByFixture = useShowStore((s) => s.recordByFixture)
+  const setRecordByFixture = useShowStore((s) => s.setRecordByFixture)
   const maskActive = !(Object.values(recordMask) as boolean[]).every(Boolean)
 
   const fixtures = show.fixtures
@@ -280,7 +282,7 @@ export function QuartzScreen({ extMonitor }: { extMonitor?: boolean } = {}) {
     record: {
       title: 'Record',
       keys: [
-        { k: 'A', label: 'Record Mode', sub: 'By Fixture', kind: 'option', info: true },
+        { k: 'A', label: 'Record Mode', sub: recordByFixture ? 'By Fixture' : 'By Channel', kind: 'option', onClick: () => setRecordByFixture(!recordByFixture) },
         { k: 'B', label: maskActive ? 'Set Mask •' : 'Set Mask', sub: t('desk.maskSub'), kind: 'menu', onClick: () => setMenu('mask') },
         { k: 'C', label: 'Clear Record Mask', kind: 'action', onClick: clearRecordMask, disabled: !maskActive },
         { k: 'D', label: convertArm === 'chase' ? 'Convert to Chase ✓' : 'Convert to Chase', sub: t('desk.convertSub'), kind: 'action', onClick: () => setConvertArm(convertArm === 'chase' ? null : 'chase'), disabled: playbacksCount === 0 },

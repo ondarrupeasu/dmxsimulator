@@ -343,6 +343,10 @@ interface ShowState {
   recordMask: RecordMask
   toggleRecordMask: (kind: PaletteKind) => void
   clearRecordMask: () => void
+  // Record Mode (Titan): By Fixture (default) stores every channel of any touched fixture,
+  // including Locate values; By Channel stores only the channels you actually changed.
+  recordByFixture: boolean
+  setRecordByFixture: (v: boolean) => void
 
   // Visualiser toggle (2D plan ↔ 3D). Lifted into the store so a recalled Workspace/View
   // (Titan's saved window layouts) can restore it along with the rest of the arrangement.
@@ -444,9 +448,11 @@ const FUNCTION_KIND: Record<string, PaletteKind> = (() => {
 /** Like snapProgrammer, but drops channels whose attribute bank is masked OUT (Titan's Record
  *  Mask). A full mask (every bank on) records everything, including unclassified functions;
  *  once any bank is off, only enabled banks are stored (unclassified functions are kept). */
-function snapProgrammerMasked(s: { programmer: ProgrammerValues; show: Show; definitions: Record<string, FixtureDefinition>; recordMask: RecordMask }): ProgrammerValues {
+function snapProgrammerMasked(s: { programmer: ProgrammerValues; show: Show; definitions: Record<string, FixtureDefinition>; recordMask: RecordMask; recordByFixture: boolean }): ProgrammerValues {
   const base = snapProgrammer(s)
-  if ((Object.values(s.recordMask) as boolean[]).every(Boolean)) return base
+  const maskFull = (Object.values(s.recordMask) as boolean[]).every(Boolean)
+  const byChannel = !s.recordByFixture
+  if (maskFull && !byChannel) return base // By Fixture + no mask = record everything (fast path)
   const out: ProgrammerValues = {}
   for (const id in base) {
     const pf = s.show.fixtures.find((f) => f.id === id)
@@ -456,7 +462,10 @@ function snapProgrammerMasked(s: { programmer: ProgrammerValues; show: Show; def
     for (const idxStr in base[id]) {
       const idx = Number(idxStr)
       const kind = FUNCTION_KIND[channels[idx]?.function]
-      if (!kind || s.recordMask[kind]) kept[idx] = base[id][idx] // unclassified functions stay
+      if (kind && !s.recordMask[kind]) continue // bank masked out
+      // Record by Channel: skip channels still at their Locate/home value (only store real edits).
+      if (byChannel && base[id][idx] === (channels[idx]?.highlightValue ?? channels[idx]?.defaultValue)) continue
+      kept[idx] = base[id][idx]
     }
     if (Object.keys(kept).length) out[id] = kept
   }
@@ -1474,6 +1483,8 @@ export const useShowStore = create<ShowState>()(
       recordMask: { intensity: true, position: true, colour: true, gobo: true, beam: true },
       toggleRecordMask: (kind) => set((s) => ({ recordMask: { ...s.recordMask, [kind]: !s.recordMask[kind] } })),
       clearRecordMask: () => set({ recordMask: { intensity: true, position: true, colour: true, gobo: true, beam: true } }),
+      recordByFixture: true,
+      setRecordByFixture: (v) => set({ recordByFixture: v }),
 
       viewer: '3d',
       setViewer: (v) => set({ viewer: v }),
