@@ -707,22 +707,25 @@ export function Visualizer3D({ ext = false }: { ext?: boolean } = {}) {
           landX = hx
           landZ = hz
         }
-        // Beam width from zoom + iris: zoom opens/closes the cone, iris pinches it toward a
-        // pinspot. Scale X/Z (width) independently of Y (length) so the cone angle changes.
-        // Prism spreads the beam a touch (it fans light into facets).
+        // Beam width from zoom + iris only: zoom opens/closes the cone, iris pinches it toward a
+        // pinspot. Prism does NOT widen the beam (that read as a zoom) — it drops a multi-facet
+        // pattern on the floor instead (see the pool below).
         const prismOn = vs.prism !== undefined && vs.prism > 0.15
         const zoomF = vs.zoom !== undefined ? 0.45 + vs.zoom * 1.45 : 1
         const irisF = vs.iris !== undefined ? 0.18 + vs.iris * 0.82 : 1
-        const widthF = zoomF * irisF * (prismOn ? 1 + vs.prism! * 0.35 : 1)
+        const widthF = zoomF * irisF
         fx.beam.scale.set(length * widthF, length, length * widthF)
 
-        const on = vs.intensity > 0.01
+        // Strobe: actually blink the output on/off (~9 Hz) instead of just dimming it, so you see
+        // the flashing. Uses real time so it keeps blinking even with the effect clock paused.
+        const strobeVisible = !vs.strobing || Math.floor(nowMs / 55) % 2 === 0
+        const on = vs.intensity > 0.01 && strobeVisible
         fx.beam.visible = on
         if (on) {
           fx.beamMat.color.copy(col)
           // Haze makes the shaft of light visible in the air — beams get more opaque; a prism
-          // splits it into several shafts, so the column reads a little brighter.
-          fx.beamMat.opacity = Math.min(0.95, vs.intensity * (vs.strobing ? 0.25 : 0.55) * (1 + 1.4 * hazeLevel) * (prismOn ? 1.15 : 1))
+          // splits it into facets, so the column reads a little brighter.
+          fx.beamMat.opacity = Math.min(0.95, vs.intensity * 0.6 * (1 + 1.4 * hazeLevel) * (prismOn ? 1.15 : 1))
         }
 
         // Pool where the beam lands — an ellipse (a tilted beam cuts the surface obliquely).
