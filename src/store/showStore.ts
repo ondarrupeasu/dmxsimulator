@@ -287,6 +287,10 @@ interface ShowState {
   clearSelectedFunctions: (fns: string[]) => void
   /** Flip Pan and Tilt on the selected moving heads (the alternate yoke position). */
   flipSelected: () => void
+  /** Fire a fixture Macro (ML Menu → Macros): for each selected fixture, set the control channel
+   *  whose capability matches `label` (Reset, Lamp On…) to that capability's value. Data-driven —
+   *  macros come from each fixture's personality (control-channel capabilities / GDTF import). */
+  applyMacro: (label: string) => void
   /** Align Fixtures (Titan): armed, waiting for you to touch the reference fixture to copy from. */
   alignArm: boolean
   setAlignArm: (v: boolean) => void
@@ -1362,6 +1366,22 @@ export const useShowStore = create<ShowState>()(
               writeFrac(tiltI, tiltFI, 1 - frac) // mirror tilt
             }
             programmer[id] = edits
+          }
+          return { programmer }
+        }),
+
+      applyMacro: (label) =>
+        set((s) => {
+          const programmer = { ...s.programmer }
+          for (const id of s.selection) {
+            const pf = s.show.fixtures.find((f) => f.id === id)
+            const channels = pf && s.definitions[pf.definitionId]?.modes[pf.modeIndex]?.channels
+            if (!channels) continue
+            channels.forEach((ch, i) => {
+              if (ch.function !== 'control' || !ch.capabilities) return
+              const cap = ch.capabilities.find((c) => c.label === label)
+              if (cap) programmer[id] = { ...programmer[id], [i]: Math.round((cap.rangeStart + cap.rangeEnd) / 2) }
+            })
           }
           return { programmer }
         }),

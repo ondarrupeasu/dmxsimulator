@@ -80,6 +80,7 @@ export function QuartzScreen({ extMonitor }: { extMonitor?: boolean } = {}) {
   const clearProgrammer = useShowStore((s) => s.clearProgrammer)
   const locateSelected = useShowStore((s) => s.locateSelected)
   const flipSelected = useShowStore((s) => s.flipSelected)
+  const applyMacro = useShowStore((s) => s.applyMacro)
   const alignArm = useShowStore((s) => s.alignArm)
   const setAlignArm = useShowStore((s) => s.setAlignArm)
   const alignFrom = useShowStore((s) => s.alignFrom)
@@ -224,6 +225,12 @@ export function QuartzScreen({ extMonitor }: { extMonitor?: boolean } = {}) {
   // A moving head (has pan/tilt) is selected → Flip is available.
   const definitions = useShowStore((s) => s.definitions)
   const hasMover = fixtures.some((pf) => selection.includes(pf.id) && (definitions[pf.definitionId]?.modes[pf.modeIndex]?.channels ?? []).some((c) => c.function === 'pan' || c.function === 'tilt'))
+  // Macros the selection actually has (from control-channel capabilities in each personality).
+  const macroLabels = [...new Set(fixtures.filter((pf) => selection.includes(pf.id)).flatMap((pf) =>
+    (definitions[pf.definitionId]?.modes[pf.modeIndex]?.channels ?? [])
+      .filter((c) => c.function === 'control' && c.capabilities)
+      .flatMap((c) => c.capabilities!.map((cap) => cap.label)),
+  ))]
   // Screens reachable from a Disk/menu softkey rather than a workspace tab (no tab lights up for them).
   const EXTRA_SCREENS = ['showlib']
   const norm = (raw: string) => (TABS.some((tb) => tb.key === raw) || EXTRA_SCREENS.includes(raw) ? raw : 'groups')
@@ -345,11 +352,22 @@ export function QuartzScreen({ extMonitor }: { extMonitor?: boolean } = {}) {
       keys: [
         { k: 'A', label: alignArm ? 'Align ✓' : 'Align', sub: t('desk.alignSub'), kind: 'action', onClick: () => setAlignArm(!alignArm), disabled: selection.length < 2 },
         { k: 'B', label: 'Flip', sub: t('desk.flipSub'), kind: 'action', onClick: flipSelected, disabled: !hasMover },
-        { k: 'C', label: 'Macros', kind: 'menu', info: true },
+        { k: 'C', label: 'Macros', kind: 'menu', onClick: () => setMenu('macros'), disabled: macroLabels.length === 0 },
         { k: 'D' },
         { k: 'E' },
         { k: 'F' },
         { k: 'G' },
+      ],
+    },
+    macros: {
+      title: macroLabels.length ? 'Macros' : 'Macros — none on this fixture',
+      keys: [
+        ...(['A', 'B', 'C', 'D', 'E', 'F'] as const).map((k, i) =>
+          macroLabels[i]
+            ? { k, label: macroLabels[i], kind: 'action' as const, onClick: () => applyMacro(macroLabels[i]) }
+            : { k },
+        ),
+        { k: 'G', label: 'Back', kind: 'menu' as const, onClick: () => setMenu('ml') },
       ],
     },
     disk: {
