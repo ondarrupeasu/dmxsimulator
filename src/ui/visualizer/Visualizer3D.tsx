@@ -222,6 +222,15 @@ function makeGoboTextures(): THREE.CanvasTexture[] {
   })
 }
 const GOBO_TEX = makeGoboTextures()
+// Prism variant of each gobo: the same pattern tiled 2×2, so a prism + gobo reads as several
+// copies of the gobo on the floor (the beam split) rather than one — cheap multi-image cue.
+const GOBO_TEX_PRISM = GOBO_TEX.map((t) => {
+  const c = t.clone()
+  c.wrapS = c.wrapT = THREE.RepeatWrapping
+  c.repeat.set(2, 2)
+  c.needsUpdate = true
+  return c
+})
 
 /** Prism split pattern: a bright core + 3 satellites (a 3-facet prism throws the beam into
  *  several). Dropped onto the floor pool while the prism is engaged, like a real prism split. */
@@ -734,12 +743,14 @@ export function Visualizer3D({ ext = false }: { ext?: boolean } = {}) {
         // otherwise the shaped pattern (incl. on the back wall) would vanish the moment the
         // beam leaves the deck, and you couldn't see your selected gobo. A patterned pool reads
         // as intentional, unlike a blank disc.
-        const goboTex = vs.gobo !== undefined && vs.gobo >= 8
-          ? GOBO_TEX[Math.min(GOBO_TEX.length - 1, Math.floor((vs.gobo / 256) * GOBO_TEX.length))]
-          : null
-        // A gobo pattern wins the pool; else a prism drops its facet split. Either shows the
-        // shaped light on the floor even off the deck (a plain disc there would look wrong).
-        const patternTex = goboTex ?? (prismOn ? PRISM_TEX : null)
+        const goboIdx = vs.gobo !== undefined && vs.gobo >= 8
+          ? Math.min(GOBO_TEX.length - 1, Math.floor((vs.gobo / 256) * GOBO_TEX.length))
+          : -1
+        // Prism multiplies the pool: with a gobo it tiles the gobo (several copies = the split);
+        // with no gobo it drops the 3-facet pattern. No prism → the plain gobo (or nothing).
+        const patternTex = prismOn
+          ? (goboIdx >= 0 ? GOBO_TEX_PRISM[goboIdx] : PRISM_TEX)
+          : (goboIdx >= 0 ? GOBO_TEX[goboIdx] : null)
         if (on && (onStage || patternTex)) {
           fx.pool.visible = true
           fx.pool.position.set(landX, (onStage ? STAGE_TOP : 0) + 0.02, landZ)

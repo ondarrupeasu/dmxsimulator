@@ -76,17 +76,19 @@ export function computeVisualState(
   const hasColor = ['red', 'green', 'blue', 'white', 'amber'].some(
     (fn) => channels.some((c) => c.function === fn),
   )
-  // A colour-wheel spot (no RGB mixing): map its wheel value to a slot colour so the
-  // beam actually changes colour when you turn the Colour wheel.
+  // A colour-wheel spot (no RGB mixing): map its wheel value to a slot colour so the beam
+  // actually changes colour when you turn the Colour wheel (slot 0 = open white).
   const wheelVal = get('colorWheel')
-  if ((!hasColor || cr + cg + cb === 0) && wheelVal !== undefined) {
-    ;[cr, cg, cb] = colourWheelSlot(wheelVal)
-  } else if (!hasColor || cr + cg + cb === 0) {
-    // A pure dimmer emits warm white; an RGB fixture with no colour picked yet also
-    // shows open white, so raising intensity alone lights it (beginner-friendly).
-    cr = 255
-    cg = 245
-    cb = 220
+  if (cr + cg + cb === 0) {
+    if (wheelVal !== undefined) {
+      ;[cr, cg, cb] = colourWheelSlot(wheelVal)
+    } else if (!hasColor) {
+      // A pure dimmer emits warm white (a tungsten/white fixture with no colour control).
+      cr = 255
+      cg = 245
+      cb = 220
+    }
+    // else: an RGB/RGBW fixture with every colour channel at 0 emits nothing → stays black.
   }
 
   const dimmer = get('dimmer')
