@@ -5,7 +5,11 @@
   },
   "tour": {
     "launch": "Bisita gidatua: piztu zure lehen truss-a urratsez urrats",
-    "launchLabel": "❔ Tutoriala"
+    "launchLabel": "❔ Tutoriala",
+    "guided": "Bisita gidatua",
+    "guidedSub": "Piztu zure lehen truss-a urratsez urrats",
+    "manual": "Masterclass eskuliburua",
+    "manualSub": "Ireki adibide-showaren gida beste fitxa batean"
   },
   "common": {
     "collapse": "Tolestu",

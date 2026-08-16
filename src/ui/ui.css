@@ -1858,3 +1858,20 @@
 
 /* Masterclass demo card in Show Library — a coral-tinted highlight (it's a PWA learning aid). */
 .qd-showcard-master { border-color: var(--coral); box-shadow: inset 0 0 0 1px rgba(255,122,107,0.35); }
+
+/* Tutorial launcher → small menu (Guided tour / Masterclass manual). */
+.tour-launch-wrap { position: relative; }
+.tour-menu-backdrop { position: fixed; inset: 0; z-index: 50; }
+.tour-menu {
+  position: absolute; top: calc(100% + 6px); right: 0; z-index: 51; min-width: 232px;
+  display: flex; flex-direction: column; gap: 3px; padding: 5px;
+  background: var(--bg-elev, #12181f); border: 1px solid var(--border); border-radius: 9px;
+  box-shadow: 0 10px 30px rgba(0,0,0,.5);
+}
+.tour-menu > button, .tour-menu > a {
+  text-align: left; text-decoration: none; display: flex; flex-direction: column; gap: 1px;
+  padding: 8px 11px; border-radius: 6px; border: none; background: transparent; cursor: pointer;
+}
+.tour-menu > button:hover, .tour-menu > a:hover { background: rgba(255,255,255,.06); }
+.tour-menu b { color: var(--text); font-size: 13px; font-weight: 600; }
+.tour-menu small { color: var(--text-dim); font-size: 11px; }

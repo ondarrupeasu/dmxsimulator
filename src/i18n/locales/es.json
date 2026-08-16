@@ -5,7 +5,11 @@
   },
   "tour": {
     "launch": "Tour guiado: enciende tu primer truss paso a paso",
-    "launchLabel": "❔ Tutorial"
+    "launchLabel": "❔ Tutorial",
+    "guided": "Tour guiado",
+    "guidedSub": "Enciende tu primer truss paso a paso",
+    "manual": "Manual Masterclass",
+    "manualSub": "Abre la guía del show de ejemplo en otra pestaña"
   },
   "common": {
     "collapse": "Plegar",

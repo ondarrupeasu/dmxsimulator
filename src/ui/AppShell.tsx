@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Panel, PanelGroup, PanelResizeHandle, type ImperativePanelHandle } from 'react-resizable-panels'
 import { useShowStore } from '../store/showStore'
@@ -34,6 +34,8 @@ export function AppShell() {
   const monitorCollapsed = fold.monitor
   const viewerVisible = useShowStore((s) => s.viewerVisible)
   const startTour = useTour((s) => s.start)
+  const [tutMenu, setTutMenu] = useState(false)
+  const manualUrl = `${import.meta.env.BASE_URL}masterclass-manual.html`
   // Broadcast live state to the external-monitor window (2nd display), if open.
   useEffect(() => startExtBroadcast(useShowStore as never), [])
   useEffect(() => {
@@ -164,9 +166,24 @@ export function AppShell() {
         <div className="spacer" />
 
         {quartzDocked && (
-          <button className="tour-launch" onClick={() => startTour()} title={t('tour.launch')}>
-            {t('tour.launchLabel')}
-          </button>
+          <div className="tour-launch-wrap">
+            <button className="tour-launch" onClick={() => setTutMenu((v) => !v)} title={t('tour.launch')} aria-expanded={tutMenu}>
+              {t('tour.launchLabel')}
+            </button>
+            {tutMenu && (
+              <>
+                <div className="tour-menu-backdrop" onClick={() => setTutMenu(false)} />
+                <div className="tour-menu" role="menu">
+                  <button role="menuitem" onClick={() => { setTutMenu(false); startTour() }}>
+                    <b>{t('tour.guided')}</b><small>{t('tour.guidedSub')}</small>
+                  </button>
+                  <a role="menuitem" href={manualUrl} target="_blank" rel="noopener noreferrer" onClick={() => setTutMenu(false)}>
+                    <b>{t('tour.manual')}</b><small>{t('tour.manualSub')}</small>
+                  </a>
+                </div>
+              </>
+            )}
+          </div>
         )}
 
         <select
