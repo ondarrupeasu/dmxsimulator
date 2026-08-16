@@ -1,0 +1,293 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Masterclass Quartz</title>
+<style>
+  :root {
+    --bg: #f4f1ea; --surface: #fffdf8; --surface-2: #faf6ee;
+    --ink: #1d1a15; --ink-dim: #6c6558; --ink-faint: #9a9385;
+    --line: #e5ddcd; --line-strong: #d6ccb6;
+    --amber: #b9700f; --amber-soft: #f3e6cf;
+    --blue: #285f97; --blue-soft: #e2ebf4;
+    --good: #2f7d4f;
+    --shadow: 0 1px 2px rgba(40,30,10,.06), 0 8px 24px rgba(40,30,10,.05);
+    --mono: ui-monospace, "SF Mono", "SFMono-Regular", Menlo, Consolas, monospace;
+    --sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #121419; --surface: #191c22; --surface-2: #15181d;
+      --ink: #ece9e2; --ink-dim: #9c988d; --ink-faint: #6f6c64;
+      --line: #282c34; --line-strong: #363b45;
+      --amber: #f2b441; --amber-soft: #2c2519;
+      --blue: #6cb0f0; --blue-soft: #16222f;
+      --good: #63c98c;
+      --shadow: 0 1px 2px rgba(0,0,0,.3), 0 10px 30px rgba(0,0,0,.35);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #121419; --surface: #191c22; --surface-2: #15181d;
+    --ink: #ece9e2; --ink-dim: #9c988d; --ink-faint: #6f6c64;
+    --line: #282c34; --line-strong: #363b45;
+    --amber: #f2b441; --amber-soft: #2c2519;
+    --blue: #6cb0f0; --blue-soft: #16222f;
+    --good: #63c98c;
+    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 10px 30px rgba(0,0,0,.35);
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font-family: var(--sans); line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 780px; margin: 0 auto; padding: 0 22px 96px; }
+
+  /* ---- Hero ---- */
+  header.hero { padding: 68px 0 30px; border-bottom: 1px solid var(--line); }
+  .eyebrow {
+    font-family: var(--mono); font-size: 12px; letter-spacing: .18em; text-transform: uppercase;
+    color: var(--amber); font-weight: 600; margin: 0 0 18px;
+  }
+  h1 {
+    font-size: clamp(38px, 7vw, 62px); line-height: 1.02; letter-spacing: -.02em;
+    font-weight: 800; margin: 0; text-wrap: balance;
+  }
+  h1 .thin { font-weight: 300; color: var(--ink-dim); }
+  .lede { font-size: 19px; color: var(--ink-dim); max-width: 60ch; margin: 20px 0 0; text-wrap: pretty; }
+  .load {
+    margin-top: 26px; display: flex; flex-wrap: wrap; gap: 10px; align-items: center;
+    font-size: 14px; color: var(--ink-dim);
+  }
+
+  /* ---- Key chips (the desk keys, mono) ---- */
+  .k {
+    font-family: var(--mono); font-size: 12.5px; font-weight: 600; white-space: nowrap;
+    padding: 2px 8px; border-radius: 5px; color: var(--blue);
+    background: var(--blue-soft); border: 1px solid color-mix(in srgb, var(--blue) 30%, transparent);
+  }
+  .k.amber { color: var(--amber); background: var(--amber-soft); border-color: color-mix(in srgb, var(--amber) 32%, transparent); }
+  .arrow { color: var(--ink-faint); font-size: 13px; }
+
+  /* ---- Coverage grid ---- */
+  section { padding-top: 52px; }
+  .sec-head { display: flex; align-items: baseline; gap: 14px; margin-bottom: 22px; }
+  .sec-num { font-family: var(--mono); font-size: 13px; color: var(--amber); font-weight: 700; }
+  h2 { font-size: 26px; letter-spacing: -.015em; font-weight: 750; margin: 0; text-wrap: balance; }
+  .sec-sub { color: var(--ink-dim); font-size: 15px; margin: 4px 0 0; }
+
+  .chips { display: flex; flex-wrap: wrap; gap: 9px; }
+  .chip {
+    font-size: 13.5px; font-weight: 600; padding: 6px 12px; border-radius: 999px;
+    background: var(--surface); border: 1px solid var(--line-strong); color: var(--ink);
+    box-shadow: var(--shadow);
+  }
+  .chip b { color: var(--amber); font-weight: 700; }
+
+  /* ---- Cards ---- */
+  .card {
+    background: var(--surface); border: 1px solid var(--line); border-radius: 14px;
+    padding: 22px 22px 20px; margin-top: 16px; box-shadow: var(--shadow);
+  }
+  .card-top { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+  .card h3 { margin: 0; font-size: 19px; letter-spacing: -.01em; }
+  .slot {
+    font-family: var(--mono); font-size: 12px; color: var(--ink-dim);
+    padding: 2px 8px; border: 1px solid var(--line-strong); border-radius: 6px;
+  }
+  .card p { margin: 12px 0 0; color: var(--ink-dim); font-size: 15.5px; }
+  .card p .hi { color: var(--ink); font-weight: 600; }
+
+  .recipe {
+    margin-top: 16px; padding: 13px 14px; border-radius: 10px;
+    background: var(--surface-2); border: 1px dashed var(--line-strong);
+    display: flex; flex-wrap: wrap; gap: 8px; align-items: center;
+  }
+  .recipe .lbl { font-family: var(--mono); font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-faint); margin-right: 4px; }
+
+  .teaches {
+    margin-top: 14px; font-size: 13.5px; color: var(--ink-dim);
+    display: flex; gap: 8px; align-items: baseline;
+  }
+  .teaches b { color: var(--good); font-weight: 700; font-family: var(--mono); font-size: 12px; letter-spacing: .04em; }
+
+  /* ---- Rig strip ---- */
+  .rig { display: grid; grid-template-columns: repeat(auto-fill, minmax(128px, 1fr)); gap: 10px; }
+  .fx {
+    background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 12px 13px;
+    box-shadow: var(--shadow);
+  }
+  .fx .n { font-weight: 700; font-size: 14px; }
+  .fx .d { font-size: 12.5px; color: var(--ink-dim); margin-top: 2px; }
+  .fx.mover { border-left: 3px solid var(--blue); }
+  .fx.par { border-left: 3px solid var(--amber); }
+
+  /* ---- Try-it list ---- */
+  ol.try { counter-reset: t; list-style: none; padding: 0; margin: 0; display: grid; gap: 12px; }
+  ol.try li {
+    position: relative; padding: 14px 16px 14px 52px; background: var(--surface);
+    border: 1px solid var(--line); border-radius: 11px; font-size: 15px; box-shadow: var(--shadow);
+  }
+  ol.try li::before {
+    counter-increment: t; content: counter(t);
+    position: absolute; left: 14px; top: 13px; width: 24px; height: 24px; border-radius: 7px;
+    background: var(--amber); color: var(--bg); font-family: var(--mono); font-weight: 700; font-size: 13px;
+    display: grid; place-items: center;
+  }
+  ol.try li b { color: var(--ink); }
+
+  footer { margin-top: 60px; padding-top: 22px; border-top: 1px solid var(--line); color: var(--ink-faint); font-size: 13px; }
+  .note { font-size: 13.5px; color: var(--ink-dim); background: var(--amber-soft); border: 1px solid color-mix(in srgb, var(--amber) 25%, transparent); border-radius: 10px; padding: 12px 15px; margin-top: 14px; }
+  a { color: var(--blue); }
+  @media (prefers-reduced-motion: no-preference) { html { scroll-behavior: smooth; } }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header class="hero">
+    <p class="eyebrow">Sesión de ejemplo + manual · DMXSimulatoR</p>
+    <h1>Masterclass <span class="thin">Quartz</span></h1>
+    <p class="lede">Un show ya programado que usa <strong>todas</strong> las funciones que la mesa tiene habilitadas ahora mismo. Cárgalo, dispáralo, y usa este manual para entender qué hay dentro y cómo se hizo en el desk — paso a paso, como en una Quartz real.</p>
+    <div class="load">
+      <span>Para cargarlo:</span>
+      <span class="k amber">Disk</span><span class="arrow">→</span>
+      <span class="k">Show Library</span><span class="arrow">→</span>
+      <span class="k">🎓 Masterclass</span>
+    </div>
+  </header>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">00</span><div><h2>Qué practica esta sesión</h2><p class="sec-sub">Cada elemento del show ejercita una función de la mesa.</p></div></div>
+    <div class="chips">
+      <span class="chip"><b>Groups</b> · selección reutilizable</span>
+      <span class="chip"><b>Fixture Order</b> · orden de abanico</span>
+      <span class="chip"><b>Palettes</b> · color y posición</span>
+      <span class="chip"><b>Record Cue</b> · looks estáticos</span>
+      <span class="chip"><b>Cue List / Chase</b> · pasos + BPM</span>
+      <span class="chip"><b>Tap Tempo</b> · marcar el ritmo</span>
+      <span class="chip"><b>Executors</b> · un toque</span>
+      <span class="chip"><b>Shapes</b> · efectos con spread</span>
+      <span class="chip"><b>Locate</b> · posición base</span>
+      <span class="chip"><b>Record Mask / Mode</b></span>
+      <span class="chip"><b>Flip / Align</b> · cabezas móviles</span>
+      <span class="chip"><b>Blind</b> · programar a oscuras</span>
+    </div>
+    <p class="note">Las teclas y menús van con su <strong>nombre original del Titan en inglés</strong> (Locate, Record, ML Menu…), igual que en la mesa real. Este manual es una ayuda del simulador (PWA), no forma parte de la Quartz.</p>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">01</span><div><h2>El rig</h2><p class="sec-sub">10 aparatos: 4 cabezas móviles para posición y haz, 6 PAR RGBW para el color.</p></div></div>
+    <div class="rig">
+      <div class="fx mover"><div class="n">Phantom 1–4</div><div class="d">Cabezas móviles · pan/tilt, color, gobo, prism</div></div>
+      <div class="fx par"><div class="n">PAR 1–2</div><div class="d">RGBW · mezcla de color</div></div>
+      <div class="fx par"><div class="n">RGBW PAR 3–6</div><div class="d">RGBW · añadidos al wash</div></div>
+    </div>
+    <p style="color:var(--ink-dim);font-size:15px;margin-top:16px;">En la ventana <span class="k">Fixtures</span> los seleccionas con un clic (o tecleando su número en el keypad: <span class="k">1</span> <span class="k">Through</span> <span class="k">4</span> <span class="k">Enter</span>). Con el <span class="k">Cog</span> de la ventana puedes cambiar la esquina a <em>DMX Address</em> para ver dónde empieza cada uno.</p>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">02</span><div><h2>Grupos</h2><p class="sec-sub">Selecciones guardadas para no volver a elegirlas a mano.</p></div></div>
+    <div class="card">
+      <div class="card-top"><h3>Movers · Colour Wash · Everything</h3></div>
+      <p>Tres grupos: las <span class="hi">4 cabezas</span>, los <span class="hi">6 PAR</span> y <span class="hi">todo</span>. Un clic en el grupo recupera esa selección — y respeta el <span class="hi">orden</span> con que se grabó (importa para abanicos y efectos).</p>
+      <div class="recipe">
+        <span class="lbl">En la mesa</span>
+        <span class="k">Fixture</span><span class="arrow">→</span><span>elige aparatos</span><span class="arrow">→</span>
+        <span class="k amber">Group</span><span class="arrow">→</span><span class="k">Record Group</span><span class="arrow">→</span><span class="k">Set Legend</span>
+      </div>
+      <div class="teaches"><b>ENSEÑA</b><span>Record Group · Recall (tocar el grupo) · Fixture Order · Set Legend (renombrar).</span></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">03</span><div><h2>Paletas</h2><p class="sec-sub">Ajustes reutilizables — se aplican a cualquier aparato que tenga ese atributo.</p></div></div>
+    <div class="card">
+      <div class="card-top"><h3>Color</h3><span class="slot">Red · Green · Blue · Amber</span></div>
+      <p>Cuatro paletas de color grabadas sobre el wash. Aplicas una a cualquier selección y pinta ese color al instante. En la celda verás la letra <span class="hi">C</span> encendida — el banco que la paleta guarda de verdad.</p>
+      <div class="recipe">
+        <span class="lbl">En la mesa</span>
+        <span class="k">Colour</span><span class="arrow">→</span><span>mezcla el color con las ruedas</span><span class="arrow">→</span>
+        <span class="k amber">Record</span> <span class="k">Colour</span>
+      </div>
+      <div class="teaches"><b>ENSEÑA</b><span>Record Palette · aplicar paleta · indicador IPCGB real.</span></div>
+    </div>
+    <div class="card">
+      <div class="card-top"><h3>Posición</h3><span class="slot">Tilt Down · Pan Fan</span></div>
+      <p><span class="hi">Tilt Down</span> apunta las cabezas al escenario. <span class="hi">Pan Fan</span> guarda un abanico (usando <span class="k">Fan</span> sobre la selección) — al recuperarla, las cabezas se abren en abanico.</p>
+      <div class="recipe">
+        <span class="lbl">En la mesa</span>
+        <span class="k">Locate</span><span class="arrow">→</span><span class="k">Position</span><span class="arrow">→</span><span class="k">Fan</span> + ruedas<span class="arrow">→</span>
+        <span class="k amber">Record</span> <span class="k">Position</span>
+      </div>
+      <div class="teaches"><b>ENSEÑA</b><span>Locate · Position + ruedas · Fan · paleta de posición.</span></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">04</span><div><h2>Playbacks</h2><p class="sec-sub">Los cuatro faders físicos. Sube el fader (o Go) para dispararlos.</p></div></div>
+
+    <div class="card">
+      <div class="card-top"><h3>Warm Wash</h3><span class="slot">Fader 1</span></div>
+      <p>Un look <span class="hi">estático</span>: los PAR en ámbar a tope. La base cálida de la escena. Sube el fader 1 y ahí se queda.</p>
+      <div class="recipe"><span class="lbl">En la mesa</span><span class="k">Colour Wash</span><span class="arrow">→</span>ámbar + intensidad<span class="arrow">→</span><span class="k amber">Record</span><span class="arrow">→</span>fader 1</div>
+      <div class="teaches"><b>ENSEÑA</b><span>Record Cue en un fader · un cue de un paso.</span></div>
+    </div>
+
+    <div class="card">
+      <div class="card-top"><h3>Colour Chase</h3><span class="slot">Fader 2 · Chase · 120 BPM</span></div>
+      <p>Un <span class="hi">chase</span> de 3 pasos: los PAR saltan Rojo → Verde → Azul, en bucle, al tempo. Grabas los 3 pasos sobre el mismo fader y lo conviertes en chase. Con <span class="k">Tap</span> marcas el ritmo con el dedo y el BPM sigue.</p>
+      <div class="recipe">
+        <span class="lbl">En la mesa</span>
+        <span class="k amber">Record</span> ×3 (R, G, B) en el fader 2<span class="arrow">→</span>
+        <span class="k">Record</span> <span class="k">Convert to Chase</span>
+      </div>
+      <div class="teaches"><b>ENSEÑA</b><span>Cue list de varios pasos · Convert to Chase · BPM · Tap Tempo.</span></div>
+    </div>
+
+    <div class="card">
+      <div class="card-top"><h3>Mover Beams</h3><span class="slot">Fader 3</span></div>
+      <p>Las cabezas <span class="hi">localizadas</span>, apuntando al escenario, con un color de rueda y a tope. El look de haces.</p>
+      <div class="recipe"><span class="lbl">En la mesa</span><span class="k">Movers</span><span class="arrow">→</span><span class="k">Locate</span><span class="arrow">→</span><span class="k">Colour</span> + <span class="k">Position</span><span class="arrow">→</span><span class="k amber">Record</span></div>
+      <div class="teaches"><b>ENSEÑA</b><span>Locate · atributos de cabeza móvil · aquí puedes probar <span class="k">Flip</span> y <span class="k">Align</span> desde el <span class="k">ML Menu</span>.</span></div>
+    </div>
+
+    <div class="card">
+      <div class="card-top"><h3>Ballyhoo</h3><span class="slot">Fader 4 · Shape</span></div>
+      <p>Un <span class="hi">efecto de círculo</span> (pan/tilt) sobre las cabezas, con <span class="hi">spread</span>: la onda recorre los aparatos en su orden. El shape queda <span class="hi">grabado dentro del cue</span> — subes el fader y las cabezas bailan.</p>
+      <div class="recipe"><span class="lbl">En la mesa</span><span class="k">Movers</span><span class="arrow">→</span><span class="k">Shape</span> (Circle)<span class="arrow">→</span><span class="k amber">Record</span><span class="arrow">→</span>fader 4</div>
+      <div class="teaches"><b>ENSEÑA</b><span>Shapes / efectos · spread en orden de selección · efecto guardado en un cue.</span></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">05</span><div><h2>Executors</h2><p class="sec-sub">La fila de arriba de la mesa — looks a un solo toque.</p></div></div>
+    <div class="card">
+      <div class="card-top"><h3>Blue Wash · Movers On</h3></div>
+      <p><span class="hi">Executor 1</span> pone el wash en azul; <span class="hi">Executor 2</span> enciende las cabezas. Púlsalos para disparar/apagar; clic derecho los libera. Son playbacks a un botón.</p>
+      <div class="recipe"><span class="lbl">En la mesa</span>programa un look<span class="arrow">→</span>pulsa un <span class="k">Executor</span> vacío para grabarlo</div>
+      <div class="teaches"><b>ENSEÑA</b><span>Record Executor · disparar/soltar · etiquetar (Set Legend).</span></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">06</span><div><h2>Pruébalo tú</h2><p class="sec-sub">Con el show cargado, estos ejercicios tocan lo que aún no está "guardado" pero la mesa sí hace.</p></div></div>
+    <ol class="try">
+      <li>Selecciona <b>Movers</b>, pulsa <b>Locate</b>, entra en <b>ML Menu → Flip</b> y mira cómo cambian de posición de yugo apuntando al mismo sitio.</li>
+      <li>Con los <b>Movers</b> seleccionados, pon un color en uno, abre <b>ML Menu → Align</b>, toca ese como referencia y el resto se iguala.</li>
+      <li>Abre <b>Group → Fixture Order</b>, toca las cabezas en otro orden y vuelve a lanzar <b>Ballyhoo</b>: la onda recorre en el nuevo orden.</li>
+      <li>Pulsa <b>Blind</b>, cambia un color y verás que el monitor DMX se congela: preparas el cambio sin sacarlo a escena.</li>
+      <li>En <b>Record → Set Mask</b> deja solo <b>Colour</b> y graba un cue: guardará solo el color, no la intensidad.</li>
+      <li>Cambia <b>Record → Record Mode</b> a <b>By Channel</b>, localiza y toca un solo atributo: el cue guardará únicamente lo que cambiaste.</li>
+    </ol>
+  </section>
+
+  <footer>
+    Masterclass Quartz · manual de la sesión de ejemplo de DMXSimulatoR. Los nombres de teclas y menús son los del software Titan de Avolites, en inglés, tal como en la mesa real.
+  </footer>
+</div>
+
+</body>
+</html>
