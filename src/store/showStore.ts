@@ -296,7 +296,7 @@ interface ShowState {
   /** Copy the reference fixture's programmed attributes (filtered by the Record Mask) onto the
    *  other selected fixtures, by function so it works across fixture types. Disarms Align. */
   alignFrom: (referenceId: string) => void
-  /** Spread a function 0→255 across the selection in rig order (legacy one-shot). */
+  /** Spread a function 0→255 across the selection in selection order (legacy one-shot). */
   fanSelected: (fn: string) => void
   /** Fan MODE (Titan): while on, turning a wheel FANS that attribute across the selection
    *  (symmetric Line curve — first/last fixtures move to opposite sides, the centre stays)
@@ -1379,9 +1379,9 @@ export const useShowStore = create<ShowState>()(
 
       fanSelected: (fn) =>
         set((s) => {
-          // Spread 0→255 across the selection in rig (fixture-list) order.
-          const order = s.show.fixtures.map((f) => f.id)
-          const ids = s.selection.slice().sort((a, b) => order.indexOf(a) - order.indexOf(b))
+          // Spread 0→255 across the selection in SELECTION order (Titan: the order you picked the
+          // fixtures — first & last change most; a recalled group uses its stored order).
+          const ids = s.selection
           if (ids.length < 2) return s
           const programmer = { ...s.programmer }
           ids.forEach((id, idx) => {
@@ -1400,8 +1400,8 @@ export const useShowStore = create<ShowState>()(
       toggleFanMode: () => set((s) => ({ fanMode: !s.fanMode })),
       fanAdjust: (fn, delta) =>
         set((s) => {
-          const order = s.show.fixtures.map((f) => f.id)
-          const ids = s.selection.slice().sort((a, b) => order.indexOf(a) - order.indexOf(b))
+          // Fan in SELECTION order (Titan), not rig order — first & last selected move most.
+          const ids = s.selection
           if (ids.length < 2) return s
           const n = ids.length
           const programmer = { ...s.programmer }
