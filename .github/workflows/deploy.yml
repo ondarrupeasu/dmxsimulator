@@ -1,11 +1,8 @@
 name: Deploy to GitHub Pages
 
-# Deploy only when a Release is published (not on every push) — so many commits don't each
-# trigger a build/deploy. Push freely to main; cut a Release to publish. `workflow_dispatch`
-# keeps a manual "Run workflow" button in the Actions tab for an ad-hoc deploy.
 on:
-  release:
-    types: [published]
+  push:
+    branches: [main]
   workflow_dispatch:
 
 permissions:
