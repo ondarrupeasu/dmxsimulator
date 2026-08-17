@@ -29,6 +29,10 @@ jobs:
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist
+          # The artifact only needs to live long enough for the deploy job to consume it.
+          # 1 day (the minimum) keeps Actions/Packages storage (500 MB free) from filling up
+          # as many pushes each upload a ~3 MB build.
+          retention-days: 1
 
   deploy:
     needs: build
