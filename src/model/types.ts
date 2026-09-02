@@ -81,6 +81,19 @@ export type BodyType =
   | 'parCan' | 'parLed' | 'fresnel' | 'profile' | 'batten' // static lanterns
   | 'blinder' | 'strobe' | 'hazer'
 
+/** Real geometry extracted from a GDTF file (part sizes in metres + beam field angle), so the
+ *  visualiser can build the fixture to its true proportions. Tiny (a few numbers) — we keep this,
+ *  never the ~1 MB GDTF/thumbnail. */
+export interface FixtureGeometry {
+  kind: 'head' | 'static'
+  /** Part sizes {w,h,l} in metres (GDTF Width/Height/Length). */
+  base?: { w: number; h: number; l: number }
+  yoke?: { w: number; h: number; l: number }
+  head?: { w: number; h: number; l: number } // static: the lamp body
+  /** Beam field angle in degrees — sets the cone spread (tight beam vs wide wash). */
+  fieldAngle?: number
+}
+
 /** A brand-neutral fixture personality. */
 export interface FixtureDefinition {
   /** Stable slug, unique across the library, e.g. "generic-rgbw-par". */
@@ -92,6 +105,8 @@ export interface FixtureDefinition {
   modes: FixtureMode[]
   /** 3D shape archetype (see BodyType). Optional — inferred from category/model when omitted. */
   body?: BodyType
+  /** Real GDTF geometry (part sizes + beam angle). When present the visualiser builds to it. */
+  geometry?: FixtureGeometry
 }
 
 /** A fixture placed into a universe at an address — one instance in the show. */

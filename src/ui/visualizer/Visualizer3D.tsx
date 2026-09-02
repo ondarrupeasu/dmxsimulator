@@ -9,7 +9,7 @@ import { computeFixtureOutputs, mergeProgrammer, computePlaybackBase, effectiveP
 import { applyEffects, activeEffects } from '../../engine/effects'
 import { liveCues } from '../../model/cue'
 import { computeVisualState } from '../../engine/render'
-import type { TrussDef, FixtureDefinition, BodyType } from '../../model/types'
+import type { TrussDef, FixtureDefinition, BodyType, FixtureGeometry } from '../../model/types'
 import { getTrusses, trussById, STAGE_TOP } from '../../model/venue'
 
 /** World position for a fixture: x normalized (-1..1) along its assigned truss. */
@@ -31,6 +31,8 @@ interface FxObj {
   beamMat: THREE.MeshBasicMaterial
   pool: THREE.Mesh
   poolMat: THREE.MeshBasicMaterial
+  /** Extra cone-width factor from the fixture's real beam/field angle (1 = the default cone). */
+  beamSpread?: number
 }
 
 // Reused temporaries for the per-frame beam-direction maths (no allocation).
@@ -358,6 +360,16 @@ function buildFixture(bodyType: BodyType): FxObj {
     }
   }
 
+  return finishFx(group, panPart, tiltPart, body, beamY, haloY)
+}
+
+/** Adds the shared bits every fixture needs (body edges, beam cone, floor pool, pick proxy,
+ *  selection halo) and returns the assembled FxObj. Shared by the archetype builder and the
+ *  GDTF-geometry builder. */
+function finishFx(
+  group: THREE.Group, panPart: THREE.Object3D, tiltPart: THREE.Object3D,
+  body: THREE.Mesh, beamY: number, haloY: number, beamSpread?: number,
+): FxObj {
   const edges = new THREE.LineSegments(
     new THREE.EdgesGeometry(body.geometry, 25),
     new THREE.LineBasicMaterial({ color: 0x7f7f8c }),
@@ -392,8 +404,6 @@ function buildFixture(bodyType: BodyType): FxObj {
   const hit = new THREE.Mesh(new THREE.SphereGeometry(0.55, 10, 10), new THREE.MeshBasicMaterial({ visible: false }))
   group.add(hit)
 
-  // Selection indicator — a small, soft red glow on the body (subtle, like a status
-  // light), shown only when selected.
   // Selection indicator — a small, bright LED-like dot on the fixture (like a status
   // light lit up), not a big halo. Additive blending makes it glow.
   const halo = new THREE.Sprite(
@@ -413,7 +423,75 @@ function buildFixture(bodyType: BodyType): FxObj {
   halo.visible = false
   group.add(halo)
 
-  return { group, panPart, tiltPart, body, edges, hit, halo, beam, beamMat, pool, poolMat }
+  return { group, panPart, tiltPart, body, edges, hit, halo, beam, beamMat, pool, poolMat, beamSpread }
+}
+
+/** The default beam cone's tangent (radius 0.13 at unit length) — real field angles scale off it. */
+const BEAM_BASE_TAN = 0.13
+
+/** Builds a fixture to its REAL proportions from GDTF-extracted geometry (part sizes in metres +
+ *  beam field angle). Moving heads get an accurate base/yoke/head with pan+tilt articulation; the
+ *  beam cone opens to the real field angle. Falls back inside the caller to buildFixture() when a
+ *  definition has no geometry. */
+function buildFromGeometry(g: FixtureGeometry): FxObj {
+  const group = new THREE.Group()
+  const panPart = new THREE.Group()
+  const tiltPart = new THREE.Group()
+  const barrelMat = new THREE.MeshStandardMaterial({ color: 0x16161c, metalness: 0.5, roughness: 0.5 })
+  const lensMat = new THREE.MeshStandardMaterial({ color: 0x0b0b10, metalness: 0.35, roughness: 0.25 })
+
+  // Field angle → extra cone spread (relative to the default ~15° cone). Clamped so a very tight
+  // beam is still visible and a very wide wash doesn't blow up.
+  const beamSpread = g.fieldAngle
+    ? Math.max(0.2, Math.min(4, Math.tan(THREE.MathUtils.degToRad(g.fieldAngle / 2)) / BEAM_BASE_TAN))
+    : undefined
+
+  let body: THREE.Mesh
+  let beamY: number
+  let haloY: number
+
+  if (g.kind === 'head') {
+    const base = g.base ?? { w: 0.18, h: 0.1, l: 0.28 }
+    const yoke = g.yoke ?? { w: 0.08, h: 0.24, l: 0.26 }
+    const head = g.head ?? { w: 0.18, h: 0.36, l: 0.2 }
+    const headR = Math.max(head.w, head.l) / 2
+
+    // Clamp + base plate on the truss (the base doesn't move).
+    const clamp = new THREE.Mesh(new THREE.BoxGeometry(base.w * 0.7, 0.1, base.l * 0.7), metalMat)
+    clamp.position.y = 0.44; group.add(clamp)
+    const baseBox = new THREE.Mesh(new THREE.BoxGeometry(base.w, base.h, base.l), metalMat)
+    baseBox.position.y = 0.3; group.add(baseBox)
+
+    // Yoke pans below the base; two arms hang down to the head pivot.
+    panPart.position.y = 0.3 - base.h / 2; group.add(panPart)
+    const armSep = headR + yoke.w * 0.5 + 0.01 // inner face of each arm just clears the head
+    const armGeo = new THREE.BoxGeometry(yoke.w, yoke.h, Math.max(head.l * 0.8, 0.06))
+    const armL = new THREE.Mesh(armGeo, metalMat); armL.position.set(-armSep, -yoke.h / 2, 0)
+    const armR = new THREE.Mesh(armGeo, metalMat); armR.position.set(armSep, -yoke.h / 2, 0)
+    panPart.add(armL, armR)
+
+    // Head tilts about the arm ends; barrel centred on the pivot, points down −Y.
+    tiltPart.position.y = -yoke.h; panPart.add(tiltPart)
+    body = new THREE.Mesh(new THREE.CylinderGeometry(headR * 0.92, headR, head.h, 26), barrelMat)
+    tiltPart.add(body)
+    const lens = new THREE.Mesh(new THREE.CylinderGeometry(headR * 0.95, headR * 0.95, 0.02, 26), lensMat)
+    lens.position.y = -head.h / 2 + 0.01; tiltPart.add(lens)
+    beamY = -head.h / 2; haloY = 0
+  } else {
+    // Static lantern: a body box on a simple U-yoke bracket, sized from head dims.
+    const b = g.head ?? { w: 0.2, h: 0.24, l: 0.24 }
+    const clamp = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.1, 0.3), metalMat); clamp.position.y = 0.42; group.add(clamp)
+    const yoke = new THREE.Mesh(new THREE.TorusGeometry(Math.max(b.w, b.l) * 0.75, 0.03, 8, 20, Math.PI), metalMat)
+    yoke.position.y = 0.05; group.add(yoke)
+    group.add(panPart); panPart.add(tiltPart)
+    body = new THREE.Mesh(new THREE.CylinderGeometry(Math.max(b.w, b.l) / 2 * 0.9, Math.max(b.w, b.l) / 2, b.h, 24), barrelMat)
+    body.position.y = -b.h / 2 + 0.02; tiltPart.add(body)
+    const face = new THREE.Mesh(new THREE.CylinderGeometry(Math.max(b.w, b.l) / 2 * 0.85, Math.max(b.w, b.l) / 2 * 0.85, 0.02, 24), lensMat)
+    face.position.y = -b.h + 0.03; tiltPart.add(face)
+    beamY = -b.h + 0.02; haloY = -b.h / 2 + 0.02
+  }
+
+  return finishFx(group, panPart, tiltPart, body, beamY, haloY, beamSpread)
 }
 
 export function Visualizer3D({ ext = false }: { ext?: boolean } = {}) {
@@ -709,7 +787,7 @@ export function Visualizer3D({ ext = false }: { ext?: boolean } = {}) {
         }
         let fx = fxMap.get(pf.id)
         if (!fx) {
-          fx = buildFixture(bodyOf(def))
+          fx = def.geometry ? buildFromGeometry(def.geometry) : buildFixture(bodyOf(def))
           scene.add(fx.group)
           scene.add(fx.pool)
           fxMap.set(pf.id, fx)
@@ -785,7 +863,7 @@ export function Visualizer3D({ ext = false }: { ext?: boolean } = {}) {
         const prismOn = vs.prism !== undefined && vs.prism > 0.15
         const zoomF = vs.zoom !== undefined ? 0.45 + vs.zoom * 1.45 : 1
         const irisF = vs.iris !== undefined ? 0.18 + vs.iris * 0.82 : 1
-        const widthF = zoomF * irisF
+        const widthF = zoomF * irisF * (fx.beamSpread ?? 1)
         fx.beam.scale.set(length * widthF, length, length * widthF)
 
         // Strobe: actually blink the output on/off (~9 Hz) instead of just dimming it, so you see

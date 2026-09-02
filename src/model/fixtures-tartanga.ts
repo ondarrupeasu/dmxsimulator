@@ -123,6 +123,14 @@ export const TARTANGA_FIXTURES: FixtureDefinition[] = [
   {
     id: 'cameo-auro-spot-z300',
     body: 'spotHead',
+    // Real proportions from the Cameo AURO Spot Z300 GDTF (part sizes in metres, 22° field).
+    geometry: {
+      kind: 'head',
+      base: { w: 0.1792, h: 0.1, l: 0.2921 },
+      yoke: { w: 0.09, h: 0.2441, l: 0.2846 },
+      head: { w: 0.1857, h: 0.3688, l: 0.213 },
+      fieldAngle: 22,
+    },
     manufacturer: 'Cameo',
     model: 'AURO Spot Z300',
     category: 'movingHead',
