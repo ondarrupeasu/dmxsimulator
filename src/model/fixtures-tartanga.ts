@@ -68,6 +68,14 @@ export const TARTANGA_FIXTURES: FixtureDefinition[] = [
   {
     id: 'adj-focus-flex',
     body: 'washHead',
+    // Real proportions from the ADJ Focus Flex GDTF — short round wash head, 55° field.
+    geometry: {
+      kind: 'head',
+      base: { w: 0.18, h: 0.09, l: 0.28 },
+      yoke: { w: 0.08, h: 0.21, l: 0.24 },
+      head: { w: 0.19, h: 0.16, l: 0.19 },
+      fieldAngle: 55,
+    },
     manufacturer: 'ADJ',
     model: 'Focus Flex',
     category: 'movingHead',
