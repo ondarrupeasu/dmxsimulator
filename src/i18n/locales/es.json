@@ -211,7 +211,8 @@
     "elevTip": "Alzado: el lado desde el que se mira",
     "resetView": "Restablecer zoom / encuadre",
     "aimReset": "Centrar",
-    "focus": "Enfocar el fixture seleccionado — acerca la cámara y orbita a su alrededor"
+    "focus": "Enfocar el fixture seleccionado — acerca la cámara y orbita a su alrededor",
+    "homeView": "Restablecer la vista — volver a todo el escenario"
   },
   "run": {
     "title": "Ejecutar",

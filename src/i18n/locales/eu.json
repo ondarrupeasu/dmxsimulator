@@ -211,7 +211,8 @@
     "elevTip": "Altxaera: begiratzen den aldea",
     "resetView": "Berrezarri zoom / enkoadrea",
     "aimReset": "Zentratu",
-    "focus": "Enfokatu hautatutako fixturea — kamera hurbildu eta haren inguruan orbitatu"
+    "focus": "Enfokatu hautatutako fixturea — kamera hurbildu eta haren inguruan orbitatu",
+    "homeView": "Berrezarri ikuspegia — eszenatoki osora itzuli"
   },
   "run": {
     "title": "Exekutatu",

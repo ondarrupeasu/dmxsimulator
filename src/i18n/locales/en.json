@@ -211,7 +211,8 @@
     "elevTip": "Elevation: the side you view from",
     "resetView": "Reset zoom / pan",
     "aimReset": "Centre",
-    "focus": "Focus the selected fixture — fly in and orbit around it"
+    "focus": "Focus the selected fixture — fly in and orbit around it",
+    "homeView": "Reset the view — back to the full stage"
   },
   "run": {
     "title": "Run",

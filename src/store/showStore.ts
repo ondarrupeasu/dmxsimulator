@@ -334,6 +334,9 @@ interface ShowState {
   /** Bumped to ask the 3D viewer to frame + orbit the selected fixture(s). */
   focusNonce: number
   focusSelected: () => void
+  /** Bumped to ask the 3D viewer to glide back to the full-stage overview. */
+  homeNonce: number
+  resetView: () => void
   viewLightsExt: boolean
   setViewLightsExt: (v: boolean) => void
 
@@ -1506,6 +1509,8 @@ export const useShowStore = create<ShowState>()(
       setViewLights: (v) => set({ viewLights: v }),
       focusNonce: 0,
       focusSelected: () => set((s) => ({ focusNonce: s.focusNonce + 1 })),
+      homeNonce: 0,
+      resetView: () => set((s) => ({ homeNonce: s.homeNonce + 1 })),
       viewLightsExt: false,
       setViewLightsExt: (v) => set({ viewLightsExt: v }),
       legendArm: false,
