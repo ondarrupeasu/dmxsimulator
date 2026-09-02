@@ -210,7 +210,8 @@
     "toggle": "Mostrar / ocultar el visualizer",
     "elevTip": "Alzado: el lado desde el que se mira",
     "resetView": "Restablecer zoom / encuadre",
-    "aimReset": "Centrar"
+    "aimReset": "Centrar",
+    "focus": "Enfocar el fixture seleccionado — acerca la cámara y orbita a su alrededor"
   },
   "run": {
     "title": "Ejecutar",

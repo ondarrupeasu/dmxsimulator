@@ -331,6 +331,9 @@ interface ShowState {
   // `viewLights`/`viewer` are the dock's; `viewLightsExt`/`viewerExt` are the ext monitor's.
   viewLights: boolean
   setViewLights: (v: boolean) => void
+  /** Bumped to ask the 3D viewer to frame + orbit the selected fixture(s). */
+  focusNonce: number
+  focusSelected: () => void
   viewLightsExt: boolean
   setViewLightsExt: (v: boolean) => void
 
@@ -1501,6 +1504,8 @@ export const useShowStore = create<ShowState>()(
 
       viewLights: false,
       setViewLights: (v) => set({ viewLights: v }),
+      focusNonce: 0,
+      focusSelected: () => set((s) => ({ focusNonce: s.focusNonce + 1 })),
       viewLightsExt: false,
       setViewLightsExt: (v) => set({ viewLightsExt: v }),
       legendArm: false,

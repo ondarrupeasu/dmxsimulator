@@ -210,7 +210,8 @@
     "toggle": "Erakutsi / ezkutatu visualizer-a",
     "elevTip": "Altxaera: begiratzen den aldea",
     "resetView": "Berrezarri zoom / enkoadrea",
-    "aimReset": "Zentratu"
+    "aimReset": "Zentratu",
+    "focus": "Enfokatu hautatutako fixturea — kamera hurbildu eta haren inguruan orbitatu"
   },
   "run": {
     "title": "Exekutatu",

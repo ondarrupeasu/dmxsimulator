@@ -448,6 +448,11 @@ export function Visualizer3D({ ext = false }: { ext?: boolean } = {}) {
     controls.enableDamping = true
     controls.maxPolarAngle = Math.PI * 0.52
 
+    // "Focus selected": when focusNonce bumps, glide the camera + orbit target to the selected
+    // fixtures' centre so you can see it close and orbit around it (the rig can be far/small).
+    let seenFocusNonce = useShowStore.getState().focusNonce
+    let focusAnim: { fromT: THREE.Vector3; toT: THREE.Vector3; fromC: THREE.Vector3; toC: THREE.Vector3; t: number } | null = null
+
     scene.add(new THREE.AmbientLight(0x404050, 1.2))
     // Work/house lights — off by default (dark, beams-only look); toggled on to see
     // where every fixture sits, then off again to design the look.
@@ -845,6 +850,28 @@ export function Visualizer3D({ ext = false }: { ext?: boolean } = {}) {
         s.position.z = u.z0 + Math.cos(t * 0.7) * 1.8
         s.position.y = u.y0 + ((th * 0.1 + u.phase) % 2.4)
         ;(s.material as THREE.SpriteMaterial).opacity = hazeLevel * 0.34
+      }
+
+      // Focus-selected: start a glide when the nonce bumps, then ease toward the target.
+      if (state.focusNonce !== seenFocusNonce) {
+        seenFocusNonce = state.focusNonce
+        const pts = state.selection.map((id) => fxMap.get(id)?.group.position).filter(Boolean) as THREE.Vector3[]
+        if (pts.length) {
+          const c = new THREE.Vector3()
+          pts.forEach((p) => c.add(p))
+          c.multiplyScalar(1 / pts.length)
+          c.y -= 0.3 // aim a touch below the yoke so the head/lens is centred
+          // Keep the camera's current direction, just move in to a close framing of the fixture.
+          const dir = camera.position.clone().sub(controls.target).normalize()
+          focusAnim = { fromT: controls.target.clone(), toT: c.clone(), fromC: camera.position.clone(), toC: c.clone().add(dir.multiplyScalar(2.4)), t: 0 }
+        }
+      }
+      if (focusAnim) {
+        focusAnim.t = Math.min(1, focusAnim.t + 0.05)
+        const e = focusAnim.t * focusAnim.t * (3 - 2 * focusAnim.t) // smoothstep
+        controls.target.lerpVectors(focusAnim.fromT, focusAnim.toT, e)
+        camera.position.lerpVectors(focusAnim.fromC, focusAnim.toC, e)
+        if (focusAnim.t >= 1) focusAnim = null
       }
 
       controls.update()

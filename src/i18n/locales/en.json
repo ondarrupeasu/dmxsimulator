@@ -210,7 +210,8 @@
     "toggle": "Show / hide the visualiser",
     "elevTip": "Elevation: the side you view from",
     "resetView": "Reset zoom / pan",
-    "aimReset": "Centre"
+    "aimReset": "Centre",
+    "focus": "Focus the selected fixture — fly in and orbit around it"
   },
   "run": {
     "title": "Run",

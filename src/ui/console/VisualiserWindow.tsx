@@ -36,6 +36,7 @@ export function VisualiserWindow({ popped = false }: { popped?: boolean } = {}) 
   const definitions = useShowStore((s) => s.definitions)
   const selection = useShowStore((s) => s.selection)
   const setFixtureAim = useShowStore((s) => s.setFixtureAim)
+  const focusSelected = useShowStore((s) => s.focusSelected)
   const effectsCount = useShowStore((s) => s.effects.length)
   const playing = useShowStore((s) => s.playing)
   const setPlaying = useShowStore((s) => s.setPlaying)
@@ -80,6 +81,9 @@ export function VisualiserWindow({ popped = false }: { popped?: boolean } = {}) 
             </select>
             <button className={`ghost-btn${viewLights ? ' active' : ''}`} data-tour="room-lights" onClick={() => setViewLights(!viewLights)} title={t('visualizer.roomLights')}>
               💡
+            </button>
+            <button className="ghost-btn" onClick={() => focusSelected()} disabled={selection.length === 0} title={t('visualizer.focus')}>
+              🎯
             </button>
           </>
         )}
