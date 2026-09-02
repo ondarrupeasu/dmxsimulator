@@ -53,7 +53,8 @@ export function buildProp(kind: PropKind): THREE.Group {
       break
     case 'singer': {
       g.add(person(cloth2))
-      const s = micStand(); s.position.set(0, 0, 0.3); g.add(s)
+      // Stand in front of the singer with the mic facing back toward them (not the audience).
+      const s = micStand(); s.position.set(0, 0, 0.34); s.rotation.y = Math.PI; g.add(s)
       break
     }
     case 'micStand':
@@ -126,7 +127,12 @@ export function buildProp(kind: PropKind): THREE.Group {
       break
     }
   }
-  g.traverse((o) => { if ((o as THREE.Mesh).isMesh) { o.castShadow = false; o.userData.propMesh = true } })
+  // Give every mesh its OWN material clone so the visualiser can tint each prop independently
+  // when a beam lights it (shared materials would light every copy at once).
+  g.traverse((o) => {
+    const m = o as THREE.Mesh
+    if (m.isMesh) { m.material = (m.material as THREE.Material).clone(); m.userData.propMesh = true }
+  })
   return g
 }
 

@@ -846,6 +846,9 @@ export function Visualizer3D({ ext = false }: { ext?: boolean } = {}) {
         if (!live.has(id)) { scene.remove(g); hazerMap.delete(id) }
       }
 
+      // Where each live beam lands on the deck this frame, so scenery props standing there get lit
+      // by it (colour + intensity). Collected in the fixture loop, applied in the props loop below.
+      const lightHits: { x: number; z: number; r: number; col: THREE.Color; inten: number }[] = []
       for (const pf of show.fixtures) {
         const def = definitions[pf.definitionId]
         if (!def) continue
@@ -984,6 +987,8 @@ export function Visualizer3D({ ext = false }: { ext?: boolean } = {}) {
           const focusF = vs.focus ?? 1
           const spread = 1 + (1 - focusF) * 0.35
           fx.pool.scale.set((length / vert) * widthF * spread, length * widthF * spread, 1)
+          // A prop standing where this beam lands on the deck gets lit by it (see props loop).
+          if (onStage) lightHits.push({ x: landX, z: landZ, r: 0.13 * length * widthF * spread + 0.35, col: col.clone(), inten: vs.intensity })
           fx.poolMat.color.copy(col)
           if (fx.poolMat.alphaMap !== patternTex) {
             fx.poolMat.alphaMap = patternTex
@@ -1024,6 +1029,19 @@ export function Visualizer3D({ ext = false }: { ext?: boolean } = {}) {
         entry.group.rotation.y = THREE.MathUtils.degToRad(p.rot ?? 0)
         entry.ring.position.set(p.x, STAGE_TOP + 0.02, p.z)
         entry.ring.visible = state.selectedProp === p.id
+
+        // Light the prop: sum every beam landing on it (brightest at the pool centre) and paint
+        // that colour as emissive on the prop, so a spot aimed at the singer lights the singer.
+        let lr = 0, lg = 0, lb = 0
+        for (const h of lightHits) {
+          const d = Math.hypot(p.x - h.x, p.z - h.z)
+          if (d < h.r) { const w = (1 - d / h.r) * h.inten; lr += h.col.r * w; lg += h.col.g * w; lb += h.col.b * w }
+        }
+        const er = Math.min(1, lr), eg = Math.min(1, lg), eb = Math.min(1, lb)
+        entry.group.traverse((o) => {
+          const m = o as THREE.Mesh
+          if (m.userData.propMesh) (m.material as THREE.MeshStandardMaterial).emissive.setRGB(er, eg, eb)
+        })
       }
 
       // Drift the haze puffs (they slowly billow + rise) while a hazer is up. Uses
