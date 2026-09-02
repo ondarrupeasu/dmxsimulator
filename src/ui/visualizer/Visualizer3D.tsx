@@ -9,6 +9,7 @@ import { computeFixtureOutputs, mergeProgrammer, computePlaybackBase, effectiveP
 import { applyEffects, activeEffects } from '../../engine/effects'
 import { liveCues } from '../../model/cue'
 import { computeVisualState } from '../../engine/render'
+import { FIXTURE_GOBOS } from '../../model/gobos'
 import type { TrussDef, FixtureDefinition, BodyType, FixtureGeometry } from '../../model/types'
 import { getTrusses, trussById, STAGE_TOP } from '../../model/venue'
 
@@ -250,6 +251,33 @@ const PRISM_TEX = (() => {
   tex.center.set(0.5, 0.5)
   return tex
 })()
+
+// Per-definition gobo set: a fixture's REAL gobo-wheel images (from its GDTF, see model/gobos.ts)
+// when available, else the generic patterns above. Loaded lazily the first time such a fixture is
+// drawn and cached; the images are tiny separate assets so nothing loads until needed. The prism
+// variant tiles each gobo 2×2 (a prism + gobo reads as several copies of the pattern).
+const _goboLoader = new THREE.TextureLoader()
+const _goboSets = new Map<string, { tex: THREE.Texture[]; prism: THREE.Texture[] }>()
+function goboSetFor(defId: string): { tex: THREE.Texture[]; prism: THREE.Texture[] } {
+  const cached = _goboSets.get(defId)
+  if (cached) return cached
+  const urls = FIXTURE_GOBOS[defId]
+  let set: { tex: THREE.Texture[]; prism: THREE.Texture[] }
+  if (urls && urls.length) {
+    const tex = urls.map((u) => { const t = _goboLoader.load(u); t.center.set(0.5, 0.5); return t })
+    // Separate load for the tiled variant (a texture can't hold two repeat settings at once).
+    const prism = urls.map((u) => {
+      const t = _goboLoader.load(u)
+      t.center.set(0.5, 0.5); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(2, 2)
+      return t
+    })
+    set = { tex, prism }
+  } else {
+    set = { tex: GOBO_TEX, prism: GOBO_TEX_PRISM }
+  }
+  _goboSets.set(defId, set)
+  return set
+}
 
 /** A fixture model. Moving heads get a base + panning yoke + tilting head; other
  *  kinds get a static can on a yoke. Either way the beam lives in the tilt part. */
@@ -884,14 +912,16 @@ export function Visualizer3D({ ext = false }: { ext?: boolean } = {}) {
         // otherwise the shaped pattern (incl. on the back wall) would vanish the moment the
         // beam leaves the deck, and you couldn't see your selected gobo. A patterned pool reads
         // as intentional, unlike a blank disc.
+        // The fixture's own gobo set — its real GDTF gobos when we have them, else the generic set.
+        const goboSet = goboSetFor(def.id)
         const goboIdx = vs.gobo !== undefined && vs.gobo >= 8
-          ? Math.min(GOBO_TEX.length - 1, Math.floor((vs.gobo / 256) * GOBO_TEX.length))
+          ? Math.min(goboSet.tex.length - 1, Math.floor((vs.gobo / 256) * goboSet.tex.length))
           : -1
         // Prism multiplies the pool: with a gobo it tiles the gobo (several copies = the split);
         // with no gobo it drops the 3-facet pattern. No prism → the plain gobo (or nothing).
         const patternTex = prismOn
-          ? (goboIdx >= 0 ? GOBO_TEX_PRISM[goboIdx] : PRISM_TEX)
-          : (goboIdx >= 0 ? GOBO_TEX[goboIdx] : null)
+          ? (goboIdx >= 0 ? goboSet.prism[goboIdx] : PRISM_TEX)
+          : (goboIdx >= 0 ? goboSet.tex[goboIdx] : null)
         if (on && (onStage || patternTex)) {
           fx.pool.visible = true
           fx.pool.position.set(landX, (onStage ? STAGE_TOP : 0) + 0.02, landZ)
