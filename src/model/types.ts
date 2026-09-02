@@ -73,6 +73,14 @@ export interface FixtureMode {
 /** Where a normalized fixture definition originated. */
 export type FixtureSource = 'builtin' | 'ofl' | 'gdtf'
 
+/** 3D body archetype the visualiser draws for a fixture, so each model reads as its real shape
+ *  (a PAR looks like a PAR can, a wash head has a big round front, a blinder has two lamps, …).
+ *  Optional — when absent the visualiser infers it from category + model name. */
+export type BodyType =
+  | 'spotHead' | 'washHead' | 'beamHead' // moving heads (barrel spot / round-front wash / narrow beam)
+  | 'parCan' | 'parLed' | 'fresnel' | 'profile' | 'batten' // static lanterns
+  | 'blinder' | 'strobe' | 'hazer'
+
 /** A brand-neutral fixture personality. */
 export interface FixtureDefinition {
   /** Stable slug, unique across the library, e.g. "generic-rgbw-par". */
@@ -82,6 +90,8 @@ export interface FixtureDefinition {
   category: FixtureCategory
   source: FixtureSource
   modes: FixtureMode[]
+  /** 3D shape archetype (see BodyType). Optional — inferred from category/model when omitted. */
+  body?: BodyType
 }
 
 /** A fixture placed into a universe at an address — one instance in the show. */

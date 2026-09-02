@@ -34,6 +34,7 @@ export const COMMON_FIXTURES: FixtureDefinition[] = [
   // ---- Moving heads ----
   {
     id: 'martin-mac-aura-xb',
+    body: 'washHead',
     manufacturer: 'Martin',
     model: 'MAC Aura XB',
     category: 'movingHead',
@@ -54,6 +55,7 @@ export const COMMON_FIXTURES: FixtureDefinition[] = [
   },
   {
     id: 'robe-pointe',
+    body: 'beamHead',
     manufacturer: 'Robe',
     model: 'Pointe',
     category: 'movingHead',
@@ -80,6 +82,7 @@ export const COMMON_FIXTURES: FixtureDefinition[] = [
   },
   {
     id: 'chauvet-rogue-r2-wash',
+    body: 'washHead',
     manufacturer: 'Chauvet',
     model: 'Rogue R2 Wash',
     category: 'movingHead',
@@ -102,6 +105,7 @@ export const COMMON_FIXTURES: FixtureDefinition[] = [
   },
   {
     id: 'adj-focus-spot-4z',
+    body: 'spotHead',
     manufacturer: 'ADJ',
     model: 'Focus Spot 4Z',
     category: 'movingHead',
@@ -126,6 +130,7 @@ export const COMMON_FIXTURES: FixtureDefinition[] = [
   // ---- Pars / LED ----
   {
     id: 'chauvet-slimpar-pro-h',
+    body: 'parLed',
     manufacturer: 'Chauvet',
     model: 'SlimPAR Pro H USB',
     category: 'par',
@@ -145,6 +150,7 @@ export const COMMON_FIXTURES: FixtureDefinition[] = [
   },
   {
     id: 'generic-led-batten',
+    body: 'batten',
     manufacturer: 'Generic',
     model: 'LED Batten (RGB)',
     category: 'par',
@@ -155,6 +161,7 @@ export const COMMON_FIXTURES: FixtureDefinition[] = [
   },
   {
     id: 'generic-blinder-2',
+    body: 'blinder',
     manufacturer: 'Generic',
     model: 'Blinder (2-lite)',
     category: 'dimmer',
@@ -172,6 +179,7 @@ export const COMMON_FIXTURES: FixtureDefinition[] = [
   // ---- Conventionals (dimmer-controlled) ----
   {
     id: 'generic-profile-spot',
+    body: 'profile',
     manufacturer: 'Generic',
     model: 'Profile Spot',
     category: 'other',
@@ -180,6 +188,7 @@ export const COMMON_FIXTURES: FixtureDefinition[] = [
   },
   {
     id: 'generic-fresnel',
+    body: 'fresnel',
     manufacturer: 'Generic',
     model: 'Fresnel',
     category: 'other',
@@ -189,6 +198,7 @@ export const COMMON_FIXTURES: FixtureDefinition[] = [
   // ---- Effects ----
   {
     id: 'martin-atomic-3000',
+    body: 'strobe',
     manufacturer: 'Martin',
     model: 'Atomic 3000 Strobe',
     category: 'strobe',

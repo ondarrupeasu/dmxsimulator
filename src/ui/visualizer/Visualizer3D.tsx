@@ -9,7 +9,7 @@ import { computeFixtureOutputs, mergeProgrammer, computePlaybackBase, effectiveP
 import { applyEffects, activeEffects } from '../../engine/effects'
 import { liveCues } from '../../model/cue'
 import { computeVisualState } from '../../engine/render'
-import type { TrussDef } from '../../model/types'
+import type { TrussDef, FixtureDefinition, BodyType } from '../../model/types'
 import { getTrusses, trussById, STAGE_TOP } from '../../model/venue'
 
 /** World position for a fixture: x normalized (-1..1) along its assigned truss. */
@@ -251,56 +251,111 @@ const PRISM_TEX = (() => {
 
 /** A fixture model. Moving heads get a base + panning yoke + tilting head; other
  *  kinds get a static can on a yoke. Either way the beam lives in the tilt part. */
-function buildFixture(movingHead: boolean): FxObj {
+/** Pick the 3D archetype for a fixture: explicit `body`, else inferred from category + model. */
+function bodyOf(def: FixtureDefinition): BodyType {
+  if (def.body) return def.body
+  const m = `${def.manufacturer} ${def.model}`.toLowerCase()
+  if (def.category === 'hazer') return 'hazer'
+  if (def.category === 'movingHead') {
+    if (/wash|flex|aura|cob/.test(m)) return 'washHead'
+    if (/beam/.test(m)) return 'beamHead'
+    return 'spotHead'
+  }
+  if (def.category === 'strobe') return 'strobe'
+  if (def.category === 'dimmer') return /blinder|lite/.test(m) ? 'blinder' : 'parCan'
+  if (def.category === 'par') {
+    if (/batten|pixel bar|bar\b/.test(m)) return 'batten'
+    if (/par ?-?64/.test(m)) return 'parCan'
+    return 'parLed'
+  }
+  if (/fresnel/.test(m)) return 'fresnel'
+  if (/profile|ellips|leko|source ?four/.test(m)) return 'profile'
+  return 'parLed'
+}
+
+function buildFixture(bodyType: BodyType): FxObj {
   const group = new THREE.Group()
   const panPart = new THREE.Group()
   const tiltPart = new THREE.Group()
 
   const barrelMat = new THREE.MeshStandardMaterial({ color: 0x16161c, metalness: 0.5, roughness: 0.5 })
+  const lensMat = new THREE.MeshStandardMaterial({ color: 0x0b0b10, metalness: 0.35, roughness: 0.25 })
   let body: THREE.Mesh
+  let beamY: number
+  let haloY: number
+  const moving = bodyType === 'spotHead' || bodyType === 'washHead' || bodyType === 'beamHead'
 
-  if (movingHead) {
-    // Clamp + base that stay on the truss; the yoke pans, the head tilts.
-    const clamp = new THREE.Mesh(new THREE.BoxGeometry(0.34, 0.12, 0.34), metalMat)
-    clamp.position.y = 0.44
-    group.add(clamp)
-    const baseCyl = new THREE.Mesh(new THREE.CylinderGeometry(0.19, 0.21, 0.14, 18), metalMat)
-    baseCyl.position.y = 0.3
-    group.add(baseCyl)
-
-    panPart.position.y = 0.23
-    group.add(panPart)
+  if (moving) {
+    // Clamp + base on the truss; the yoke pans, the head tilts.
+    const clamp = new THREE.Mesh(new THREE.BoxGeometry(0.34, 0.12, 0.34), metalMat); clamp.position.y = 0.44; group.add(clamp)
+    const baseCyl = new THREE.Mesh(new THREE.CylinderGeometry(0.19, 0.21, 0.14, 18), metalMat); baseCyl.position.y = 0.3; group.add(baseCyl)
+    panPart.position.y = 0.23; group.add(panPart)
     const armGeo = new THREE.BoxGeometry(0.06, 0.5, 0.14)
-    const armL = new THREE.Mesh(armGeo, metalMat)
-    armL.position.set(-0.26, -0.2, 0)
-    const armR = new THREE.Mesh(armGeo, metalMat)
-    armR.position.set(0.26, -0.2, 0)
+    const armL = new THREE.Mesh(armGeo, metalMat); armL.position.set(-0.26, -0.2, 0)
+    const armR = new THREE.Mesh(armGeo, metalMat); armR.position.set(0.26, -0.2, 0)
     panPart.add(armL, armR)
+    tiltPart.position.y = -0.34; panPart.add(tiltPart)
 
-    tiltPart.position.y = -0.34
-    panPart.add(tiltPart)
-    const barrelGeo = new THREE.CylinderGeometry(0.17, 0.19, 0.42, 20)
-    body = new THREE.Mesh(barrelGeo, barrelMat)
-    body.position.y = -0.13
-    tiltPart.add(body)
-    const lens = new THREE.Mesh(new THREE.TorusGeometry(0.17, 0.022, 8, 20), metalMat)
-    lens.rotation.x = Math.PI / 2
-    lens.position.y = -0.34
-    tiltPart.add(lens)
+    if (bodyType === 'washHead') {
+      // Wash: short, wide head with a big flat round front (COB / lens array).
+      body = new THREE.Mesh(new THREE.CylinderGeometry(0.24, 0.22, 0.24, 24), barrelMat); body.position.y = -0.06; tiltPart.add(body)
+      const lens = new THREE.Mesh(new THREE.CylinderGeometry(0.23, 0.23, 0.03, 24), lensMat); lens.position.y = -0.19; tiltPart.add(lens)
+      beamY = -0.2; haloY = -0.06
+    } else if (bodyType === 'beamHead') {
+      // Beam: narrow, long barrel.
+      body = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.14, 0.5, 20), barrelMat); body.position.y = -0.17; tiltPart.add(body)
+      const lens = new THREE.Mesh(new THREE.TorusGeometry(0.12, 0.02, 8, 20), metalMat); lens.rotation.x = Math.PI / 2; lens.position.y = -0.42; tiltPart.add(lens)
+      beamY = -0.42; haloY = -0.17
+    } else {
+      // Spot: medium barrel head (gobo / prism spot).
+      body = new THREE.Mesh(new THREE.CylinderGeometry(0.17, 0.19, 0.42, 20), barrelMat); body.position.y = -0.13; tiltPart.add(body)
+      const lens = new THREE.Mesh(new THREE.TorusGeometry(0.17, 0.022, 8, 20), metalMat); lens.rotation.x = Math.PI / 2; lens.position.y = -0.34; tiltPart.add(lens)
+      beamY = -0.34; haloY = -0.13
+    }
   } else {
-    // Static can (PAR / strobe / dimmer) hanging from a simple yoke bracket.
-    const clamp = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.1, 0.3), metalMat)
-    clamp.position.y = 0.42
-    group.add(clamp)
-    const yoke = new THREE.Mesh(new THREE.TorusGeometry(0.27, 0.03, 8, 20, Math.PI), metalMat)
-    yoke.position.y = 0.05
-    group.add(yoke)
-    group.add(panPart)
-    panPart.add(tiltPart)
-    const barrelGeo = new THREE.CylinderGeometry(0.22, 0.24, 0.4, 20)
-    body = new THREE.Mesh(barrelGeo, barrelMat)
-    body.position.y = -0.1
-    tiltPart.add(body)
+    // Static lantern on a simple yoke bracket.
+    const clamp = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.1, 0.3), metalMat); clamp.position.y = 0.42; group.add(clamp)
+    const yoke = new THREE.Mesh(new THREE.TorusGeometry(0.27, 0.03, 8, 20, Math.PI), metalMat); yoke.position.y = 0.05; group.add(yoke)
+    group.add(panPart); panPart.add(tiltPart)
+
+    if (bodyType === 'parCan') {
+      // Classic PAR 64 can: long cylinder + front rim.
+      body = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.17, 0.5, 22), barrelMat); body.position.y = -0.18; tiltPart.add(body)
+      const rim = new THREE.Mesh(new THREE.TorusGeometry(0.16, 0.02, 8, 22), metalMat); rim.rotation.x = Math.PI / 2; rim.position.y = -0.43; tiltPart.add(rim)
+      beamY = -0.43; haloY = -0.18
+    } else if (bodyType === 'fresnel') {
+      // Fresnel: square body + round stepped lens.
+      body = new THREE.Mesh(new THREE.BoxGeometry(0.34, 0.34, 0.3), barrelMat); body.position.y = -0.19; tiltPart.add(body)
+      const lens = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.16, 0.04, 24), lensMat); lens.position.y = -0.37; tiltPart.add(lens)
+      beamY = -0.38; haloY = -0.19
+    } else if (bodyType === 'profile') {
+      // Profile / ellipsoidal: body + lens tube out the front.
+      body = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.18, 0.44, 18), barrelMat); body.position.y = -0.2; tiltPart.add(body)
+      const tube = new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.12, 0.2, 18), metalMat); tube.position.y = -0.5; tiltPart.add(tube)
+      beamY = -0.58; haloY = -0.2
+    } else if (bodyType === 'batten') {
+      // LED batten: a long horizontal bar of cells.
+      body = new THREE.Mesh(new THREE.BoxGeometry(1.0, 0.1, 0.12), barrelMat); body.position.y = -0.06; tiltPart.add(body)
+      const face = new THREE.Mesh(new THREE.BoxGeometry(0.96, 0.06, 0.02), lensMat); face.position.set(0, -0.11, 0); tiltPart.add(face)
+      beamY = -0.12; haloY = -0.06
+    } else if (bodyType === 'blinder') {
+      // Blinder: a bar carrying two round lamps facing down.
+      body = new THREE.Mesh(new THREE.BoxGeometry(0.62, 0.14, 0.18), barrelMat); body.position.y = -0.06; tiltPart.add(body)
+      for (const lx of [-0.16, 0.16]) {
+        const lamp = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.12, 0.1, 20), lensMat); lamp.position.set(lx, -0.15, 0); tiltPart.add(lamp)
+      }
+      beamY = -0.2; haloY = -0.06
+    } else if (bodyType === 'strobe') {
+      // Strobe: a flat wide panel facing down.
+      body = new THREE.Mesh(new THREE.BoxGeometry(0.52, 0.14, 0.3), barrelMat); body.position.y = -0.1; tiltPart.add(body)
+      const panel = new THREE.Mesh(new THREE.BoxGeometry(0.46, 0.02, 0.26), lensMat); panel.position.y = -0.18; tiltPart.add(panel)
+      beamY = -0.19; haloY = -0.1
+    } else {
+      // parLed (and default): compact LED PAR — short round body + LED face.
+      body = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 0.16, 20), barrelMat); body.position.y = -0.08; tiltPart.add(body)
+      const face = new THREE.Mesh(new THREE.CylinderGeometry(0.19, 0.19, 0.02, 20), lensMat); face.position.y = -0.17; tiltPart.add(face)
+      beamY = -0.17; haloY = -0.08
+    }
   }
 
   const edges = new THREE.LineSegments(
@@ -319,7 +374,7 @@ function buildFixture(movingHead: boolean): FxObj {
     side: THREE.DoubleSide,
   })
   const beam = new THREE.Mesh(makeBeamGeometry(), beamMat)
-  beam.position.y = movingHead ? -0.34 : -0.3
+  beam.position.y = beamY
   tiltPart.add(beam)
 
   // Floor pool (in the scene, not the head, so it stays flat on the floor).
@@ -354,7 +409,7 @@ function buildFixture(movingHead: boolean): FxObj {
   )
   halo.renderOrder = 6
   halo.scale.setScalar(0.3)
-  halo.position.y = movingHead ? -0.34 : -0.1 // sit on the lamp body
+  halo.position.y = haloY // sit on the lamp body
   halo.visible = false
   group.add(halo)
 
@@ -646,7 +701,7 @@ export function Visualizer3D({ ext = false }: { ext?: boolean } = {}) {
         }
         let fx = fxMap.get(pf.id)
         if (!fx) {
-          fx = buildFixture(def.category === 'movingHead')
+          fx = buildFixture(bodyOf(def))
           scene.add(fx.group)
           scene.add(fx.pool)
           fxMap.set(pf.id, fx)

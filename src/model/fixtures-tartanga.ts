@@ -47,6 +47,7 @@ export const TARTANGA_FIXTURES: FixtureDefinition[] = [
   // Cameo PAR 64 CAN RGB 3W — code CLP64RGB3WPS. Order R,G,B,Dim,Speed,Program.
   {
     id: 'cameo-par64-can-rgb-3w',
+    body: 'parCan',
     manufacturer: 'Cameo',
     model: 'PAR 64 CAN RGB 3W',
     category: 'par',
@@ -66,6 +67,7 @@ export const TARTANGA_FIXTURES: FixtureDefinition[] = [
   // per-pixel cell control only exists in the 34/42/50-ch modes, not here).
   {
     id: 'adj-focus-flex',
+    body: 'washHead',
     manufacturer: 'ADJ',
     model: 'Focus Flex',
     category: 'movingHead',
@@ -100,6 +102,7 @@ export const TARTANGA_FIXTURES: FixtureDefinition[] = [
   // Eurolite LED ML-56 RGBA — order R,G,B,A,Dim,Strobe(=Ch6 combined, 0 = steady).
   {
     id: 'eurolite-ml-56-rgba',
+    body: 'parLed',
     manufacturer: 'Eurolite',
     model: 'LED ML-56 RGBA',
     category: 'par',
@@ -119,6 +122,7 @@ export const TARTANGA_FIXTURES: FixtureDefinition[] = [
   // Cameo AURO SPOT Z300 — 200 W spot, 17-channel full-function mode.
   {
     id: 'cameo-auro-spot-z300',
+    body: 'spotHead',
     manufacturer: 'Cameo',
     model: 'AURO Spot Z300',
     category: 'movingHead',
@@ -147,6 +151,7 @@ export const TARTANGA_FIXTURES: FixtureDefinition[] = [
   // MARK (Equipson) BLINDER 2L — 2-eye COB blinder, each eye split warm/cold white.
   {
     id: 'mark-blinder-2l',
+    body: 'blinder',
     manufacturer: 'MARK',
     model: 'Blinder 2L',
     category: 'dimmer',
