@@ -5,7 +5,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { useMemo } from 'react'
-import type { FixtureDefinition, PatchedFixture, Show, TrussDef } from '../model/types'
+import type { FixtureDefinition, PatchedFixture, PropKind, Show, TrussDef } from '../model/types'
 import { fixtureFootprint, nextUserNumber } from '../model/types'
 import { DEFAULT_TRUSSES, DEFAULT_TRUSS, nextTrussId } from '../model/venue'
 import type { Playback, CueStep, LegacyCue } from '../model/cue'
@@ -261,6 +261,14 @@ interface ShowState {
   setFixtureFloor: (instanceId: string, floor: boolean) => void
   /** Set a non-moving fixture's physical rigging aim (pan/tilt degrees). */
   setFixtureAim: (instanceId: string, pan: number, tilt: number) => void
+  // --- Scene props (people, band gear, set pieces on the stage — visual only) ---
+  /** Currently selected scenery prop (independent of the fixture selection). */
+  selectedProp: string | null
+  selectProp: (id: string | null) => void
+  addProp: (kind: PropKind) => void
+  removeProp: (id: string) => void
+  moveProp: (id: string, x: number, z: number) => void
+  rotateProp: (id: string, deltaDeg: number) => void
   /** Edit the show's metadata (name / venue / designer) shown in exports. */
   setShowMeta: (patch: Partial<Pick<Show, 'name' | 'venue' | 'designer'>>) => void
   /** Move every selected fixture to a truss / universe at once. */
@@ -1196,6 +1204,31 @@ export const useShowStore = create<ShowState>()(
           show: {
             ...s.show,
             fixtures: s.show.fixtures.map((f) => (f.id === instanceId ? { ...f, aim: { pan, tilt } } : f)),
+          },
+        })),
+
+      selectedProp: null,
+      selectProp: (id) => set({ selectedProp: id }),
+      addProp: (kind) =>
+        set((s) => {
+          const id = `prop-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`
+          const props = [...(s.show.props ?? []), { id, kind, x: 0, z: -1.5, rot: 0 }]
+          return { show: { ...s.show, props }, selectedProp: id }
+        }),
+      removeProp: (id) =>
+        set((s) => ({
+          show: { ...s.show, props: (s.show.props ?? []).filter((p) => p.id !== id) },
+          selectedProp: s.selectedProp === id ? null : s.selectedProp,
+        })),
+      moveProp: (id, x, z) =>
+        set((s) => ({
+          show: { ...s.show, props: (s.show.props ?? []).map((p) => (p.id === id ? { ...p, x, z } : p)) },
+        })),
+      rotateProp: (id, deltaDeg) =>
+        set((s) => ({
+          show: {
+            ...s.show,
+            props: (s.show.props ?? []).map((p) => (p.id === id ? { ...p, rot: ((p.rot ?? 0) + deltaDeg) % 360 } : p)),
           },
         })),
 

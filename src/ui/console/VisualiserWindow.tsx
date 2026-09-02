@@ -7,6 +7,7 @@ import { AimPad } from './AimPad'
 import { PwaTag } from '../PwaTag'
 import { VENUE_PRESETS } from '../../model/venues'
 import { fixtureAttributeKeys } from '../../model/types'
+import { PROP_LIBRARY } from '../visualizer/props'
 
 /** The 3D/2D visualiser as a Titan workspace window (the Quartz's Capture output lives on the
  *  touchscreen too). The rig render itself is faithful; the toolbar (venue, room lights, 2D,
@@ -40,6 +41,10 @@ export function VisualiserWindow({ popped = false }: { popped?: boolean } = {}) 
   const resetView = useShowStore((s) => s.resetView)
   const viewMode = useShowStore((s) => s.viewMode)
   const setCameraView = useShowStore((s) => s.setCameraView)
+  const addProp = useShowStore((s) => s.addProp)
+  const selectedProp = useShowStore((s) => s.selectedProp)
+  const rotateProp = useShowStore((s) => s.rotateProp)
+  const removeProp = useShowStore((s) => s.removeProp)
   const effectsCount = useShowStore((s) => s.effects.length)
   const playing = useShowStore((s) => s.playing)
   const setPlaying = useShowStore((s) => s.setPlaying)
@@ -98,6 +103,17 @@ export function VisualiserWindow({ popped = false }: { popped?: boolean } = {}) 
             <button className="ghost-btn" onClick={() => resetView()} title={t('visualizer.homeView')}>
               ⌂
             </button>
+            <select className="venue-select" value="" onChange={(e) => { if (e.target.value) addProp(e.target.value as never) }} title={t('props.addTip')}>
+              <option value="">➕ {t('props.add')}</option>
+              {PROP_LIBRARY.map((p) => (<option key={p.kind} value={p.kind}>{p.emoji} {t(`props.kinds.${p.kind}`)}</option>))}
+            </select>
+            {selectedProp && (
+              <>
+                <button className="ghost-btn" onClick={() => rotateProp(selectedProp, -15)} title={t('props.rotL')}>↺</button>
+                <button className="ghost-btn" onClick={() => rotateProp(selectedProp, 15)} title={t('props.rotR')}>↻</button>
+                <button className="ghost-btn" onClick={() => removeProp(selectedProp)} title={t('props.remove')}>🗑</button>
+              </>
+            )}
           </>
         )}
         <div className="view-toggle">

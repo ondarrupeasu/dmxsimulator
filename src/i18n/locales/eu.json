@@ -222,6 +222,27 @@
       "sideRight": "Eskuin aldea"
     }
   },
+  "props": {
+    "add": "Gehitu elementua",
+    "addTip": "Gehitu eszenatokira eszena-elementu bat — gero arrastatu bere lekura",
+    "rotL": "Biratu ezkerrera",
+    "rotR": "Biratu eskuinera",
+    "remove": "Kendu elementua",
+    "kinds": {
+      "person": "Pertsona",
+      "singer": "Abeslaria",
+      "guitarist": "Gitarra-jotzailea",
+      "drumKit": "Bateria",
+      "keyboard": "Teklatua",
+      "micStand": "Mikro-euskarria",
+      "amp": "Anplifikadorea",
+      "speaker": "PA bozgorailua",
+      "sofa": "Sofa",
+      "chair": "Aulkia",
+      "table": "Mahaia",
+      "riser": "Tarima"
+    }
+  },
   "run": {
     "title": "Exekutatu",
     "record": "Grabatu cue-a",

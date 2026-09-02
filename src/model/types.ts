@@ -173,6 +173,23 @@ export function fixtureAttributeKeys(def: FixtureDefinition | undefined, modeInd
   return out
 }
 
+/** A non-lighting element placed on the stage in the 3D viewer, so a rig reads in context
+ *  (where the band / actors / set pieces are). Not DMX — purely visual scenery. */
+export type PropKind =
+  | 'person' | 'guitarist' | 'singer' // people
+  | 'drumKit' | 'keyboard' | 'micStand' | 'amp' | 'speaker' // band gear
+  | 'sofa' | 'chair' | 'table' | 'riser' // set pieces
+
+export interface SceneProp {
+  id: string
+  kind: PropKind
+  /** World position on the deck: x left↔right (m), z depth (m, + = downstage / toward audience). */
+  x: number
+  z: number
+  /** Rotation around the vertical axis, degrees. */
+  rot?: number
+}
+
 /** A truss in the rig — a hanging bar at a depth (z) and height (y). */
 export interface TrussDef {
   id: number
@@ -195,6 +212,8 @@ export interface Show {
   fixtures: PatchedFixture[]
   /** The rig's trusses. Optional — when absent the default venue set is used. */
   trusses?: TrussDef[]
+  /** Scenery placed on the stage (people, band gear, set pieces) — visual only, not DMX. */
+  props?: SceneProp[]
 }
 
 /** DMX footprint (channel count) of a patched fixture's active mode. */

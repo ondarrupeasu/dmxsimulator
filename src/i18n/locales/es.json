@@ -222,6 +222,27 @@
       "sideRight": "Lateral der."
     }
   },
+  "props": {
+    "add": "Añadir elemento",
+    "addTip": "Añade un elemento de escena al escenario — luego arrástralo a su sitio",
+    "rotL": "Girar a la izquierda",
+    "rotR": "Girar a la derecha",
+    "remove": "Quitar elemento",
+    "kinds": {
+      "person": "Persona",
+      "singer": "Cantante",
+      "guitarist": "Guitarrista",
+      "drumKit": "Batería",
+      "keyboard": "Teclado",
+      "micStand": "Pie de micro",
+      "amp": "Ampli",
+      "speaker": "Altavoz PA",
+      "sofa": "Sofá",
+      "chair": "Silla",
+      "table": "Mesa",
+      "riser": "Tarima"
+    }
+  },
   "run": {
     "title": "Ejecutar",
     "record": "Grabar cue",

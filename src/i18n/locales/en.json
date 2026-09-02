@@ -222,6 +222,27 @@
       "sideRight": "Right side"
     }
   },
+  "props": {
+    "add": "Add element",
+    "addTip": "Add a scenery element to the stage — then drag it into place",
+    "rotL": "Rotate left",
+    "rotR": "Rotate right",
+    "remove": "Remove element",
+    "kinds": {
+      "person": "Person",
+      "singer": "Singer",
+      "guitarist": "Guitarist",
+      "drumKit": "Drum kit",
+      "keyboard": "Keyboard",
+      "micStand": "Mic stand",
+      "amp": "Amp",
+      "speaker": "PA speaker",
+      "sofa": "Sofa",
+      "chair": "Chair",
+      "table": "Table",
+      "riser": "Riser"
+    }
+  },
   "run": {
     "title": "Run",
     "record": "Record cue",

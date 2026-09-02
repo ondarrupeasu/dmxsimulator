@@ -10,6 +10,7 @@ import { applyEffects, activeEffects } from '../../engine/effects'
 import { liveCues } from '../../model/cue'
 import { computeVisualState } from '../../engine/render'
 import { FIXTURE_GOBOS } from '../../model/gobos'
+import { buildProp } from './props'
 import type { TrussDef, FixtureDefinition, BodyType, FixtureGeometry } from '../../model/types'
 import { getTrusses, trussById, STAGE_TOP } from '../../model/venue'
 
@@ -689,6 +690,8 @@ export function Visualizer3D({ ext = false }: { ext?: boolean } = {}) {
 
     const fxMap = new Map<string, FxObj>()
     const hazerMap = new Map<string, THREE.Group>()
+    // Scenery props (people, band gear, set pieces). Each entry: the built group + its floor ring.
+    const propMap = new Map<string, { group: THREE.Group; kind: string; ring: THREE.Mesh }>()
     const trussMap = new Map<number, THREE.Mesh>()
     const down = new THREE.Vector3()
 
@@ -706,19 +709,53 @@ export function Visualizer3D({ ext = false }: { ext?: boolean } = {}) {
 
     // Click a fixture to select it (a drag rotates the view, so only a click that
     // barely moved counts as a pick). Shift-click adds/removes from the selection.
+    // Pressing on a scenery prop instead grabs it and drags it across the deck.
     const raycaster = new THREE.Raycaster()
     const ndc = new THREE.Vector2()
     let downX = 0
     let downY = 0
-    const onDown = (e: PointerEvent) => {
-      downX = e.clientX
-      downY = e.clientY
-    }
-    const onUp = (e: PointerEvent) => {
-      if (Math.abs(e.clientX - downX) > 4 || Math.abs(e.clientY - downY) > 4) return
+    let draggingProp: string | null = null
+    const deckPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), -STAGE_TOP) // horizontal at deck height
+    const hitPt = new THREE.Vector3()
+    const setNdc = (e: PointerEvent) => {
       const rect = renderer.domElement.getBoundingClientRect()
       ndc.x = ((e.clientX - rect.left) / rect.width) * 2 - 1
       ndc.y = -((e.clientY - rect.top) / rect.height) * 2 + 1
+    }
+    const pickProp = (): string | null => {
+      raycaster.setFromCamera(ndc, camera)
+      const groups = [...propMap.values()].map((e) => e.group)
+      const hit = raycaster.intersectObjects(groups, true)[0]
+      if (!hit) return null
+      let o: THREE.Object3D | null = hit.object
+      while (o && o.userData.propId === undefined) o = o.parent
+      return (o?.userData.propId as string | undefined) ?? null
+    }
+    const onDown = (e: PointerEvent) => {
+      downX = e.clientX
+      downY = e.clientY
+      setNdc(e)
+      const pid = pickProp()
+      if (pid) {
+        draggingProp = pid
+        useShowStore.getState().selectProp(pid)
+        controls.enabled = false // grab the prop instead of orbiting
+      }
+    }
+    const onMoveDrag = (e: PointerEvent) => {
+      if (!draggingProp) return
+      setNdc(e)
+      raycaster.setFromCamera(ndc, camera)
+      if (raycaster.ray.intersectPlane(deckPlane, hitPt)) {
+        const x = THREE.MathUtils.clamp(hitPt.x, -9.5, 9.5)
+        const z = THREE.MathUtils.clamp(hitPt.z, -6.5, 3.5)
+        useShowStore.getState().moveProp(draggingProp, x, z)
+      }
+    }
+    const onUp = (e: PointerEvent) => {
+      if (draggingProp) { draggingProp = null; controls.enabled = true; return }
+      if (Math.abs(e.clientX - downX) > 4 || Math.abs(e.clientY - downY) > 4) return
+      setNdc(e)
       raycaster.setFromCamera(ndc, camera)
       const proxies = [
         ...[...fxMap.values()].map((fx) => fx.hit),
@@ -726,6 +763,7 @@ export function Visualizer3D({ ext = false }: { ext?: boolean } = {}) {
       ].filter(Boolean)
       const picked = raycaster.intersectObjects(proxies, false)[0]
       const st = useShowStore.getState()
+      st.selectProp(null) // clicking the rig deselects any prop
       if (!picked) {
         st.select([])
         return
@@ -737,6 +775,7 @@ export function Visualizer3D({ ext = false }: { ext?: boolean } = {}) {
       if (id) st.toggleSelect(id)
     }
     renderer.domElement.addEventListener('pointerdown', onDown)
+    renderer.domElement.addEventListener('pointermove', onMoveDrag)
     renderer.domElement.addEventListener('pointerup', onUp)
 
     let raf = 0
@@ -960,6 +999,33 @@ export function Visualizer3D({ ext = false }: { ext?: boolean } = {}) {
         ;(fx.body.material as THREE.MeshStandardMaterial).emissive.setHex(selected ? 0x123b4a : lit ? 0x15151b : 0x000000)
       }
 
+      // --- Scenery props (people, band gear, set pieces) — reconcile against show.props ---
+      const propList = show.props ?? []
+      const propIds = new Set(propList.map((p) => p.id))
+      for (const [id, entry] of propMap) {
+        if (!propIds.has(id)) { scene.remove(entry.group); scene.remove(entry.ring); propMap.delete(id) }
+      }
+      for (const p of propList) {
+        let entry = propMap.get(p.id)
+        if (!entry || entry.kind !== p.kind) {
+          if (entry) { scene.remove(entry.group); scene.remove(entry.ring) }
+          const group = buildProp(p.kind)
+          group.userData.propId = p.id
+          const ring = new THREE.Mesh(
+            new THREE.RingGeometry(0.52, 0.64, 32),
+            new THREE.MeshBasicMaterial({ color: 0x3fd0f2, transparent: true, opacity: 0.9, side: THREE.DoubleSide, depthWrite: false }),
+          )
+          ring.rotation.x = -Math.PI / 2
+          scene.add(group); scene.add(ring)
+          entry = { group, kind: p.kind, ring }
+          propMap.set(p.id, entry)
+        }
+        entry.group.position.set(p.x, STAGE_TOP, p.z)
+        entry.group.rotation.y = THREE.MathUtils.degToRad(p.rot ?? 0)
+        entry.ring.position.set(p.x, STAGE_TOP + 0.02, p.z)
+        entry.ring.visible = state.selectedProp === p.id
+      }
+
       // Drift the haze puffs (they slowly billow + rise) while a hazer is up. Uses
       // real time so the haze keeps moving even with the effect clock paused.
       const hazeVisible = hazeLevel > 0.01
@@ -1026,6 +1092,7 @@ export function Visualizer3D({ ext = false }: { ext?: boolean } = {}) {
       cancelAnimationFrame(raf)
       ro.disconnect()
       renderer.domElement.removeEventListener('pointerdown', onDown)
+      renderer.domElement.removeEventListener('pointermove', onMoveDrag)
       renderer.domElement.removeEventListener('pointerup', onUp)
       controls.dispose()
       renderer.dispose()
