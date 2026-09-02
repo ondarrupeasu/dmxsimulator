@@ -690,8 +690,9 @@ export function Visualizer3D({ ext = false }: { ext?: boolean } = {}) {
 
     const fxMap = new Map<string, FxObj>()
     const hazerMap = new Map<string, THREE.Group>()
-    // Scenery props (people, band gear, set pieces). Each entry: the built group + its floor ring.
-    const propMap = new Map<string, { group: THREE.Group; kind: string; ring: THREE.Mesh }>()
+    // Scenery props (people, band gear, set pieces). Each entry: the built group, its visible
+    // floor ring, and a fat invisible ring that's easy to grab for rotating.
+    const propMap = new Map<string, { group: THREE.Group; kind: string; ring: THREE.Mesh; ringPick: THREE.Mesh }>()
     const trussMap = new Map<number, THREE.Mesh>()
     const down = new THREE.Vector3()
 
@@ -715,6 +716,7 @@ export function Visualizer3D({ ext = false }: { ext?: boolean } = {}) {
     let downX = 0
     let downY = 0
     let draggingProp: string | null = null
+    let draggingRotate: string | null = null // grabbing the selection ring rotates instead of moves
     const deckPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), -STAGE_TOP) // horizontal at deck height
     const hitPt = new THREE.Vector3()
     const setNdc = (e: PointerEvent) => {
@@ -731,10 +733,32 @@ export function Visualizer3D({ ext = false }: { ext?: boolean } = {}) {
       while (o && o.userData.propId === undefined) o = o.parent
       return (o?.userData.propId as string | undefined) ?? null
     }
+    // Angle (rad) on the deck from a prop's centre to the current pointer, for the rotate ring.
+    const deckAngleToProp = (px: number, pz: number): number | null => {
+      raycaster.setFromCamera(ndc, camera)
+      if (!raycaster.ray.intersectPlane(deckPlane, hitPt)) return null
+      return Math.atan2(hitPt.z - pz, hitPt.x - px)
+    }
+    // Raycast the visible selection ring; grabbing it rotates the prop instead of moving it.
+    const pickRing = (): string | null => {
+      raycaster.setFromCamera(ndc, camera)
+      const rings = [...propMap.values()].map((e) => e.ringPick)
+      const hit = raycaster.intersectObjects(rings, false).find((h) => h.object.visible)
+      return (hit?.object.userData.propRingId as string | undefined) ?? null
+    }
+    const propPos = (id: string) => (useShowStore.getState().show.props ?? []).find((p) => p.id === id)
+    let lastAngle = 0
     const onDown = (e: PointerEvent) => {
       downX = e.clientX
       downY = e.clientY
       setNdc(e)
+      // Ring first (rotate the already-selected prop), then the prop body (move it).
+      const rid = pickRing()
+      if (rid) {
+        const p = propPos(rid)
+        const a = p ? deckAngleToProp(p.x, p.z) : null
+        if (a !== null) { draggingRotate = rid; lastAngle = a; controls.enabled = false; return }
+      }
       const pid = pickProp()
       if (pid) {
         draggingProp = pid
@@ -743,6 +767,19 @@ export function Visualizer3D({ ext = false }: { ext?: boolean } = {}) {
       }
     }
     const onMoveDrag = (e: PointerEvent) => {
+      if (draggingRotate) {
+        setNdc(e)
+        const p = propPos(draggingRotate)
+        const a = p ? deckAngleToProp(p.x, p.z) : null
+        if (a !== null) {
+          let d = a - lastAngle
+          while (d > Math.PI) d -= 2 * Math.PI
+          while (d < -Math.PI) d += 2 * Math.PI
+          useShowStore.getState().rotateProp(draggingRotate, -THREE.MathUtils.radToDeg(d))
+          lastAngle = a
+        }
+        return
+      }
       if (!draggingProp) return
       setNdc(e)
       raycaster.setFromCamera(ndc, camera)
@@ -753,6 +790,7 @@ export function Visualizer3D({ ext = false }: { ext?: boolean } = {}) {
       }
     }
     const onUp = (e: PointerEvent) => {
+      if (draggingRotate) { draggingRotate = null; controls.enabled = true; return }
       if (draggingProp) { draggingProp = null; controls.enabled = true; return }
       if (Math.abs(e.clientX - downX) > 4 || Math.abs(e.clientY - downY) > 4) return
       setNdc(e)
@@ -1008,27 +1046,38 @@ export function Visualizer3D({ ext = false }: { ext?: boolean } = {}) {
       const propList = show.props ?? []
       const propIds = new Set(propList.map((p) => p.id))
       for (const [id, entry] of propMap) {
-        if (!propIds.has(id)) { scene.remove(entry.group); scene.remove(entry.ring); propMap.delete(id) }
+        if (!propIds.has(id)) { scene.remove(entry.group, entry.ring, entry.ringPick); propMap.delete(id) }
       }
       for (const p of propList) {
         let entry = propMap.get(p.id)
         if (!entry || entry.kind !== p.kind) {
-          if (entry) { scene.remove(entry.group); scene.remove(entry.ring) }
+          if (entry) scene.remove(entry.group, entry.ring, entry.ringPick)
           const group = buildProp(p.kind)
           group.userData.propId = p.id
+          // Slim visible torus reading as a selection ring...
           const ring = new THREE.Mesh(
-            new THREE.RingGeometry(0.52, 0.64, 32),
-            new THREE.MeshBasicMaterial({ color: 0x3fd0f2, transparent: true, opacity: 0.9, side: THREE.DoubleSide, depthWrite: false }),
+            new THREE.TorusGeometry(0.62, 0.055, 8, 40),
+            new THREE.MeshBasicMaterial({ color: 0x3fd0f2, transparent: true, opacity: 0.9, depthWrite: false }),
           )
           ring.rotation.x = -Math.PI / 2
-          scene.add(group); scene.add(ring)
-          entry = { group, kind: p.kind, ring }
+          // ...plus a fat invisible torus over it that's easy to grab to rotate the prop.
+          const ringPick = new THREE.Mesh(
+            new THREE.TorusGeometry(0.62, 0.3, 6, 32),
+            new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, depthWrite: false }), // invisible but raycastable
+          )
+          ringPick.rotation.x = -Math.PI / 2
+          ringPick.userData.propRingId = p.id
+          scene.add(group, ring, ringPick)
+          entry = { group, kind: p.kind, ring, ringPick }
           propMap.set(p.id, entry)
         }
         entry.group.position.set(p.x, STAGE_TOP, p.z)
         entry.group.rotation.y = THREE.MathUtils.degToRad(p.rot ?? 0)
         entry.ring.position.set(p.x, STAGE_TOP + 0.02, p.z)
+        entry.ringPick.position.set(p.x, STAGE_TOP + 0.02, p.z)
         entry.ring.visible = state.selectedProp === p.id
+        // The grab torus is only "active" (raycastable via our visible filter) when selected.
+        entry.ringPick.visible = state.selectedProp === p.id
 
         // Light the prop: sum every beam landing on it (brightest at the pool centre) and paint
         // that colour as emissive on the prop, so a spot aimed at the singer lights the singer.
