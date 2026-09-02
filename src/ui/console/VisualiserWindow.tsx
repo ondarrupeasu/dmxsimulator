@@ -38,6 +38,8 @@ export function VisualiserWindow({ popped = false }: { popped?: boolean } = {}) 
   const setFixtureAim = useShowStore((s) => s.setFixtureAim)
   const focusSelected = useShowStore((s) => s.focusSelected)
   const resetView = useShowStore((s) => s.resetView)
+  const viewMode = useShowStore((s) => s.viewMode)
+  const setCameraView = useShowStore((s) => s.setCameraView)
   const effectsCount = useShowStore((s) => s.effects.length)
   const playing = useShowStore((s) => s.playing)
   const setPlaying = useShowStore((s) => s.setPlaying)
@@ -79,6 +81,13 @@ export function VisualiserWindow({ popped = false }: { popped?: boolean } = {}) 
               {VENUE_PRESETS.map((v) => (<option key={v.id} value={v.id}>{v.name}</option>))}
               {venueUrl && <option value="__custom">{venueName}</option>}
               <option value="__file">Load glTF…</option>
+            </select>
+            <select className="venue-select" value={viewMode} onChange={(e) => setCameraView(e.target.value as never)} title={t('visualizer.viewTip')}>
+              <option value="home">🎥 {t('visualizer.views.home')}</option>
+              <option value="techPov">🎛 {t('visualizer.views.techPov')}</option>
+              <option value="stage">🎭 {t('visualizer.views.stage')}</option>
+              <option value="sideLeft">⬅ {t('visualizer.views.sideLeft')}</option>
+              <option value="sideRight">➡ {t('visualizer.views.sideRight')}</option>
             </select>
             <button className={`ghost-btn${viewLights ? ' active' : ''}`} data-tour="room-lights" onClick={() => setViewLights(!viewLights)} title={t('visualizer.roomLights')}>
               💡

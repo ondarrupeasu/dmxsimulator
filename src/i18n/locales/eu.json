@@ -212,7 +212,15 @@
     "resetView": "Berrezarri zoom / enkoadrea",
     "aimReset": "Zentratu",
     "focus": "Enfokatu hautatutako fixturea — kamera hurbildu eta haren inguruan orbitatu",
-    "homeView": "Berrezarri ikuspegia — eszenatoki osora itzuli"
+    "homeView": "Berrezarri ikuspegia — eszenatoki osora itzuli",
+    "viewTip": "Kamera ikuspegia",
+    "views": {
+      "home": "Orokorra",
+      "techPov": "Teknikari POVa (kontrola)",
+      "stage": "Eszenatokia soilik",
+      "sideLeft": "Ezker aldea",
+      "sideRight": "Eskuin aldea"
+    }
   },
   "run": {
     "title": "Exekutatu",

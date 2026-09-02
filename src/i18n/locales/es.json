@@ -212,7 +212,15 @@
     "resetView": "Restablecer zoom / encuadre",
     "aimReset": "Centrar",
     "focus": "Enfocar el fixture seleccionado — acerca la cámara y orbita a su alrededor",
-    "homeView": "Restablecer la vista — volver a todo el escenario"
+    "homeView": "Restablecer la vista — volver a todo el escenario",
+    "viewTip": "Vista de cámara",
+    "views": {
+      "home": "General",
+      "techPov": "POV Técnico (control)",
+      "stage": "Solo escenario",
+      "sideLeft": "Lateral izq.",
+      "sideRight": "Lateral der."
+    }
   },
   "run": {
     "title": "Ejecutar",

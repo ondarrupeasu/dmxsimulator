@@ -552,14 +552,27 @@ export function Visualizer3D({ ext = false }: { ext?: boolean } = {}) {
     const controls = new OrbitControls(camera, renderer.domElement)
     controls.target.set(0, 1.5, 1.5)
     controls.enableDamping = true
-    controls.maxPolarAngle = Math.PI * 0.52
+    // Allow the camera to dip well below the horizon so you can get down near the floor and look
+    // up at the rig; a per-frame floor clamp (below) keeps it from sliding under the stage.
+    controls.maxPolarAngle = Math.PI * 0.85
+    controls.minDistance = 2
 
     // "Focus selected" / "Home": when a nonce bumps, glide the camera + orbit target so the
     // selection fills the view (fit to its bounding box) or back to the full-stage overview.
     const HOME_TARGET = new THREE.Vector3(0, 1.5, 1.5)
     const HOME_CAM = new THREE.Vector3(0, 7.5, 17)
+    // Preset views for the toolbar dropdown (camera position + orbit target). Heights are low so
+    // you see the stage from a realistic eye level; 'stage' also hides the audience seats.
+    const VIEWS: Record<string, { cam: THREE.Vector3; target: THREE.Vector3 }> = {
+      home: { cam: HOME_CAM.clone(), target: HOME_TARGET.clone() },
+      techPov: { cam: new THREE.Vector3(0, 2.4, 21), target: new THREE.Vector3(0, 3, -3) }, // FOH desk
+      stage: { cam: new THREE.Vector3(0, 3, 10), target: new THREE.Vector3(0, 2.6, -3) }, // front, no seats
+      sideLeft: { cam: new THREE.Vector3(-17, 3.5, -1), target: new THREE.Vector3(0, 3, -2) },
+      sideRight: { cam: new THREE.Vector3(17, 3.5, -1), target: new THREE.Vector3(0, 3, -2) },
+    }
     let seenFocusNonce = useShowStore.getState().focusNonce
     let seenHomeNonce = useShowStore.getState().homeNonce
+    let seenViewNonce = useShowStore.getState().viewNonce
     let focusAnim: { fromT: THREE.Vector3; toT: THREE.Vector3; fromC: THREE.Vector3; toC: THREE.Vector3; t: number } | null = null
 
     scene.add(new THREE.AmbientLight(0x404050, 1.2))
@@ -985,6 +998,14 @@ export function Visualizer3D({ ext = false }: { ext?: boolean } = {}) {
         seenHomeNonce = state.homeNonce
         focusAnim = { fromT: controls.target.clone(), toT: HOME_TARGET.clone(), fromC: camera.position.clone(), toC: HOME_CAM.clone(), t: 0 }
       }
+      // Preset view chosen from the toolbar dropdown.
+      if (state.viewNonce !== seenViewNonce) {
+        seenViewNonce = state.viewNonce
+        const v = VIEWS[state.viewMode] ?? VIEWS.home
+        focusAnim = { fromT: controls.target.clone(), toT: v.target.clone(), fromC: camera.position.clone(), toC: v.cam.clone(), t: 0 }
+      }
+      // 'Stage' view hides the audience so you see the stage alone.
+      seats.visible = state.viewMode !== 'stage'
       if (focusAnim) {
         focusAnim.t = Math.min(1, focusAnim.t + 0.05)
         const e = focusAnim.t * focusAnim.t * (3 - 2 * focusAnim.t) // smoothstep
@@ -994,6 +1015,9 @@ export function Visualizer3D({ ext = false }: { ext?: boolean } = {}) {
       }
 
       controls.update()
+      // Keep the camera just above the floor — you can get down low to look up at the rig, but
+      // never slip under the stage deck.
+      if (camera.position.y < 0.25) camera.position.y = 0.25
       renderer.render(scene, camera)
     }
     animate()

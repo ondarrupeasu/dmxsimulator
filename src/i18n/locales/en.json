@@ -212,7 +212,15 @@
     "resetView": "Reset zoom / pan",
     "aimReset": "Centre",
     "focus": "Focus the selected fixture — fly in and orbit around it",
-    "homeView": "Reset the view — back to the full stage"
+    "homeView": "Reset the view — back to the full stage",
+    "viewTip": "Camera view",
+    "views": {
+      "home": "Overview",
+      "techPov": "Tech POV (desk)",
+      "stage": "Stage only",
+      "sideLeft": "Left side",
+      "sideRight": "Right side"
+    }
   },
   "run": {
     "title": "Run",

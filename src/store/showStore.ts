@@ -337,6 +337,11 @@ interface ShowState {
   /** Bumped to ask the 3D viewer to glide back to the full-stage overview. */
   homeNonce: number
   resetView: () => void
+  /** Preset camera view for the 3D viewer. 'stage' also hides the audience seats. */
+  viewMode: 'home' | 'techPov' | 'stage' | 'sideLeft' | 'sideRight'
+  /** Bumped whenever a view is (re)selected, so the viewer re-runs the camera glide. */
+  viewNonce: number
+  setCameraView: (mode: 'home' | 'techPov' | 'stage' | 'sideLeft' | 'sideRight') => void
   viewLightsExt: boolean
   setViewLightsExt: (v: boolean) => void
 
@@ -1511,6 +1516,9 @@ export const useShowStore = create<ShowState>()(
       focusSelected: () => set((s) => ({ focusNonce: s.focusNonce + 1 })),
       homeNonce: 0,
       resetView: () => set((s) => ({ homeNonce: s.homeNonce + 1 })),
+      viewMode: 'home',
+      viewNonce: 0,
+      setCameraView: (mode) => set((s) => ({ viewMode: mode, viewNonce: s.viewNonce + 1 })),
       viewLightsExt: false,
       setViewLightsExt: (v) => set({ viewLightsExt: v }),
       legendArm: false,
