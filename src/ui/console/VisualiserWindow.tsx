@@ -75,11 +75,12 @@ export function VisualiserWindow({ popped = false }: { popped?: boolean } = {}) 
     if (!file || !selectedProp) return
     const img = new Image()
     img.onload = () => {
-      const size = 128
+      const size = 200
       const cv = document.createElement('canvas')
       cv.width = cv.height = size
       const ctx = cv.getContext('2d')
       if (!ctx) return
+      ctx.imageSmoothingQuality = 'high'
       const s = Math.min(img.width, img.height)
       ctx.drawImage(img, (img.width - s) / 2, (img.height - s) / 2, s, s, 0, 0, size, size)
       URL.revokeObjectURL(img.src)

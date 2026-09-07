@@ -1087,20 +1087,26 @@ export function Visualizer3D({ ext = false }: { ext?: boolean } = {}) {
             const tex = new THREE.TextureLoader().load(face)
             tex.colorSpace = THREE.SRGBColorSpace
             tex.wrapS = tex.wrapT = THREE.ClampToEdgeWrapping // pan/zoom clamps to the edge pixels
-            // A curved cap over the front of the head sphere, so the photo sits ON the round head.
-            const R = 0.13 // head sphere radius (see props.ts person())
-            const phiLen = 2.0
-            const thetaLen = 1.75
+            tex.minFilter = THREE.LinearFilter // no mipmaps → keeps the photo crisp + full contrast
+            tex.generateMipmaps = false
+            tex.needsUpdate = true
+            // A GENTLY curved patch on the front of the head (a slice of a big sphere = nearly flat),
+            // so the photo barely distorts at the sides. Its front bulges to just in front of the
+            // head sphere (radius 0.13) and it curves back a little.
+            const Rc = 0.26 // patch sphere radius — bigger = flatter, less side distortion
+            const halfW = 0.58 // angular half-width; patch half-width ≈ Rc·sin(halfW)
+            const halfH = 0.72
             const geo = new THREE.SphereGeometry(
-              R * 1.03, 28, 28,
-              Math.PI / 2 - phiLen / 2, phiLen, // centred on +Z (the way the figure faces)
-              Math.PI / 2 - thetaLen / 2, thetaLen,
+              Rc, 40, 40,
+              Math.PI / 2 - halfW, 2 * halfW, // centred on +Z (the way the figure faces)
+              Math.PI / 2 - halfH, 2 * halfH,
             )
-            // Unlit + tone-mapping off so the photo keeps its true colour and contrast (a lit
-            // material washed it out under the dim ambient light). Transparent so a cut-out
-            // (transparent-background) head photo shows the head behind, not a black square.
-            const mesh = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ map: tex, toneMapped: false, transparent: true }))
-            mesh.position.set(0, HEAD_Y, 0)
+            // Unlit + tone-mapping off + OPAQUE (alphaTest, not blend) so the photo keeps its true
+            // colour and contrast — a lit or blended material washed it out. alphaTest still cuts
+            // out a transparent-background photo (shows the head behind), no black square.
+            // fog: false — the scene's dark haze would otherwise desaturate the photo (washed out).
+            const mesh = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ map: tex, toneMapped: false, fog: false, alphaTest: 0.5, side: THREE.DoubleSide }))
+            mesh.position.set(0, HEAD_Y, 0.13 - Rc) // front of the patch sits at the head surface
             entry.group.add(mesh)
             entry.faceMesh = mesh
           }
