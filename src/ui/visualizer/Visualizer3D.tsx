@@ -10,7 +10,7 @@ import { applyEffects, activeEffects } from '../../engine/effects'
 import { liveCues } from '../../model/cue'
 import { computeVisualState } from '../../engine/render'
 import { FIXTURE_GOBOS } from '../../model/gobos'
-import { buildProp, isPersonKind, HEAD_Y } from './props'
+import { buildProp, isPersonKind, HEAD } from './props'
 import type { TrussDef, FixtureDefinition, BodyType, FixtureGeometry } from '../../model/types'
 import { getTrusses, trussById, STAGE_TOP } from '../../model/venue'
 
@@ -1090,12 +1090,11 @@ export function Visualizer3D({ ext = false }: { ext?: boolean } = {}) {
             tex.minFilter = THREE.LinearFilter // no mipmaps → keeps the photo crisp + full contrast
             tex.generateMipmaps = false
             tex.needsUpdate = true
-            // A GENTLY curved patch on the front of the head (a slice of a big sphere = nearly flat),
-            // so the photo barely distorts at the sides. Its front bulges to just in front of the
-            // head sphere (radius 0.13) and it curves back a little.
-            const Rc = 0.26 // patch sphere radius — bigger = flatter, less side distortion
-            const halfW = 0.58 // angular half-width; patch half-width ≈ Rc·sin(halfW)
-            const halfH = 0.72
+            // A GENTLY curved patch on the front of the head-shaped head — nearly flat (a slice of
+            // a big sphere), sized to the FACE area so it doesn't overhang the narrower head sides.
+            const Rc = 0.34 // patch sphere radius — bigger = flatter, less side distortion
+            const halfW = 0.33 // half-width ≈ Rc·sin(halfW) ≈ head half-width
+            const halfH = 0.42
             const geo = new THREE.SphereGeometry(
               Rc, 40, 40,
               Math.PI / 2 - halfW, 2 * halfW, // centred on +Z (the way the figure faces)
@@ -1106,7 +1105,7 @@ export function Visualizer3D({ ext = false }: { ext?: boolean } = {}) {
             // out a transparent-background photo (shows the head behind), no black square.
             // fog: false — the scene's dark haze would otherwise desaturate the photo (washed out).
             const mesh = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ map: tex, toneMapped: false, fog: false, alphaTest: 0.5, side: THREE.DoubleSide }))
-            mesh.position.set(0, HEAD_Y, 0.13 - Rc) // front of the patch sits at the head surface
+            mesh.position.set(0, HEAD.y, HEAD.frontZ - Rc) // front of the patch sits at the head surface
             entry.group.add(mesh)
             entry.faceMesh = mesh
           }

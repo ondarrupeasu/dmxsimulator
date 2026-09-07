@@ -30,8 +30,11 @@ function person(shirt: THREE.Material = cloth): THREE.Group {
   g.add(cyl(0.2, 0.17, 0.62, shirt, 0, 1.15, 0)) // torso
   g.add(cyl(0.05, 0.05, 0.55, shirt, -0.24, 1.18, 0)) // arms
   g.add(cyl(0.05, 0.05, 0.55, shirt, 0.24, 1.18, 0))
-  const head = new THREE.Mesh(new THREE.SphereGeometry(0.13, 16, 12), skin)
-  head.position.y = 1.63
+  // Head shaped like a real head, not a ball: narrower at the sides, a touch taller and deeper.
+  // A face photo then sits on the flatter front and barely distorts at the sides.
+  const head = new THREE.Mesh(new THREE.SphereGeometry(HEAD.r, 24, 20), skin)
+  head.position.y = HEAD.y
+  head.scale.set(HEAD.sx, HEAD.sy, HEAD.sz)
   head.userData.isHead = true // a face photo, when set, is placed on the front of this head
   g.add(head)
   return g
@@ -40,8 +43,11 @@ function person(shirt: THREE.Material = cloth): THREE.Group {
 /** Prop kinds that are people — the ones a face photo can be applied to. */
 export const PERSON_KINDS: PropKind[] = ['person', 'singer', 'guitarist']
 export const isPersonKind = (k: PropKind): boolean => PERSON_KINDS.includes(k)
-/** Local Y of a person's head (all person kinds share the same figure). */
-export const HEAD_Y = 1.63
+/** Head geometry, shared by all person kinds: centre height, base radius and the ellipsoid scale
+ *  that makes it head-shaped (narrower sides). frontZ = how far forward the face surface sits. */
+export const HEAD = { y: 1.63, r: 0.125, sx: 0.84, sy: 1.14, sz: 1.02, get frontZ() { return this.r * this.sz } }
+/** Back-compat: local Y of a person's head. */
+export const HEAD_Y = HEAD.y
 
 /** A boom mic stand (~1.5 m): weighted base, pole, boom arm, mic capsule. */
 function micStand(): THREE.Group {
