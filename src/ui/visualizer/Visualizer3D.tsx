@@ -1065,6 +1065,17 @@ export function Visualizer3D({ ext = false }: { ext?: boolean } = {}) {
       for (const [id, entry] of propMap) {
         if (!propIds.has(id)) { scene.remove(entry.group, entry.ring, entry.ringPick); propMap.delete(id) }
       }
+      // Risers are platforms: any prop standing on one (within its footprint) rides on top of it.
+      const RISER_TOP = 0.31 // height of the primitive riser's surface
+      const risers = propList.filter((p) => p.kind === 'riser')
+      const elevationAt = (px: number, pz: number, selfId: string): number => {
+        let e = 0
+        for (const r of risers) {
+          if (r.id === selfId) continue
+          if (Math.abs(px - r.x) <= 1.0 && Math.abs(pz - r.z) <= 1.0) e = Math.max(e, RISER_TOP)
+        }
+        return e
+      }
       for (const p of propList) {
         let entry = propMap.get(p.id)
         if (!entry || entry.kind !== p.kind) {
@@ -1116,7 +1127,8 @@ export function Visualizer3D({ ext = false }: { ext?: boolean } = {}) {
           entry = { group, kind: p.kind, ring, ringPick }
           propMap.set(p.id, entry)
         }
-        entry.group.position.set(p.x, STAGE_TOP, p.z)
+        const elev = elevationAt(p.x, p.z, p.id)
+        entry.group.position.set(p.x, STAGE_TOP + elev, p.z)
         entry.group.rotation.y = THREE.MathUtils.degToRad(p.rot ?? 0)
 
         // Face photo on a person's head — apply/replace when it changes (recognisable students).
@@ -1168,8 +1180,8 @@ export function Visualizer3D({ ext = false }: { ext?: boolean } = {}) {
           }
         }
 
-        entry.ring.position.set(p.x, STAGE_TOP + 0.02, p.z)
-        entry.ringPick.position.set(p.x, STAGE_TOP + 0.02, p.z)
+        entry.ring.position.set(p.x, STAGE_TOP + elev + 0.02, p.z)
+        entry.ringPick.position.set(p.x, STAGE_TOP + elev + 0.02, p.z)
         entry.ring.visible = state.selectedProp === p.id
         // The grab torus is only "active" (raycastable via our visible filter) when selected.
         entry.ringPick.visible = state.selectedProp === p.id
