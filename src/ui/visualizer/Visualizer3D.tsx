@@ -1139,8 +1139,8 @@ export function Visualizer3D({ ext = false }: { ext?: boolean } = {}) {
             // the head surface (no floating gap) and takes the head's shape. Taller than wide, sized
             // to the face area so skin shows around it (forehead, temples, chin). The photo is
             // cropped 4:5 upstream, matching this patch, so the whole face fits without cropping.
-            const halfW = 0.66 // angular half-width on the head
-            const halfH = 0.62 // taller than wide (a face)
+            const halfW = 1.2 // angular half-width on the head — covers most of the front face
+            const halfH = 1.12 // taller than wide (a face), fills the head top-to-bottom
             const geo = new THREE.SphereGeometry(
               HEAD.r * 1.01, 48, 40,
               Math.PI / 2 - halfW, 2 * halfW, // centred on +Z (the way the figure faces)
