@@ -14,6 +14,8 @@
   "common": {
     "collapse": "Collapse",
     "expand": "Expand",
+    "report": "Feedback",
+    "reportTip": "Report a problem or suggest an improvement",
     "language": "Language",
     "reset": "Reset show",
     "zones": "Show trace",

@@ -14,6 +14,8 @@
   "common": {
     "collapse": "Plegar",
     "expand": "Expandir",
+    "report": "Reportar",
+    "reportTip": "Reportar un problema o sugerir una mejora",
     "language": "Idioma",
     "reset": "Reiniciar show",
     "zones": "Ver calco",

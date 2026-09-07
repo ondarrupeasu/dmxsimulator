@@ -14,6 +14,8 @@
   "common": {
     "collapse": "Tolestu",
     "expand": "Zabaldu",
+    "report": "Jakinarazi",
+    "reportTip": "Jakinarazi arazo bat edo iradoki hobekuntza bat",
     "language": "Hizkuntza",
     "reset": "Berrezarri show-a",
     "zones": "Erakutsi kalkoa",

@@ -38,6 +38,23 @@ export function AppShell() {
   const manualUrl = `${import.meta.env.BASE_URL}masterclass-manual.html`
   // Broadcast live state to the external-monitor window (2nd display), if open.
   useEffect(() => startExtBroadcast(useShowStore as never), [])
+
+  // The shared "Reportar" feedback widget (public/report.js) hard-codes a Spanish label; keep it
+  // in step with the app language. The button is injected on DOMContentLoaded (before React
+  // mounts), so it's normally present already — retry briefly in case of a race.
+  useEffect(() => {
+    const apply = () => {
+      const btn = document.querySelector('.cfr-btn') as HTMLElement | null
+      if (!btn) return false
+      btn.textContent = t('common.report')
+      btn.title = t('common.reportTip')
+      return true
+    }
+    if (apply()) return
+    const iv = window.setInterval(() => { if (apply()) window.clearInterval(iv) }, 200)
+    const stop = window.setTimeout(() => window.clearInterval(iv), 3000)
+    return () => { window.clearInterval(iv); window.clearTimeout(stop) }
+  }, [t, i18n.language])
   useEffect(() => {
     const p = monitorRef.current
     if (!p) return
