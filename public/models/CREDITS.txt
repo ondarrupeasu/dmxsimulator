@@ -1,0 +1,12 @@
+3D prop models (glTF/GLB)
+=========================
+Furniture and audio-gear models are from Kenney's "Furniture Kit" and related
+kits — Creative Commons Zero (CC0), no attribution required. Thank you Kenney!
+  Source: https://kenney.nl/assets  (mirror: https://github.com/shorepine/kenney)
+
+Files:
+  sofa.glb    = Kenney loungeSofa
+  chair.glb   = Kenney loungeChair
+  table.glb   = Kenney table
+  speaker.glb = Kenney speaker
+  amp.glb     = Kenney speakerSmall

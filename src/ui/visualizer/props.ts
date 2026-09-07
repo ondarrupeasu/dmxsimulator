@@ -171,6 +171,18 @@ export function buildProp(kind: PropKind): THREE.Group {
   return g
 }
 
+/** Nicer glTF (GLB) models for the non-people props, loaded on demand and cached; when a kind is
+ *  listed here the visualiser shows the model instead of the primitive above (which stays as the
+ *  fallback while it loads or if it's missing). `height` = target world height (auto-fitted);
+ *  `rotY` orients the model so its front faces +Z. Files live in public/models/ (CC0 assets). */
+export const PROP_MODELS: Partial<Record<PropKind, { url: string; height: number; rotY?: number }>> = {
+  amp: { url: 'amp.glb', height: 0.55 },
+  speaker: { url: 'speaker.glb', height: 1.0 },
+  sofa: { url: 'sofa.glb', height: 0.8 },
+  chair: { url: 'chair.glb', height: 0.9 },
+  table: { url: 'table.glb', height: 0.75 },
+}
+
 /** Ordered list of prop kinds for the library palette, with an emoji cue. */
 export const PROP_LIBRARY: { kind: PropKind; emoji: string }[] = [
   { kind: 'person', emoji: '🧍' },

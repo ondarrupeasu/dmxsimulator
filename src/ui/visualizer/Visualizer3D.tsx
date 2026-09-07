@@ -10,9 +10,26 @@ import { applyEffects, activeEffects } from '../../engine/effects'
 import { liveCues } from '../../model/cue'
 import { computeVisualState } from '../../engine/render'
 import { FIXTURE_GOBOS } from '../../model/gobos'
-import { buildProp, isPersonKind, HEAD } from './props'
+import { buildProp, isPersonKind, HEAD, PROP_MODELS } from './props'
 import type { TrussDef, FixtureDefinition, BodyType, FixtureGeometry } from '../../model/types'
 import { getTrusses, trussById, STAGE_TOP } from '../../model/venue'
+
+// Loaded GLB prop models, cached by url (one network load per model, then clone per instance).
+const _propGltf = new GLTFLoader()
+const _propModelCache = new Map<string, THREE.Object3D>()
+const _propModelLoading = new Map<string, Promise<THREE.Object3D>>()
+function loadPropModel(url: string): Promise<THREE.Object3D> {
+  const cached = _propModelCache.get(url)
+  if (cached) return Promise.resolve(cached)
+  let p = _propModelLoading.get(url)
+  if (!p) {
+    p = new Promise<THREE.Object3D>((resolve, reject) => {
+      _propGltf.load(url, (g) => { _propModelCache.set(url, g.scene); resolve(g.scene) }, undefined, reject)
+    })
+    _propModelLoading.set(url, p)
+  }
+  return p
+}
 
 /** World position for a fixture: x normalized (-1..1) along its assigned truss. */
 function place(x: number, truss: number | undefined, trusses: TrussDef[]): THREE.Vector3 {
@@ -1052,8 +1069,36 @@ export function Visualizer3D({ ext = false }: { ext?: boolean } = {}) {
         let entry = propMap.get(p.id)
         if (!entry || entry.kind !== p.kind) {
           if (entry) scene.remove(entry.group, entry.ring, entry.ringPick)
-          const group = buildProp(p.kind)
+          const group = buildProp(p.kind) // primitive fallback, shown until (and if) a GLB loads
           group.userData.propId = p.id
+          // Nicer GLB model for band gear / furniture: load on demand, auto-fit to the deck, and
+          // swap it in for the primitive. On failure the primitive stays.
+          const modelDef = PROP_MODELS[p.kind]
+          if (modelDef) {
+            const gid = p.id
+            loadPropModel(`${import.meta.env.BASE_URL}models/${modelDef.url}`)
+              .then((tpl) => {
+                if (propMap.get(gid)?.group !== group) return // prop gone or replaced meanwhile
+                const inst = tpl.clone(true)
+                let bb = new THREE.Box3().setFromObject(inst)
+                const size = new THREE.Vector3(); bb.getSize(size)
+                inst.scale.setScalar(modelDef.height / (size.y || 1)) // fit to target height
+                bb = new THREE.Box3().setFromObject(inst)
+                const c = new THREE.Vector3(); bb.getCenter(c)
+                inst.position.set(-c.x, -bb.min.y, -c.z) // centre on x/z, base on the deck
+                if (modelDef.rotY) inst.rotation.y = modelDef.rotY
+                // Per-instance materials so a beam tints just this prop; mark for lighting.
+                inst.traverse((o) => {
+                  const m = o as THREE.Mesh
+                  if (!m.isMesh) return
+                  m.material = Array.isArray(m.material) ? m.material.map((x) => x.clone()) : (m.material as THREE.Material).clone()
+                  o.userData.propMesh = true
+                })
+                group.clear()
+                group.add(inst)
+              })
+              .catch(() => { /* keep the primitive fallback */ })
+          }
           // Slim visible torus reading as a selection ring...
           const ring = new THREE.Mesh(
             new THREE.TorusGeometry(0.62, 0.055, 8, 40),
