@@ -1086,11 +1086,18 @@ export function Visualizer3D({ ext = false }: { ext?: boolean } = {}) {
           if (face) {
             const tex = new THREE.TextureLoader().load(face)
             tex.colorSpace = THREE.SRGBColorSpace
-            const mesh = new THREE.Mesh(
-              new THREE.PlaneGeometry(0.26, 0.26),
-              new THREE.MeshBasicMaterial({ map: tex, transparent: true }),
+            // A curved cap over the front of the head sphere, so the photo sits ON the round head.
+            const R = 0.13 // head sphere radius (see props.ts person())
+            const phiLen = 2.0
+            const thetaLen = 1.75
+            const geo = new THREE.SphereGeometry(
+              R * 1.03, 28, 28,
+              Math.PI / 2 - phiLen / 2, phiLen, // centred on +Z (the way the figure faces)
+              Math.PI / 2 - thetaLen / 2, thetaLen,
             )
-            mesh.position.set(0, HEAD_Y, 0.12) // just in front of the head sphere, facing forward
+            const mesh = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ map: tex, roughness: 0.85 }))
+            mesh.position.set(0, HEAD_Y, 0)
+            mesh.userData.propMesh = true // lit by beams like the rest of the figure
             entry.group.add(mesh)
             entry.faceMesh = mesh
           }
