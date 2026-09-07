@@ -273,6 +273,9 @@ interface ShowState {
   setPropFace: (id: string, face: string | null) => void
   /** Nudge how the face photo is framed on the head: zoom factor + pan within the image. */
   nudgeFace: (id: string, dZoom: number, dOffX: number, dOffY: number) => void
+  /** Undo / redo the last change to the show (patch, props, trusses, metadata). */
+  undo: () => void
+  redo: () => void
   /** Edit the show's metadata (name / venue / designer) shown in exports. */
   setShowMeta: (patch: Partial<Pick<Show, 'name' | 'venue' | 'designer'>>) => void
   /** Move every selected fixture to a truss / universe at once. */
@@ -566,6 +569,17 @@ function makeDemoShow(defs: Record<string, FixtureDefinition>): Show {
   add('generic-rgbw-par', 0, 'PAR 2', 0.4)
   return { name: 'Untitled show', universeCount: 1, fixtures }
 }
+
+// --- Undo/redo history for the `show` (patch, props, trusses, metadata) ---
+// Kept module-level so recording doesn't trigger re-renders. Rapid edits (e.g. dragging a prop)
+// coalesce into a single undo step. Not persisted.
+const undoHist: Show[] = []
+const redoHist: Show[] = []
+let applyingHistory = false
+let prevShow: Show | null = null
+let lastEditAt = 0
+const UNDO_COALESCE_MS = 500
+const UNDO_MAX = 60
 
 const initialDefs = defsRecord(BUILTIN_FIXTURES)
 
@@ -1263,6 +1277,27 @@ export const useShowStore = create<ShowState>()(
         }))
       },
 
+      undo: () => {
+        if (!undoHist.length) return
+        applyingHistory = true
+        const cur = get().show
+        const prev = undoHist.pop() as Show
+        redoHist.push(cur)
+        set({ show: prev })
+        prevShow = prev
+        applyingHistory = false
+      },
+      redo: () => {
+        if (!redoHist.length) return
+        applyingHistory = true
+        const cur = get().show
+        const next = redoHist.pop() as Show
+        undoHist.push(cur)
+        set({ show: next })
+        prevShow = next
+        applyingHistory = false
+      },
+
       setShowMeta: (patch) => set((s) => ({ show: { ...s.show, ...patch } })),
 
       setSelectedTruss: (truss) =>
@@ -1941,6 +1976,22 @@ export const useShowStore = create<ShowState>()(
     },
   ),
 )
+
+// Record `show` changes for undo/redo. Rapid edits within UNDO_COALESCE_MS collapse into one
+// step (so a drag is a single undo). Skipped while undo/redo is applying a snapshot.
+useShowStore.subscribe((state) => {
+  if (prevShow === null) { prevShow = state.show; return }
+  if (state.show === prevShow) return
+  if (applyingHistory) { prevShow = state.show; return }
+  const now = Date.now()
+  if (now - lastEditAt > UNDO_COALESCE_MS) {
+    undoHist.push(prevShow)
+    if (undoHist.length > UNDO_MAX) undoHist.shift()
+    redoHist.length = 0
+  }
+  lastEditAt = now
+  prevShow = state.show
+})
 
 // Dev aid: expose the live store on window so it can be driven from the console/tests
 // (bare `import()` in the console gets a different HMR module instance).

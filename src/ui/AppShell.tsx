@@ -39,6 +39,24 @@ export function AppShell() {
   // Broadcast live state to the external-monitor window (2nd display), if open.
   useEffect(() => startExtBroadcast(useShowStore as never), [])
 
+  // Undo / redo for show edits (patch, props, trusses, metadata): Cmd/Ctrl+Z, and
+  // Cmd/Ctrl+Shift+Z or Ctrl+Y to redo. Ignored while typing in a field.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (!(e.metaKey || e.ctrlKey)) return
+      const k = e.key.toLowerCase()
+      if (k !== 'z' && k !== 'y') return
+      const el = e.target as HTMLElement | null
+      if (el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.isContentEditable)) return
+      e.preventDefault()
+      const st = useShowStore.getState()
+      if (k === 'y' || (k === 'z' && e.shiftKey)) st.redo()
+      else st.undo()
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [])
+
   // The shared "Reportar" feedback widget (public/report.js) hard-codes a Spanish label; keep it
   // in step with the app language. The button is injected on DOMContentLoaded (before React
   // mounts), so it's normally present already — retry briefly in case of a race.
