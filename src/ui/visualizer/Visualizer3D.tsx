@@ -1090,13 +1090,14 @@ export function Visualizer3D({ ext = false }: { ext?: boolean } = {}) {
             tex.minFilter = THREE.LinearFilter // no mipmaps → keeps the photo crisp + full contrast
             tex.generateMipmaps = false
             tex.needsUpdate = true
-            // A GENTLY curved patch on the front of the head-shaped head — nearly flat (a slice of
-            // a big sphere), sized to the FACE area so it doesn't overhang the narrower head sides.
-            const Rc = 0.34 // patch sphere radius — bigger = flatter, less side distortion
-            const halfW = 0.33 // half-width ≈ Rc·sin(halfW) ≈ head half-width
-            const halfH = 0.42
+            // The face is a thin front slice of the head ELLIPSOID ITSELF — so it sits exactly on
+            // the head surface (no floating gap) and takes the head's shape. Taller than wide, sized
+            // to the face area so skin shows around it (forehead, temples, chin). The photo is
+            // cropped 4:5 upstream, matching this patch, so the whole face fits without cropping.
+            const halfW = 0.66 // angular half-width on the head
+            const halfH = 0.62 // taller than wide (a face)
             const geo = new THREE.SphereGeometry(
-              Rc, 40, 40,
+              HEAD.r * 1.01, 48, 40,
               Math.PI / 2 - halfW, 2 * halfW, // centred on +Z (the way the figure faces)
               Math.PI / 2 - halfH, 2 * halfH,
             )
@@ -1105,7 +1106,8 @@ export function Visualizer3D({ ext = false }: { ext?: boolean } = {}) {
             // out a transparent-background photo (shows the head behind), no black square.
             // fog: false — the scene's dark haze would otherwise desaturate the photo (washed out).
             const mesh = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ map: tex, toneMapped: false, fog: false, alphaTest: 0.5, side: THREE.DoubleSide }))
-            mesh.position.set(0, HEAD.y, HEAD.frontZ - Rc) // front of the patch sits at the head surface
+            mesh.scale.set(HEAD.sx, HEAD.sy, HEAD.sz) // conform to the head ellipsoid
+            mesh.position.set(0, HEAD.y, 0)
             entry.group.add(mesh)
             entry.faceMesh = mesh
           }

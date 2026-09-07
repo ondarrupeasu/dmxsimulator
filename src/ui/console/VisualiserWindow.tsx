@@ -75,14 +75,22 @@ export function VisualiserWindow({ popped = false }: { popped?: boolean } = {}) 
     if (!file || !selectedProp) return
     const img = new Image()
     img.onload = () => {
-      const size = 200
+      // Crop to a 4:5 portrait (a face is taller than wide) centred on the image, so the whole
+      // face fits on the head without cutting the forehead/chin.
+      const W = 200
+      const H = 250
       const cv = document.createElement('canvas')
-      cv.width = cv.height = size
+      cv.width = W
+      cv.height = H
       const ctx = cv.getContext('2d')
       if (!ctx) return
       ctx.imageSmoothingQuality = 'high'
-      const s = Math.min(img.width, img.height)
-      ctx.drawImage(img, (img.width - s) / 2, (img.height - s) / 2, s, s, 0, 0, size, size)
+      const target = W / H // 0.8
+      let sw = img.width
+      let sh = img.height
+      if (img.width / img.height > target) sw = img.height * target // source wider → crop sides
+      else sh = img.width / target // source taller → crop top/bottom
+      ctx.drawImage(img, (img.width - sw) / 2, (img.height - sh) / 2, sw, sh, 0, 0, W, H)
       URL.revokeObjectURL(img.src)
       // PNG, not JPEG: keeps transparency (a cut-out head photo would otherwise get a black
       // background) and avoids JPEG colour loss.
