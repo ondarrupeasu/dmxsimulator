@@ -83,7 +83,9 @@ export function VisualiserWindow({ popped = false }: { popped?: boolean } = {}) 
       const s = Math.min(img.width, img.height)
       ctx.drawImage(img, (img.width - s) / 2, (img.height - s) / 2, s, s, 0, 0, size, size)
       URL.revokeObjectURL(img.src)
-      setPropFace(selectedProp, cv.toDataURL('image/jpeg', 0.8))
+      // PNG, not JPEG: keeps transparency (a cut-out head photo would otherwise get a black
+      // background) and avoids JPEG colour loss.
+      setPropFace(selectedProp, cv.toDataURL('image/png'))
     }
     img.src = URL.createObjectURL(file)
   }

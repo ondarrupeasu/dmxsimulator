@@ -1097,8 +1097,9 @@ export function Visualizer3D({ ext = false }: { ext?: boolean } = {}) {
               Math.PI / 2 - thetaLen / 2, thetaLen,
             )
             // Unlit + tone-mapping off so the photo keeps its true colour and contrast (a lit
-            // material washed it out under the dim ambient light).
-            const mesh = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ map: tex, toneMapped: false }))
+            // material washed it out under the dim ambient light). Transparent so a cut-out
+            // (transparent-background) head photo shows the head behind, not a black square.
+            const mesh = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ map: tex, toneMapped: false, transparent: true }))
             mesh.position.set(0, HEAD_Y, 0)
             entry.group.add(mesh)
             entry.faceMesh = mesh
