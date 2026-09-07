@@ -21,18 +21,38 @@ function cyl(rt: number, rb: number, h: number, mat: THREE.Material, x = 0, y = 
   m.position.set(x, y, z)
   return m
 }
+/** A rounded capsule (radius + straight length) — the building block of the person figure. */
+function cap(r: number, len: number, mat: THREE.Material, x = 0, y = 0, z = 0): THREE.Mesh {
+  const m = new THREE.Mesh(new THREE.CapsuleGeometry(r, len, 6, 14), mat)
+  m.position.set(x, y, z)
+  return m
+}
+function sphere(r: number, mat: THREE.Material, x = 0, y = 0, z = 0): THREE.Mesh {
+  const m = new THREE.Mesh(new THREE.SphereGeometry(r, 16, 12), mat)
+  m.position.set(x, y, z)
+  return m
+}
 
-/** A simple standing person (~1.7 m), feet at the group origin. */
+/** A standing person (~1.8 m), feet at the group origin. Rounded (capsule) body with shoes,
+ *  legs, hips, a flattened torso, shoulders, angled arms with hands, a neck and a head-shaped
+ *  head. Faces +Z. */
 function person(shirt: THREE.Material = cloth): THREE.Group {
   const g = new THREE.Group()
-  g.add(cyl(0.075, 0.08, 0.85, dark, -0.1, 0.42, 0)) // legs
-  g.add(cyl(0.075, 0.08, 0.85, dark, 0.1, 0.42, 0))
-  g.add(cyl(0.2, 0.17, 0.62, shirt, 0, 1.15, 0)) // torso
-  g.add(cyl(0.05, 0.05, 0.55, shirt, -0.24, 1.18, 0)) // arms
-  g.add(cyl(0.05, 0.05, 0.55, shirt, 0.24, 1.18, 0))
-  // Head shaped like a real head, not a ball: narrower at the sides, a touch taller and deeper.
-  // A face photo then sits on the flatter front and barely distorts at the sides.
-  const head = new THREE.Mesh(new THREE.SphereGeometry(HEAD.r, 24, 20), skin)
+  for (const x of [-0.1, 0.1]) {
+    g.add(box(0.13, 0.07, 0.27, dark, x, 0.035, 0.05)) // shoe
+    g.add(cap(0.08, 0.5, dark, x, 0.42, 0)) // leg
+  }
+  const hips = cap(0.17, 0.07, shirt, 0, 0.82, 0); hips.scale.set(1, 1, 0.75); g.add(hips)
+  const torso = cap(0.19, 0.34, shirt, 0, 1.13, 0); torso.scale.set(1, 1, 0.7); g.add(torso) // flattened front-back
+  const shoulders = cap(0.085, 0.26, shirt, 0, 1.35, 0); shoulders.rotation.z = Math.PI / 2; shoulders.scale.set(1, 1, 0.8); g.add(shoulders)
+  for (const s of [-1, 1]) {
+    const arm = cap(0.052, 0.4, shirt, s * 0.27, 1.13, 0); arm.rotation.z = s * 0.14; g.add(arm)
+    g.add(sphere(0.052, skin, s * 0.31, 0.87, 0)) // hand
+  }
+  g.add(cyl(0.05, 0.062, 0.12, skin, 0, 1.5, 0, 12)) // neck
+  // Head shaped like a real head, not a ball: narrower at the sides, a touch taller and deeper,
+  // so a face photo sits on the front and barely distorts at the sides.
+  const head = new THREE.Mesh(new THREE.SphereGeometry(HEAD.r, 28, 22), skin)
   head.position.y = HEAD.y
   head.scale.set(HEAD.sx, HEAD.sy, HEAD.sz)
   head.userData.isHead = true // a face photo, when set, is placed on the front of this head
