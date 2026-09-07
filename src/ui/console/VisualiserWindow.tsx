@@ -156,12 +156,12 @@ export function VisualiserWindow({ popped = false }: { popped?: boolean } = {}) 
                     <button className="ghost-btn" onClick={() => faceRef.current?.click()} title={t('props.face')}>📷</button>
                     {selProp?.face && (
                       <>
-                        <button className="ghost-btn" onClick={() => nudgeFace(selectedProp, 0.2, 0, 0)} title={t('props.faceZoomIn')}>🔍+</button>
-                        <button className="ghost-btn" onClick={() => nudgeFace(selectedProp, -0.2, 0, 0)} title={t('props.faceZoomOut')}>🔍−</button>
-                        <button className="ghost-btn" onClick={() => nudgeFace(selectedProp, 0, -0.06, 0)} title={t('props.facePan')}>◀</button>
-                        <button className="ghost-btn" onClick={() => nudgeFace(selectedProp, 0, 0.06, 0)} title={t('props.facePan')}>▶</button>
-                        <button className="ghost-btn" onClick={() => nudgeFace(selectedProp, 0, 0, 0.06)} title={t('props.facePan')}>▲</button>
-                        <button className="ghost-btn" onClick={() => nudgeFace(selectedProp, 0, 0, -0.06)} title={t('props.facePan')}>▼</button>
+                        <button className="ghost-btn" onClick={() => nudgeFace(selectedProp, 0.1, 0, 0)} title={t('props.faceZoomIn')}>🔍+</button>
+                        <button className="ghost-btn" onClick={() => nudgeFace(selectedProp, -0.1, 0, 0)} title={t('props.faceZoomOut')}>🔍−</button>
+                        <button className="ghost-btn" onClick={() => nudgeFace(selectedProp, 0, -0.025, 0)} title={t('props.facePan')}>◀</button>
+                        <button className="ghost-btn" onClick={() => nudgeFace(selectedProp, 0, 0.025, 0)} title={t('props.facePan')}>▶</button>
+                        <button className="ghost-btn" onClick={() => nudgeFace(selectedProp, 0, 0, 0.025)} title={t('props.facePan')}>▲</button>
+                        <button className="ghost-btn" onClick={() => nudgeFace(selectedProp, 0, 0, -0.025)} title={t('props.facePan')}>▼</button>
                         <button className="ghost-btn" onClick={() => setPropFace(selectedProp, null)} title={t('props.faceClear')}>🚫</button>
                       </>
                     )}
