@@ -10,6 +10,9 @@ const dark = new THREE.MeshStandardMaterial({ color: 0x1b1b22, roughness: 0.6, m
 const metal = new THREE.MeshStandardMaterial({ color: 0x3a3a44, roughness: 0.5, metalness: 0.6 })
 const grille = new THREE.MeshStandardMaterial({ color: 0x101014, roughness: 0.9, metalness: 0.2 })
 const fabric = new THREE.MeshStandardMaterial({ color: 0x55506a, roughness: 0.9, metalness: 0.04 })
+const white = new THREE.MeshStandardMaterial({ color: 0xe9e9ef, roughness: 0.35, metalness: 0.05 })
+const chrome = new THREE.MeshStandardMaterial({ color: 0xb9bcc6, roughness: 0.25, metalness: 0.9 })
+const shell = new THREE.MeshStandardMaterial({ color: 0x7d2230, roughness: 0.4, metalness: 0.3 }) // drum shell
 
 function box(w: number, h: number, d: number, mat: THREE.Material, x = 0, y = 0, z = 0): THREE.Mesh {
   const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat)
@@ -105,25 +108,43 @@ export function buildProp(kind: PropKind): THREE.Group {
       break
     }
     case 'drumKit': {
-      g.add(cyl(0.33, 0.33, 0.4, dark, 0, 0.2, 0.15, 20)) // bass drum (upright-ish)
-      g.add(cyl(0.16, 0.16, 0.16, cloth, -0.18, 0.62, 0.1)) // tom L
-      g.add(cyl(0.16, 0.16, 0.16, cloth, 0.18, 0.62, 0.1)) // tom R
-      g.add(cyl(0.19, 0.19, 0.16, dark, -0.42, 0.52, 0.28)) // snare
-      // Cymbals on stands.
-      for (const [x, z, hy] of [[-0.6, 0.1, 1.1], [0.55, 0.1, 1.2]] as const) {
-        g.add(cyl(0.01, 0.01, hy, metal, x, hy / 2, z))
-        const cym = cyl(0.24, 0.24, 0.012, metal, x, hy, z, 20); g.add(cym)
+      // A drum + its chrome hoops (rim rings top & bottom), given its radius/height/centre.
+      const drum = (r: number, h: number, x: number, y: number, z: number) => {
+        g.add(cyl(r, r, h, shell, x, y, z, 22))
+        for (const yy of [y + h / 2, y - h / 2]) {
+          const rim = new THREE.Mesh(new THREE.TorusGeometry(r, 0.012, 6, 24), chrome)
+          rim.rotation.x = Math.PI / 2; rim.position.set(x, yy, z); g.add(rim)
+        }
       }
-      g.add(cyl(0.18, 0.2, 0.06, dark, 0.15, 0.5, 0.7)) // stool
-      g.add(cyl(0.03, 0.03, 0.5, metal, 0.15, 0.25, 0.7))
+      g.add(cyl(0.33, 0.33, 0.4, shell, 0, 0.28, 0.18, 24)) // bass drum (upright)
+      { const bh = new THREE.Mesh(new THREE.TorusGeometry(0.33, 0.014, 6, 26), chrome); bh.position.set(0, 0.28, 0.38); g.add(bh) }
+      drum(0.15, 0.15, -0.17, 0.66, 0.12) // tom L
+      drum(0.15, 0.15, 0.17, 0.66, 0.12) // tom R
+      drum(0.18, 0.15, -0.42, 0.56, 0.3) // snare
+      // Cymbals on chrome stands.
+      for (const [x, z, hy, rad] of [[-0.62, 0.12, 1.02, 0.24], [0.6, 0.1, 1.18, 0.27]] as const) {
+        g.add(cyl(0.012, 0.012, hy, chrome, x, hy / 2, z))
+        const cym = cyl(rad, rad, 0.01, chrome, x, hy, z, 24); cym.rotation.z = 0.08; g.add(cym)
+      }
+      // Hi-hat (two close cymbals on a stand).
+      g.add(cyl(0.012, 0.012, 0.7, chrome, -0.28, 0.35, 0.42))
+      g.add(cyl(0.15, 0.15, 0.01, chrome, -0.28, 0.68, 0.42, 24))
+      g.add(cyl(0.15, 0.15, 0.01, chrome, -0.28, 0.72, 0.42, 24))
+      g.add(cyl(0.18, 0.2, 0.06, dark, 0.18, 0.5, 0.72)) // stool
+      g.add(cyl(0.03, 0.03, 0.5, chrome, 0.18, 0.25, 0.72))
       break
     }
     case 'keyboard': {
-      // X-stand + 88-key slab at playing height.
+      // X-stand + a keybed with real-looking white + black keys, tilted toward the player.
       const l1 = box(0.05, 0.95, 0.05, metal, 0, 0.48, 0); l1.rotation.z = 0.5; g.add(l1)
       const l2 = box(0.05, 0.95, 0.05, metal, 0, 0.48, 0); l2.rotation.z = -0.5; g.add(l2)
-      g.add(box(1.25, 0.1, 0.32, dark, 0, 0.92, 0)) // keybed
-      g.add(box(1.18, 0.03, 0.14, fabric, 0, 0.99, 0.06)) // keys strip
+      const kb = new THREE.Group(); kb.position.set(0, 0.92, 0.02); kb.rotation.x = -0.09; g.add(kb)
+      kb.add(box(1.26, 0.09, 0.34, dark)) // keybed body
+      kb.add(box(1.18, 0.03, 0.19, white, 0, 0.06, 0.06)) // white keys
+      for (let i = -0.52; i <= 0.52; i += 0.075) { // black keys (skip the E-F / B-C gaps loosely)
+        if (Math.abs((i * 6.6) % 1) < 0.28) continue
+        kb.add(box(0.03, 0.03, 0.11, dark, i, 0.08, 0.02))
+      }
       break
     }
     case 'amp': {
