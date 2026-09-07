@@ -231,6 +231,9 @@
     "rotR": "Rotate right",
     "face": "Add a face photo (stored only on this device, never uploaded)",
     "faceClear": "Remove the face photo",
+    "faceZoomIn": "Zoom the photo in",
+    "faceZoomOut": "Zoom the photo out",
+    "facePan": "Move the photo within the head",
     "remove": "Remove element",
     "kinds": {
       "person": "Person",

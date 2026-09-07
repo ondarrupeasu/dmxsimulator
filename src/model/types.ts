@@ -191,6 +191,11 @@ export interface SceneProp {
   /** Optional face photo (small square JPEG data URL) shown on a person prop's head. Stored
    *  locally with the show — never uploaded anywhere. Only used by the person-type kinds. */
   face?: string
+  /** How the photo is framed on the head: zoom (1 = fit, >1 = closer) and pan within the image
+   *  (fractions, + = right / up). Adjusts the texture, not the mesh. */
+  faceZoom?: number
+  faceOffX?: number
+  faceOffY?: number
 }
 
 /** A truss in the rig — a hanging bar at a depth (z) and height (y). */

@@ -1086,6 +1086,7 @@ export function Visualizer3D({ ext = false }: { ext?: boolean } = {}) {
           if (face) {
             const tex = new THREE.TextureLoader().load(face)
             tex.colorSpace = THREE.SRGBColorSpace
+            tex.wrapS = tex.wrapT = THREE.ClampToEdgeWrapping // pan/zoom clamps to the edge pixels
             // A curved cap over the front of the head sphere, so the photo sits ON the round head.
             const R = 0.13 // head sphere radius (see props.ts person())
             const phiLen = 2.0
@@ -1095,13 +1096,23 @@ export function Visualizer3D({ ext = false }: { ext?: boolean } = {}) {
               Math.PI / 2 - phiLen / 2, phiLen, // centred on +Z (the way the figure faces)
               Math.PI / 2 - thetaLen / 2, thetaLen,
             )
-            const mesh = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ map: tex, roughness: 0.85 }))
+            // Unlit + tone-mapping off so the photo keeps its true colour and contrast (a lit
+            // material washed it out under the dim ambient light).
+            const mesh = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ map: tex, toneMapped: false }))
             mesh.position.set(0, HEAD_Y, 0)
-            mesh.userData.propMesh = true // lit by beams like the rest of the figure
             entry.group.add(mesh)
             entry.faceMesh = mesh
           }
           entry.faceUrl = face
+        }
+        // Frame the photo on the head (zoom + pan within the image) — updates live.
+        if (entry.faceMesh) {
+          const tex = (entry.faceMesh.material as THREE.MeshBasicMaterial).map
+          if (tex) {
+            const r = 1 / (p.faceZoom ?? 1)
+            tex.repeat.set(r, r)
+            tex.offset.set((1 - r) / 2 - (p.faceOffX ?? 0), (1 - r) / 2 - (p.faceOffY ?? 0))
+          }
         }
 
         entry.ring.position.set(p.x, STAGE_TOP + 0.02, p.z)

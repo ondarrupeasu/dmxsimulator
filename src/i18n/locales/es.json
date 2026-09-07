@@ -231,6 +231,9 @@
     "rotR": "Girar a la derecha",
     "face": "Cargar foto de cara (se guarda solo en este dispositivo, no se sube a ningún sitio)",
     "faceClear": "Quitar la foto de cara",
+    "faceZoomIn": "Ampliar la foto",
+    "faceZoomOut": "Reducir la foto",
+    "facePan": "Desplazar la foto dentro de la cabeza",
     "remove": "Quitar elemento",
     "kinds": {
       "person": "Persona",

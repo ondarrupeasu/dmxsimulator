@@ -47,6 +47,7 @@ export function VisualiserWindow({ popped = false }: { popped?: boolean } = {}) 
   const rotateProp = useShowStore((s) => s.rotateProp)
   const removeProp = useShowStore((s) => s.removeProp)
   const setPropFace = useShowStore((s) => s.setPropFace)
+  const nudgeFace = useShowStore((s) => s.nudgeFace)
   const props = useShowStore((s) => s.show.props)
   const selProp = props?.find((p) => p.id === selectedProp)
   const selIsPerson = selProp ? isPersonKind(selProp.kind as PropKind) : false
@@ -143,7 +144,15 @@ export function VisualiserWindow({ popped = false }: { popped?: boolean } = {}) 
                     <input ref={faceRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={onFaceFile} />
                     <button className="ghost-btn" onClick={() => faceRef.current?.click()} title={t('props.face')}>📷</button>
                     {selProp?.face && (
-                      <button className="ghost-btn" onClick={() => setPropFace(selectedProp, null)} title={t('props.faceClear')}>🚫</button>
+                      <>
+                        <button className="ghost-btn" onClick={() => nudgeFace(selectedProp, 0.2, 0, 0)} title={t('props.faceZoomIn')}>🔍+</button>
+                        <button className="ghost-btn" onClick={() => nudgeFace(selectedProp, -0.2, 0, 0)} title={t('props.faceZoomOut')}>🔍−</button>
+                        <button className="ghost-btn" onClick={() => nudgeFace(selectedProp, 0, -0.06, 0)} title={t('props.facePan')}>◀</button>
+                        <button className="ghost-btn" onClick={() => nudgeFace(selectedProp, 0, 0.06, 0)} title={t('props.facePan')}>▶</button>
+                        <button className="ghost-btn" onClick={() => nudgeFace(selectedProp, 0, 0, 0.06)} title={t('props.facePan')}>▲</button>
+                        <button className="ghost-btn" onClick={() => nudgeFace(selectedProp, 0, 0, -0.06)} title={t('props.facePan')}>▼</button>
+                        <button className="ghost-btn" onClick={() => setPropFace(selectedProp, null)} title={t('props.faceClear')}>🚫</button>
+                      </>
                     )}
                   </>
                 )}

@@ -231,6 +231,9 @@
     "rotR": "Biratu eskuinera",
     "face": "Kargatu aurpegi-argazkia (gailu honetan soilik gordetzen da, ez da inora igotzen)",
     "faceClear": "Kendu aurpegi-argazkia",
+    "faceZoomIn": "Handitu argazkia",
+    "faceZoomOut": "Txikitu argazkia",
+    "facePan": "Mugitu argazkia buruaren barruan",
     "remove": "Kendu elementua",
     "kinds": {
       "person": "Pertsona",

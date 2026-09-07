@@ -271,6 +271,8 @@ interface ShowState {
   rotateProp: (id: string, deltaDeg: number) => void
   /** Set (or clear, with null) a person prop's face photo (a small data URL). */
   setPropFace: (id: string, face: string | null) => void
+  /** Nudge how the face photo is framed on the head: zoom factor + pan within the image. */
+  nudgeFace: (id: string, dZoom: number, dOffX: number, dOffY: number) => void
   /** Edit the show's metadata (name / venue / designer) shown in exports. */
   setShowMeta: (patch: Partial<Pick<Show, 'name' | 'venue' | 'designer'>>) => void
   /** Move every selected fixture to a truss / universe at once. */
@@ -1237,9 +1239,29 @@ export const useShowStore = create<ShowState>()(
         set((s) => ({
           show: {
             ...s.show,
-            props: (s.show.props ?? []).map((p) => (p.id === id ? { ...p, face: face ?? undefined } : p)),
+            props: (s.show.props ?? []).map((p) =>
+              p.id === id ? { ...p, face: face ?? undefined, ...(face ? {} : { faceZoom: undefined, faceOffX: undefined, faceOffY: undefined }) } : p,
+            ),
           },
         })),
+      nudgeFace: (id, dZoom, dOffX, dOffY) => {
+        const clamp = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, v))
+        set((s) => ({
+          show: {
+            ...s.show,
+            props: (s.show.props ?? []).map((p) =>
+              p.id === id
+                ? {
+                    ...p,
+                    faceZoom: clamp((p.faceZoom ?? 1) + dZoom, 0.5, 3),
+                    faceOffX: clamp((p.faceOffX ?? 0) + dOffX, -0.6, 0.6),
+                    faceOffY: clamp((p.faceOffY ?? 0) + dOffY, -0.6, 0.6),
+                  }
+                : p,
+            ),
+          },
+        }))
+      },
 
       setShowMeta: (patch) => set((s) => ({ show: { ...s.show, ...patch } })),
 
