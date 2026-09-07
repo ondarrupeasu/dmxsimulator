@@ -188,6 +188,9 @@ export interface SceneProp {
   z: number
   /** Rotation around the vertical axis, degrees. */
   rot?: number
+  /** Optional face photo (small square JPEG data URL) shown on a person prop's head. Stored
+   *  locally with the show — never uploaded anywhere. Only used by the person-type kinds. */
+  face?: string
 }
 
 /** A truss in the rig — a hanging bar at a depth (z) and height (y). */

@@ -227,6 +227,8 @@
     "addTip": "Add a scenery element to the stage — then drag it into place",
     "rotL": "Rotate left",
     "rotR": "Rotate right",
+    "face": "Add a face photo (stored only on this device, never uploaded)",
+    "faceClear": "Remove the face photo",
     "remove": "Remove element",
     "kinds": {
       "person": "Person",

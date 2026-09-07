@@ -227,6 +227,8 @@
     "addTip": "Gehitu eszenatokira eszena-elementu bat — gero arrastatu bere lekura",
     "rotL": "Biratu ezkerrera",
     "rotR": "Biratu eskuinera",
+    "face": "Kargatu aurpegi-argazkia (gailu honetan soilik gordetzen da, ez da inora igotzen)",
+    "faceClear": "Kendu aurpegi-argazkia",
     "remove": "Kendu elementua",
     "kinds": {
       "person": "Pertsona",

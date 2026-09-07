@@ -10,7 +10,7 @@ import { applyEffects, activeEffects } from '../../engine/effects'
 import { liveCues } from '../../model/cue'
 import { computeVisualState } from '../../engine/render'
 import { FIXTURE_GOBOS } from '../../model/gobos'
-import { buildProp } from './props'
+import { buildProp, isPersonKind, HEAD_Y } from './props'
 import type { TrussDef, FixtureDefinition, BodyType, FixtureGeometry } from '../../model/types'
 import { getTrusses, trussById, STAGE_TOP } from '../../model/venue'
 
@@ -692,7 +692,7 @@ export function Visualizer3D({ ext = false }: { ext?: boolean } = {}) {
     const hazerMap = new Map<string, THREE.Group>()
     // Scenery props (people, band gear, set pieces). Each entry: the built group, its visible
     // floor ring, and a fat invisible ring that's easy to grab for rotating.
-    const propMap = new Map<string, { group: THREE.Group; kind: string; ring: THREE.Mesh; ringPick: THREE.Mesh }>()
+    const propMap = new Map<string, { group: THREE.Group; kind: string; ring: THREE.Mesh; ringPick: THREE.Mesh; faceMesh?: THREE.Mesh; faceUrl?: string }>()
     const trussMap = new Map<number, THREE.Mesh>()
     const down = new THREE.Vector3()
 
@@ -1073,6 +1073,30 @@ export function Visualizer3D({ ext = false }: { ext?: boolean } = {}) {
         }
         entry.group.position.set(p.x, STAGE_TOP, p.z)
         entry.group.rotation.y = THREE.MathUtils.degToRad(p.rot ?? 0)
+
+        // Face photo on a person's head — apply/replace when it changes (recognisable students).
+        const face = isPersonKind(p.kind) ? p.face : undefined
+        if (face !== entry.faceUrl) {
+          if (entry.faceMesh) {
+            entry.group.remove(entry.faceMesh)
+            const fm = entry.faceMesh.material as THREE.MeshBasicMaterial
+            fm.map?.dispose(); fm.dispose()
+            entry.faceMesh = undefined
+          }
+          if (face) {
+            const tex = new THREE.TextureLoader().load(face)
+            tex.colorSpace = THREE.SRGBColorSpace
+            const mesh = new THREE.Mesh(
+              new THREE.PlaneGeometry(0.26, 0.26),
+              new THREE.MeshBasicMaterial({ map: tex, transparent: true }),
+            )
+            mesh.position.set(0, HEAD_Y, 0.12) // just in front of the head sphere, facing forward
+            entry.group.add(mesh)
+            entry.faceMesh = mesh
+          }
+          entry.faceUrl = face
+        }
+
         entry.ring.position.set(p.x, STAGE_TOP + 0.02, p.z)
         entry.ringPick.position.set(p.x, STAGE_TOP + 0.02, p.z)
         entry.ring.visible = state.selectedProp === p.id

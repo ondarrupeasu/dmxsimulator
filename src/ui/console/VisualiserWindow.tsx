@@ -7,7 +7,8 @@ import { AimPad } from './AimPad'
 import { PwaTag } from '../PwaTag'
 import { VENUE_PRESETS } from '../../model/venues'
 import { fixtureAttributeKeys } from '../../model/types'
-import { PROP_LIBRARY } from '../visualizer/props'
+import { PROP_LIBRARY, isPersonKind } from '../visualizer/props'
+import type { PropKind } from '../../model/types'
 
 /** The 3D/2D visualiser as a Titan workspace window (the Quartz's Capture output lives on the
  *  touchscreen too). The rig render itself is faithful; the toolbar (venue, room lights, 2D,
@@ -45,6 +46,10 @@ export function VisualiserWindow({ popped = false }: { popped?: boolean } = {}) 
   const selectedProp = useShowStore((s) => s.selectedProp)
   const rotateProp = useShowStore((s) => s.rotateProp)
   const removeProp = useShowStore((s) => s.removeProp)
+  const setPropFace = useShowStore((s) => s.setPropFace)
+  const props = useShowStore((s) => s.show.props)
+  const selProp = props?.find((p) => p.id === selectedProp)
+  const selIsPerson = selProp ? isPersonKind(selProp.kind as PropKind) : false
   const effectsCount = useShowStore((s) => s.effects.length)
   const playing = useShowStore((s) => s.playing)
   const setPlaying = useShowStore((s) => s.setPlaying)
@@ -58,6 +63,28 @@ export function VisualiserWindow({ popped = false }: { popped?: boolean } = {}) 
   const onVenueSelect = (v: string) => {
     if (v === '__file') venueRef.current?.click()
     else if (v !== '__custom') setVenuePreset(v || null)
+  }
+
+  // Face photo for a person prop: read the chosen image, centre-crop to a square and shrink to
+  // 128 px, then store the tiny JPEG on the prop. The image never leaves the device (no upload).
+  const faceRef = useRef<HTMLInputElement>(null)
+  const onFaceFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    e.target.value = ''
+    if (!file || !selectedProp) return
+    const img = new Image()
+    img.onload = () => {
+      const size = 128
+      const cv = document.createElement('canvas')
+      cv.width = cv.height = size
+      const ctx = cv.getContext('2d')
+      if (!ctx) return
+      const s = Math.min(img.width, img.height)
+      ctx.drawImage(img, (img.width - s) / 2, (img.height - s) / 2, s, s, 0, 0, size, size)
+      URL.revokeObjectURL(img.src)
+      setPropFace(selectedProp, cv.toDataURL('image/jpeg', 0.8))
+    }
+    img.src = URL.createObjectURL(file)
   }
 
   // Non-moving fixtures you aim by hand (PARs, profiles…) — the aim joystick appears when one
@@ -111,6 +138,15 @@ export function VisualiserWindow({ popped = false }: { popped?: boolean } = {}) 
               <>
                 <button className="ghost-btn" onClick={() => rotateProp(selectedProp, -15)} title={t('props.rotL')}>↺</button>
                 <button className="ghost-btn" onClick={() => rotateProp(selectedProp, 15)} title={t('props.rotR')}>↻</button>
+                {selIsPerson && (
+                  <>
+                    <input ref={faceRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={onFaceFile} />
+                    <button className="ghost-btn" onClick={() => faceRef.current?.click()} title={t('props.face')}>📷</button>
+                    {selProp?.face && (
+                      <button className="ghost-btn" onClick={() => setPropFace(selectedProp, null)} title={t('props.faceClear')}>🚫</button>
+                    )}
+                  </>
+                )}
                 <button className="ghost-btn" onClick={() => removeProp(selectedProp)} title={t('props.remove')}>🗑</button>
               </>
             )}

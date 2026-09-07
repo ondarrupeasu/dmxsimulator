@@ -227,6 +227,8 @@
     "addTip": "Añade un elemento de escena al escenario — luego arrástralo a su sitio",
     "rotL": "Girar a la izquierda",
     "rotR": "Girar a la derecha",
+    "face": "Cargar foto de cara (se guarda solo en este dispositivo, no se sube a ningún sitio)",
+    "faceClear": "Quitar la foto de cara",
     "remove": "Quitar elemento",
     "kinds": {
       "person": "Persona",

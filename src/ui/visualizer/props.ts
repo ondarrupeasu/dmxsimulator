@@ -30,9 +30,18 @@ function person(shirt: THREE.Material = cloth): THREE.Group {
   g.add(cyl(0.2, 0.17, 0.62, shirt, 0, 1.15, 0)) // torso
   g.add(cyl(0.05, 0.05, 0.55, shirt, -0.24, 1.18, 0)) // arms
   g.add(cyl(0.05, 0.05, 0.55, shirt, 0.24, 1.18, 0))
-  g.add(new THREE.Mesh(new THREE.SphereGeometry(0.13, 16, 12), skin).translateY(1.63)) // head
+  const head = new THREE.Mesh(new THREE.SphereGeometry(0.13, 16, 12), skin)
+  head.position.y = 1.63
+  head.userData.isHead = true // a face photo, when set, is placed on the front of this head
+  g.add(head)
   return g
 }
+
+/** Prop kinds that are people — the ones a face photo can be applied to. */
+export const PERSON_KINDS: PropKind[] = ['person', 'singer', 'guitarist']
+export const isPersonKind = (k: PropKind): boolean => PERSON_KINDS.includes(k)
+/** Local Y of a person's head (all person kinds share the same figure). */
+export const HEAD_Y = 1.63
 
 /** A boom mic stand (~1.5 m): weighted base, pole, boom arm, mic capsule. */
 function micStand(): THREE.Group {

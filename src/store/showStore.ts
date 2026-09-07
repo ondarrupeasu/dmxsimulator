@@ -269,6 +269,8 @@ interface ShowState {
   removeProp: (id: string) => void
   moveProp: (id: string, x: number, z: number) => void
   rotateProp: (id: string, deltaDeg: number) => void
+  /** Set (or clear, with null) a person prop's face photo (a small data URL). */
+  setPropFace: (id: string, face: string | null) => void
   /** Edit the show's metadata (name / venue / designer) shown in exports. */
   setShowMeta: (patch: Partial<Pick<Show, 'name' | 'venue' | 'designer'>>) => void
   /** Move every selected fixture to a truss / universe at once. */
@@ -1229,6 +1231,13 @@ export const useShowStore = create<ShowState>()(
           show: {
             ...s.show,
             props: (s.show.props ?? []).map((p) => (p.id === id ? { ...p, rot: ((p.rot ?? 0) + deltaDeg) % 360 } : p)),
+          },
+        })),
+      setPropFace: (id, face) =>
+        set((s) => ({
+          show: {
+            ...s.show,
+            props: (s.show.props ?? []).map((p) => (p.id === id ? { ...p, face: face ?? undefined } : p)),
           },
         })),
 
