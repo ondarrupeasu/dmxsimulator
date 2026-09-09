@@ -70,7 +70,7 @@ function Pcon({ color = 'blue', capped = false }: { color?: 'white' | 'blue'; ca
 
 /** A patch bay (CANALES / CIRCUITOS): rows of numbered connectors (null = capped), with a black
  *  ventilation louver strip between the rows, faithfully to the real racks. */
-function Bay({ title, tip, color, rows }: { title: string; tip: string; color: 'white' | 'blue'; rows: (number | null)[][] }) {
+function Bay({ title, tip, color, rows, perNumber = 1 }: { title: string; tip: string; color: 'white' | 'blue'; rows: (number | null)[][]; perNumber?: number }) {
   return (
     <section className="pw-panel pw-rack pw-bay">
       <header title={tip}>{title}</header>
@@ -82,7 +82,10 @@ function Bay({ title, tip, color, rows }: { title: string; tip: string; color: '
                 c === null ? (
                   <span className="pw-cell" key={ci}><Pcon capped /></span>
                 ) : (
-                  <span className="pw-cell" key={ci} title={`${c}`}><b className="pw-cell-num">{c}</b><Pcon color={color} /></span>
+                  <span className="pw-cell" key={ci} title={`${c}`}>
+                    <b className="pw-cell-num">{c}</b>
+                    <span className="pw-cell-pcons">{Array.from({ length: perNumber }).map((_, i) => <Pcon key={i} color={color} />)}</span>
+                  </span>
                 ),
               )}
             </div>
@@ -94,7 +97,7 @@ function Bay({ title, tip, color, rows }: { title: string; tip: string; color: '
   )
 }
 
-// CANALES DE DIMMERS: 6 per row, white connectors (1-36).
+// CANALES DE DIMMERS: 6 numbers per row, TWO white connectors per number (1-36).
 const CANALES_ROWS: (number | null)[][] = Array.from({ length: 6 }, (_, r) => Array.from({ length: 6 }, (_, c) => r * 6 + c + 1))
 // CIRCUITOS: 8 per row in pairs, blue connectors, with capped gaps between the pairs (1 between
 // 2-3, 2 between 4-5, 1 between 6-7), like the real rack (1-48).
@@ -233,7 +236,7 @@ export function PowerPatchView() {
           </section>
 
           {/* 3 — CANALES DE DIMMERS (white connectors, 1-36) */}
-          <Bay title="CANALES DE DIMMERS" tip={t('power.tip.canales')} color="white" rows={CANALES_ROWS} />
+          <Bay title="CANALES DE DIMMERS" tip={t('power.tip.canales')} color="white" rows={CANALES_ROWS} perNumber={2} />
 
           {/* 4 — CIRCUITOS (blue connectors, pairs + capped gaps, 1-48) */}
           <Bay title="CIRCUITOS" tip={t('power.tip.circuitos')} color="blue" rows={CIRCUITOS_ROWS} />

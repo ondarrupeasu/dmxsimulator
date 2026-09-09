@@ -72,20 +72,24 @@
 }
 .pw-pcon::before { top: 2px; left: 2px; }
 .pw-pcon::after { bottom: 2px; right: 2px; }
-/* round keyed connector face */
+/* round keyed connector face: dark recess, light collar ring, a keyway notch and a central tongue */
 .pw-pcon > i {
   position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-  width: 13px; height: 13px; border-radius: 50%; background: #0e0f13;
-  box-shadow: inset 0 0 0 1.5px rgba(255, 255, 255, 0.22);
+  width: 13px; height: 13px; border-radius: 50%;
+  background: radial-gradient(circle at 50% 45%, #1a1c22 55%, #090a0d);
+  box-shadow: inset 0 0 0 2px #adb1ba;
 }
-.pw-pcon > i::before { /* keyway notch (left) */
-  content: ''; position: absolute; left: -1px; top: 50%; transform: translateY(-50%);
-  width: 4px; height: 3px; border-radius: 1px; background: #0e0f13;
+.pw-pcon.blue > i { box-shadow: inset 0 0 0 2px #a6acdf; }
+.pw-pcon > i::before { /* keyway (notch cut in the collar, ~1 o'clock) */
+  content: ''; position: absolute; top: 0; right: 1.5px; width: 3.5px; height: 4px; border-radius: 1px; background: #d8d4c7;
 }
-.pw-pcon > i::after { /* central contact */
+.pw-pcon.blue > i::before { background: #4a52bd; }
+.pw-pcon > i::after { /* central contact tongue */
   content: ''; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-  width: 4px; height: 4px; border-radius: 50%; background: #26282f;
+  width: 4px; height: 5px; border-radius: 1px; background: #2f323b;
 }
+/* two connectors under one number (CANALES) */
+.pw-cell-pcons { display: flex; gap: 2px; }
 
 /* Socket bays (CANALES / CIRCUITOS): rows of connectors with numbered labels, black ventilation
    louver strips filling between the rows (like the real racks). */
@@ -104,25 +108,27 @@
 .pw-mod { display: flex; flex-direction: column; align-items: center; flex: none; }
 .pw-mod-tab { width: 90%; height: 4px; border-radius: 2px; margin-bottom: 2px; }
 .pw-mod-body {
-  position: relative; width: 100%; height: 44px;
-  background: linear-gradient(#f4f5f8, #d9dbe1); border: 1px solid #b3b8c2; border-radius: 3px;
-  box-shadow: inset 0 1px 0 #fff, 0 1px 2px rgba(0, 0, 0, 0.35);
-  display: flex; align-items: flex-end; justify-content: center; padding-bottom: 5px;
+  position: relative; width: 100%; height: 46px;
+  background: linear-gradient(#f6f7fa, #e0e2e7); border: 1px solid #adb2bd; border-radius: 2px;
+  box-shadow: inset 0 1px 0 #fff, 0 1px 2px rgba(0, 0, 0, 0.3);
+  display: flex; flex-direction: column; align-items: center; gap: 4px; padding-top: 6px;
 }
-.pw-mod.pw-main .pw-mod-body { background: linear-gradient(#35373f, #202128); border-color: #131419; }
+.pw-mod.pw-main .pw-mod-body { background: linear-gradient(#3a3c44, #23252c); border-color: #131419; }
 
+/* RCD blue TEST push button (round, at the top of the module — like the real differential). */
 .pw-rcd-test {
-  position: absolute; top: 4px; left: 50%; transform: translateX(-50%);
-  width: 12px; height: 7px; border-radius: 1px; background: #2a6cff; border: 1px solid #1b4fbf;
+  width: 9px; height: 9px; border-radius: 50%; flex: none;
+  background: radial-gradient(circle at 40% 35%, #5b86ff, #1e46c8); border: 1px solid #163a9e;
 }
 
-/* Real DIN-breaker toggle: ONE common handle bar (multi-pole breakers move all poles at once).
-   Light body, dark tab; UP = on. It spans the module, so a 4-pole breaker has a wide handle. */
-.pw-lever { width: 74%; height: 22px; background: linear-gradient(#e7e9ee, #cdd0d7); border: 1px solid #9aa0ad; border-radius: 1px; position: relative; }
-.pw-lever::after { content: ''; position: absolute; left: 1px; right: 1px; height: 8px; border-radius: 1px; background: #2a2c33; top: 1px; }
-.pw-lever:not(.on)::after { top: auto; bottom: 1px; }
-.pw-mod.pw-main .pw-lever { height: 24px; }
-.pw-mod.pw-main .pw-lever::after { height: 10px; }
+/* DIN-breaker toggle — a small rocker near the top. ONE common handle (multi-pole breakers move
+   all poles together). MCB grey, RCD blue, main black; UP = on. */
+.pw-lever { width: 60%; height: 15px; border-radius: 2px; position: relative; background: linear-gradient(#e9ebef, #cfd2d8); border: 1px solid #9aa0ad; }
+.pw-lever::after { content: ''; position: absolute; left: 1.5px; right: 1.5px; height: 6px; border-radius: 1px; background: #2b2d34; top: 1.5px; }
+.pw-lever:not(.on)::after { top: auto; bottom: 1.5px; }
+.pw-mod.pw-rcd .pw-lever { background: linear-gradient(#4e6ae0, #3348b8); border-color: #26379c; }
+.pw-mod.pw-rcd .pw-lever::after { background: #e6eaf8; }
+.pw-mod.pw-main .pw-lever { width: 70%; height: 18px; }
 
 .pw-mod-name { font-size: 6.5px; color: #9297a3; text-align: center; margin-top: 3px; line-height: 1.12; word-break: break-word; min-height: 8px; }
 
