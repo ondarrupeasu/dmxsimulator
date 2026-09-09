@@ -277,6 +277,38 @@
       "canales": "Salidas de los canales de dimmer (1-36) — las salidas reguladas de los dimmers.",
       "circuitos": "Circuitos (1-48): el cableado fijo que va a las varas del escenario. Se patchea uno a un canal de dimmer con un latiguillo para controlarlo.",
       "dimmerScreen": "Pantalla del dimmer — muestra el canal / info DMX cuando el rack está encendido."
+    },
+    "help": {
+      "title": "¿Cómo funciona el cuadro?",
+      "intro": "El recorrido: red → GENERAL → se reparte en líneas (dimmers, fuerza/directos, sonido, emergencia) → protecciones → focos.",
+      "general": {
+        "t": "⚫ Interruptor general",
+        "b": "La llave maestra: da o corta la corriente a TODO el cuadro. Palanca arriba = encendido."
+      },
+      "diff": {
+        "t": "🔵 Diferencial (y botón de test)",
+        "b": "Protege a las PERSONAS: salta si detecta una fuga de corriente a tierra (un cable pelado que alguien toca, humedad…) y corta en milisegundos. El botón azul es de TEST: simula una fuga para comprobar que salta bien; si al pulsarlo no salta, está averiado."
+      },
+      "mcb": {
+        "t": "⬜ Magnetotérmico (automático)",
+        "b": "Protege el CABLE: salta por sobrecarga (más potencia de la que aguanta el cable) o por cortocircuito (dos cables que se tocan). Tiene 1, 2 o 4 palancas según los polos."
+      },
+      "dimmer": {
+        "t": "🎚 Dimmer",
+        "b": "Regula la INTENSIDAD de las luces analógicas: recibe DMX de la Quartz y deja pasar más o menos voltaje a la lámpara. 3 unidades × 12 = 36 canales. Su pantallita se enciende cuando el rack tiene corriente."
+      },
+      "directos": {
+        "t": "🔌 Directos",
+        "b": "Tomas de corriente CONSTANTE (sin regular). Aquí se enchufan los focos LED/DMX, que se regulan solos por dentro. ⚠️ Nunca al dimmer o se rompen."
+      },
+      "patch": {
+        "t": "🔀 Patch: canales ↔ circuitos",
+        "b": "Los CIRCUITOS (1-48) van fijos a las varas del escenario; los CANALES DE DIMMERS (1-36) son las salidas reguladas de los dimmers. Con un latiguillo unes circuito → canal de dimmer y decides qué dimmer controla cada foco. Ese número es su dirección DMX (circuito 8 → dimmer 1 = DMX 1)."
+      },
+      "rule": {
+        "t": "⭐ Regla de oro: LED vs analógica",
+        "b": "Analógica → SIEMPRE al dimmer (su dirección DMX es el canal del dimmer). LED/DMX → SIEMPRE a directos, y la dirección DMX se pone en el propio foco."
+      }
     }
   },
   "run": {

@@ -277,6 +277,38 @@
       "canales": "Dimmer channel outputs (1-36) — the dimmers' regulated outputs.",
       "circuitos": "Stage circuits (1-48): the fixed wiring to the bars. Patch one to a dimmer channel with a jumper to control it.",
       "dimmerScreen": "Dimmer display — shows the channel / DMX info once the rack is powered on."
+    },
+    "help": {
+      "title": "How does the board work?",
+      "intro": "The path: mains → GENERAL → split into lines (dimmers, force/directs, sound, emergency) → protections → fixtures.",
+      "general": {
+        "t": "⚫ Main switch",
+        "b": "The master key: gives or cuts power to the WHOLE board. Lever up = on."
+      },
+      "diff": {
+        "t": "🔵 RCD (and test button)",
+        "b": "Protects PEOPLE: it trips if it detects current leaking to earth (a bare wire someone touches, damp…), cutting in milliseconds. The blue button is TEST: it simulates a leak to check the RCD trips; if it does not trip when pressed, it is faulty."
+      },
+      "mcb": {
+        "t": "⬜ MCB (circuit breaker)",
+        "b": "Protects the CABLE: it trips on overload (more power than the cable can take) or short-circuit (two wires touching). It has 1, 2 or 4 levers depending on the poles."
+      },
+      "dimmer": {
+        "t": "🎚 Dimmer",
+        "b": "Dims the INTENSITY of analog lights: it takes DMX from the Quartz and lets more or less voltage through to the lamp. 3 units × 12 = 36 channels. Its little screen lights up when the rack has power."
+      },
+      "directos": {
+        "t": "🔌 DIRECTOS",
+        "b": "Constant (un-dimmed) power outlets. LED / DMX fixtures plug in here — they dim themselves internally. ⚠️ Never into a dimmer or they break."
+      },
+      "patch": {
+        "t": "🔀 Patch: channels ↔ circuits",
+        "b": "The CIRCUITOS (1-48) are the fixed wiring to the stage bars; the CANALES DE DIMMERS (1-36) are the dimmers regulated outputs. A jumper joins circuit → dimmer channel and decides which dimmer controls each fixture. That number is its DMX address (circuit 8 → dimmer 1 = DMX 1)."
+      },
+      "rule": {
+        "t": "⭐ Golden rule: LED vs analog",
+        "b": "Analog → ALWAYS to a dimmer (its DMX address is the dimmer channel). LED / DMX → ALWAYS to directos, and the DMX address is set on the fixture itself."
+      }
     }
   },
   "run": {

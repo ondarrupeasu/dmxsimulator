@@ -277,6 +277,38 @@
       "canales": "Dimmer kanalen irteerak (1-36) — dimmerren irteera erregulatuak.",
       "circuitos": "Zirkuituak (1-48): eszenatokiko baretara doan kableatu finkoa. Latiguillo batekin dimmer kanal batera patxeatzen da kontrolatzeko.",
       "dimmerScreen": "Dimmerraren pantaila — kanala / DMX informazioa erakusten du rack-a piztuta dagoenean."
+    },
+    "help": {
+      "title": "Nola dabil koadroa?",
+      "intro": "Ibilbidea: sarea → GENERAL → lerrotan banatzen da (dimmerrak, indarra/directos, soinua, larrialdia) → babesak → fokoak.",
+      "general": {
+        "t": "⚫ Etengailu orokorra",
+        "b": "Giltza nagusia: koadro OSOARI korrontea ematen edo mozten dio. Palanka gora = piztuta."
+      },
+      "diff": {
+        "t": "🔵 Diferentziala (eta test botoia)",
+        "b": "PERTSONAK babesten ditu: lurrera korronte-ihes bat detektatzen badu (norbaitek ukitzen duen kable biluzia, hezetasuna…), milisegundotan mozten du. Botoi urdina TESTekoa da: ihes bat simulatzen du diferentziala ondo jauzi egiten duen egiaztatzeko; sakatzean jauzi egiten ez badu, hondatuta dago."
+      },
+      "mcb": {
+        "t": "⬜ Magnetotermikoa (automatikoa)",
+        "b": "KABLEA babesten du: gainkargagatik (kableak jasan dezakeena baino potentzia gehiago) edo zirkuitulaburragatik (bi kable ukitzen) jauzi egiten du. 1, 2 edo 4 palanka ditu poloen arabera."
+      },
+      "dimmer": {
+        "t": "🎚 Dimmerra",
+        "b": "Argi analogikoen INTENTSITATEA erregulatzen du: Quartz-etik DMX jasotzen du eta tentsio gehiago edo gutxiago uzten dio lanpara. 3 unitate × 12 = 36 kanal. Bere pantailatxoa pizten da rack-ak korrontea duenean."
+      },
+      "directos": {
+        "t": "🔌 Directos",
+        "b": "Korronte KONSTANTEKO hartuneak (erregulatu gabe). LED / DMX fokoak hemen konektatzen dira — beren barnean erregulatzen dira. ⚠️ Inoiz ez dimmerrera edo hondatu egiten dira."
+      },
+      "patch": {
+        "t": "🔀 Patch-a: kanalak ↔ zirkuituak",
+        "b": "ZIRKUITUAK (1-48) eszenatokiko baretara doan kableatu finkoa dira; DIMMER KANALAK (1-36) dimmerren irteera erregulatuak. Latiguillo batekin zirkuitua → dimmer kanala lotzen duzu, eta foko bakoitza zein dimmerrek kontrolatzen duen erabakitzen duzu. Zenbaki hori bere DMX helbidea da (zirkuitua 8 → dimmerra 1 = DMX 1)."
+      },
+      "rule": {
+        "t": "⭐ Urrezko araua: LED vs analogikoa",
+        "b": "Analogikoa → BETI dimmerrera (bere DMX helbidea dimmer kanala da). LED / DMX → BETI directos-era, eta DMX helbidea fokoan bertan jartzen da."
+      }
     }
   },
   "run": {

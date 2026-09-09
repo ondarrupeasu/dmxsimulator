@@ -88,9 +88,12 @@ function Module({ m, title, testTitle }: { m: Mod; title: string; testTitle: str
   )
 }
 
+const HELP_SECTIONS = ['general', 'diff', 'mcb', 'dimmer', 'directos', 'patch', 'rule'] as const
+
 export function PowerPatchView() {
   const { t } = useTranslation()
   const close = () => useShowStore.getState().setPowerOpen(false)
+  const [showHelp, setShowHelp] = useState(false)
 
   // Uniform scale-to-fit: the racks keep their fixed size and never squash — the whole board
   // scales down (or up a touch) to fit the viewport, like the Quartz desk.
@@ -117,8 +120,28 @@ export function PowerPatchView() {
         <span className="pw-tag" title={t('common.pwaTag')}>PWA</span>
         <div className="pw-spacer" />
         <div className="pw-hint">{t('power.hint')}</div>
+        <button className="pw-help-btn" onClick={() => setShowHelp((v) => !v)}>❔ {t('power.help.title')}</button>
         <button className="pw-close" onClick={close} title={t('power.close')}>✕</button>
       </div>
+
+      {showHelp && (
+        <>
+          <div className="pw-help-backdrop" onClick={() => setShowHelp(false)} />
+          <aside className="pw-help" role="dialog" aria-label={t('power.help.title')}>
+            <div className="pw-help-head">
+              <b>{t('power.help.title')}</b>
+              <button className="pw-close" onClick={() => setShowHelp(false)} title={t('power.close')}>✕</button>
+            </div>
+            <p className="pw-help-intro">{t('power.help.intro')}</p>
+            {HELP_SECTIONS.map((k) => (
+              <div className="pw-help-sec" key={k}>
+                <h4>{t(`power.help.${k}.t`)}</h4>
+                <p>{t(`power.help.${k}.b`)}</p>
+              </div>
+            ))}
+          </aside>
+        </>
+      )}
 
       <div className="pw-stage" ref={stageRef}>
         <div className="pw-content" ref={contentRef} style={{ transform: `scale(${scale})` }}>

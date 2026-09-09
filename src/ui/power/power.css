@@ -151,3 +151,19 @@
   background: radial-gradient(circle at 40% 35%, #3a3d49, #14151b 70%);
   border: 2px solid #4a4e5b; box-shadow: inset 0 0 4px rgba(0, 0, 0, 0.7);
 }
+
+/* ---- "How does it work?" help drawer ---- */
+.pw-help-btn { background: #23252e; color: #e6e7ea; border: 1px solid #363945; border-radius: 8px; padding: 6px 12px; cursor: pointer; font-size: 12px; white-space: nowrap; }
+.pw-help-btn:hover { background: #2e3140; }
+.pw-help-backdrop { position: fixed; inset: 0; z-index: 4001; background: rgba(0, 0, 0, 0.45); }
+.pw-help {
+  position: fixed; top: 0; right: 0; bottom: 0; z-index: 4002; width: min(430px, 92vw);
+  background: #14151b; border-left: 1px solid #2c2f3a; box-shadow: -12px 0 40px rgba(0, 0, 0, 0.5);
+  padding: 16px 18px; overflow: auto; color: #dfe1e6;
+}
+.pw-help-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+.pw-help-head b { font-size: 16px; }
+.pw-help-intro { color: #9aa0ad; font-size: 13px; line-height: 1.5; margin: 0 0 16px; }
+.pw-help-sec { margin-bottom: 15px; }
+.pw-help-sec h4 { margin: 0 0 4px; font-size: 14px; color: #f0b000; }
+.pw-help-sec p { margin: 0; font-size: 13px; line-height: 1.55; color: #c7cbd3; }
