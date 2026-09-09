@@ -61,10 +61,14 @@ function range(n: number, from = 1) {
   return Array.from({ length: n }, (_, i) => i + from)
 }
 
+/** A panel-mount powerCON connector (same size in every rack). */
+function Pcon() {
+  return <span className="pw-pcon"><i /></span>
+}
 function Socket({ n }: { n: number }) {
   return (
     <div className="pw-socket" title={`${n}`}>
-      <span className="pw-socket-ring" />
+      <Pcon />
       <span className="pw-socket-num">{n}</span>
     </div>
   )
@@ -167,13 +171,14 @@ export function PowerPatchView() {
           <section className="pw-panel pw-rack pw-dimmers">
             <header>{t('power.dimmers')}</header>
             {[0, 1, 2].map((u) => (
-              <div className="pw-dimmer-unit" key={u}>
-                <div className="pw-dimmer-brand">TINHAO · AT2000⁺</div>
-                <div className="pw-dimmer-row">
-                  {/* LCD is OFF (dark, blank) until the rack is powered — that state lands with the
-                      interaction phase; for now the rack has no power so the screen shows nothing. */}
-                  <div className="pw-dimmer-screen" title={t('power.tip.dimmerScreen')}>
-                    <div className="pw-dimmer-btns"><i /><i /><i /><i /></div>
+              <div className="pw-dimmer-slot" key={u}>
+                <div className="pw-dimmer-unit">
+                  <div className="pw-dimmer-face">
+                    {/* LCD is OFF (dark, blank) until the rack is powered (interaction phase). */}
+                    <div className="pw-dimmer-screen" title={t('power.tip.dimmerScreen')}>
+                      <div className="pw-dimmer-btns"><i /><i /><i /><i /></div>
+                    </div>
+                    <span className="pw-dimmer-brand">TINHAO&nbsp;·&nbsp;AT2000⁺</span>
                   </div>
                   <div className="pw-dimmer-chans">
                     {range(12, u * 12 + 1).map((n) => (
@@ -181,6 +186,7 @@ export function PowerPatchView() {
                     ))}
                   </div>
                 </div>
+                <div className="pw-vent" aria-hidden />
               </div>
             ))}
             <div className="pw-directos" title={t('power.tip.directos')}>
@@ -192,7 +198,7 @@ export function PowerPatchView() {
               </div>
               <div className="pw-directos-row">
                 {range(12).map((n) => (
-                  <span className="pw-directos-socket" key={n} title={`Directo ${n} — ${t('power.tip.directos')}`} />
+                  <span key={n} title={`Directo ${n} — ${t('power.tip.directos')}`}><Pcon /></span>
                 ))}
               </div>
             </div>

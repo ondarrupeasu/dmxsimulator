@@ -54,12 +54,20 @@
 .pw-rack { width: 252px; }
 .pw-board { width: 366px; }
 
-/* Powercon socket + number */
+/* powerCON connector — same size in EVERY rack. Dark round chassis with a keyway + 3 contact
+   holes, like the real Neutrik powerCON panel connector. */
 .pw-socket { display: flex; flex-direction: column; align-items: center; gap: 3px; position: relative; }
-.pw-socket-ring {
-  width: 30px; height: 30px; border-radius: 50%;
-  background: radial-gradient(circle at 40% 35%, #3a3d49, #14151b 70%);
-  border: 2px solid #4a4e5b; box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.7);
+.pw-pcon {
+  width: 18px; height: 18px; border-radius: 50%; position: relative; display: block; flex: none;
+  background: radial-gradient(circle at 45% 38%, #3b3f4a, #17181e 72%);
+  border: 2px solid #0d0e12; box-shadow: inset 0 0 3px rgba(0, 0, 0, 0.85);
+}
+.pw-pcon > i { position: absolute; inset: 3px; border-radius: 50%; background: #4a4e5a; }
+.pw-pcon > i::before { content: ''; position: absolute; top: -1px; left: 50%; transform: translateX(-50%); width: 6px; height: 4px; background: #0d0e12; border-radius: 0 0 2px 2px; }
+.pw-pcon > i::after {
+  content: ''; position: absolute; left: 50%; top: 54%; transform: translate(-50%, -50%);
+  width: 2px; height: 2px; border-radius: 50%; background: #14151a;
+  box-shadow: -3px 2px 0 #14151a, 3px 2px 0 #14151a;
 }
 .pw-socket-num { font-size: 10px; color: #9aa0ad; }
 
@@ -92,38 +100,43 @@
   width: 12px; height: 7px; border-radius: 1px; background: #2a6cff; border: 1px solid #1b4fbf;
 }
 
+/* Real DIN-breaker toggle: a small light lever with a dark tab, UP = on. */
 .pw-levers { display: flex; gap: 2px; justify-content: center; }
-.pw-lever { width: 5px; height: 18px; background: #191a20; border-radius: 1px; position: relative; }
-.pw-lever::after { content: ''; position: absolute; left: 0.5px; right: 0.5px; height: 7px; border-radius: 1px; background: #cfd2d9; bottom: 1px; }
-.pw-lever.on::after { bottom: auto; top: 1px; background: #2ac26a; }
-.pw-mod.pw-rcd .pw-lever { width: 8px; }
-.pw-mod.pw-main .pw-lever { width: 48px; height: 22px; }
-.pw-mod.pw-main .pw-lever::after { height: 9px; }
+.pw-lever { width: 6px; height: 22px; background: linear-gradient(#e7e9ee, #cdd0d7); border: 1px solid #9aa0ad; border-radius: 1px; position: relative; }
+.pw-lever::after { content: ''; position: absolute; left: 1px; right: 1px; height: 8px; border-radius: 1px; background: #2a2c33; top: 1px; }
+.pw-lever:not(.on)::after { top: auto; bottom: 1px; }
+.pw-mod.pw-main .pw-lever { width: 50px; height: 24px; }
+.pw-mod.pw-main .pw-lever::after { height: 10px; }
 
 .pw-mod-name { font-size: 6.5px; color: #9297a3; text-align: center; margin-top: 3px; line-height: 1.12; word-break: break-word; min-height: 8px; }
 
-/* ---- Dimmer rack ---- : the 3 units grow to fill the rack height (like the real rack devices),
-   DIRECTOS fixed at the bottom, so the breakers reach down. */
-.pw-dimmer-unit {
-  background: #1b2740; border: 1px solid #2a3a5c; border-radius: 8px; padding: 8px;
-  flex: 1 1 0; display: flex; flex-direction: column; justify-content: center;
-}
-.pw-dimmer-brand { font-size: 10px; font-weight: 700; color: #8fb0e6; margin-bottom: 6px; }
-.pw-dimmer-row { display: flex; gap: 6px; align-items: stretch; }
+/* ---- Dimmer rack ---- : thin blue AT2000+ devices separated by black ventilated blank panels
+   that fill the rack (copying the real rack), DIRECTOS fixed at the bottom. */
+.pw-dimmer-slot { flex: 1 1 0; display: flex; flex-direction: column; min-height: 0; }
+.pw-dimmer-unit { background: linear-gradient(#223458, #182640); border: 1px solid #2c3d61; border-radius: 5px; padding: 6px 8px; flex: none; }
+.pw-dimmer-face { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+.pw-dimmer-brand { font-size: 9px; font-weight: 800; color: #9fbdf0; letter-spacing: 0.4px; margin-left: auto; }
 /* Dimmer LCD — OFF by default (dark, blank). Add .on (interaction phase) to light it up. */
 .pw-dimmer-screen {
-  width: 46px; flex: none; background: #05080c; border: 1px solid #10151d; border-radius: 3px;
-  padding: 4px 3px; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 2px;
+  width: 42px; height: 20px; flex: none; background: #05080c; border: 1px solid #10151d; border-radius: 2px;
+  display: flex; flex-direction: column; align-items: center; justify-content: flex-end; padding: 2px; gap: 2px;
 }
 .pw-dimmer-screen.on { background: #081018; border-color: #143050; box-shadow: inset 0 0 7px rgba(50, 140, 230, 0.28); justify-content: center; }
 .pw-lcd-line { font: 700 7px/1.1 ui-monospace, 'SF Mono', monospace; color: #63d2ff; letter-spacing: 0.3px; text-shadow: 0 0 3px rgba(99, 210, 255, 0.6); }
 .pw-lcd-dim { color: #3f8fc9; font-weight: 500; }
-.pw-dimmer-btns { display: flex; gap: 2px; margin-top: 3px; }
-.pw-dimmer-btns > i { width: 5px; height: 5px; border-radius: 50%; background: #294056; }
-.pw-dimmer-chans { flex: 1; display: grid; grid-template-columns: repeat(12, 1fr); gap: 2px; align-content: center; }
+.pw-dimmer-btns { display: flex; gap: 2px; }
+.pw-dimmer-btns > i { width: 4px; height: 4px; border-radius: 50%; background: #294056; }
+.pw-dimmer-chans { display: grid; grid-template-columns: repeat(12, 1fr); gap: 2px; }
 .pw-mcb { display: flex; flex-direction: column; align-items: center; }
-.pw-mcb > span { width: 9px; height: 20px; border-radius: 2px; background: linear-gradient(#e7e9ee, #cdd0d7); border: 1px solid #9aa0ad; }
+.pw-mcb-lever { width: 8px; height: 16px; border-radius: 1px; background: #d7dae0; border: 1px solid #9aa0ad; position: relative; }
+.pw-mcb-lever::after { content: ''; position: absolute; left: 1px; right: 1px; top: 1px; height: 6px; border-radius: 1px; background: #33363f; }
 .pw-mcb > b { font-size: 7px; color: #9aa0ad; font-weight: 500; margin-top: 2px; }
+/* Black ventilated blank panel that fills the space between/after the thin dimmer devices. */
+.pw-vent {
+  flex: 1; min-height: 8px; margin: 5px 0; border-radius: 4px;
+  background: #0b0c10; border: 1px solid #1b1d25;
+  background-image: repeating-linear-gradient(#0b0c10 0 4px, #1c1f28 4px 6px);
+}
 
 /* ---- Legend footer (always visible, tooltips on hover) ---- */
 .pw-legend {
@@ -144,13 +157,8 @@
 /* One long colour bar per group of four outlets (4 yellow, 4 orange, 4 pink). */
 .pw-directos-bars { display: flex; gap: 3px; margin-bottom: 5px; }
 .pw-directos-bars > span { flex: 1; height: 5px; border-radius: 2px; }
-/* One single row of 12 outlets. */
-.pw-directos-row { display: flex; gap: 2px; justify-content: space-between; }
-.pw-directos-socket {
-  width: 15px; height: 15px; border-radius: 50%;
-  background: radial-gradient(circle at 40% 35%, #3a3d49, #14151b 70%);
-  border: 2px solid #4a4e5b; box-shadow: inset 0 0 4px rgba(0, 0, 0, 0.7);
-}
+/* One single row of 12 outlets (same powerCON as the bays). */
+.pw-directos-row { display: flex; gap: 1px; justify-content: space-between; align-items: center; }
 
 /* ---- "How does it work?" help drawer ---- */
 .pw-help-btn { background: #23252e; color: #e6e7ea; border: 1px solid #363945; border-radius: 8px; padding: 6px 12px; cursor: pointer; font-size: 12px; white-space: nowrap; }
