@@ -43,7 +43,21 @@
   transition: transform 0.6s cubic-bezier(0.66, 0, 0.2, 1), opacity 0.55s ease, filter 0.55s ease;
 }
 .pw-slide-inner { transform-origin: center center; will-change: transform; pointer-events: auto; }
-.pw-racks-row { display: flex; gap: 16px; align-items: flex-start; }
+.pw-racks-row { display: flex; gap: 16px; align-items: flex-start; position: relative; }
+
+/* breaker levers slide up (ON) / down (OFF) with a little spring */
+.pw-svg rect { transition: y 0.17s cubic-bezier(0.34, 1.4, 0.5, 1); }
+
+/* patch cables drawn over the racks (measured in the racks' unscaled coordinate space) */
+.pw-cables { position: absolute; top: 0; left: 0; pointer-events: none; z-index: 6; overflow: visible; }
+.pw-cable-line { fill: none; stroke: #6b7079; stroke-width: 4.5; stroke-linecap: round; opacity: 0.95; }
+.pw-cable-end { fill: #3f5bcb; stroke: #1f2a55; stroke-width: 1; }
+
+/* clickable connectors */
+.pw-conn { padding: 0; margin: 0; border: 0; background: none; cursor: pointer; display: inline-flex; line-height: 0; border-radius: 5px; }
+.pw-conn:hover { outline: 2px solid #5b9dff; outline-offset: 1px; }
+.pw-conn.patched { outline: 2px solid #46d07a; outline-offset: 1px; }
+.pw-conn.sel { outline: 2px solid #ffb020; outline-offset: 1px; box-shadow: 0 0 9px rgba(255, 176, 32, 0.65); }
 
 /* Cover-flow arrows */
 .pw-nav {
@@ -109,7 +123,12 @@
 /* DIN-rail modules: main switch (black), RCD/differential (blue test button + 2-pole lever) and
    MCBs (1-4 pole levers). Levers UP = ON. */
 .pw-row-breakers { display: flex; gap: 3px; align-items: flex-start; padding-top: 2px; }
-.pw-mod { position: relative; display: flex; flex-direction: column; align-items: center; flex: none; }
+.pw-mod { position: relative; display: flex; flex-direction: column; align-items: center; flex: none; cursor: pointer; border-radius: 4px; }
+.pw-mod:hover { filter: brightness(1.09); }
+.pw-mod:focus-visible { outline: 2px solid #5b9dff; outline-offset: 1px; }
+.pw-chan { cursor: pointer; border-radius: 3px; }
+.pw-chan:hover { filter: brightness(1.12); }
+.pw-chan:focus-visible { outline: 2px solid #5b9dff; }
 /* the SVG device draws the whole module; keep every module the same height, width follows poles */
 .pw-mod .pw-svg { display: block; height: 62px; width: auto; }
 /* FUERZA phase colour tab above the RCD (pink/orange/yellow) */

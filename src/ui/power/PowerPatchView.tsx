@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useRef, useState } from 'react'
+import { Fragment, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import type { CSSProperties } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useShowStore } from '../../store/showStore'
@@ -76,8 +76,11 @@ function Pcon({ color = 'blue', capped = false }: { color?: 'white' | 'blue'; ca
 }
 
 /** A patch bay (CANALES / CIRCUITOS): rows of numbered connectors (null = capped), with a black
- *  ventilation louver strip between the rows, faithfully to the real racks. */
-function Bay({ title, tip, color, rows, perNumber = 1 }: { title: string; tip: string; color: 'white' | 'blue'; rows: (number | null)[][]; perNumber?: number }) {
+ *  ventilation louver strip between the rows. Connectors are clickable to patch cables between bays. */
+function Bay({ title, tip, color, rows, perNumber = 1, kind, sel, patched, onConn }: {
+  title: string; tip: string; color: 'white' | 'blue'; rows: (number | null)[][]; perNumber?: number
+  kind: 'canal' | 'circ'; sel: string | null; patched: Set<string>; onConn: (id: string, kind: 'canal' | 'circ') => void
+}) {
   return (
     <section className="pw-panel pw-rack pw-bay">
       <header title={tip}>{title}</header>
@@ -89,9 +92,20 @@ function Bay({ title, tip, color, rows, perNumber = 1 }: { title: string; tip: s
                 c === null ? (
                   <span className="pw-cell" key={ci}><Pcon capped /></span>
                 ) : (
-                  <span className="pw-cell" key={ci} title={`${c}`}>
+                  <span className="pw-cell" key={ci}>
                     <b className="pw-cell-num">{c}</b>
-                    <span className="pw-cell-pcons">{Array.from({ length: perNumber }).map((_, i) => <Pcon key={i} color={color} />)}</span>
+                    <span className="pw-cell-pcons">
+                      {Array.from({ length: perNumber }).map((_, i) => {
+                        const id = `${kind}-${c}-${i}`
+                        return (
+                          <button key={i} type="button" data-connid={id} title={`${c}`}
+                            className={`pw-conn${sel === id ? ' sel' : ''}${patched.has(id) ? ' patched' : ''}`}
+                            onClick={(e) => { e.stopPropagation(); onConn(id, kind) }}>
+                            <Pcon color={color} />
+                          </button>
+                        )
+                      })}
+                    </span>
                   </span>
                 ),
               )}
@@ -116,11 +130,13 @@ const CIRCUITOS_ROWS: (number | null)[][] = Array.from({ length: 6 }, (_, r) => 
 /** One DIN module drawn as an SVG standard device (see breakers.tsx): the black 4-pole main
  *  isolator, a differential (RCD, box + blue half-dome TEST + blue handle), or a magnetothermic
  *  (MCB, 1-4 poles under a common tie-bar). An optional colour tab codes the FUERZA phases. */
-function Module({ m, title }: { m: Mod; title: string }) {
+function Module({ m, title, on, onToggle }: { m: Mod; title: string; on: boolean; onToggle: () => void }) {
   return (
-    <div className={`pw-mod pw-${m.kind}`} title={m.name ? `${m.name} — ${title}` : title}>
+    <div className={`pw-mod pw-${m.kind}${on ? '' : ' off'}`} title={m.name ? `${m.name} — ${title}` : title}
+      role="button" tabIndex={0} onClick={onToggle}
+      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onToggle() } }}>
       {m.tab && <span className="pw-mod-tab" style={{ background: m.tab }} />}
-      {m.kind === 'main' ? <MainSwitch /> : m.kind === 'rcd' ? <RCD /> : m.kind === 'rcdh' ? <RCDHager /> : <MCB poles={m.poles ?? 1} />}
+      {m.kind === 'main' ? <MainSwitch on={on} /> : m.kind === 'rcd' ? <RCD on={on} /> : m.kind === 'rcdh' ? <RCDHager on={on} /> : <MCB poles={m.poles ?? 1} on={on} />}
       {m.name && <span className="pw-mod-name">{m.name}</span>}
     </div>
   )
@@ -133,6 +149,24 @@ export function PowerPatchView() {
   const close = () => useShowStore.getState().setPowerOpen(false)
   const [showHelp, setShowHelp] = useState(false)
 
+  // --- Interaction: breakers toggle on/off, and powerCON cables patch CANALES <-> CIRCUITOS ---
+  const [breakerOn, setBreakerOn] = useState<Record<string, boolean>>({})
+  const isOn = (id: string) => breakerOn[id] ?? true
+  const toggle = (id: string) => setBreakerOn((s) => ({ ...s, [id]: !(s[id] ?? true) }))
+
+  const [sel, setSel] = useState<string | null>(null) // a connector waiting to be patched
+  const [patches, setPatches] = useState<{ from: string; to: string }[]>([])
+  const patched = new Set<string>(patches.flatMap((p) => [p.from, p.to]))
+  const clickConn = (id: string, kind: 'canal' | 'circ') => {
+    const existing = patches.find((p) => p.from === id || p.to === id)
+    if (existing) { setPatches((ps) => ps.filter((p) => p !== existing)); setSel(null); return } // un-patch
+    if (!sel) { setSel(id); return }
+    const selKind: 'canal' | 'circ' = sel.startsWith('canal') ? 'canal' : 'circ'
+    if (selKind === kind) { setSel(id); return } // same side → move the selection
+    setPatches((ps) => [...ps, { from: kind === 'circ' ? sel : id, to: kind === 'circ' ? id : sel }])
+    setSel(null)
+  }
+
   // Cover-flow of three scenes: the breaker board (seen first), the three patch racks (they travel
   // together — you patch them together), and the DMX splitter / data side. The active scene scales
   // to fit and is large; the neighbours peek at the sides, turned like album covers.
@@ -143,6 +177,8 @@ export function PowerPatchView() {
   const dataRef = useRef<HTMLDivElement>(null)
   const [k, setK] = useState({ board: 1, racks: 1, data: 1 })
   const [nav, setNav] = useState<{ nextLeft?: number; prevRight?: number }>({})
+  const [cables, setCables] = useState<{ key: string; d: string; ax: number; ay: number; bx: number; by: number }[]>([])
+  const [rowSize, setRowSize] = useState({ w: 0, h: 0 })
   useEffect(() => {
     const fit = () => {
       const st = stageRef.current
@@ -167,6 +203,36 @@ export function PowerPatchView() {
     if (stageRef.current) ro.observe(stageRef.current)
     return () => ro.disconnect()
   }, [scene])
+
+  // Measure connector centres (in the racks' own unscaled coordinate space) and build the patch
+  // cables. Recomputed whenever the patch list, the racks' scale, or the scene changes.
+  useLayoutEffect(() => {
+    const row = racksRef.current
+    if (!row) return
+    const measure = () => {
+      const scale = k.racks || 1
+      const rr = row.getBoundingClientRect()
+      const centre = (id: string) => {
+        const el = row.querySelector(`[data-connid="${id}"]`) as HTMLElement | null
+        if (!el) return null
+        const c = el.getBoundingClientRect()
+        return { x: (c.left + c.width / 2 - rr.left) / scale, y: (c.top + c.height / 2 - rr.top) / scale }
+      }
+      const out: typeof cables = []
+      for (const p of patches) {
+        const a = centre(p.from), b = centre(p.to)
+        if (!a || !b) continue
+        const sag = 26 + Math.abs(b.x - a.x) * 0.12
+        out.push({ key: `${p.from}>${p.to}`, ax: a.x, ay: a.y, bx: b.x, by: b.y, d: `M ${a.x} ${a.y} C ${a.x} ${a.y + sag}, ${b.x} ${b.y + sag}, ${b.x} ${b.y}` })
+      }
+      setCables(out)
+      setRowSize({ w: row.offsetWidth, h: row.offsetHeight })
+    }
+    measure()
+    const ro = new ResizeObserver(measure)
+    ro.observe(row)
+    return () => ro.disconnect()
+  }, [patches, k.racks, scene])
 
   // outer transform for a slide at position i, given the active scene (cover-flow)
   const slideStyle = (i: number): CSSProperties => {
@@ -222,7 +288,8 @@ export function PowerPatchView() {
                     <div className="pw-row-breakers">
                       {row.mods.map((m, j) => {
                         const tip = m.kind === 'main' ? 'general' : m.kind === 'rcd' || m.kind === 'rcdh' ? 'diff' : 'mcb'
-                        return <Module key={j} m={m} title={t(`power.tip.${tip}`)} />
+                        const id = `b-${i}-${j}`
+                        return <Module key={j} m={m} title={t(`power.tip.${tip}`)} on={isOn(id)} onToggle={() => toggle(id)} />
                       })}
                     </div>
                   </div>
@@ -249,9 +316,16 @@ export function PowerPatchView() {
                       <span className="pw-dimmer-brand">TINHAO&nbsp;·&nbsp;AT2000⁺</span>
                     </div>
                     <div className="pw-dimmer-chans">
-                      {range(12, u * 12 + 1).map((n) => (
-                        <div className="pw-chan" key={n} title={`${n} · ${t('power.tip.dimmerChan')}`}><ChannelBreaker /><b>{n}</b></div>
-                      ))}
+                      {range(12, u * 12 + 1).map((n) => {
+                        const id = `ch-${n}`
+                        return (
+                          <div className={`pw-chan${isOn(id) ? '' : ' off'}`} key={n} role="button" tabIndex={0}
+                            title={`${n} · ${t('power.tip.dimmerChan')}`} onClick={() => toggle(id)}
+                            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(id) } }}>
+                            <ChannelBreaker on={isOn(id)} /><b>{n}</b>
+                          </div>
+                        )
+                      })}
                     </div>
                   </div>
                   {u < 2 && <div className="pw-vent" aria-hidden />}
@@ -260,9 +334,9 @@ export function PowerPatchView() {
               <div className="pw-directos" title={t('power.tip.directos')}>
                 <div className="pw-directos-label">DIRECTOS</div>
                 <div className="pw-directos-bars">
-                  <span style={{ background: PINK }} />
-                  <span style={{ background: ORANGE }} />
                   <span style={{ background: YELLOW }} />
+                  <span style={{ background: ORANGE }} />
+                  <span style={{ background: PINK }} />
                 </div>
                 <div className="pw-directos-row">
                   {range(12).map((n) => (
@@ -273,10 +347,23 @@ export function PowerPatchView() {
             </section>
 
             {/* CANALES DE DIMMERS (white connectors, 1-36) */}
-            <Bay title="CANALES DE DIMMERS" tip={t('power.tip.canales')} color="white" rows={CANALES_ROWS} perNumber={2} />
+            <Bay title="CANALES DE DIMMERS" tip={t('power.tip.canales')} color="white" rows={CANALES_ROWS} perNumber={2} kind="canal" sel={sel} patched={patched} onConn={clickConn} />
 
             {/* CIRCUITOS (blue connectors, pairs + capped gaps, 1-48) */}
-            <Bay title="CIRCUITOS" tip={t('power.tip.circuitos')} color="blue" rows={CIRCUITOS_ROWS} />
+            <Bay title="CIRCUITOS" tip={t('power.tip.circuitos')} color="blue" rows={CIRCUITOS_ROWS} kind="circ" sel={sel} patched={patched} onConn={clickConn} />
+
+            {/* patch cables overlay (measured in the racks' own coordinate space) */}
+            {cables.length > 0 && (
+              <svg className="pw-cables" width={rowSize.w} height={rowSize.h} style={{ width: rowSize.w, height: rowSize.h }} aria-hidden>
+                {cables.map((c) => (
+                  <g key={c.key}>
+                    <path d={c.d} className="pw-cable-line" />
+                    <circle cx={c.ax} cy={c.ay} r="4.5" className="pw-cable-end" />
+                    <circle cx={c.bx} cy={c.by} r="4.5" className="pw-cable-end" />
+                  </g>
+                ))}
+              </svg>
+            )}
           </div>
         </section>
 
