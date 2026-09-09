@@ -55,15 +55,18 @@
 
 /* patch cables drawn over the racks (measured in the racks' unscaled coordinate space) */
 .pw-cables { position: absolute; top: 0; left: 0; pointer-events: none; z-index: 6; overflow: visible; }
-/* each cable a subtly different tone (var --c); the stroke itself is hoverable to pick it out */
-.pw-cable-line { fill: none; stroke: var(--c, #6b7079); stroke-width: 4.5; stroke-linecap: round; opacity: 0.95; pointer-events: stroke; cursor: pointer; transition: stroke-width 0.12s ease; }
+/* realistic grey cable; hovering it (the stroke is hoverable) lights it up to pick it out */
+.pw-cable-line { fill: none; stroke: #6b7079; stroke-width: 4.5; stroke-linecap: round; opacity: 0.95; pointer-events: stroke; cursor: pointer; transition: stroke-width 0.12s ease; }
+.pw-cable-line.dead { stroke: #45474d; opacity: 0.4; } /* connected but no power reaching it */
 .pw-cable-line:hover, .pw-cable-line.hovered { stroke: #ffcf5a; stroke-width: 7; opacity: 1; filter: drop-shadow(0 0 4px rgba(255, 207, 90, 0.7)); }
 .pw-cable-end { fill: #3f5bcb; stroke: #1f2a55; stroke-width: 1; }
 
 /* clickable connectors */
 .pw-conn { padding: 0; margin: 0; border: 0; background: none; cursor: pointer; display: inline-flex; line-height: 0; border-radius: 5px; }
 .pw-conn:hover { outline: 2px solid #5b9dff; outline-offset: 1px; }
-.pw-conn.patched { outline: 2px solid #46d07a; outline-offset: 1px; }
+/* patched = connected (neutral grey ring); only turns green when power actually reaches it */
+.pw-conn.patched { outline: 2px solid #767b85; outline-offset: 1px; }
+.pw-conn.patched.live { outline: 2px solid #46d07a; box-shadow: 0 0 8px rgba(70, 208, 122, 0.6); }
 .pw-conn.sel { outline: 2px solid #ffb020; outline-offset: 1px; box-shadow: 0 0 9px rgba(255, 176, 32, 0.65); }
 .pw-conn.linked { outline: 2.5px solid #ffcf5a; outline-offset: 1px; box-shadow: 0 0 10px rgba(255, 207, 90, 0.8); }
 
