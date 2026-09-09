@@ -159,11 +159,24 @@ function simulateCables(row: HTMLElement, patches: { from: string; to: string }[
   for (const key of [...ropes.keys()]) if (!alive.has(key)) ropes.delete(key)
 }
 
+/** A clickable, patchable powerCON connector. */
+function Conn({ id, color, sel, patched, onConn, title }: {
+  id: string; color: 'white' | 'blue'; sel: string | null; patched: Set<string>; onConn: (id: string) => void; title?: string
+}) {
+  return (
+    <button type="button" data-connid={id} title={title}
+      className={`pw-conn${sel === id ? ' sel' : ''}${patched.has(id) ? ' patched' : ''}`}
+      onClick={(e) => { e.stopPropagation(); onConn(id) }}>
+      <Pcon color={color} />
+    </button>
+  )
+}
+
 /** A patch bay (CANALES / CIRCUITOS): rows of numbered connectors (null = capped), with a black
  *  ventilation louver strip between the rows. Connectors are clickable to patch cables between bays. */
 function Bay({ title, tip, color, rows, perNumber = 1, kind, sel, patched, onConn }: {
   title: string; tip: string; color: 'white' | 'blue'; rows: (number | null)[][]; perNumber?: number
-  kind: 'canal' | 'circ'; sel: string | null; patched: Set<string>; onConn: (id: string, kind: 'canal' | 'circ') => void
+  kind: 'canal' | 'circ'; sel: string | null; patched: Set<string>; onConn: (id: string) => void
 }) {
   return (
     <section className="pw-panel pw-rack pw-bay">
@@ -179,16 +192,9 @@ function Bay({ title, tip, color, rows, perNumber = 1, kind, sel, patched, onCon
                   <span className="pw-cell" key={ci}>
                     <b className="pw-cell-num">{c}</b>
                     <span className="pw-cell-pcons">
-                      {Array.from({ length: perNumber }).map((_, i) => {
-                        const id = `${kind}-${c}-${i}`
-                        return (
-                          <button key={i} type="button" data-connid={id} title={`${c}`}
-                            className={`pw-conn${sel === id ? ' sel' : ''}${patched.has(id) ? ' patched' : ''}`}
-                            onClick={(e) => { e.stopPropagation(); onConn(id, kind) }}>
-                            <Pcon color={color} />
-                          </button>
-                        )
-                      })}
+                      {Array.from({ length: perNumber }).map((_, i) => (
+                        <Conn key={i} id={`${kind}-${c}-${i}`} color={color} sel={sel} patched={patched} onConn={onConn} title={`${c}`} />
+                      ))}
                     </span>
                   </span>
                 ),
@@ -242,13 +248,16 @@ export function PowerPatchView() {
   const [sel, setSel] = useState<string | null>(null) // a connector waiting to be patched
   const [patches, setPatches] = useState<{ from: string; to: string }[]>([])
   const patched = new Set<string>(patches.flatMap((p) => [p.from, p.to]))
-  const clickConn = (id: string, kind: 'canal' | 'circ') => {
+  // sources feed power out (dimmer channels, directos); sinks receive it (stage circuits, regletas).
+  const roleOf = (id: string) => (id.startsWith('canal') || id.startsWith('directo') ? 'src' : 'sink')
+  const clickConn = (id: string) => {
     const existing = patches.find((p) => p.from === id || p.to === id)
     if (existing) { setPatches((ps) => ps.filter((p) => p !== existing)); setSel(null); return } // un-patch
     if (!sel) { setSel(id); return }
-    const selKind: 'canal' | 'circ' = sel.startsWith('canal') ? 'canal' : 'circ'
-    if (selKind === kind) { setSel(id); return } // same side → move the selection
-    setPatches((ps) => [...ps, { from: kind === 'circ' ? sel : id, to: kind === 'circ' ? id : sel }])
+    if (roleOf(sel) === roleOf(id)) { setSel(id); return } // same role → move the selection
+    const from = roleOf(id) === 'src' ? id : sel
+    const to = roleOf(id) === 'sink' ? id : sel
+    setPatches((ps) => [...ps, { from, to }])
     setSel(null)
   }
 
@@ -388,7 +397,8 @@ export function PowerPatchView() {
 
         {/* Scene 1 — the three patch racks, side by side (they belong together) */}
         <section className="pw-slide" style={slideStyle(1)} aria-hidden={scene !== 1}>
-          <div className="pw-slide-inner pw-racks-row" ref={racksRef} style={{ transform: `scale(${k.racks})`, pointerEvents: Math.abs(1 - scene) >= 2 ? 'none' : 'auto', cursor: scene === 1 ? 'default' : 'pointer' }} onClick={scene === 1 || Math.abs(1 - scene) >= 2 ? undefined : () => setScene(1)}>
+          <div className="pw-slide-inner pw-racks-wrap" ref={racksRef} style={{ transform: `scale(${k.racks})`, pointerEvents: Math.abs(1 - scene) >= 2 ? 'none' : 'auto', cursor: scene === 1 ? 'default' : 'pointer' }} onClick={scene === 1 || Math.abs(1 - scene) >= 2 ? undefined : () => setScene(1)}>
+            <div className="pw-racks-row">
             {/* Dimmer racks + DIRECTOS */}
             <section className="pw-panel pw-rack pw-dimmers">
               <header>{t('power.dimmers')}</header>
@@ -427,7 +437,7 @@ export function PowerPatchView() {
                 </div>
                 <div className="pw-directos-row">
                   {range(12).map((n) => (
-                    <span key={n} title={`Directo ${n} — ${t('power.tip.directos')}`}><Pcon color="white" /></span>
+                    <Conn key={n} id={`directo-${n}-0`} color="white" sel={sel} patched={patched} onConn={clickConn} title={`Directo ${n} — ${t('power.tip.directos')}`} />
                   ))}
                 </div>
               </div>
@@ -438,6 +448,22 @@ export function PowerPatchView() {
 
             {/* CIRCUITOS (blue connectors, pairs + capped gaps, 1-48) */}
             <Bay title="CIRCUITOS" tip={t('power.tip.circuitos')} color="blue" rows={CIRCUITOS_ROWS} kind="circ" sel={sel} patched={patched} onConn={clickConn} />
+            </div>
+
+            {/* Regletas de fuerza — constant-power strips; DIRECTOS (or CIRCUITOS) plug in here */}
+            <div className="pw-regletas">
+              <section className="pw-panel pw-regletas-panel">
+                <header title={t('power.tip.regletas')}>{t('power.regletas')}</header>
+                <div className="pw-regletas-row">
+                  {range(10).map((n) => (
+                    <span className="pw-cell" key={n}>
+                      <b className="pw-cell-num">R{n}</b>
+                      <Conn id={`regleta-${n}-0`} color="white" sel={sel} patched={patched} onConn={clickConn} title={`Regleta ${n}`} />
+                    </span>
+                  ))}
+                </div>
+              </section>
+            </div>
 
             {/* patch cables overlay — verlet ropes with a powerCON plug at each tip (updated in RAF) */}
             {patches.length > 0 && (

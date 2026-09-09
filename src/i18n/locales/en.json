@@ -276,7 +276,8 @@
       "emerg": "Emergency-lighting circuit.",
       "canales": "Dimmer channel outputs (1-36) — the dimmers' regulated outputs.",
       "circuitos": "Stage circuits (1-48): the fixed wiring to the bars. Patch one to a dimmer channel with a jumper to control it.",
-      "dimmerScreen": "Dimmer display — shows the channel / DMX info once the rack is powered on."
+      "dimmerScreen": "Dimmer display — shows the channel / DMX info once the rack is powered on.",
+      "regletas": "Constant-power outlets on stage (patch a DIRECTO here for LED/moving fixtures, or a stage power point)"
     },
     "help": {
       "title": "How does the board work?",
@@ -315,7 +316,8 @@
     "toData": "DMX / Data",
     "data": "DMX SPLITTER · TINHAO S4",
     "dataBars": "Bars 1-4",
-    "dataNote": "The DATA side: the Quartz desk sends one DMX line to the S4 splitter, which fans it out to 4 outputs — one per lighting bar. A fixture needs BOTH power (the board/dimmers) and this DMX signal. The S4 lives behind the patch racks."
+    "dataNote": "The DATA side: the Quartz desk sends one DMX line to the S4 splitter, which fans it out to 4 outputs — one per lighting bar. A fixture needs BOTH power (the board/dimmers) and this DMX signal. The S4 lives behind the patch racks.",
+    "regletas": "POWER STRIPS"
   },
   "run": {
     "title": "Run",

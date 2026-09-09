@@ -276,7 +276,8 @@
       "emerg": "Larrialdiko argiztapen-zirkuitua.",
       "canales": "Dimmer kanalen irteerak (1-36) — dimmerren irteera erregulatuak.",
       "circuitos": "Zirkuituak (1-48): eszenatokiko baretara doan kableatu finkoa. Latiguillo batekin dimmer kanal batera patxeatzen da kontrolatzeko.",
-      "dimmerScreen": "Dimmerraren pantaila — kanala / DMX informazioa erakusten du rack-a piztuta dagoenean."
+      "dimmerScreen": "Dimmerraren pantaila — kanala / DMX informazioa erakusten du rack-a piztuta dagoenean.",
+      "regletas": "Eszenatokiko etengabeko korronte-hartuneak (lotu DIREKTO bat hemen LED/foku mugikorretarako, edo indar-hartune bat)"
     },
     "help": {
       "title": "Nola dabil koadroa?",
@@ -315,7 +316,8 @@
     "toData": "DMX / Datuak",
     "data": "DMX SPLITTERRA · TINHAO S4",
     "dataBars": "1-4 barrak",
-    "dataNote": "DATUEN aldea: Quartz mahaiak DMX linea bat bidaltzen dio S4 splitterrari, eta honek 4 irteeratan banatzen du — barra bakoitzeko bat. Foku batek korrontea (koadroa/dimmerrak) ETA DMX seinale hau behar ditu. S4a patch rack-en atzean dago."
+    "dataNote": "DATUEN aldea: Quartz mahaiak DMX linea bat bidaltzen dio S4 splitterrari, eta honek 4 irteeratan banatzen du — barra bakoitzeko bat. Foku batek korrontea (koadroa/dimmerrak) ETA DMX seinale hau behar ditu. S4a patch rack-en atzean dago.",
+    "regletas": "INDAR-ERREGELETAK"
   },
   "run": {
     "title": "Exekutatu",

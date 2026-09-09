@@ -276,7 +276,8 @@
       "emerg": "Circuito de alumbrado de emergencia.",
       "canales": "Salidas de los canales de dimmer (1-36) — las salidas reguladas de los dimmers.",
       "circuitos": "Circuitos (1-48): el cableado fijo que va a las varas del escenario. Se patchea uno a un canal de dimmer con un latiguillo para controlarlo.",
-      "dimmerScreen": "Pantalla del dimmer — muestra el canal / info DMX cuando el rack está encendido."
+      "dimmerScreen": "Pantalla del dimmer — muestra el canal / info DMX cuando el rack está encendido.",
+      "regletas": "Tomas de corriente constante en el escenario (parchea un DIRECTO aquí para focos LED/móviles, o una toma de fuerza)"
     },
     "help": {
       "title": "¿Cómo funciona el cuadro?",
@@ -315,7 +316,8 @@
     "toData": "DMX / Datos",
     "data": "SPLITTER DMX · TINHAO S4",
     "dataBars": "Varas 1-4",
-    "dataNote": "El lado de DATOS: la mesa Quartz manda una línea DMX al splitter S4, que la reparte en 4 salidas — una por vara. Un foco necesita corriente (cuadro/dimmers) Y esta señal DMX. El S4 está detrás de los racks de patch."
+    "dataNote": "El lado de DATOS: la mesa Quartz manda una línea DMX al splitter S4, que la reparte en 4 salidas — una por vara. Un foco necesita corriente (cuadro/dimmers) Y esta señal DMX. El S4 está detrás de los racks de patch.",
+    "regletas": "REGLETAS DE FUERZA"
   },
   "run": {
     "title": "Ejecutar",

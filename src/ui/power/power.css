@@ -43,7 +43,12 @@
   transition: transform 0.6s cubic-bezier(0.66, 0, 0.2, 1), opacity 0.55s ease, filter 0.55s ease;
 }
 .pw-slide-inner { transform-origin: center center; will-change: transform; pointer-events: auto; }
-.pw-racks-row { display: flex; gap: 16px; align-items: flex-start; position: relative; }
+.pw-racks-wrap { display: flex; flex-direction: column; gap: 12px; align-items: center; position: relative; }
+.pw-racks-row { display: flex; gap: 16px; align-items: flex-start; }
+/* Regletas de fuerza — a strip under the racks (uses the trimmed rack space) */
+.pw-regletas { width: 100%; display: flex; justify-content: center; }
+.pw-regletas-panel { width: fit-content; min-width: 420px; padding: 10px 14px; gap: 8px; }
+.pw-regletas-row { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
 
 /* breaker levers slide up (ON) / down (OFF) with a little spring */
 .pw-svg rect { transition: y 0.17s cubic-bezier(0.34, 1.4, 0.5, 1); }
@@ -94,7 +99,7 @@
   box-sizing: border-box; flex: none;
 }
 /* the three patch racks match each other's height; the board sizes to its content */
-.pw-rack { min-height: 468px; }
+.pw-rack { min-height: 424px; }
 .pw-panel > header {
   font-size: 12px; font-weight: 800; letter-spacing: 1px; color: #aeb3c0; text-align: center;
   background: #12131a; border: 1px solid #2c2f3a; border-radius: 6px; padding: 5px 8px; flex: none;
