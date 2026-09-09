@@ -44,29 +44,29 @@
 .pw-slide-inner { transform-origin: center center; will-change: transform; }
 .pw-racks-row { display: flex; gap: 16px; align-items: flex-start; }
 
-/* Active vs peeking states */
+/* Active vs peeking states. The active slide gets pointer-events (future breaker/patch clicks);
+   only the RIGHT peek (racks on scene 0) is clickable to switch — the left peek (board on scene 1)
+   is NOT, so it can never swallow a click meant for the left rack's breakers. */
 .pw-flow.scene-0 .pw-slide-board,
-.pw-flow.scene-1 .pw-slide-racks { transform: translateX(0) rotateY(0) scale(1); opacity: 1; filter: none; z-index: 2; }
+.pw-flow.scene-1 .pw-slide-racks { transform: translateX(0) rotateY(0) scale(1); opacity: 1; filter: none; z-index: 2; pointer-events: auto; }
 .pw-flow.scene-0 .pw-slide-racks { transform: translateX(66%) rotateY(-30deg) scale(0.72); opacity: 0.4; filter: brightness(0.7); z-index: 1; cursor: pointer; pointer-events: auto; }
-.pw-flow.scene-1 .pw-slide-board { transform: translateX(-66%) rotateY(30deg) scale(0.72); opacity: 0.4; filter: brightness(0.7); z-index: 1; cursor: pointer; pointer-events: auto; }
-.pw-flow .pw-slide:hover { opacity: 0.6; }
-.pw-flow.scene-0 .pw-slide-board:hover,
-.pw-flow.scene-1 .pw-slide-racks:hover { opacity: 1; }
+.pw-flow.scene-1 .pw-slide-board { transform: translateX(-66%) rotateY(30deg) scale(0.72); opacity: 0.4; filter: brightness(0.7); z-index: 1; pointer-events: none; }
+.pw-flow.scene-0 .pw-slide-racks:hover { opacity: 0.6; }
 
 /* Cover-flow arrows */
 .pw-nav {
-  position: absolute; top: 50%; transform: translateY(-50%); z-index: 5;
-  display: flex; flex-direction: column; align-items: center; gap: 4px;
-  background: rgba(24, 26, 33, 0.82); color: #e6e7ea;
-  border: 1px solid #3a3e4b; border-radius: 12px; padding: 12px 10px; cursor: pointer;
+  position: absolute; top: 58%; transform: translateY(-50%); z-index: 5;
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+  background: rgba(24, 26, 33, 0.85); color: #e6e7ea;
+  border: 1px solid #3a3e4b; border-radius: 10px; padding: 7px 6px; cursor: pointer;
   backdrop-filter: blur(3px); transition: background 0.2s, transform 0.2s;
 }
 .pw-nav[hidden] { display: none; }
 .pw-nav:hover { background: #2b2f3c; }
 .pw-nav-next { right: 14px; }
-.pw-nav-prev { left: 14px; }
-.pw-nav-chev { font-size: 26px; line-height: 1; color: #ff8a3d; }
-.pw-nav-label { font-size: 10px; font-weight: 700; max-width: 66px; text-align: center; color: #aeb3c0; }
+.pw-nav-prev { left: 12px; }
+.pw-nav-chev { font-size: 19px; line-height: 1; color: #ff8a3d; }
+.pw-nav-label { font-size: 8.5px; font-weight: 700; max-width: 48px; text-align: center; color: #aeb3c0; line-height: 1.1; }
 
 /* A rack panel — FIXED width (solid object); all panels stretch to the same height. */
 .pw-panel {
@@ -84,7 +84,7 @@
 }
 /* The three racks are IDENTICAL in size — wide enough for the connectors (no overflow). */
 .pw-rack { width: 284px; }
-.pw-board { width: 430px; }
+.pw-board { width: 486px; }
 
 /* powerCON connector — drawn as SVG (connectors.tsx): a square flange (white or blue) with two
    diagonal screws and a round keyed boss. Same size in EVERY rack. */

@@ -153,8 +153,8 @@ export function PowerPatchView() {
         }
       }
       if (rk) {
-        // the three racks fill the screen as much as possible
-        const k = Math.min((st.clientWidth - 96) / rk.offsetWidth, availH / rk.offsetHeight, 2.4)
+        // the three racks fill the screen, leaving side room so the back-arrow never sits on a rack
+        const k = Math.min((st.clientWidth - 150) / rk.offsetWidth, availH / rk.offsetHeight, 2.4)
         if (k > 0 && isFinite(k)) setKRacks(k)
       }
     }
@@ -196,7 +196,7 @@ export function PowerPatchView() {
 
       <div className={`pw-stage pw-flow scene-${scene}`} ref={stageRef}>
         {/* Scene 0 — Cuadro eléctrico (breaker board): the first thing you see */}
-        <section className="pw-slide pw-slide-board" onClick={scene !== 0 ? () => setScene(0) : undefined} aria-hidden={scene !== 0}>
+        <section className="pw-slide pw-slide-board" aria-hidden={scene !== 0}>
           <div className="pw-slide-inner" ref={boardRef} style={{ transform: `scale(${kBoard})` }}>
             <section className="pw-panel pw-board">
               <header>{t('power.board')}</header>
