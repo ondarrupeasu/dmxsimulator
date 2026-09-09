@@ -147,9 +147,9 @@ export function PowerPatchView() {
               <div className="pw-dimmer-unit" key={u}>
                 <div className="pw-dimmer-brand">TINHAO · AT2000⁺</div>
                 <div className="pw-dimmer-row">
+                  {/* LCD is OFF (dark, blank) until the rack is powered — that state lands with the
+                      interaction phase; for now the rack has no power so the screen shows nothing. */}
                   <div className="pw-dimmer-screen" title={t('power.tip.dimmerScreen')}>
-                    <span className="pw-lcd-line">AT2000⁺</span>
-                    <span className="pw-lcd-line pw-lcd-dim">DMX {String(u * 12 + 1).padStart(3, '0')}</span>
                     <div className="pw-dimmer-btns"><i /><i /><i /><i /></div>
                   </div>
                   <div className="pw-dimmer-chans">

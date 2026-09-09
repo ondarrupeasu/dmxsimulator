@@ -34,17 +34,17 @@
   overflow: hidden; padding: 14px;
 }
 .pw-content {
-  display: flex; gap: 16px; align-items: flex-start;
+  display: flex; gap: 16px; align-items: stretch; /* all panels share the tallest one's height */
   transform-origin: center center; will-change: transform;
 }
 
-/* A rack panel — FIXED size (solid object). */
+/* A rack panel — FIXED width (solid object); all panels stretch to the same height. */
 .pw-panel {
   background: linear-gradient(#20222b, #191b22);
   border: 1px solid #2c2f3a; border-radius: 10px;
   padding: 12px; display: flex; flex-direction: column; gap: 10px;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
-  height: 560px; box-sizing: border-box; flex: none;
+  min-height: 540px; box-sizing: border-box; flex: none;
 }
 .pw-panel > header {
   font-size: 12px; font-weight: 800; letter-spacing: 1px; color: #aeb3c0; text-align: center;
@@ -102,15 +102,20 @@
 
 .pw-mod-name { font-size: 6.5px; color: #9297a3; text-align: center; margin-top: 3px; line-height: 1.12; word-break: break-word; min-height: 8px; }
 
-/* ---- Dimmer rack ---- */
-.pw-dimmer-unit { background: #1b2740; border: 1px solid #2a3a5c; border-radius: 8px; padding: 8px; flex: none; }
+/* ---- Dimmer rack ---- : the 3 units grow to fill the rack height (like the real rack devices),
+   DIRECTOS fixed at the bottom, so the breakers reach down. */
+.pw-dimmer-unit {
+  background: #1b2740; border: 1px solid #2a3a5c; border-radius: 8px; padding: 8px;
+  flex: 1 1 0; display: flex; flex-direction: column; justify-content: center;
+}
 .pw-dimmer-brand { font-size: 10px; font-weight: 700; color: #8fb0e6; margin-bottom: 6px; }
 .pw-dimmer-row { display: flex; gap: 6px; align-items: stretch; }
+/* Dimmer LCD — OFF by default (dark, blank). Add .on (interaction phase) to light it up. */
 .pw-dimmer-screen {
-  width: 46px; flex: none; background: #081018; border: 1px solid #143050; border-radius: 3px;
-  padding: 4px 3px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
-  box-shadow: inset 0 0 7px rgba(50, 140, 230, 0.28);
+  width: 46px; flex: none; background: #05080c; border: 1px solid #10151d; border-radius: 3px;
+  padding: 4px 3px; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 2px;
 }
+.pw-dimmer-screen.on { background: #081018; border-color: #143050; box-shadow: inset 0 0 7px rgba(50, 140, 230, 0.28); justify-content: center; }
 .pw-lcd-line { font: 700 7px/1.1 ui-monospace, 'SF Mono', monospace; color: #63d2ff; letter-spacing: 0.3px; text-shadow: 0 0 3px rgba(99, 210, 255, 0.6); }
 .pw-lcd-dim { color: #3f8fc9; font-weight: 500; }
 .pw-dimmer-btns { display: flex; gap: 2px; margin-top: 3px; }
@@ -134,7 +139,7 @@
 .lg-mcb::after { content: ''; position: absolute; left: 50%; bottom: 2px; transform: translateX(-50%); width: 3px; height: 6px; background: #2ac26a; border-radius: 1px; }
 .lg-directo { background: #e9e94a; }
 
-.pw-directos { background: #14151b; border: 1px solid #2a2d38; border-radius: 8px; padding: 8px; margin-top: auto; }
+.pw-directos { background: #14151b; border: 1px solid #2a2d38; border-radius: 8px; padding: 8px; }
 .pw-directos-label { font-size: 11px; font-weight: 800; letter-spacing: 3px; text-align: center; color: #cfd3dc; margin-bottom: 6px; }
 /* One long colour bar per group of four outlets (4 yellow, 4 orange, 4 pink). */
 .pw-directos-bars { display: flex; gap: 3px; margin-bottom: 5px; }
