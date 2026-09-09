@@ -111,24 +111,27 @@
   position: relative; width: 100%; height: 46px;
   background: linear-gradient(#f6f7fa, #e0e2e7); border: 1px solid #adb2bd; border-radius: 2px;
   box-shadow: inset 0 1px 0 #fff, 0 1px 2px rgba(0, 0, 0, 0.3);
-  display: flex; flex-direction: column; align-items: center; gap: 4px; padding-top: 6px;
+  display: flex; flex-direction: column; align-items: center; padding: 5px 0 6px;
 }
 .pw-mod.pw-main .pw-mod-body { background: linear-gradient(#3a3c44, #23252c); border-color: #131419; }
 
-/* RCD blue TEST push button (round, at the top of the module — like the real differential). */
+/* RCD blue half-dome TEST button (small, at the top of the box — like the real differential). */
 .pw-rcd-test {
-  width: 9px; height: 9px; border-radius: 50%; flex: none;
-  background: radial-gradient(circle at 40% 35%, #5b86ff, #1e46c8); border: 1px solid #163a9e;
+  width: 12px; height: 6px; border-radius: 6px 6px 0 0; flex: none; margin-bottom: 3px;
+  background: linear-gradient(#5b86ff, #1e46c8); border: 1px solid #163a9e; border-bottom: none;
 }
 
-/* DIN-breaker toggle — a small rocker near the top. ONE common handle (multi-pole breakers move
-   all poles together). MCB grey, RCD blue, main black; UP = on. */
-.pw-lever { width: 60%; height: 15px; border-radius: 2px; position: relative; background: linear-gradient(#e9ebef, #cfd2d8); border: 1px solid #9aa0ad; }
-.pw-lever::after { content: ''; position: absolute; left: 1.5px; right: 1.5px; height: 6px; border-radius: 1px; background: #2b2d34; top: 1.5px; }
-.pw-lever:not(.on)::after { top: auto; bottom: 1.5px; }
-.pw-mod.pw-rcd .pw-lever { background: linear-gradient(#4e6ae0, #3348b8); border-color: #26379c; }
-.pw-mod.pw-rcd .pw-lever::after { background: #e6eaf8; }
-.pw-mod.pw-main .pw-lever { width: 70%; height: 18px; }
+/* N pole toggles (small T-levers) with a common tie bar for multi-pole breakers. UP = on. The RCD's
+   poles are blue, the main's sit on a black body. */
+.pw-toggles { position: relative; display: flex; gap: 1.5px; justify-content: center; margin-top: auto; }
+.pw-tie { position: absolute; top: -2px; left: 0; right: 0; height: 3px; border-radius: 1px; background: linear-gradient(#9db8e8, #6d8bc8); }
+.pw-mod.pw-main .pw-tie { background: linear-gradient(#5a5d68, #3a3c44); }
+.pw-pole { width: 5px; height: 15px; border-radius: 1px; position: relative; background: linear-gradient(#eef0f3, #d3d6dc); border: 1px solid #a3a8b3; }
+.pw-pole::after { content: ''; position: absolute; left: 0.5px; right: 0.5px; height: 6px; border-radius: 1px; background: #2b2d34; top: 1px; }
+.pw-pole:not(.on)::after { top: auto; bottom: 1px; }
+.pw-mod.pw-rcd .pw-pole { width: 7px; background: linear-gradient(#5e79e6, #3a4fbe); border-color: #2a3fa0; }
+.pw-mod.pw-rcd .pw-pole::after { background: #e6eaf8; }
+.pw-mod.pw-main .pw-pole { height: 17px; }
 
 .pw-mod-name { font-size: 6.5px; color: #9297a3; text-align: center; margin-top: 3px; line-height: 1.12; word-break: break-word; min-height: 8px; }
 
@@ -150,8 +153,8 @@
 .pw-dimmer-btns > i { width: 4px; height: 4px; border-radius: 50%; background: #294056; }
 .pw-dimmer-chans { display: grid; grid-template-columns: repeat(12, 1fr); gap: 2px; }
 .pw-mcb { display: flex; flex-direction: column; align-items: center; }
-.pw-mcb-lever { width: 8px; height: 16px; border-radius: 1px; background: #d7dae0; border: 1px solid #9aa0ad; position: relative; }
-.pw-mcb-lever::after { content: ''; position: absolute; left: 1px; right: 1px; top: 1px; height: 6px; border-radius: 1px; background: #33363f; }
+.pw-mcb-lever { width: 6px; height: 14px; border-radius: 1px; background: linear-gradient(#eef0f3, #d3d6dc); border: 1px solid #a3a8b3; position: relative; }
+.pw-mcb-lever::after { content: ''; position: absolute; left: 0.5px; right: 0.5px; top: 1px; height: 5px; border-radius: 1px; background: #2b2d34; }
 .pw-mcb > b { font-size: 7px; color: #9aa0ad; font-weight: 500; margin-top: 2px; }
 /* Black ventilated blank panel that fills the space between/after the thin dimmer devices. */
 .pw-vent {

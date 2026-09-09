@@ -55,7 +55,6 @@ const BREAKER_ROWS: { label: string; mods: Mod[] }[] = [
   },
 ]
 
-const MOD_W: Record<Mod['kind'], number> = { main: 78, rcd: 34, mcb: 0 }
 
 function range(n: number, from = 1) {
   return Array.from({ length: n }, (_, i) => i + from)
@@ -106,17 +105,21 @@ const CIRCUITOS_ROWS: (number | null)[][] = Array.from({ length: 6 }, (_, r) => 
   return [a + 1, a + 2, null, a + 3, a + 4, null, null, a + 5, a + 6, null, a + 7, a + 8]
 })
 
-/** One DIN module (main / RCD / MCB). A multi-pole breaker has ONE common handle (a single toggle
- *  bar that raises/lowers all poles together) — up = ON. RCDs show the blue test button. */
+/** One DIN module drawn like the real device: N pole toggles (small T-levers, up = ON) joined by a
+ *  common handle bar for multi-pole; a differential (RCD) is a box with a blue half-dome TEST button
+ *  and a blue handle; the main is a black 4-pole switch. */
 function Module({ m, title, testTitle }: { m: Mod; title: string; testTitle: string }) {
   const poles = m.kind === 'main' ? 4 : m.kind === 'rcd' ? 2 : m.poles ?? 1
-  const width = m.kind === 'mcb' ? Math.max(20, poles * 9 + 8) : MOD_W[m.kind]
+  const width = m.kind === 'main' ? 74 : m.kind === 'rcd' ? 40 : Math.max(16, poles * 8 + 6)
   return (
     <div className={`pw-mod pw-${m.kind}`} style={{ width }} title={m.name ? `${m.name} — ${title}` : title}>
       <span className="pw-mod-tab" style={{ background: m.tab ?? 'transparent' }} />
       <div className="pw-mod-body">
         {m.kind === 'rcd' && <span className="pw-rcd-test" title={testTitle} />}
-        <span className="pw-lever on" />
+        <div className="pw-toggles">
+          {poles > 1 && <span className="pw-tie" />}
+          {Array.from({ length: poles }).map((_, i) => <span key={i} className="pw-pole on" />)}
+        </div>
       </div>
       <span className="pw-mod-name">{m.name ?? ''}</span>
     </div>
