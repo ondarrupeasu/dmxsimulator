@@ -245,13 +245,20 @@ function Module({ m, title, on, onToggle, onTest }: { m: Mod; title: string; on:
 
 const HELP_SECTIONS = ['general', 'diff', 'mcb', 'dimmer', 'directos', 'patch', 'rule'] as const
 
+// Persist the breaker states + patch cables in this browser so students don't re-cable every visit.
+const STORE_KEY = 'dmxsim.power.v1'
+type PowerState = { breakerOn?: Record<string, boolean>; patches?: { from: string; to: string }[] }
+function loadPower(): PowerState {
+  try { return JSON.parse(localStorage.getItem(STORE_KEY) || '{}') as PowerState } catch { return {} }
+}
+
 export function PowerPatchView() {
   const { t } = useTranslation()
   const close = () => useShowStore.getState().setPowerOpen(false)
   const [showHelp, setShowHelp] = useState(false)
 
   // --- Interaction: breakers toggle on/off, and powerCON cables patch CANALES <-> CIRCUITOS ---
-  const [breakerOn, setBreakerOn] = useState<Record<string, boolean>>({})
+  const [breakerOn, setBreakerOn] = useState<Record<string, boolean>>(() => loadPower().breakerOn ?? {})
   const isOn = (id: string) => breakerOn[id] ?? true
   const toggle = (id: string) => setBreakerOn((s) => ({ ...s, [id]: !(s[id] ?? true) }))
   const trip = (id: string) => setBreakerOn((s) => ({ ...s, [id]: false })) // TEST button: only ever OFF
@@ -261,7 +268,11 @@ export function PowerPatchView() {
   const rackPowered = (u: number) => isOn('b-0-0') && isOn(`b-1-${u * 2}`) && isOn(`b-1-${u * 2 + 1}`)
 
   const [sel, setSel] = useState<string | null>(null) // a connector waiting to be patched
-  const [patches, setPatches] = useState<{ from: string; to: string }[]>([])
+  const [patches, setPatches] = useState<{ from: string; to: string }[]>(() => loadPower().patches ?? [])
+  useEffect(() => {
+    try { localStorage.setItem(STORE_KEY, JSON.stringify({ breakerOn, patches })) } catch { /* ignore quota/private-mode */ }
+  }, [breakerOn, patches])
+  const resetAll = () => { setBreakerOn({}); setPatches([]); setSel(null); try { localStorage.removeItem(STORE_KEY) } catch { /* ignore */ } }
   const patched = new Set<string>(patches.flatMap((p) => [p.from, p.to]))
   // sources feed power out (dimmer channels, directos); sinks receive it (stage circuits, regletas).
   const roleOf = (id: string) => (id.startsWith('canal') || id.startsWith('directo') ? 'src' : 'sink')
@@ -363,6 +374,7 @@ export function PowerPatchView() {
         <span className="pw-tag" title={t('common.pwaTag')}>PWA</span>
         <div className="pw-spacer" />
         <div className="pw-hint">{t('power.hint')}</div>
+        <button className="pw-help-btn" onClick={resetAll} title={t('power.resetTip')}>↺ {t('power.reset')}</button>
         <button className="pw-help-btn" onClick={() => setShowHelp((v) => !v)}>❔ {t('power.help.title')}</button>
         <button className="pw-close" onClick={close} title={t('power.close')}>✕</button>
       </div>

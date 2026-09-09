@@ -317,7 +317,9 @@
     "data": "DMX SPLITTER · TINHAO S4",
     "dataBars": "Bars 1-4",
     "dataNote": "The DATA side: the Quartz desk sends one DMX line to the S4 splitter, which fans it out to 4 outputs — one per lighting bar. A fixture needs BOTH power (the board/dimmers) and this DMX signal. The S4 lives behind the patch racks.",
-    "regletas": "POWER STRIPS"
+    "regletas": "POWER STRIPS",
+    "reset": "Reset",
+    "resetTip": "Clear all cables and set every breaker back ON"
   },
   "run": {
     "title": "Run",

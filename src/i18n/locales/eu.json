@@ -317,7 +317,9 @@
     "data": "DMX SPLITTERRA · TINHAO S4",
     "dataBars": "1-4 barrak",
     "dataNote": "DATUEN aldea: Quartz mahaiak DMX linea bat bidaltzen dio S4 splitterrari, eta honek 4 irteeratan banatzen du — barra bakoitzeko bat. Foku batek korrontea (koadroa/dimmerrak) ETA DMX seinale hau behar ditu. S4a patch rack-en atzean dago.",
-    "regletas": "INDAR-ERREGELETAK"
+    "regletas": "INDAR-ERREGELETAK",
+    "reset": "Berrezarri",
+    "resetTip": "Kendu kable guztiak eta etengailu guztiak igota utzi"
   },
   "run": {
     "title": "Exekutatu",
