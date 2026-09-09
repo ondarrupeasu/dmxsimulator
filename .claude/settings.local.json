@@ -24,7 +24,15 @@
       "WebFetch(domain:forum.avolites.com)",
       "mcp__visualize__read_me",
       "mcp__visualize__show_widget",
-      "WebFetch(domain:open-fixture-library.org)"
+      "WebFetch(domain:open-fixture-library.org)",
+      "mcp__claude-in-chrome__list_connected_browsers",
+      "mcp__claude-in-chrome__navigate",
+      "mcp__claude-in-chrome__computer",
+      "mcp__claude-in-chrome__find",
+      "mcp__claude-in-chrome__tabs_context_mcp",
+      "mcp__claude-in-chrome__get_page_text",
+      "mcp__claude-in-chrome__read_page",
+      "mcp__claude-in-chrome__javascript_tool"
     ]
   }
 }

@@ -25,3 +25,6 @@ dist-ssr
 
 # Large third-party reference files (Avolites/Capture demos) — analyse locally, never ship
 public/CAPTURE/
+
+# Local-only reference photos (Tartanga panels, etc.)
+docs/refs/

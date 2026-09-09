@@ -1,6 +1,8 @@
 import { Fragment, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useShowStore } from '../../store/showStore'
+import { MCB, RCD, MainSwitch, ChannelBreaker } from './breakers'
+import { PowerCon } from './connectors'
 import './power.css'
 
 /**
@@ -60,11 +62,10 @@ function range(n: number, from = 1) {
   return Array.from({ length: n }, (_, i) => i + from)
 }
 
-/** A panel-mount powerCON connector — white or blue, or a capped (blanked-off) position. Same
- *  size everywhere. */
+/** A panel-mount powerCON connector — white or blue, or a capped (blanked-off) position, drawn as
+ *  SVG (see connectors.tsx). Same size everywhere. */
 function Pcon({ color = 'blue', capped = false }: { color?: 'white' | 'blue'; capped?: boolean }) {
-  if (capped) return <span className="pw-pcon capped" />
-  return <span className={`pw-pcon ${color}`}><i /></span>
+  return <PowerCon color={color} capped={capped} />
 }
 
 /** A patch bay (CANALES / CIRCUITOS): rows of numbered connectors (null = capped), with a black
@@ -105,23 +106,15 @@ const CIRCUITOS_ROWS: (number | null)[][] = Array.from({ length: 6 }, (_, r) => 
   return [a + 1, a + 2, null, a + 3, a + 4, null, null, a + 5, a + 6, null, a + 7, a + 8]
 })
 
-/** One DIN module drawn like the real device: N pole toggles (small T-levers, up = ON) joined by a
- *  common handle bar for multi-pole; a differential (RCD) is a box with a blue half-dome TEST button
- *  and a blue handle; the main is a black 4-pole switch. */
-function Module({ m, title, testTitle }: { m: Mod; title: string; testTitle: string }) {
-  const poles = m.kind === 'main' ? 4 : m.kind === 'rcd' ? 2 : m.poles ?? 1
-  const width = m.kind === 'main' ? 74 : m.kind === 'rcd' ? 40 : Math.max(16, poles * 8 + 6)
+/** One DIN module drawn as an SVG standard device (see breakers.tsx): the black 4-pole main
+ *  isolator, a differential (RCD, box + blue half-dome TEST + blue handle), or a magnetothermic
+ *  (MCB, 1-4 poles under a common tie-bar). An optional colour tab codes the FUERZA phases. */
+function Module({ m, title }: { m: Mod; title: string }) {
   return (
-    <div className={`pw-mod pw-${m.kind}`} style={{ width }} title={m.name ? `${m.name} — ${title}` : title}>
-      <span className="pw-mod-tab" style={{ background: m.tab ?? 'transparent' }} />
-      <div className="pw-mod-body">
-        {m.kind === 'rcd' && <span className="pw-rcd-test" title={testTitle} />}
-        <div className="pw-toggles">
-          {poles > 1 && <span className="pw-tie" />}
-          {Array.from({ length: poles }).map((_, i) => <span key={i} className="pw-pole on" />)}
-        </div>
-      </div>
-      <span className="pw-mod-name">{m.name ?? ''}</span>
+    <div className={`pw-mod pw-${m.kind}`} title={m.name ? `${m.name} — ${title}` : title}>
+      {m.tab && <span className="pw-mod-tab" style={{ background: m.tab }} />}
+      {m.kind === 'main' ? <MainSwitch /> : m.kind === 'rcd' ? <RCD /> : <MCB poles={m.poles ?? 1} />}
+      {m.name && <span className="pw-mod-name">{m.name}</span>}
     </div>
   )
 }
@@ -193,7 +186,7 @@ export function PowerPatchView() {
                   <div className="pw-row-breakers">
                     {row.mods.map((m, j) => {
                       const tip = m.kind === 'main' ? 'general' : m.kind === 'rcd' ? 'diff' : 'mcb'
-                      return <Module key={j} m={m} title={t(`power.tip.${tip}`)} testTitle={t('power.tip.test')} />
+                      return <Module key={j} m={m} title={t(`power.tip.${tip}`)} />
                     })}
                   </div>
                 </div>
@@ -216,7 +209,7 @@ export function PowerPatchView() {
                   </div>
                   <div className="pw-dimmer-chans">
                     {range(12, u * 12 + 1).map((n) => (
-                      <div className="pw-mcb" key={n} title={`${n} · ${t('power.tip.dimmerChan')}`}><span className="pw-mcb-lever" /><b>{n}</b></div>
+                      <div className="pw-mcb" key={n} title={`${n} · ${t('power.tip.dimmerChan')}`}><ChannelBreaker /><b>{n}</b></div>
                     ))}
                   </div>
                 </div>
