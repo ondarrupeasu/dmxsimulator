@@ -257,7 +257,27 @@
     "close": "Close",
     "hint": "Tartanga's real racks — preview (interaction coming soon)",
     "board": "BREAKER BOARD",
-    "dimmers": "DIMMERS + DIRECTOS"
+    "dimmers": "DIMMERS + DIRECTOS",
+    "legendTitle": "What is each part?",
+    "lg": {
+      "diff": "RCD (differential)",
+      "test": "Test button",
+      "mcb": "Circuit breaker (MCB)",
+      "directo": "DIRECTOS"
+    },
+    "tip": {
+      "general": "GENERAL — the main switch: cuts all the power to the board.",
+      "diff": "RCD / residual-current device: protects PEOPLE — it trips if it detects current leaking to earth (e.g. a bare wire someone touches).",
+      "test": "RCD test button: press it to simulate a leak and check the RCD trips. Worth testing now and then.",
+      "mcb": "MCB / circuit breaker: protects the CABLE — it trips on overload or short-circuit.",
+      "dimmerChan": "Dimmer channel — one dimmable output, protected by its breaker.",
+      "directos": "DIRECTOS: constant (un-dimmed) power. LED / DMX fixtures plug here — NEVER into a dimmer or they break.",
+      "base32": "32 A power outlet (sound / SOINUA).",
+      "emerg": "Emergency-lighting circuit.",
+      "canales": "Dimmer channel outputs (1-36) — the dimmers' regulated outputs.",
+      "circuitos": "Stage circuits (1-48): the fixed wiring to the bars. Patch one to a dimmer channel with a jumper to control it.",
+      "dimmerScreen": "Dimmer display — shows the channel / DMX info once the rack is powered on."
+    }
   },
   "run": {
     "title": "Run",

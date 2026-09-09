@@ -19,29 +19,43 @@ const YELLOW = '#e9e94a'
 const ORANGE = '#ff7a1a'
 const PINK = '#ff2e88'
 
-type Bk = { name: string; tab?: string; rcd?: boolean; main?: boolean }
-// Breaker board (cuadro eléctrico) rows, read off the real panel (IMG_7399). RCDs (differentials)
-// carry a blue test button.
-const BREAKER_ROWS: { label: string; breakers: Bk[] }[] = [
-  { label: 'GENERAL', breakers: [{ name: 'GENERAL', main: true }] },
-  { label: 'DIMMERS', breakers: [{ name: 'DIMMER-1', rcd: true }, { name: 'DIMMER-2', rcd: true }, { name: 'DIMMER-3', rcd: true }] },
-  { label: 'SOINUA · 32A', breakers: [{ name: 'BASE 32A-1', rcd: true }, { name: 'BASE 32A-2', rcd: true }] },
+// A single DIN module: the black main switch, a differential (RCD, with a blue test button and a
+// 2-pole lever), or a magnetothermic (MCB, 1-4 poles). Read off the real panel (IMG_7399).
+type Mod = { kind: 'main' | 'rcd' | 'mcb'; name?: string; tab?: string; poles?: number }
+const BREAKER_ROWS: { label: string; mods: Mod[] }[] = [
+  { label: 'GENERAL', mods: [{ kind: 'main', name: 'GENERAL' }] },
   {
-    label: 'FUERZA / DIRECTOS',
-    breakers: [
-      { name: 'DIFERENCIAL FUERZA', rcd: true, tab: PINK },
-      { name: 'CALEFACTOR RACK' },
-      { name: 'RESERVA' },
-      { name: 'DIFERENCIAL FUERZA', rcd: true, tab: ORANGE },
-      { name: 'RACK' },
-      { name: 'ALTAVOZ SALA', tab: YELLOW },
+    label: 'DIMMERS',
+    mods: [
+      { kind: 'rcd' }, { kind: 'mcb', name: 'DIMMER-1', poles: 4 },
+      { kind: 'rcd' }, { kind: 'mcb', name: 'DIMMER-2', poles: 4 },
+      { kind: 'rcd' }, { kind: 'mcb', name: 'DIMMER-3', poles: 4 },
     ],
   },
-  { label: 'EMERGENCIA', breakers: [{ name: 'Emerg', rcd: true }, { name: 'Emerg', rcd: true }, { name: 'Emerg', rcd: true }] },
+  {
+    label: 'SOINUA · 32A',
+    mods: [
+      { kind: 'rcd' }, { kind: 'mcb', name: 'BASE 32A-1', poles: 2 },
+      { kind: 'rcd' }, { kind: 'mcb', name: 'BASE 32A-2', poles: 2 },
+    ],
+  },
+  {
+    label: 'FUERZA / DIRECTOS',
+    mods: [
+      { kind: 'rcd', tab: PINK, name: 'DIF. FUERZA-1' }, { kind: 'mcb', name: 'RACK 1-4', poles: 4 }, { kind: 'mcb', name: 'CALEFACTOR' },
+      { kind: 'rcd', tab: ORANGE, name: 'DIF. FUERZA-2' }, { kind: 'mcb', name: 'RACK 5-8', poles: 4 }, { kind: 'mcb', name: 'RESERVA' },
+      { kind: 'rcd', tab: YELLOW, name: 'DIF. FUERZA-3' }, { kind: 'mcb', name: 'RACK 9-12', poles: 4 }, { kind: 'mcb', name: 'ALMACÉN' },
+    ],
+  },
+  {
+    label: 'EMERGENCIA',
+    mods: [
+      { kind: 'rcd' }, { kind: 'mcb', name: 'Emerg 1' }, { kind: 'rcd' }, { kind: 'mcb', name: 'Emerg 2' }, { kind: 'rcd' }, { kind: 'mcb', name: 'Emerg 3' },
+    ],
+  },
 ]
 
-// DIRECTOS outlets (constant power): 4 yellow, 4 orange, 4 pink (IMG_7394).
-const DIRECTOS: string[] = [YELLOW, YELLOW, YELLOW, YELLOW, ORANGE, ORANGE, ORANGE, ORANGE, PINK, PINK, PINK, PINK]
+const MOD_W: Record<Mod['kind'], number> = { main: 78, rcd: 34, mcb: 0 }
 
 function range(n: number, from = 1) {
   return Array.from({ length: n }, (_, i) => i + from)
@@ -56,16 +70,20 @@ function Socket({ n }: { n: number }) {
   )
 }
 
-/** A breaker. RCD (differential) = wider, with a blue test button; main = the black-bezel general. */
-function Breaker({ name, tab, rcd, main, on = true }: Bk & { on?: boolean }) {
+/** One DIN module (main / RCD / MCB) with its lever(s) up = ON. RCDs show the blue test button. */
+function Module({ m, title, testTitle }: { m: Mod; title: string; testTitle: string }) {
+  const poles = m.kind === 'main' ? 3 : m.kind === 'rcd' ? 2 : m.poles ?? 1
+  const width = m.kind === 'mcb' ? Math.max(24, poles * 7 + 14) : MOD_W[m.kind]
   return (
-    <div className={`pw-breaker${rcd ? ' rcd' : ''}${main ? ' main' : ''}`} title={name}>
-      <span className="pw-breaker-tab" style={{ background: tab ?? 'transparent' }} />
-      <div className="pw-breaker-body">
-        {rcd && <span className="pw-rcd-test" title="Test" />}
-        <span className={`pw-breaker-sw${on ? ' on' : ''}`}><span /></span>
+    <div className={`pw-mod pw-${m.kind}`} style={{ width }} title={m.name ? `${m.name} — ${title}` : title}>
+      <span className="pw-mod-tab" style={{ background: m.tab ?? 'transparent' }} />
+      <div className="pw-mod-body">
+        {m.kind === 'rcd' && <span className="pw-rcd-test" title={testTitle} />}
+        <div className="pw-levers">
+          {Array.from({ length: poles }).map((_, i) => <span key={i} className="pw-lever on" />)}
+        </div>
       </div>
-      <span className="pw-breaker-name">{name}</span>
+      <span className="pw-mod-name">{m.name ?? ''}</span>
     </div>
   )
 }
@@ -112,7 +130,10 @@ export function PowerPatchView() {
                 <div className="pw-board-row" key={i}>
                   <div className="pw-row-label">{row.label}</div>
                   <div className="pw-row-breakers">
-                    {row.breakers.map((b, j) => <Breaker key={j} {...b} />)}
+                    {row.mods.map((m, j) => {
+                      const tip = m.kind === 'main' ? 'general' : m.kind === 'rcd' ? 'diff' : 'mcb'
+                      return <Module key={j} m={m} title={t(`power.tip.${tip}`)} testTitle={t('power.tip.test')} />
+                    })}
                   </div>
                 </div>
               ))}
@@ -125,21 +146,30 @@ export function PowerPatchView() {
             {[0, 1, 2].map((u) => (
               <div className="pw-dimmer-unit" key={u}>
                 <div className="pw-dimmer-brand">TINHAO · AT2000⁺</div>
-                <div className="pw-dimmer-chans">
-                  {range(12, u * 12 + 1).map((n) => (
-                    <div className="pw-mcb" key={n} title={`Canal ${n}`}><span /><b>{n}</b></div>
-                  ))}
+                <div className="pw-dimmer-row">
+                  <div className="pw-dimmer-screen" title={t('power.tip.dimmerScreen')}>
+                    <span className="pw-lcd-line">AT2000⁺</span>
+                    <span className="pw-lcd-line pw-lcd-dim">DMX {String(u * 12 + 1).padStart(3, '0')}</span>
+                    <div className="pw-dimmer-btns"><i /><i /><i /><i /></div>
+                  </div>
+                  <div className="pw-dimmer-chans">
+                    {range(12, u * 12 + 1).map((n) => (
+                      <div className="pw-mcb" key={n} title={`${n} · ${t('power.tip.dimmerChan')}`}><span className="pw-mcb-lever" /><b>{n}</b></div>
+                    ))}
+                  </div>
                 </div>
               </div>
             ))}
-            <div className="pw-directos">
+            <div className="pw-directos" title={t('power.tip.directos')}>
               <div className="pw-directos-label">DIRECTOS</div>
+              <div className="pw-directos-bars">
+                <span style={{ background: PINK }} />
+                <span style={{ background: ORANGE }} />
+                <span style={{ background: YELLOW }} />
+              </div>
               <div className="pw-directos-row">
-                {DIRECTOS.map((c, i) => (
-                  <div className="pw-socket" key={i} title={`Directo ${i + 1}`}>
-                    <span className="pw-directos-tab" style={{ background: c }} />
-                    <span className="pw-socket-ring" />
-                  </div>
+                {range(12).map((n) => (
+                  <span className="pw-directos-socket" key={n} title={`Directo ${n} — ${t('power.tip.directos')}`} />
                 ))}
               </div>
             </div>
@@ -147,16 +177,24 @@ export function PowerPatchView() {
 
           {/* 3 — CANALES DE DIMMERS (dimmer outputs 1-36) */}
           <section className="pw-panel pw-rack pw-bay">
-            <header>CANALES DE DIMMERS</header>
+            <header title={t('power.tip.canales')}>CANALES DE DIMMERS</header>
             <div className="pw-grid">{range(36).map((n) => <Socket key={n} n={n} />)}</div>
           </section>
 
           {/* 4 — CIRCUITOS (stage circuits 1-48) */}
           <section className="pw-panel pw-rack pw-bay">
-            <header>CIRCUITOS</header>
+            <header title={t('power.tip.circuitos')}>CIRCUITOS</header>
             <div className="pw-grid">{range(48).map((n) => <Socket key={n} n={n} />)}</div>
           </section>
         </div>
+      </div>
+
+      <div className="pw-legend">
+        <span className="pw-legend-title">{t('power.legendTitle')}</span>
+        <span className="pw-legend-item" title={t('power.tip.diff')}><i className="lg lg-diff" />{t('power.lg.diff')}</span>
+        <span className="pw-legend-item" title={t('power.tip.test')}><i className="lg lg-test" />{t('power.lg.test')}</span>
+        <span className="pw-legend-item" title={t('power.tip.mcb')}><i className="lg lg-mcb" />{t('power.lg.mcb')}</span>
+        <span className="pw-legend-item" title={t('power.tip.directos')}><i className="lg lg-directo" />{t('power.lg.directo')}</span>
       </div>
     </div>
   )

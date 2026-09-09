@@ -63,49 +63,86 @@
 }
 .pw-socket-num { font-size: 10px; color: #9aa0ad; }
 
-/* Socket bays (CANALES / CIRCUITOS) */
+/* Socket bays (CANALES / CIRCUITOS). Rows spread to fill the whole rack height — CANALES has
+   fewer sockets but still reaches the bottom, like the real racks. */
 .pw-bay .pw-grid {
   flex: 1; display: grid; grid-template-columns: repeat(6, 1fr);
-  gap: 10px 4px; align-content: start; overflow: hidden;
+  column-gap: 4px; align-content: space-between; justify-items: center; overflow: hidden;
 }
 
 /* ---- Breaker board ---- */
 .pw-board-rows { display: flex; flex-direction: column; gap: 10px; flex: 1; }
 .pw-board-row { background: #14151b; border: 1px solid #2a2d38; border-radius: 8px; padding: 7px 9px; }
 .pw-row-label { font-size: 10px; font-weight: 700; color: #7f8593; letter-spacing: 0.5px; margin-bottom: 5px; }
-.pw-row-breakers { display: flex; gap: 5px; align-items: flex-start; }
+/* DIN-rail modules: main switch (black), RCD/differential (blue test button + 2-pole lever) and
+   MCBs (1-4 pole levers). Levers UP = ON. */
+.pw-row-breakers { display: flex; gap: 3px; align-items: flex-start; padding-top: 2px; }
+.pw-mod { display: flex; flex-direction: column; align-items: center; flex: none; }
+.pw-mod-tab { width: 90%; height: 4px; border-radius: 2px; margin-bottom: 2px; }
+.pw-mod-body {
+  position: relative; width: 100%; height: 44px;
+  background: linear-gradient(#f4f5f8, #d9dbe1); border: 1px solid #b3b8c2; border-radius: 3px;
+  box-shadow: inset 0 1px 0 #fff, 0 1px 2px rgba(0, 0, 0, 0.35);
+  display: flex; align-items: flex-end; justify-content: center; padding-bottom: 5px;
+}
+.pw-mod.pw-main .pw-mod-body { background: linear-gradient(#35373f, #202128); border-color: #131419; }
 
-.pw-breaker { display: flex; flex-direction: column; align-items: center; width: 44px; }
-.pw-breaker.rcd { width: 50px; }
-.pw-breaker.main { width: 84px; }
-.pw-breaker-tab { width: 100%; height: 4px; border-radius: 2px; margin-bottom: 3px; }
-.pw-breaker-body {
-  width: 100%; background: #dfe1e6; border: 1px solid #9aa0ad; border-radius: 4px;
-  display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 3px 0;
+.pw-rcd-test {
+  position: absolute; top: 4px; left: 50%; transform: translateX(-50%);
+  width: 12px; height: 7px; border-radius: 1px; background: #2a6cff; border: 1px solid #1b4fbf;
 }
-.pw-breaker.main .pw-breaker-body { background: #2a2c34; border-color: #14151a; }
-.pw-rcd-test { width: 12px; height: 9px; border-radius: 2px; background: #2a6cff; border: 1px solid #1b4fbf; }
-.pw-breaker-sw {
-  width: 20px; height: 34px; border-radius: 3px; background: #f4f5f8; border: 1px solid #9aa0ad;
-  display: flex; align-items: flex-start; justify-content: center; padding: 2px;
-}
-.pw-breaker.main .pw-breaker-sw { width: 60px; }
-.pw-breaker-sw > span { width: 14px; height: 13px; border-radius: 2px; background: #33363f; }
-.pw-breaker.main .pw-breaker-sw > span { width: 52px; }
-.pw-breaker-sw.on { align-items: flex-end; }
-.pw-breaker-sw.on > span { background: #2ac26a; }
-.pw-breaker-name { font-size: 7px; color: #8b8f9a; text-align: center; margin-top: 3px; line-height: 1.15; }
+
+.pw-levers { display: flex; gap: 2px; justify-content: center; }
+.pw-lever { width: 5px; height: 18px; background: #191a20; border-radius: 1px; position: relative; }
+.pw-lever::after { content: ''; position: absolute; left: 0.5px; right: 0.5px; height: 7px; border-radius: 1px; background: #cfd2d9; bottom: 1px; }
+.pw-lever.on::after { bottom: auto; top: 1px; background: #2ac26a; }
+.pw-mod.pw-rcd .pw-lever { width: 8px; }
+.pw-mod.pw-main .pw-lever { width: 48px; height: 22px; }
+.pw-mod.pw-main .pw-lever::after { height: 9px; }
+
+.pw-mod-name { font-size: 6.5px; color: #9297a3; text-align: center; margin-top: 3px; line-height: 1.12; word-break: break-word; min-height: 8px; }
 
 /* ---- Dimmer rack ---- */
 .pw-dimmer-unit { background: #1b2740; border: 1px solid #2a3a5c; border-radius: 8px; padding: 8px; flex: none; }
 .pw-dimmer-brand { font-size: 10px; font-weight: 700; color: #8fb0e6; margin-bottom: 6px; }
-.pw-dimmer-chans { display: grid; grid-template-columns: repeat(12, 1fr); gap: 3px; }
+.pw-dimmer-row { display: flex; gap: 6px; align-items: stretch; }
+.pw-dimmer-screen {
+  width: 46px; flex: none; background: #081018; border: 1px solid #143050; border-radius: 3px;
+  padding: 4px 3px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+  box-shadow: inset 0 0 7px rgba(50, 140, 230, 0.28);
+}
+.pw-lcd-line { font: 700 7px/1.1 ui-monospace, 'SF Mono', monospace; color: #63d2ff; letter-spacing: 0.3px; text-shadow: 0 0 3px rgba(99, 210, 255, 0.6); }
+.pw-lcd-dim { color: #3f8fc9; font-weight: 500; }
+.pw-dimmer-btns { display: flex; gap: 2px; margin-top: 3px; }
+.pw-dimmer-btns > i { width: 5px; height: 5px; border-radius: 50%; background: #294056; }
+.pw-dimmer-chans { flex: 1; display: grid; grid-template-columns: repeat(12, 1fr); gap: 2px; align-content: center; }
 .pw-mcb { display: flex; flex-direction: column; align-items: center; }
-.pw-mcb > span { width: 12px; height: 22px; border-radius: 2px; background: #d7dae0; border: 1px solid #9aa0ad; }
-.pw-mcb > b { font-size: 8px; color: #9aa0ad; font-weight: 500; margin-top: 2px; }
+.pw-mcb > span { width: 9px; height: 20px; border-radius: 2px; background: linear-gradient(#e7e9ee, #cdd0d7); border: 1px solid #9aa0ad; }
+.pw-mcb > b { font-size: 7px; color: #9aa0ad; font-weight: 500; margin-top: 2px; }
+
+/* ---- Legend footer (always visible, tooltips on hover) ---- */
+.pw-legend {
+  display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+  padding: 8px 14px; background: #16171c; border-top: 1px solid #262832;
+}
+.pw-legend-title { color: #8b8f9a; font-weight: 600; font-size: 12px; }
+.pw-legend-item { display: flex; align-items: center; gap: 6px; color: #c7cbd3; font-size: 12px; cursor: help; }
+.pw-legend .lg { width: 13px; height: 13px; border-radius: 3px; flex: none; }
+.lg-diff { background: linear-gradient(#f4f5f8, #d9dbe1); border: 1px solid #b3b8c2; }
+.lg-test { background: #2a6cff; border: 1px solid #1b4fbf; }
+.lg-mcb { background: linear-gradient(#f4f5f8, #d9dbe1); border: 1px solid #b3b8c2; position: relative; }
+.lg-mcb::after { content: ''; position: absolute; left: 50%; bottom: 2px; transform: translateX(-50%); width: 3px; height: 6px; background: #2ac26a; border-radius: 1px; }
+.lg-directo { background: #e9e94a; }
 
 .pw-directos { background: #14151b; border: 1px solid #2a2d38; border-radius: 8px; padding: 8px; margin-top: auto; }
-.pw-directos-label { font-size: 11px; font-weight: 800; letter-spacing: 3px; text-align: center; color: #cfd3dc; margin-bottom: 8px; }
-.pw-directos-row { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px 4px; justify-items: center; }
-.pw-directos .pw-socket { padding-top: 6px; }
-.pw-directos-tab { position: absolute; top: 0; width: 26px; height: 4px; border-radius: 2px; }
+.pw-directos-label { font-size: 11px; font-weight: 800; letter-spacing: 3px; text-align: center; color: #cfd3dc; margin-bottom: 6px; }
+/* One long colour bar per group of four outlets (4 yellow, 4 orange, 4 pink). */
+.pw-directos-bars { display: flex; gap: 3px; margin-bottom: 5px; }
+.pw-directos-bars > span { flex: 1; height: 5px; border-radius: 2px; }
+/* One single row of 12 outlets. */
+.pw-directos-row { display: flex; gap: 2px; justify-content: space-between; }
+.pw-directos-socket {
+  width: 15px; height: 15px; border-radius: 50%;
+  background: radial-gradient(circle at 40% 35%, #3a3d49, #14151b 70%);
+  border: 2px solid #4a4e5b; box-shadow: inset 0 0 4px rgba(0, 0, 0, 0.7);
+}

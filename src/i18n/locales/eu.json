@@ -257,7 +257,27 @@
     "close": "Itxi",
     "hint": "Tartangako benetako rack-ak — aurrebista (elkarrekintza laster)",
     "board": "KOADRO ELEKTRIKOA",
-    "dimmers": "DIMMER-AK + DIRECTOS"
+    "dimmers": "DIMMER-AK + DIRECTOS",
+    "legendTitle": "Zer da bakoitza?",
+    "lg": {
+      "diff": "Diferentziala",
+      "test": "Test botoia",
+      "mcb": "Magnetotermikoa",
+      "directo": "DIRECTOS"
+    },
+    "tip": {
+      "general": "GENERAL — etengailu orokorra: koadroaren korronte guztia mozten du.",
+      "diff": "Etengailu diferentziala: PERTSONAK babesten ditu — lurrera korronte-ihes bat detektatzen badu, jauzi egiten du (adib. norbaitek ukitzen duen kable biluzi bat).",
+      "test": "Diferentzialaren test botoia: sakatzean ihes bat simulatzen du, diferentziala ondo jauzi egiten duen egiaztatzeko. Noizean behin probatzea komeni da.",
+      "mcb": "Magnetotermikoa (etengailu automatikoa): KABLEA babesten du — gainkarga edo zirkuitulaburragatik jauzi egiten du.",
+      "dimmerChan": "Dimmer kanala — irteera erregulagarri bat, bere magnetotermikoak babestua.",
+      "directos": "DIRECTOS: korronte KONSTANTEA (erregulatu gabe). LED / DMX fokoak hemen — INOIZ EZ dimmerrera edo hondatu egiten dira.",
+      "base32": "32 A-ko indar-hartunea (soinua / SOINUA).",
+      "emerg": "Larrialdiko argiztapen-zirkuitua.",
+      "canales": "Dimmer kanalen irteerak (1-36) — dimmerren irteera erregulatuak.",
+      "circuitos": "Zirkuituak (1-48): eszenatokiko baretara doan kableatu finkoa. Latiguillo batekin dimmer kanal batera patxeatzen da kontrolatzeko.",
+      "dimmerScreen": "Dimmerraren pantaila — kanala / DMX informazioa erakusten du rack-a piztuta dagoenean."
+    }
   },
   "run": {
     "title": "Exekutatu",

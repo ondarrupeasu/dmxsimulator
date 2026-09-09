@@ -257,7 +257,27 @@
     "close": "Cerrar",
     "hint": "Los racks reales de Tartanga — vista previa (la interacción llega pronto)",
     "board": "CUADRO ELÉCTRICO",
-    "dimmers": "DIMMERS + DIRECTOS"
+    "dimmers": "DIMMERS + DIRECTOS",
+    "legendTitle": "¿Qué es cada cosa?",
+    "lg": {
+      "diff": "Diferencial",
+      "test": "Botón de test",
+      "mcb": "Magnetotérmico",
+      "directo": "DIRECTOS"
+    },
+    "tip": {
+      "general": "GENERAL — interruptor general: corta toda la corriente del cuadro.",
+      "diff": "Interruptor diferencial: protege a las PERSONAS — salta si detecta una fuga de corriente a tierra (p. ej. un cable pelado que alguien toca).",
+      "test": "Botón de test del diferencial: al pulsarlo simula una fuga para comprobar que el diferencial salta bien. Conviene probarlo de vez en cuando.",
+      "mcb": "Magnetotérmico (interruptor automático): protege el CABLE — salta por sobrecarga o cortocircuito.",
+      "dimmerChan": "Canal de dimmer — una salida regulable, protegida por su magnetotérmico.",
+      "directos": "DIRECTOS: corriente CONSTANTE (sin regular). Aquí van los focos LED / DMX — NUNCA al dimmer o se rompen.",
+      "base32": "Toma de fuerza de 32 A (sonido / SOINUA).",
+      "emerg": "Circuito de alumbrado de emergencia.",
+      "canales": "Salidas de los canales de dimmer (1-36) — las salidas reguladas de los dimmers.",
+      "circuitos": "Circuitos (1-48): el cableado fijo que va a las varas del escenario. Se patchea uno a un canal de dimmer con un latiguillo para controlarlo.",
+      "dimmerScreen": "Pantalla del dimmer — muestra el canal / info DMX cuando el rack está encendido."
+    }
   },
   "run": {
     "title": "Ejecutar",
