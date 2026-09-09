@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { Fragment, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useShowStore } from '../../store/showStore'
 import './power.css'
@@ -61,31 +61,59 @@ function range(n: number, from = 1) {
   return Array.from({ length: n }, (_, i) => i + from)
 }
 
-/** A panel-mount powerCON connector (same size in every rack). */
-function Pcon() {
-  return <span className="pw-pcon"><i /></span>
+/** A panel-mount powerCON connector — white or blue, or a capped (blanked-off) position. Same
+ *  size everywhere. */
+function Pcon({ color = 'blue', capped = false }: { color?: 'white' | 'blue'; capped?: boolean }) {
+  if (capped) return <span className="pw-pcon capped" />
+  return <span className={`pw-pcon ${color}`}><i /></span>
 }
-function Socket({ n }: { n: number }) {
+
+/** A patch bay (CANALES / CIRCUITOS): rows of numbered connectors (null = capped), with a black
+ *  ventilation louver strip between the rows, faithfully to the real racks. */
+function Bay({ title, tip, color, rows }: { title: string; tip: string; color: 'white' | 'blue'; rows: (number | null)[][] }) {
   return (
-    <div className="pw-socket" title={`${n}`}>
-      <Pcon />
-      <span className="pw-socket-num">{n}</span>
-    </div>
+    <section className="pw-panel pw-rack pw-bay">
+      <header title={tip}>{title}</header>
+      <div className="pw-bay-body">
+        {rows.map((row, ri) => (
+          <Fragment key={ri}>
+            <div className="pw-bay-row">
+              {row.map((c, ci) =>
+                c === null ? (
+                  <span className="pw-cell" key={ci}><Pcon capped /></span>
+                ) : (
+                  <span className="pw-cell" key={ci} title={`${c}`}><b className="pw-cell-num">{c}</b><Pcon color={color} /></span>
+                ),
+              )}
+            </div>
+            {ri < rows.length - 1 && <div className="pw-vent" aria-hidden />}
+          </Fragment>
+        ))}
+      </div>
+    </section>
   )
 }
 
-/** One DIN module (main / RCD / MCB) with its lever(s) up = ON. RCDs show the blue test button. */
+// CANALES DE DIMMERS: 6 per row, white connectors (1-36).
+const CANALES_ROWS: (number | null)[][] = Array.from({ length: 6 }, (_, r) => Array.from({ length: 6 }, (_, c) => r * 6 + c + 1))
+// CIRCUITOS: 8 per row in pairs, blue connectors, with capped gaps between the pairs (1 between
+// 2-3, 2 between 4-5, 1 between 6-7), like the real rack (1-48).
+const CIRCUITOS_ROWS: (number | null)[][] = Array.from({ length: 6 }, (_, r) => {
+  const a = r * 8
+  return [a + 1, a + 2, null, a + 3, a + 4, null, null, a + 5, a + 6, null, a + 7, a + 8]
+})
+
+/** One DIN module (main / RCD / MCB). A multi-pole breaker has ONE common handle (a single toggle
+ *  bar that raises/lowers all poles together) — up = ON. RCDs show the blue test button. */
 function Module({ m, title, testTitle }: { m: Mod; title: string; testTitle: string }) {
-  const poles = m.kind === 'main' ? 3 : m.kind === 'rcd' ? 2 : m.poles ?? 1
-  const width = m.kind === 'mcb' ? Math.max(24, poles * 7 + 14) : MOD_W[m.kind]
+  const poles = m.kind === 'main' ? 4 : m.kind === 'rcd' ? 2 : m.poles ?? 1
+  const width = m.kind === 'mcb' ? Math.max(20, poles * 9 + 8) : MOD_W[m.kind]
   return (
     <div className={`pw-mod pw-${m.kind}`} style={{ width }} title={m.name ? `${m.name} — ${title}` : title}>
       <span className="pw-mod-tab" style={{ background: m.tab ?? 'transparent' }} />
       <div className="pw-mod-body">
         {m.kind === 'rcd' && <span className="pw-rcd-test" title={testTitle} />}
-        <div className="pw-levers">
-          {Array.from({ length: poles }).map((_, i) => <span key={i} className="pw-lever on" />)}
-        </div>
+        <span className="pw-lever on" />
       </div>
       <span className="pw-mod-name">{m.name ?? ''}</span>
     </div>
@@ -198,23 +226,17 @@ export function PowerPatchView() {
               </div>
               <div className="pw-directos-row">
                 {range(12).map((n) => (
-                  <span key={n} title={`Directo ${n} — ${t('power.tip.directos')}`}><Pcon /></span>
+                  <span key={n} title={`Directo ${n} — ${t('power.tip.directos')}`}><Pcon color="white" /></span>
                 ))}
               </div>
             </div>
           </section>
 
-          {/* 3 — CANALES DE DIMMERS (dimmer outputs 1-36) */}
-          <section className="pw-panel pw-rack pw-bay">
-            <header title={t('power.tip.canales')}>CANALES DE DIMMERS</header>
-            <div className="pw-grid">{range(36).map((n) => <Socket key={n} n={n} />)}</div>
-          </section>
+          {/* 3 — CANALES DE DIMMERS (white connectors, 1-36) */}
+          <Bay title="CANALES DE DIMMERS" tip={t('power.tip.canales')} color="white" rows={CANALES_ROWS} />
 
-          {/* 4 — CIRCUITOS (stage circuits 1-48) */}
-          <section className="pw-panel pw-rack pw-bay">
-            <header title={t('power.tip.circuitos')}>CIRCUITOS</header>
-            <div className="pw-grid">{range(48).map((n) => <Socket key={n} n={n} />)}</div>
-          </section>
+          {/* 4 — CIRCUITOS (blue connectors, pairs + capped gaps, 1-48) */}
+          <Bay title="CIRCUITOS" tip={t('power.tip.circuitos')} color="blue" rows={CIRCUITOS_ROWS} />
         </div>
       </div>
 

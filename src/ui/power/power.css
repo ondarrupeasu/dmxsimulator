@@ -54,29 +54,45 @@
 .pw-rack { width: 252px; }
 .pw-board { width: 366px; }
 
-/* powerCON connector — same size in EVERY rack. Dark round chassis with a keyway + 3 contact
-   holes, like the real Neutrik powerCON panel connector. */
-.pw-socket { display: flex; flex-direction: column; align-items: center; gap: 3px; position: relative; }
+/* powerCON connector — Neutrik-style: a rounded-square flange (white or blue) with two diagonal
+   screws and a round keyed connector face. Same size in EVERY rack. */
 .pw-pcon {
-  width: 18px; height: 18px; border-radius: 50%; position: relative; display: block; flex: none;
-  background: radial-gradient(circle at 45% 38%, #3b3f4a, #17181e 72%);
-  border: 2px solid #0d0e12; box-shadow: inset 0 0 3px rgba(0, 0, 0, 0.85);
+  position: relative; flex: none; width: 17px; height: 21px; border-radius: 3px;
+  border: 1px solid rgba(0, 0, 0, 0.55);
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.35), 0 1px 2px rgba(0, 0, 0, 0.45);
 }
-.pw-pcon > i { position: absolute; inset: 3px; border-radius: 50%; background: #4a4e5a; }
-.pw-pcon > i::before { content: ''; position: absolute; top: -1px; left: 50%; transform: translateX(-50%); width: 6px; height: 4px; background: #0d0e12; border-radius: 0 0 2px 2px; }
-.pw-pcon > i::after {
-  content: ''; position: absolute; left: 50%; top: 54%; transform: translate(-50%, -50%);
-  width: 2px; height: 2px; border-radius: 50%; background: #14151a;
-  box-shadow: -3px 2px 0 #14151a, 3px 2px 0 #14151a;
+.pw-pcon.white { background: linear-gradient(#efece2, #d8d4c7); }
+.pw-pcon.blue { background: linear-gradient(#5b63d6, #3b43ac); }
+.pw-pcon.capped { background: linear-gradient(#2b2d36, #1b1d25); border-color: #101116; }
+/* two diagonal mounting screws */
+.pw-pcon.white::before, .pw-pcon.white::after,
+.pw-pcon.blue::before, .pw-pcon.blue::after {
+  content: ''; position: absolute; width: 3px; height: 3px; border-radius: 50%;
+  background: radial-gradient(#cbced4, #868b95);
 }
-.pw-socket-num { font-size: 10px; color: #9aa0ad; }
+.pw-pcon::before { top: 2px; left: 2px; }
+.pw-pcon::after { bottom: 2px; right: 2px; }
+/* round keyed connector face */
+.pw-pcon > i {
+  position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+  width: 13px; height: 13px; border-radius: 50%; background: #0e0f13;
+  box-shadow: inset 0 0 0 1.5px rgba(255, 255, 255, 0.22);
+}
+.pw-pcon > i::before { /* keyway notch (left) */
+  content: ''; position: absolute; left: -1px; top: 50%; transform: translateY(-50%);
+  width: 4px; height: 3px; border-radius: 1px; background: #0e0f13;
+}
+.pw-pcon > i::after { /* central contact */
+  content: ''; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+  width: 4px; height: 4px; border-radius: 50%; background: #26282f;
+}
 
-/* Socket bays (CANALES / CIRCUITOS). Rows spread to fill the whole rack height — CANALES has
-   fewer sockets but still reaches the bottom, like the real racks. */
-.pw-bay .pw-grid {
-  flex: 1; display: grid; grid-template-columns: repeat(6, 1fr);
-  column-gap: 4px; align-content: space-between; justify-items: center; overflow: hidden;
-}
+/* Socket bays (CANALES / CIRCUITOS): rows of connectors with numbered labels, black ventilation
+   louver strips filling between the rows (like the real racks). */
+.pw-bay-body { flex: 1; display: flex; flex-direction: column; }
+.pw-bay-row { display: flex; justify-content: space-around; align-items: flex-end; padding: 0 2px; }
+.pw-cell { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.pw-cell-num { font-size: 7.5px; font-weight: 700; color: #2a2c33; background: #e6e7ea; border-radius: 2px; padding: 0 3px; line-height: 1.35; }
 
 /* ---- Breaker board ---- */
 .pw-board-rows { display: flex; flex-direction: column; gap: 10px; flex: 1; }
@@ -100,12 +116,12 @@
   width: 12px; height: 7px; border-radius: 1px; background: #2a6cff; border: 1px solid #1b4fbf;
 }
 
-/* Real DIN-breaker toggle: a small light lever with a dark tab, UP = on. */
-.pw-levers { display: flex; gap: 2px; justify-content: center; }
-.pw-lever { width: 6px; height: 22px; background: linear-gradient(#e7e9ee, #cdd0d7); border: 1px solid #9aa0ad; border-radius: 1px; position: relative; }
+/* Real DIN-breaker toggle: ONE common handle bar (multi-pole breakers move all poles at once).
+   Light body, dark tab; UP = on. It spans the module, so a 4-pole breaker has a wide handle. */
+.pw-lever { width: 74%; height: 22px; background: linear-gradient(#e7e9ee, #cdd0d7); border: 1px solid #9aa0ad; border-radius: 1px; position: relative; }
 .pw-lever::after { content: ''; position: absolute; left: 1px; right: 1px; height: 8px; border-radius: 1px; background: #2a2c33; top: 1px; }
 .pw-lever:not(.on)::after { top: auto; bottom: 1px; }
-.pw-mod.pw-main .pw-lever { width: 50px; height: 24px; }
+.pw-mod.pw-main .pw-lever { height: 24px; }
 .pw-mod.pw-main .pw-lever::after { height: 10px; }
 
 .pw-mod-name { font-size: 6.5px; color: #9297a3; text-align: center; margin-top: 3px; line-height: 1.12; word-break: break-word; min-height: 8px; }
