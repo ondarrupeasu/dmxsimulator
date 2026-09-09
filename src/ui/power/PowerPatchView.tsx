@@ -102,6 +102,13 @@ function SchukoPlug() {
 type Pt = { x: number; y: number; px: number; py: number }
 const ROPE_N = 18
 
+/** A distinct, cable-like tone per cable (subtly tinted greys) so overlapping cables stay tellable. */
+function cableColor(key: string) {
+  let h = 0
+  for (let i = 0; i < key.length; i++) h = (h * 31 + key.charCodeAt(i)) >>> 0
+  return `hsl(${h % 360} 17% ${44 + ((h >> 9) % 24)}%)`
+}
+
 /** Advance every patch cable's verlet rope by `substeps` and write the SVG path + plug transforms
  *  directly. substeps=1 per animation frame; a larger value settles the rope synchronously (e.g. on
  *  creation, so cables show a hanging shape even before/without requestAnimationFrame). */
@@ -171,12 +178,12 @@ function simulateCables(row: HTMLElement, patches: { from: string; to: string }[
 }
 
 /** A clickable, patchable connector — a powerCON socket, or a Schuko outlet for the regletas. */
-function Conn({ id, color, sel, patched, onConn, title, schuko }: {
-  id: string; color: 'white' | 'blue'; sel: string | null; patched: Set<string>; onConn: (id: string) => void; title?: string; schuko?: boolean
+function Conn({ id, color, sel, patched, linked, onConn, title, schuko }: {
+  id: string; color: 'white' | 'blue'; sel: string | null; patched: Set<string>; linked?: Set<string>; onConn: (id: string) => void; title?: string; schuko?: boolean
 }) {
   return (
     <button type="button" data-connid={id} title={title}
-      className={`pw-conn${sel === id ? ' sel' : ''}${patched.has(id) ? ' patched' : ''}`}
+      className={`pw-conn${sel === id ? ' sel' : ''}${patched.has(id) ? ' patched' : ''}${linked?.has(id) ? ' linked' : ''}`}
       onClick={(e) => { e.stopPropagation(); onConn(id) }}>
       {schuko ? <Schuko /> : <Pcon color={color} />}
     </button>
@@ -185,9 +192,9 @@ function Conn({ id, color, sel, patched, onConn, title, schuko }: {
 
 /** A patch bay (CANALES / CIRCUITOS): rows of numbered connectors (null = capped), with a black
  *  ventilation louver strip between the rows. Connectors are clickable to patch cables between bays. */
-function Bay({ title, tip, color, rows, perNumber = 1, kind, sel, patched, onConn }: {
+function Bay({ title, tip, color, rows, perNumber = 1, kind, sel, patched, linked, onConn }: {
   title: string; tip: string; color: 'white' | 'blue'; rows: (number | null)[][]; perNumber?: number
-  kind: 'canal' | 'circ'; sel: string | null; patched: Set<string>; onConn: (id: string) => void
+  kind: 'canal' | 'circ'; sel: string | null; patched: Set<string>; linked?: Set<string>; onConn: (id: string) => void
 }) {
   return (
     <section className="pw-panel pw-rack pw-bay">
@@ -204,7 +211,7 @@ function Bay({ title, tip, color, rows, perNumber = 1, kind, sel, patched, onCon
                     <b className="pw-cell-num">{c}</b>
                     <span className="pw-cell-pcons">
                       {Array.from({ length: perNumber }).map((_, i) => (
-                        <Conn key={i} id={`${kind}-${c}-${i}`} color={color} sel={sel} patched={patched} onConn={onConn} title={`${c}`} />
+                        <Conn key={i} id={`${kind}-${c}-${i}`} color={color} sel={sel} patched={patched} linked={linked} onConn={onConn} title={`${c}`} />
                       ))}
                     </span>
                   </span>
@@ -268,12 +275,14 @@ export function PowerPatchView() {
   const rackPowered = (u: number) => isOn('b-0-0') && isOn(`b-1-${u * 2}`) && isOn(`b-1-${u * 2 + 1}`)
 
   const [sel, setSel] = useState<string | null>(null) // a connector waiting to be patched
+  const [hover, setHover] = useState<string | null>(null) // hovered cable key → highlight it + its ends
   const [patches, setPatches] = useState<{ from: string; to: string }[]>(() => loadPower().patches ?? [])
   useEffect(() => {
     try { localStorage.setItem(STORE_KEY, JSON.stringify({ breakerOn, patches })) } catch { /* ignore quota/private-mode */ }
   }, [breakerOn, patches])
   const resetAll = () => { setBreakerOn({}); setPatches([]); setSel(null); try { localStorage.removeItem(STORE_KEY) } catch { /* ignore */ } }
   const patched = new Set<string>(patches.flatMap((p) => [p.from, p.to]))
+  const linked = hover ? new Set<string>(hover.split('>')) : undefined // the two ends of the hovered cable
   // sources feed power out (dimmer channels, directos); sinks receive it (stage circuits, regletas).
   const roleOf = (id: string) => (id.startsWith('canal') || id.startsWith('directo') ? 'src' : 'sink')
   const clickConn = (id: string) => {
@@ -471,17 +480,17 @@ export function PowerPatchView() {
                 </div>
                 <div className="pw-directos-row">
                   {range(12).map((n) => (
-                    <Conn key={n} id={`directo-${n}-0`} color="white" sel={sel} patched={patched} onConn={clickConn} title={`Directo ${n} — ${t('power.tip.directos')}`} />
+                    <Conn key={n} id={`directo-${n}-0`} color="white" sel={sel} patched={patched} linked={linked} onConn={clickConn} title={`Directo ${n} — ${t('power.tip.directos')}`} />
                   ))}
                 </div>
               </div>
             </section>
 
             {/* CANALES DE DIMMERS (white connectors, 1-36) */}
-            <Bay title="CANALES DE DIMMERS" tip={t('power.tip.canales')} color="white" rows={CANALES_ROWS} perNumber={2} kind="canal" sel={sel} patched={patched} onConn={clickConn} />
+            <Bay title="CANALES DE DIMMERS" tip={t('power.tip.canales')} color="white" rows={CANALES_ROWS} perNumber={2} kind="canal" sel={sel} patched={patched} linked={linked} onConn={clickConn} />
 
             {/* CIRCUITOS (blue connectors, pairs + capped gaps, 1-48) */}
-            <Bay title="CIRCUITOS" tip={t('power.tip.circuitos')} color="blue" rows={CIRCUITOS_ROWS} kind="circ" sel={sel} patched={patched} onConn={clickConn} />
+            <Bay title="CIRCUITOS" tip={t('power.tip.circuitos')} color="blue" rows={CIRCUITOS_ROWS} kind="circ" sel={sel} patched={patched} linked={linked} onConn={clickConn} />
             </div>
 
             {/* Regletas de fuerza — constant-power strips; DIRECTOS (or CIRCUITOS) plug in here */}
@@ -492,7 +501,7 @@ export function PowerPatchView() {
                   {range(10).map((n) => (
                     <span className="pw-cell" key={n}>
                       <b className="pw-cell-num">R{n}</b>
-                      <Conn id={`regleta-${n}-0`} color="white" sel={sel} patched={patched} onConn={clickConn} title={`Regleta ${n}`} schuko />
+                      <Conn id={`regleta-${n}-0`} color="white" sel={sel} patched={patched} linked={linked} onConn={clickConn} title={`Regleta ${n}`} schuko />
                     </span>
                   ))}
                 </div>
@@ -506,8 +515,8 @@ export function PowerPatchView() {
                   const key = `${p.from}>${p.to}`
                   // regleta cables use a Schuko plug at the regleta end, powerCON everywhere else
                   return (
-                    <g key={key}>
-                      <path data-cablekey={key} className="pw-cable-line" />
+                    <g key={key} onMouseEnter={() => setHover(key)} onMouseLeave={() => setHover((h) => (h === key ? null : h))}>
+                      <path data-cablekey={key} className={`pw-cable-line${hover === key ? ' hovered' : ''}`} style={{ ['--c' as string]: cableColor(key) } as CSSProperties} />
                       <g data-cablekey={key} data-end="a">{p.from.startsWith('regleta') ? <SchukoPlug /> : <CablePlug />}</g>
                       <g data-cablekey={key} data-end="b">{p.to.startsWith('regleta') ? <SchukoPlug /> : <CablePlug />}</g>
                     </g>
