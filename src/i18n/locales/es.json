@@ -311,7 +311,11 @@
       }
     },
     "toRacks": "Racks de patch",
-    "toBoard": "Cuadro eléctrico"
+    "toBoard": "Cuadro eléctrico",
+    "toData": "DMX / Datos",
+    "data": "SPLITTER DMX · TINHAO S4",
+    "dataBars": "Varas 1-4",
+    "dataNote": "El lado de DATOS: la mesa Quartz manda una línea DMX al splitter S4, que la reparte en 4 salidas — una por vara. Un foco necesita corriente (cuadro/dimmers) Y esta señal DMX. El S4 está detrás de los racks de patch."
   },
   "run": {
     "title": "Ejecutar",

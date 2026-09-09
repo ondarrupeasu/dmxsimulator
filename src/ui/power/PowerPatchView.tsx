@@ -1,8 +1,10 @@
 import { Fragment, useEffect, useRef, useState } from 'react'
+import type { CSSProperties } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useShowStore } from '../../store/showStore'
 import { MCB, RCD, RCDHager, MainSwitch, ChannelBreaker } from './breakers'
 import { PowerCon } from './connectors'
+import { S4Splitter } from './splitter'
 import './power.css'
 
 /**
@@ -131,43 +133,51 @@ export function PowerPatchView() {
   const close = () => useShowStore.getState().setPowerOpen(false)
   const [showHelp, setShowHelp] = useState(false)
 
-  // Two scenes in a cover-flow: the breaker board (seen first), then the three patch racks (they
-  // travel together — you patch them together). Each scene scales to fit the stage on its own so
-  // the active one is as big as possible; the other peeks at the side, turned like an album cover.
-  const [scene, setScene] = useState<0 | 1>(0)
+  // Cover-flow of three scenes: the breaker board (seen first), the three patch racks (they travel
+  // together — you patch them together), and the DMX splitter / data side. The active scene scales
+  // to fit and is large; the neighbours peek at the sides, turned like album covers.
+  const [scene, setScene] = useState(0)
   const stageRef = useRef<HTMLDivElement>(null)
   const boardRef = useRef<HTMLDivElement>(null)
   const racksRef = useRef<HTMLDivElement>(null)
-  const [kBoard, setKBoard] = useState(1)
-  const [kRacks, setKRacks] = useState(1)
-  const [nextLeft, setNextLeft] = useState<number | undefined>(undefined)
+  const dataRef = useRef<HTMLDivElement>(null)
+  const [k, setK] = useState({ board: 1, racks: 1, data: 1 })
+  const [nav, setNav] = useState<{ nextLeft?: number; prevRight?: number }>({})
   useEffect(() => {
     const fit = () => {
       const st = stageRef.current
-      if (!st) return
+      if (!st || st.clientWidth < 200 || st.clientHeight < 120) return // ignore collapsed/transient sizes
       const availH = st.clientHeight - 24
-      const bd = boardRef.current, rk = racksRef.current
-      if (bd) {
-        // the board leaves room on the right for the arrow + the peeking racks
-        const k = Math.min((st.clientWidth - 150) / bd.offsetWidth, availH / bd.offsetHeight, 2.2)
-        if (k > 0 && isFinite(k)) {
-          setKBoard(k)
-          // park the "to racks" arrow just off the board's right edge, never over the racks
-          const right = st.clientWidth / 2 + (bd.offsetWidth * k) / 2 + 16
-          setNextLeft(Math.min(right, st.clientWidth - 84))
-        }
-      }
-      if (rk) {
-        // the three racks fill the screen, leaving side room so the back-arrow never sits on a rack
-        const k = Math.min((st.clientWidth - 150) / rk.offsetWidth, availH / rk.offsetHeight, 2.4)
-        if (k > 0 && isFinite(k)) setKRacks(k)
+      const availW = st.clientWidth - 150 // room for the side arrows / peeking scenes
+      const calc = (el: HTMLDivElement | null, cap: number) =>
+        el && el.offsetWidth ? Math.min(availW / el.offsetWidth, availH / el.offsetHeight, cap) : 1
+      const nk = { board: calc(boardRef.current, 2.2), racks: calc(racksRef.current, 2.4), data: calc(dataRef.current, 2) }
+      setK(nk)
+      // place the arrows just outside the ACTIVE scene's on-screen edges (never over a neighbour)
+      const el = [boardRef, racksRef, dataRef][scene]?.current
+      const ak = [nk.board, nk.racks, nk.data][scene]
+      if (el && isFinite(ak)) {
+        const halfW = (el.offsetWidth * ak) / 2
+        const edge = Math.min(st.clientWidth / 2 + halfW + 14, st.clientWidth - 88)
+        setNav({ nextLeft: edge, prevRight: edge }) // symmetric: just outside each edge of the active scene
       }
     }
     fit()
     const ro = new ResizeObserver(fit)
     if (stageRef.current) ro.observe(stageRef.current)
     return () => ro.disconnect()
-  }, [])
+  }, [scene])
+
+  // outer transform for a slide at position i, given the active scene (cover-flow)
+  const slideStyle = (i: number): CSSProperties => {
+    const o = i - scene
+    if (o === 0) return { transform: 'translateX(0) rotateY(0deg) scale(1)', opacity: 1, zIndex: 3, filter: 'none' }
+    if (Math.abs(o) === 1)
+      return { transform: `translateX(${o < 0 ? -64 : 64}%) rotateY(${o < 0 ? 26 : -26}deg) scale(0.7)`, opacity: 0.4, zIndex: 2, filter: 'brightness(0.65)' }
+    return { transform: `translateX(${o < 0 ? -118 : 118}%) rotateY(${o < 0 ? 32 : -32}deg) scale(0.5)`, opacity: 0, zIndex: 1, filter: 'brightness(0.6)', pointerEvents: 'none' }
+  }
+  const nextLabel = scene === 0 ? t('power.toRacks') : t('power.toData')
+  const prevLabel = scene === 1 ? t('power.toBoard') : t('power.toRacks')
 
   return (
     <div className="pw-overlay" role="dialog" aria-label={t('power.title')}>
@@ -199,10 +209,10 @@ export function PowerPatchView() {
         </>
       )}
 
-      <div className={`pw-stage pw-flow scene-${scene}`} ref={stageRef}>
+      <div className="pw-stage pw-flow" ref={stageRef}>
         {/* Scene 0 — Cuadro eléctrico (breaker board): the first thing you see */}
-        <section className="pw-slide pw-slide-board" aria-hidden={scene !== 0}>
-          <div className="pw-slide-inner" ref={boardRef} style={{ transform: `scale(${kBoard})` }}>
+        <section className="pw-slide" style={slideStyle(0)} aria-hidden={scene !== 0}>
+          <div className="pw-slide-inner" ref={boardRef} style={{ transform: `scale(${k.board})`, pointerEvents: Math.abs(0 - scene) >= 2 ? 'none' : 'auto', cursor: scene === 0 ? 'default' : 'pointer' }} onClick={scene === 0 || Math.abs(0 - scene) >= 2 ? undefined : () => setScene(0)}>
             <section className="pw-panel pw-board">
               <header>{t('power.board')}</header>
               <div className="pw-board-rows">
@@ -223,8 +233,8 @@ export function PowerPatchView() {
         </section>
 
         {/* Scene 1 — the three patch racks, side by side (they belong together) */}
-        <section className="pw-slide pw-slide-racks" onClick={scene !== 1 ? () => setScene(1) : undefined} aria-hidden={scene !== 1}>
-          <div className="pw-slide-inner pw-racks-row" ref={racksRef} style={{ transform: `scale(${kRacks})` }}>
+        <section className="pw-slide" style={slideStyle(1)} aria-hidden={scene !== 1}>
+          <div className="pw-slide-inner pw-racks-row" ref={racksRef} style={{ transform: `scale(${k.racks})`, pointerEvents: Math.abs(1 - scene) >= 2 ? 'none' : 'auto', cursor: scene === 1 ? 'default' : 'pointer' }} onClick={scene === 1 || Math.abs(1 - scene) >= 2 ? undefined : () => setScene(1)}>
             {/* Dimmer racks + DIRECTOS */}
             <section className="pw-panel pw-rack pw-dimmers">
               <header>{t('power.dimmers')}</header>
@@ -270,14 +280,31 @@ export function PowerPatchView() {
           </div>
         </section>
 
+        {/* Scene 2 — DMX splitter (data side): lives behind the racks */}
+        <section className="pw-slide" style={slideStyle(2)} aria-hidden={scene !== 2}>
+          <div className="pw-slide-inner" ref={dataRef} style={{ transform: `scale(${k.data})`, pointerEvents: Math.abs(2 - scene) >= 2 ? 'none' : 'auto', cursor: scene === 2 ? 'default' : 'pointer' }} onClick={scene === 2 || Math.abs(2 - scene) >= 2 ? undefined : () => setScene(2)}>
+            <section className="pw-panel pw-data">
+              <header>{t('power.data')}</header>
+              <div className="pw-data-flow">
+                <span className="pw-data-src">Quartz</span>
+                <span className="pw-data-arrow">→</span>
+                <S4Splitter />
+                <span className="pw-data-arrow">→</span>
+                <span className="pw-data-bars">{t('power.dataBars')}</span>
+              </div>
+              <p className="pw-data-note">{t('power.dataNote')}</p>
+            </section>
+          </div>
+        </section>
+
         {/* Cover-flow navigation */}
-        <button className="pw-nav pw-nav-next" onClick={() => setScene(1)} hidden={scene === 1} title={t('power.toRacks')} style={nextLeft != null ? { left: nextLeft, right: 'auto' } : undefined}>
+        <button className="pw-nav pw-nav-next" onClick={() => setScene(scene + 1)} hidden={scene >= 2} title={nextLabel} style={nav.nextLeft != null ? { left: nav.nextLeft, right: 'auto' } : undefined}>
           <span className="pw-nav-chev">❯</span>
-          <span className="pw-nav-label">{t('power.toRacks')}</span>
+          <span className="pw-nav-label">{nextLabel}</span>
         </button>
-        <button className="pw-nav pw-nav-prev" onClick={() => setScene(0)} hidden={scene === 0} title={t('power.toBoard')}>
+        <button className="pw-nav pw-nav-prev" onClick={() => setScene(scene - 1)} hidden={scene <= 0} title={prevLabel} style={nav.prevRight != null ? { right: nav.prevRight, left: 'auto' } : undefined}>
           <span className="pw-nav-chev">❮</span>
-          <span className="pw-nav-label">{t('power.toBoard')}</span>
+          <span className="pw-nav-label">{prevLabel}</span>
         </button>
       </div>
 

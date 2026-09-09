@@ -27,8 +27,10 @@
 }
 .pw-close:hover { background: #2e3140; }
 
-/* Stage = the cover-flow viewport. Two scenes (board / racks) sit stacked; the active one is
-   centred and full-size, the other peeks at the side turned like an album cover. */
+/* Stage = the cover-flow viewport. Three scenes (board / racks / data) sit stacked; the active one
+   is centred and full-size, the neighbours peek at the sides turned like album covers. The outer
+   .pw-slide transform (position/rotation) is set inline per scene; only the INNER captures clicks,
+   so an active scene's empty margins never swallow a click and the neighbours stay clickable. */
 .pw-stage {
   flex: 1; min-height: 0; position: relative;
   overflow: hidden; padding: 14px;
@@ -37,21 +39,11 @@
 .pw-slide {
   position: absolute; inset: 0;
   display: flex; align-items: center; justify-content: center;
-  transform-origin: center center;
+  transform-origin: center center; pointer-events: none;
   transition: transform 0.6s cubic-bezier(0.66, 0, 0.2, 1), opacity 0.55s ease, filter 0.55s ease;
-  pointer-events: none; /* re-enabled only on the peeking (inactive) slide, below */
 }
-.pw-slide-inner { transform-origin: center center; will-change: transform; }
+.pw-slide-inner { transform-origin: center center; will-change: transform; pointer-events: auto; }
 .pw-racks-row { display: flex; gap: 16px; align-items: flex-start; }
-
-/* Active vs peeking states. The active slide gets pointer-events (future breaker/patch clicks);
-   only the RIGHT peek (racks on scene 0) is clickable to switch — the left peek (board on scene 1)
-   is NOT, so it can never swallow a click meant for the left rack's breakers. */
-.pw-flow.scene-0 .pw-slide-board,
-.pw-flow.scene-1 .pw-slide-racks { transform: translateX(0) rotateY(0) scale(1); opacity: 1; filter: none; z-index: 2; pointer-events: auto; }
-.pw-flow.scene-0 .pw-slide-racks { transform: translateX(66%) rotateY(-30deg) scale(0.72); opacity: 0.4; filter: brightness(0.7); z-index: 1; cursor: pointer; pointer-events: auto; }
-.pw-flow.scene-1 .pw-slide-board { transform: translateX(-66%) rotateY(30deg) scale(0.72); opacity: 0.4; filter: brightness(0.7); z-index: 1; pointer-events: none; }
-.pw-flow.scene-0 .pw-slide-racks:hover { opacity: 0.6; }
 
 /* Cover-flow arrows */
 .pw-nav {
@@ -67,6 +59,17 @@
 .pw-nav-prev { left: 12px; }
 .pw-nav-chev { font-size: 19px; line-height: 1; color: #ff8a3d; }
 .pw-nav-label { font-size: 8.5px; font-weight: 700; max-width: 48px; text-align: center; color: #aeb3c0; line-height: 1.1; }
+
+/* ---- DMX splitter (data) scene ---- */
+.pw-data { width: fit-content; align-items: center; }
+.pw-data-flow { display: flex; align-items: center; gap: 14px; }
+.pw-s4 { display: block; height: 300px; width: auto; }
+.pw-data-src, .pw-data-bars {
+  font-size: 13px; font-weight: 700; color: #cfd3db;
+  background: #171922; border: 1px solid #2c2f3a; border-radius: 8px; padding: 12px 14px; text-align: center;
+}
+.pw-data-arrow { font-size: 22px; color: #ff8a3d; }
+.pw-data-note { max-width: 520px; font-size: 12px; line-height: 1.5; color: #9aa0aa; text-align: center; margin: 4px auto 0; }
 
 /* A rack panel — FIXED width (solid object); all panels stretch to the same height. */
 .pw-panel {
