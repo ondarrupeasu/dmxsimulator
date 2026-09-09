@@ -26,17 +26,14 @@ function Xlr({ x, y, r = 20 }: { x: number; y: number; r?: number }) {
   )
 }
 
-/** A male XLR cable plug inserted into a socket, with a short cable stub going up or down. */
-function XlrPlug({ x, y, dir }: { x: number; y: number; dir: 'up' | 'down' }) {
-  const s = dir === 'down' ? 1 : -1
+/** A male XLR cable plug seated head-on in a socket (frontal — no dangling cable). */
+function XlrPlug({ x, y }: { x: number; y: number }) {
   return (
     <g transform={`translate(${x},${y})`}>
-      {/* cable stub */}
-      <path d={`M 0 0 C ${6 * s} ${20 * s}, ${-8 * s} ${30 * s}, ${2 * s} ${46 * s}`} fill="none" stroke="#2f4bc0" strokeWidth="6" strokeLinecap="round" />
-      {/* plug barrel + boot */}
-      <circle r="15" fill="#33353c" stroke="#17181b" strokeWidth="1.5" />
-      <circle r="9" fill="#1c1d21" stroke="#0d0e10" strokeWidth="1" />
-      <rect x="-7" y={dir === 'down' ? 12 : -20} width="14" height="9" rx="3" fill="#2a3c8f" />
+      <circle r="16.5" fill="#34363d" stroke="#15161a" strokeWidth="1.5" />
+      <circle r="10.5" fill="#1b1c20" stroke="#0d0e10" strokeWidth="1" />
+      <circle r="4.5" fill="#2a2c33" />
+      <circle cx="-3.5" cy="-3.5" r="1.6" fill="#4c4f57" opacity="0.7" />
     </g>
   )
 }
@@ -71,7 +68,7 @@ export function S4Splitter() {
       {/* DMX IN — two sockets (left free, right patched); green LED above the label */}
       <Xlr x={116} y={86} />
       <Xlr x={168} y={86} />
-      <XlrPlug x={168} y={86} dir="up" />
+      <XlrPlug x={168} y={86} />
       <Led x={142} y={118} color={GREEN} />
       <text x="142" y="134" fill="#dfe1e4" fontSize="13" fontWeight="700" fontFamily="system-ui" textAnchor="middle" letterSpacing="1">DMX IN</text>
 
@@ -88,7 +85,7 @@ export function S4Splitter() {
             <text x={x} y="218" fill="#dfe1e4" fontSize="11" fontWeight="700" fontFamily="system-ui" textAnchor="middle">{n}</text>
             <Led x={x} y={232} color={GREEN} />
             <Xlr x={x} y={262} />
-            {n !== 1 && <XlrPlug x={x} y={262} dir="down" />}
+            {n !== 1 && <XlrPlug x={x} y={262} />}
           </g>
         )
       })}

@@ -134,28 +134,39 @@
 /* FUERZA phase colour tab above the RCD (pink/orange/yellow) */
 .pw-mod-tab { position: absolute; top: -6px; left: 10%; right: 10%; height: 4px; border-radius: 2px; z-index: 1; }
 
-.pw-mod-name { font-size: 6px; color: #9297a3; text-align: center; margin-top: 3px; line-height: 1.1; word-break: break-word; min-height: 8px; max-width: 52px; }
+/* module label = a little sticker on the bottom of the breaker (like the real panel) */
+.pw-mod-name {
+  position: absolute; left: 1px; right: 1px; bottom: 3px;
+  font-size: 5px; font-weight: 600; line-height: 1.02; letter-spacing: -0.1px;
+  color: #3a3a3a; background: rgba(243, 239, 229, 0.9); border: 0.5px solid #cbc5b4; border-radius: 1px;
+  padding: 0.5px 0; text-align: center; overflow: hidden; max-height: 11px;
+}
+.pw-testbtn { cursor: pointer; }
+.pw-testbtn:hover { filter: brightness(1.25); }
 
 /* ---- Dimmer rack ---- : thin blue AT2000+ devices separated by black ventilated blank panels
    that fill the rack (copying the real rack), DIRECTOS fixed at the bottom. */
 .pw-dimmer-slot { flex: none; display: flex; flex-direction: column; }
-.pw-dimmer-unit { background: linear-gradient(#223458, #182640); border: 1px solid #2c3d61; border-radius: 5px; padding: 6px 8px; flex: none; }
-.pw-dimmer-face { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
-.pw-dimmer-brand { font-size: 9px; font-weight: 800; color: #9fbdf0; letter-spacing: 0.4px; margin-left: auto; }
+/* AT2000+ dimmer face: LCD (+ menu buttons) on the left, the 12 channel breakers on the SAME line
+   to the right — packed tight, like the real unit. */
+.pw-dimmer-unit { background: linear-gradient(#223458, #182640); border: 1px solid #2c3d61; border-radius: 5px; padding: 5px 10px; flex: none; display: flex; align-items: center; gap: 10px; position: relative; }
+.pw-dimmer-lcdcol { display: flex; flex-direction: column; align-items: center; gap: 3px; flex: none; }
+.pw-dimmer-brand { position: absolute; top: 3px; right: 9px; font-size: 8px; font-weight: 800; color: #9fbdf0; letter-spacing: 0.4px; }
 /* Dimmer LCD — OFF by default (dark, blank). Add .on (interaction phase) to light it up. */
 .pw-dimmer-screen {
-  width: 42px; height: 20px; flex: none; background: #05080c; border: 1px solid #10151d; border-radius: 2px;
-  display: flex; flex-direction: column; align-items: center; justify-content: flex-end; padding: 2px; gap: 2px;
+  width: 46px; height: 21px; flex: none; background: #05080c; border: 1px solid #10151d; border-radius: 2px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 2px; gap: 1px;
 }
-.pw-dimmer-screen.on { background: #081018; border-color: #143050; box-shadow: inset 0 0 7px rgba(50, 140, 230, 0.28); justify-content: center; }
+.pw-dimmer-screen.on { background: #081018; border-color: #143050; box-shadow: inset 0 0 7px rgba(50, 140, 230, 0.28); }
 .pw-lcd-line { font: 700 7px/1.1 ui-monospace, 'SF Mono', monospace; color: #63d2ff; letter-spacing: 0.3px; text-shadow: 0 0 3px rgba(99, 210, 255, 0.6); }
 .pw-lcd-dim { color: #3f8fc9; font-weight: 500; }
-.pw-dimmer-btns { display: flex; gap: 2px; }
-.pw-dimmer-btns > i { width: 4px; height: 4px; border-radius: 50%; background: #294056; }
-.pw-dimmer-chans { display: grid; grid-template-columns: repeat(12, 1fr); gap: 2px; }
+/* 5 menu buttons under the LCD */
+.pw-dimmer-menu { display: flex; gap: 3px; }
+.pw-dimmer-menu > i { width: 6px; height: 3.5px; border-radius: 1px; background: #34506f; border: 0.5px solid #22364d; }
+.pw-dimmer-chans { display: flex; gap: 1px; align-items: flex-start; }
 .pw-chan { display: flex; flex-direction: column; align-items: center; }
 .pw-chan .pw-svg { display: block; height: 30px; width: auto; }
-.pw-chan > b { font-size: 7px; color: #9aa0ad; font-weight: 500; margin-top: 2px; }
+.pw-chan > b { font-size: 6.5px; color: #9aa0ad; font-weight: 500; margin-top: 1px; }
 /* Black ventilated louver strip between rows/devices — thin, like the real racks. */
 .pw-vent {
   flex: none; height: 8px; margin: 3px 0; border-radius: 3px;

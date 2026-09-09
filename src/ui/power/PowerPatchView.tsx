@@ -75,14 +75,15 @@ function Pcon({ color = 'blue', capped = false }: { color?: 'white' | 'blue'; ca
   return <PowerCon color={color} capped={capped} />
 }
 
-/** A powerCON cable plug drawn at a cable tip (local +x points down the cable, tip at origin). */
+/** A powerCON cable plug seen head-on, seated in its socket (frontal — no dangling barrel). The
+ *  cable itself droops away behind it. */
 function CablePlug() {
   return (
     <g className="pw-plug">
-      <rect x="16" y="-3.5" width="8" height="7" rx="2.5" fill="#2a2c33" /> {/* strain relief */}
-      <rect x="2" y="-5.5" width="15" height="11" rx="3" fill="#3a5bd0" stroke="#22368f" strokeWidth="1" /> {/* body */}
-      <rect x="6" y="-7" width="7" height="2" rx="1" fill="#6f8ae6" /> {/* latch */}
-      <rect x="-4" y="-6" width="7" height="12" rx="2.5" fill="#5b78e0" stroke="#22368f" strokeWidth="0.8" /> {/* collar */}
+      <rect x="-9" y="-9" width="18" height="18" rx="4.5" fill="#3a5bd0" stroke="#20347f" strokeWidth="1.2" />
+      <circle r="6.2" fill="#182356" stroke="#0f163a" strokeWidth="0.8" />
+      <circle r="2.7" fill="#33489f" />
+      <circle cx="-1.4" cy="-1.6" r="1.1" fill="#7d95e8" opacity="0.75" />
     </g>
   )
 }
@@ -148,12 +149,12 @@ function simulateCables(row: HTMLElement, patches: { from: string; to: string }[
       for (let i = 1; i < N; i++) d += ` L ${pts[i].x.toFixed(1)} ${pts[i].y.toFixed(1)}`
       pathEl.setAttribute('d', d)
     }
-    const setPlug = (end: 'a' | 'b', tip: Pt, nb: Pt) => {
+    const setPlug = (end: 'a' | 'b', tip: Pt) => {
       const g = row.querySelector(`g[data-cablekey="${key}"][data-end="${end}"]`)
-      if (g) g.setAttribute('transform', `translate(${tip.x.toFixed(1)},${tip.y.toFixed(1)}) rotate(${(Math.atan2(nb.y - tip.y, nb.x - tip.x) * 180) / Math.PI})`)
+      if (g) g.setAttribute('transform', `translate(${tip.x.toFixed(1)},${tip.y.toFixed(1)})`) // frontal — no rotation
     }
-    setPlug('a', pts[0], pts[1])
-    setPlug('b', pts[N - 1], pts[N - 2])
+    setPlug('a', pts[0])
+    setPlug('b', pts[N - 1])
   }
   for (const key of [...ropes.keys()]) if (!alive.has(key)) ropes.delete(key)
 }
@@ -213,13 +214,13 @@ const CIRCUITOS_ROWS: (number | null)[][] = Array.from({ length: 6 }, (_, r) => 
 /** One DIN module drawn as an SVG standard device (see breakers.tsx): the black 4-pole main
  *  isolator, a differential (RCD, box + blue half-dome TEST + blue handle), or a magnetothermic
  *  (MCB, 1-4 poles under a common tie-bar). An optional colour tab codes the FUERZA phases. */
-function Module({ m, title, on, onToggle }: { m: Mod; title: string; on: boolean; onToggle: () => void }) {
+function Module({ m, title, on, onToggle, onTest }: { m: Mod; title: string; on: boolean; onToggle: () => void; onTest: () => void }) {
   return (
     <div className={`pw-mod pw-${m.kind}${on ? '' : ' off'}`} title={m.name ? `${m.name} — ${title}` : title}
       role="button" tabIndex={0} onClick={onToggle}
       onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onToggle() } }}>
       {m.tab && <span className="pw-mod-tab" style={{ background: m.tab }} />}
-      {m.kind === 'main' ? <MainSwitch on={on} /> : m.kind === 'rcd' ? <RCD on={on} /> : m.kind === 'rcdh' ? <RCDHager on={on} /> : <MCB poles={m.poles ?? 1} on={on} />}
+      {m.kind === 'main' ? <MainSwitch on={on} /> : m.kind === 'rcd' ? <RCD on={on} onTest={onTest} /> : m.kind === 'rcdh' ? <RCDHager on={on} onTest={onTest} /> : <MCB poles={m.poles ?? 1} on={on} />}
       {m.name && <span className="pw-mod-name">{m.name}</span>}
     </div>
   )
@@ -236,6 +237,7 @@ export function PowerPatchView() {
   const [breakerOn, setBreakerOn] = useState<Record<string, boolean>>({})
   const isOn = (id: string) => breakerOn[id] ?? true
   const toggle = (id: string) => setBreakerOn((s) => ({ ...s, [id]: !(s[id] ?? true) }))
+  const trip = (id: string) => setBreakerOn((s) => ({ ...s, [id]: false })) // TEST button: only ever OFF
 
   const [sel, setSel] = useState<string | null>(null) // a connector waiting to be patched
   const [patches, setPatches] = useState<{ from: string; to: string }[]>([])
@@ -374,7 +376,7 @@ export function PowerPatchView() {
                       {row.mods.map((m, j) => {
                         const tip = m.kind === 'main' ? 'general' : m.kind === 'rcd' || m.kind === 'rcdh' ? 'diff' : 'mcb'
                         const id = `b-${i}-${j}`
-                        return <Module key={j} m={m} title={t(`power.tip.${tip}`)} on={isOn(id)} onToggle={() => toggle(id)} />
+                        return <Module key={j} m={m} title={t(`power.tip.${tip}`)} on={isOn(id)} onToggle={() => toggle(id)} onTest={() => trip(id)} />
                       })}
                     </div>
                   </div>
@@ -393,12 +395,12 @@ export function PowerPatchView() {
               {[0, 1, 2].map((u) => (
                 <div className="pw-dimmer-slot" key={u}>
                   <div className="pw-dimmer-unit">
-                    <div className="pw-dimmer-face">
+                    <span className="pw-dimmer-brand">AT2000⁺</span>
+                    <div className="pw-dimmer-lcdcol">
                       {/* LCD is OFF (dark, blank) until the rack is powered (interaction phase). */}
-                      <div className="pw-dimmer-screen" title={t('power.tip.dimmerScreen')}>
-                        <div className="pw-dimmer-btns"><i /><i /><i /><i /></div>
-                      </div>
-                      <span className="pw-dimmer-brand">TINHAO&nbsp;·&nbsp;AT2000⁺</span>
+                      <div className="pw-dimmer-screen" title={t('power.tip.dimmerScreen')} />
+                      {/* 5 menu control buttons under the screen */}
+                      <div className="pw-dimmer-menu">{[0, 1, 2, 3, 4].map((b) => <i key={b} />)}</div>
                     </div>
                     <div className="pw-dimmer-chans">
                       {range(12, u * 12 + 1).map((n) => {
