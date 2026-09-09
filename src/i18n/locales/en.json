@@ -250,6 +250,15 @@
       "riser": "Riser"
     }
   },
+  "power": {
+    "short": "Power",
+    "open": "Open the electrical / dimmer-patch panels (Tartanga racks)",
+    "title": "Electrical panels & dimmer patch",
+    "close": "Close",
+    "hint": "Tartanga's real racks — preview (interaction coming soon)",
+    "board": "BREAKER BOARD",
+    "dimmers": "DIMMERS + DIRECTOS"
+  },
   "run": {
     "title": "Run",
     "record": "Record cue",

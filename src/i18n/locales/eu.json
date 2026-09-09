@@ -250,6 +250,15 @@
       "riser": "Tarima"
     }
   },
+  "power": {
+    "short": "Koadroa",
+    "open": "Ireki panel elektrikoak / dimmer-patch-a (Tartangako rack-ak)",
+    "title": "Panel elektrikoak eta dimmer-patch-a",
+    "close": "Itxi",
+    "hint": "Tartangako benetako rack-ak — aurrebista (elkarrekintza laster)",
+    "board": "KOADRO ELEKTRIKOA",
+    "dimmers": "DIMMER-AK + DIRECTOS"
+  },
   "run": {
     "title": "Exekutatu",
     "record": "Grabatu cue-a",

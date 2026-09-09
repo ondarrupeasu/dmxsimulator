@@ -1,0 +1,105 @@
+/* Full-screen electrical / dimmer-patch module. Dark "rack" look. */
+.pw-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 4000;
+  display: flex;
+  flex-direction: column;
+  background: #0e0f13;
+  color: #e6e7ea;
+  font: 13px/1.4 -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+.pw-topbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  background: #16171c;
+  border-bottom: 1px solid #262832;
+}
+.pw-title { font-size: 16px; font-weight: 700; letter-spacing: 0.3px; }
+.pw-tag {
+  font-size: 10px; font-weight: 700; color: #ff8a3d;
+  border: 1px solid rgba(255, 138, 61, 0.5); border-radius: 10px; padding: 2px 7px;
+}
+.pw-spacer { flex: 1; }
+.pw-hint { color: #8b8f9a; font-size: 12px; }
+.pw-close {
+  background: #23252e; color: #e6e7ea; border: 1px solid #363945; border-radius: 8px;
+  width: 30px; height: 30px; cursor: pointer; font-size: 14px;
+}
+.pw-close:hover { background: #2e3140; }
+
+.pw-stage {
+  flex: 1; min-height: 0;
+  display: flex; gap: 16px; align-items: stretch;
+  padding: 16px; overflow: auto;
+}
+
+/* A rack panel */
+.pw-panel {
+  background: linear-gradient(#20222b, #191b22);
+  border: 1px solid #2c2f3a;
+  border-radius: 10px;
+  padding: 12px;
+  display: flex; flex-direction: column; gap: 10px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+.pw-panel > header {
+  font-size: 12px; font-weight: 800; letter-spacing: 1px;
+  color: #aeb3c0; text-align: center;
+  background: #12131a; border: 1px solid #2c2f3a; border-radius: 6px;
+  padding: 5px 8px;
+}
+
+/* Powercon socket + number */
+.pw-socket { display: flex; flex-direction: column; align-items: center; gap: 3px; }
+.pw-socket-ring {
+  width: 30px; height: 30px; border-radius: 50%;
+  background: radial-gradient(circle at 40% 35%, #3a3d49, #14151b 70%);
+  border: 2px solid #4a4e5b;
+  box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.7);
+}
+.pw-socket-num { font-size: 10px; color: #9aa0ad; }
+
+/* Socket grids (bays) */
+.pw-bay { min-width: 220px; }
+.pw-grid { display: grid; gap: 10px 12px; }
+.pw-grid-6 { grid-template-columns: repeat(6, 1fr); }
+
+/* Breaker board */
+.pw-board { min-width: 300px; }
+.pw-board-rows { display: flex; flex-direction: column; gap: 12px; }
+.pw-board-row {
+  background: #14151b; border: 1px solid #2a2d38; border-radius: 8px; padding: 8px 10px;
+}
+.pw-row-label { font-size: 10px; font-weight: 700; color: #7f8593; letter-spacing: 0.5px; margin-bottom: 6px; }
+.pw-row-breakers { display: flex; gap: 8px; flex-wrap: wrap; }
+
+.pw-breaker { display: flex; flex-direction: column; align-items: center; width: 58px; }
+.pw-breaker-tab { width: 100%; height: 4px; border-radius: 2px; margin-bottom: 3px; }
+.pw-breaker-sw {
+  width: 26px; height: 40px; border-radius: 4px; background: #e9eaee; border: 1px solid #9aa0ad;
+  display: flex; align-items: flex-start; justify-content: center; padding: 2px;
+}
+.pw-breaker-sw > span { width: 18px; height: 16px; border-radius: 3px; background: #33363f; }
+.pw-breaker-sw.on { align-items: flex-end; }
+.pw-breaker-sw.on > span { background: #2ac26a; }
+.pw-breaker-name { font-size: 8px; color: #8b8f9a; text-align: center; margin-top: 3px; line-height: 1.1; }
+
+/* Dimmer rack */
+.pw-dimmers { min-width: 260px; }
+.pw-dimmer-unit { background: #1b2740; border: 1px solid #2a3a5c; border-radius: 8px; padding: 8px; }
+.pw-dimmer-brand { font-size: 10px; font-weight: 700; color: #8fb0e6; margin-bottom: 6px; }
+.pw-dimmer-chans { display: grid; grid-template-columns: repeat(12, 1fr); gap: 3px; }
+.pw-mcb { display: flex; flex-direction: column; align-items: center; }
+.pw-mcb > span { width: 12px; height: 22px; border-radius: 2px; background: #d7dae0; border: 1px solid #9aa0ad; }
+.pw-mcb > b { font-size: 8px; color: #9aa0ad; font-weight: 500; margin-top: 2px; }
+
+.pw-directos { background: #14151b; border: 1px solid #2a2d38; border-radius: 8px; padding: 8px; }
+.pw-directos-label {
+  font-size: 11px; font-weight: 800; letter-spacing: 3px; text-align: center; color: #cfd3dc; margin-bottom: 6px;
+}
+.pw-directos-row { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+.pw-directos .pw-socket { position: relative; }
+.pw-directos-tab { position: absolute; top: -6px; width: 26px; height: 4px; border-radius: 2px; }

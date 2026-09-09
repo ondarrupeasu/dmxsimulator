@@ -9,6 +9,7 @@ import { DmxMonitor } from './patch/DmxMonitor'
 import { QuartzScreen } from './console/QuartzScreen'
 import { QuartzPanel } from './console/QuartzPanel'
 import { VisualiserWindow } from './console/VisualiserWindow'
+import { PowerPatchView } from './power/PowerPatchView'
 import { TourOverlay } from './TourOverlay'
 import { useTour } from '../store/tourStore'
 import { audioEngine } from '../engine/audio'
@@ -23,6 +24,7 @@ export function AppShell() {
   const mode = useShowStore((s) => s.mode)
   const setMode = useShowStore((s) => s.setMode)
   const consoleId = useShowStore((s) => s.consoleId)
+  const powerOpen = useShowStore((s) => s.powerOpen)
 
   // The only foldable secondary pane now is the PWA DMX monitor (the Titan screen + desk stay
   // put — they're the console, always visible). fold state lives in the store so a recalled
@@ -221,6 +223,10 @@ export function AppShell() {
           </div>
         )}
 
+        <button className="power-launch" onClick={() => useShowStore.getState().setPowerOpen(true)} title={t('power.open')}>
+          ⚡ {t('power.short')}
+        </button>
+
         <select
           value={i18n.language}
           onChange={(e) => setLanguage(e.target.value)}
@@ -305,6 +311,7 @@ export function AppShell() {
         )}
       </div>
       <TourOverlay />
+      {powerOpen && <PowerPatchView />}
     </div>
   )
 }

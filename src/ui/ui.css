@@ -73,6 +73,12 @@
   cursor: pointer; white-space: nowrap;
 }
 .tour-launch:hover { background: var(--coral); color: #16131a; }
+.power-launch {
+  border: 1px solid #f0b000; background: transparent; color: #f0b000;
+  padding: 4px 12px; border-radius: var(--radius-sm); font-weight: 600; font-size: 12px;
+  cursor: pointer; white-space: nowrap;
+}
+.power-launch:hover { background: #f0b000; color: #1a1710; }
 
 /* ---- Body: left panel + right column ---- */
 .body {

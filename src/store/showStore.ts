@@ -136,6 +136,9 @@ interface ShowState {
   // Patch is a PWA aid (Titan patches via menus, not a window), so it lives here, not in the desk.
   rightPanel: 'monitor' | 'patch'
   setRightPanel: (p: 'monitor' | 'patch') => void
+  /** Full-screen electrical / dimmer-patch panels module (Tartanga racks). */
+  powerOpen: boolean
+  setPowerOpen: (v: boolean) => void
   // Titan mosaic: the touchscreen holds one or more workspace windows, each at a standard
   // position (quarter/half/full). deskFocus = the active window (tabs + Cog act on it).
   deskWindows: DeskWindow[]
@@ -689,6 +692,8 @@ export const useShowStore = create<ShowState>()(
       setExtConnected: (v) => set({ extConnected: v }),
       rightPanel: 'monitor',
       setRightPanel: (p) => set({ rightPanel: p }),
+      powerOpen: false,
+      setPowerOpen: (v) => set({ powerOpen: v }),
       deskScreen: 'fixtures',
       // Default mosaic: just the Fixtures workspace, full. The Visualiser is its own big pane
       // (bottom-right), not a mosaic window, so it can grow independently of the desk.

@@ -250,6 +250,15 @@
       "riser": "Tarima"
     }
   },
+  "power": {
+    "short": "Cuadro",
+    "open": "Abrir los paneles eléctricos / patch de dimmers (racks de Tartanga)",
+    "title": "Paneles eléctricos y patch de dimmers",
+    "close": "Cerrar",
+    "hint": "Los racks reales de Tartanga — vista previa (la interacción llega pronto)",
+    "board": "CUADRO ELÉCTRICO",
+    "dimmers": "DIMMERS + DIRECTOS"
+  },
   "run": {
     "title": "Ejecutar",
     "record": "Grabar cue",
