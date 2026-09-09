@@ -131,9 +131,9 @@
 .pw-dimmer-btns { display: flex; gap: 2px; }
 .pw-dimmer-btns > i { width: 4px; height: 4px; border-radius: 50%; background: #294056; }
 .pw-dimmer-chans { display: grid; grid-template-columns: repeat(12, 1fr); gap: 2px; }
-.pw-mcb { display: flex; flex-direction: column; align-items: center; }
-.pw-mcb .pw-svg { display: block; height: 30px; width: auto; }
-.pw-mcb > b { font-size: 7px; color: #9aa0ad; font-weight: 500; margin-top: 2px; }
+.pw-chan { display: flex; flex-direction: column; align-items: center; }
+.pw-chan .pw-svg { display: block; height: 30px; width: auto; }
+.pw-chan > b { font-size: 7px; color: #9aa0ad; font-weight: 500; margin-top: 2px; }
 /* Black ventilated louver strip between rows/devices — thin, like the real racks. */
 .pw-vent {
   flex: none; height: 8px; margin: 3px 0; border-radius: 3px;

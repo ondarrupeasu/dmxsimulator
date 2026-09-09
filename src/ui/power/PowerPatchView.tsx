@@ -235,7 +235,7 @@ export function PowerPatchView() {
                     </div>
                     <div className="pw-dimmer-chans">
                       {range(12, u * 12 + 1).map((n) => (
-                        <div className="pw-mcb" key={n} title={`${n} · ${t('power.tip.dimmerChan')}`}><ChannelBreaker /><b>{n}</b></div>
+                        <div className="pw-chan" key={n} title={`${n} · ${t('power.tip.dimmerChan')}`}><ChannelBreaker /><b>{n}</b></div>
                       ))}
                     </div>
                   </div>
