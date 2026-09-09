@@ -1,14 +1,14 @@
 /**
- * TINHAO S4 DMX splitter, traced from the Tartanga photo: a black panel with one DMX IN and four
- * DMX OUT (5-pin XLR), status LEDs (DMX IN + per-output green, POWER red). It's the DATA side of the
- * rig — the Quartz desk's DMX feeds this, and each OUT drives one lighting bar.
+ * TINHAO S4 DMX splitter, traced from the Tartanga photo: a black panel with a DMX IN pair and four
+ * DMX OUT (5-pin XLR), status LEDs above their labels (green for DMX IN and each output, red POWER).
+ * It's the DATA side of the rig — the Quartz desk's DMX feeds this, and each OUT drives one bar.
  *
- * Physically it lives BEHIND the patch racks (noted in the scene caption).
+ * As in the photo: of the two DMX IN sockets the left is free and the right has a cable; of the four
+ * DMX OUT, #1 is free and #2/#3/#4 are patched. Physically it lives behind the patch racks.
  */
 
-/** A 5-pin female XLR chassis connector (as on the S4 in/out). */
-function Xlr({ x, y, r = 24 }: { x: number; y: number; r?: number }) {
-  // 5-pin layout: two upper, two lower, one centre
+/** A 5-pin female XLR chassis connector. */
+function Xlr({ x, y, r = 20 }: { x: number; y: number; r?: number }) {
   const p = r * 0.34
   const holes = [
     [0, -p], [-p, -p * 0.35], [p, -p * 0.35], [-p * 0.6, p * 0.7], [p * 0.6, p * 0.7],
@@ -17,13 +17,26 @@ function Xlr({ x, y, r = 24 }: { x: number; y: number; r?: number }) {
     <g transform={`translate(${x},${y})`}>
       <circle r={r} fill="#0c0c0e" stroke="#3a3c42" strokeWidth="1.5" />
       <circle r={r - 3} fill="#17181b" stroke="#2a2b30" strokeWidth="1" />
-      {/* keyway notch at top */}
       <rect x={-3} y={-r + 2.5} width="6" height="5" rx="1.5" fill="#0a0a0c" />
-      {/* female insert */}
       <circle r={r * 0.62} fill="#25272c" stroke="#3d3f45" strokeWidth="1" />
       {holes.map(([hx, hy], i) => (
         <circle key={i} cx={hx} cy={hy} r={r * 0.11} fill="#0b0b0d" stroke="#45474d" strokeWidth="0.6" />
       ))}
+    </g>
+  )
+}
+
+/** A male XLR cable plug inserted into a socket, with a short cable stub going up or down. */
+function XlrPlug({ x, y, dir }: { x: number; y: number; dir: 'up' | 'down' }) {
+  const s = dir === 'down' ? 1 : -1
+  return (
+    <g transform={`translate(${x},${y})`}>
+      {/* cable stub */}
+      <path d={`M 0 0 C ${6 * s} ${20 * s}, ${-8 * s} ${30 * s}, ${2 * s} ${46 * s}`} fill="none" stroke="#2f4bc0" strokeWidth="6" strokeLinecap="round" />
+      {/* plug barrel + boot */}
+      <circle r="15" fill="#33353c" stroke="#17181b" strokeWidth="1.5" />
+      <circle r="9" fill="#1c1d21" stroke="#0d0e10" strokeWidth="1" />
+      <rect x="-7" y={dir === 'down' ? 12 : -20} width="14" height="9" rx="3" fill="#2a3c8f" />
     </g>
   )
 }
@@ -55,26 +68,27 @@ export function S4Splitter() {
       <text x="300" y="42" fill="#e6e7ea" fontSize="24" fontStyle="italic" fontWeight="800" fontFamily="system-ui" textAnchor="middle">S4</text>
       <text x="300" y="55" fill="#9aa0aa" fontSize="8" fontWeight="700" fontFamily="system-ui" textAnchor="middle" letterSpacing="1">LIGHTING</text>
 
-      {/* DMX IN */}
-      <Xlr x={150} y={96} r={26} />
-      <line x1="120" y1="140" x2="180" y2="140" stroke="#4a4c52" strokeWidth="1" />
-      <line x1="150" y1="128" x2="150" y2="140" stroke="#4a4c52" strokeWidth="1" />
-      <Led x={120} y={150} color={GREEN} />
-      <text x="150" y="166" fill="#dfe1e4" fontSize="13" fontWeight="700" fontFamily="system-ui" textAnchor="middle" letterSpacing="1">DMX IN</text>
+      {/* DMX IN — two sockets (left free, right patched); green LED above the label */}
+      <Xlr x={116} y={86} />
+      <Xlr x={168} y={86} />
+      <XlrPlug x={168} y={86} dir="up" />
+      <Led x={142} y={118} color={GREEN} />
+      <text x="142" y="134" fill="#dfe1e4" fontSize="13" fontWeight="700" fontFamily="system-ui" textAnchor="middle" letterSpacing="1">DMX IN</text>
 
-      {/* POWER (label to the left of the LED so it stays inside the panel) */}
-      <text x="294" y="154" fill="#dfe1e4" fontSize="13" fontWeight="700" fontFamily="system-ui" textAnchor="end" letterSpacing="0.5">POWER</text>
-      <Led x={306} y={150} color={RED} />
+      {/* POWER — red LED above the label */}
+      <Led x={306} y={96} color={RED} />
+      <text x="306" y="114" fill="#dfe1e4" fontSize="13" fontWeight="700" fontFamily="system-ui" textAnchor="middle" letterSpacing="0.5">POWER</text>
 
-      {/* DMX OUT 1-4 */}
+      {/* DMX OUT 1-4 — #1 free, #2/#3/#4 patched */}
       {outs.map((n, i) => {
-        const x = 64 + i * 80
+        const x = 66 + i * 76
         return (
           <g key={n}>
-            <text x={x} y="212" fill="#dfe1e4" fontSize="11.5" fontWeight="700" fontFamily="system-ui" textAnchor="middle" letterSpacing="0.5">DMX OUT</text>
-            <text x={x} y="224" fill="#dfe1e4" fontSize="11.5" fontWeight="700" fontFamily="system-ui" textAnchor="middle">{n}</text>
-            <Led x={x + 22} y={232} color={GREEN} />
-            <Xlr x={x} y={258} r={22} />
+            <text x={x} y="206" fill="#dfe1e4" fontSize="11" fontWeight="700" fontFamily="system-ui" textAnchor="middle" letterSpacing="0.5">DMX OUT</text>
+            <text x={x} y="218" fill="#dfe1e4" fontSize="11" fontWeight="700" fontFamily="system-ui" textAnchor="middle">{n}</text>
+            <Led x={x} y={232} color={GREEN} />
+            <Xlr x={x} y={262} />
+            {n !== 1 && <XlrPlug x={x} y={262} dir="down" />}
           </g>
         )
       })}

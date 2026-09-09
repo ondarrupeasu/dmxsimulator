@@ -75,6 +75,89 @@ function Pcon({ color = 'blue', capped = false }: { color?: 'white' | 'blue'; ca
   return <PowerCon color={color} capped={capped} />
 }
 
+/** A powerCON cable plug drawn at a cable tip (local +x points down the cable, tip at origin). */
+function CablePlug() {
+  return (
+    <g className="pw-plug">
+      <rect x="16" y="-3.5" width="8" height="7" rx="2.5" fill="#2a2c33" /> {/* strain relief */}
+      <rect x="2" y="-5.5" width="15" height="11" rx="3" fill="#3a5bd0" stroke="#22368f" strokeWidth="1" /> {/* body */}
+      <rect x="6" y="-7" width="7" height="2" rx="1" fill="#6f8ae6" /> {/* latch */}
+      <rect x="-4" y="-6" width="7" height="12" rx="2.5" fill="#5b78e0" stroke="#22368f" strokeWidth="0.8" /> {/* collar */}
+    </g>
+  )
+}
+
+type Pt = { x: number; y: number; px: number; py: number }
+const ROPE_N = 18
+
+/** Advance every patch cable's verlet rope by `substeps` and write the SVG path + plug transforms
+ *  directly. substeps=1 per animation frame; a larger value settles the rope synchronously (e.g. on
+ *  creation, so cables show a hanging shape even before/without requestAnimationFrame). */
+function simulateCables(row: HTMLElement, patches: { from: string; to: string }[], scale: number, ropes: Map<string, Pt[]>, substeps: number) {
+  const N = ROPE_N, GRAV = 0.5, DAMP = 0.96, ITER = 14, SLACK = 1.28
+  const rr = row.getBoundingClientRect()
+  const centre = (id: string) => {
+    const el = row.querySelector(`[data-connid="${id}"]`) as HTMLElement | null
+    if (!el) return null
+    const c = el.getBoundingClientRect()
+    return { x: (c.left + c.width / 2 - rr.left) / scale, y: (c.top + c.height / 2 - rr.top) / scale }
+  }
+  const alive = new Set<string>()
+  for (const p of patches) {
+    const key = `${p.from}>${p.to}`
+    alive.add(key)
+    const a = centre(p.from), b = centre(p.to)
+    if (!a || !b) continue
+    const dist = Math.max(Math.hypot(b.x - a.x, b.y - a.y), 1)
+    const rest = (dist * SLACK) / (N - 1)
+    let pts = ropes.get(key)
+    if (!pts) {
+      pts = Array.from({ length: N }, (_, i) => {
+        const t = i / (N - 1)
+        const x = a.x + (b.x - a.x) * t, y = a.y + (b.y - a.y) * t + Math.sin(t * Math.PI) * 24
+        return { x, y, px: x, py: y }
+      })
+      ropes.set(key, pts)
+    }
+    for (let s = 0; s < substeps; s++) {
+      pts[0].x = a.x; pts[0].y = a.y; pts[N - 1].x = b.x; pts[N - 1].y = b.y
+      for (let i = 1; i < N - 1; i++) {
+        const pt = pts[i]
+        const vx = (pt.x - pt.px) * DAMP, vy = (pt.y - pt.py) * DAMP
+        pt.px = pt.x; pt.py = pt.y
+        pt.x += vx; pt.y += vy + GRAV
+      }
+      for (let it = 0; it < ITER; it++) {
+        pts[0].x = a.x; pts[0].y = a.y; pts[N - 1].x = b.x; pts[N - 1].y = b.y
+        for (let i = 0; i < N - 1; i++) {
+          const p1 = pts[i], p2 = pts[i + 1]
+          const dx = p2.x - p1.x, dy = p2.y - p1.y
+          const d = Math.hypot(dx, dy) || 0.001
+          const diff = (rest - d) / d
+          const ox = dx * diff, oy = dy * diff
+          const m1 = i === 0 ? 0 : 1, m2 = i + 1 === N - 1 ? 0 : 1
+          if (m1 && m2) { p1.x -= ox * 0.5; p1.y -= oy * 0.5; p2.x += ox * 0.5; p2.y += oy * 0.5 }
+          else if (m2) { p2.x += ox; p2.y += oy }
+          else if (m1) { p1.x -= ox; p1.y -= oy }
+        }
+      }
+    }
+    const pathEl = row.querySelector(`path[data-cablekey="${key}"]`)
+    if (pathEl) {
+      let d = `M ${pts[0].x.toFixed(1)} ${pts[0].y.toFixed(1)}`
+      for (let i = 1; i < N; i++) d += ` L ${pts[i].x.toFixed(1)} ${pts[i].y.toFixed(1)}`
+      pathEl.setAttribute('d', d)
+    }
+    const setPlug = (end: 'a' | 'b', tip: Pt, nb: Pt) => {
+      const g = row.querySelector(`g[data-cablekey="${key}"][data-end="${end}"]`)
+      if (g) g.setAttribute('transform', `translate(${tip.x.toFixed(1)},${tip.y.toFixed(1)}) rotate(${(Math.atan2(nb.y - tip.y, nb.x - tip.x) * 180) / Math.PI})`)
+    }
+    setPlug('a', pts[0], pts[1])
+    setPlug('b', pts[N - 1], pts[N - 2])
+  }
+  for (const key of [...ropes.keys()]) if (!alive.has(key)) ropes.delete(key)
+}
+
 /** A patch bay (CANALES / CIRCUITOS): rows of numbered connectors (null = capped), with a black
  *  ventilation louver strip between the rows. Connectors are clickable to patch cables between bays. */
 function Bay({ title, tip, color, rows, perNumber = 1, kind, sel, patched, onConn }: {
@@ -177,8 +260,8 @@ export function PowerPatchView() {
   const dataRef = useRef<HTMLDivElement>(null)
   const [k, setK] = useState({ board: 1, racks: 1, data: 1 })
   const [nav, setNav] = useState<{ nextLeft?: number; prevRight?: number }>({})
-  const [cables, setCables] = useState<{ key: string; d: string; ax: number; ay: number; bx: number; by: number }[]>([])
   const [rowSize, setRowSize] = useState({ w: 0, h: 0 })
+  const ropesRef = useRef<Map<string, { x: number; y: number; px: number; py: number }[]>>(new Map())
   useEffect(() => {
     const fit = () => {
       const st = stageRef.current
@@ -204,34 +287,36 @@ export function PowerPatchView() {
     return () => ro.disconnect()
   }, [scene])
 
-  // Measure connector centres (in the racks' own unscaled coordinate space) and build the patch
-  // cables. Recomputed whenever the patch list, the racks' scale, or the scene changes.
+  // The overlay SVG matches the racks' unscaled size.
   useLayoutEffect(() => {
     const row = racksRef.current
     if (!row) return
-    const measure = () => {
-      const scale = k.racks || 1
-      const rr = row.getBoundingClientRect()
-      const centre = (id: string) => {
-        const el = row.querySelector(`[data-connid="${id}"]`) as HTMLElement | null
-        if (!el) return null
-        const c = el.getBoundingClientRect()
-        return { x: (c.left + c.width / 2 - rr.left) / scale, y: (c.top + c.height / 2 - rr.top) / scale }
-      }
-      const out: typeof cables = []
-      for (const p of patches) {
-        const a = centre(p.from), b = centre(p.to)
-        if (!a || !b) continue
-        const sag = 26 + Math.abs(b.x - a.x) * 0.12
-        out.push({ key: `${p.from}>${p.to}`, ax: a.x, ay: a.y, bx: b.x, by: b.y, d: `M ${a.x} ${a.y} C ${a.x} ${a.y + sag}, ${b.x} ${b.y + sag}, ${b.x} ${b.y}` })
-      }
-      setCables(out)
-      setRowSize({ w: row.offsetWidth, h: row.offsetHeight })
-    }
+    const measure = () => setRowSize({ w: row.offsetWidth, h: row.offsetHeight })
     measure()
     const ro = new ResizeObserver(measure)
     ro.observe(row)
     return () => ro.disconnect()
+  }, [scene])
+
+  // Settle each cable synchronously when it changes, so it shows a hanging shape immediately (even
+  // in a background tab where requestAnimationFrame is paused).
+  useLayoutEffect(() => {
+    const row = racksRef.current
+    if (!row || scene !== 1) return
+    simulateCables(row, patches, k.racks || 1, ropesRef.current, 60)
+  }, [patches, k.racks, scene, rowSize])
+
+  // Live verlet physics: each cable hangs and swings like a real cable. One sub-step per frame.
+  useEffect(() => {
+    const row = racksRef.current
+    if (!row || scene !== 1) return
+    let raf = 0
+    const step = () => {
+      simulateCables(row, patches, k.racks || 1, ropesRef.current, 1)
+      raf = requestAnimationFrame(step)
+    }
+    raf = requestAnimationFrame(step)
+    return () => cancelAnimationFrame(raf)
   }, [patches, k.racks, scene])
 
   // outer transform for a slide at position i, given the active scene (cover-flow)
@@ -352,16 +437,19 @@ export function PowerPatchView() {
             {/* CIRCUITOS (blue connectors, pairs + capped gaps, 1-48) */}
             <Bay title="CIRCUITOS" tip={t('power.tip.circuitos')} color="blue" rows={CIRCUITOS_ROWS} kind="circ" sel={sel} patched={patched} onConn={clickConn} />
 
-            {/* patch cables overlay (measured in the racks' own coordinate space) */}
-            {cables.length > 0 && (
+            {/* patch cables overlay — verlet ropes with a powerCON plug at each tip (updated in RAF) */}
+            {patches.length > 0 && (
               <svg className="pw-cables" width={rowSize.w} height={rowSize.h} style={{ width: rowSize.w, height: rowSize.h }} aria-hidden>
-                {cables.map((c) => (
-                  <g key={c.key}>
-                    <path d={c.d} className="pw-cable-line" />
-                    <circle cx={c.ax} cy={c.ay} r="4.5" className="pw-cable-end" />
-                    <circle cx={c.bx} cy={c.by} r="4.5" className="pw-cable-end" />
-                  </g>
-                ))}
+                {patches.map((p) => {
+                  const key = `${p.from}>${p.to}`
+                  return (
+                    <g key={key}>
+                      <path data-cablekey={key} className="pw-cable-line" />
+                      <g data-cablekey={key} data-end="a"><CablePlug /></g>
+                      <g data-cablekey={key} data-end="b"><CablePlug /></g>
+                    </g>
+                  )
+                })}
               </svg>
             )}
           </div>
