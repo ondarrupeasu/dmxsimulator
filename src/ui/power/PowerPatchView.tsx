@@ -135,19 +135,26 @@ export function PowerPatchView() {
   const racksRef = useRef<HTMLDivElement>(null)
   const [kBoard, setKBoard] = useState(1)
   const [kRacks, setKRacks] = useState(1)
+  const [nextLeft, setNextLeft] = useState<number | undefined>(undefined)
   useEffect(() => {
     const fit = () => {
       const st = stageRef.current
       if (!st) return
-      const availW = st.clientWidth - 120 // leave room for the side arrows / peek
-      const availH = st.clientHeight - 36
+      const availH = st.clientHeight - 24
       const bd = boardRef.current, rk = racksRef.current
       if (bd) {
-        const k = Math.min(availW / bd.offsetWidth, availH / bd.offsetHeight, 2)
-        if (k > 0 && isFinite(k)) setKBoard(k)
+        // the board leaves room on the right for the arrow + the peeking racks
+        const k = Math.min((st.clientWidth - 150) / bd.offsetWidth, availH / bd.offsetHeight, 2.2)
+        if (k > 0 && isFinite(k)) {
+          setKBoard(k)
+          // park the "to racks" arrow just off the board's right edge, never over the racks
+          const right = st.clientWidth / 2 + (bd.offsetWidth * k) / 2 + 16
+          setNextLeft(Math.min(right, st.clientWidth - 84))
+        }
       }
       if (rk) {
-        const k = Math.min(availW / rk.offsetWidth, availH / rk.offsetHeight, 1.6)
+        // the three racks fill the screen as much as possible
+        const k = Math.min((st.clientWidth - 96) / rk.offsetWidth, availH / rk.offsetHeight, 2.4)
         if (k > 0 && isFinite(k)) setKRacks(k)
       }
     }
@@ -259,7 +266,7 @@ export function PowerPatchView() {
         </section>
 
         {/* Cover-flow navigation */}
-        <button className="pw-nav pw-nav-next" onClick={() => setScene(1)} hidden={scene === 1} title={t('power.toRacks')}>
+        <button className="pw-nav pw-nav-next" onClick={() => setScene(1)} hidden={scene === 1} title={t('power.toRacks')} style={nextLeft != null ? { left: nextLeft, right: 'auto' } : undefined}>
           <span className="pw-nav-chev">❯</span>
           <span className="pw-nav-label">{t('power.toRacks')}</span>
         </button>

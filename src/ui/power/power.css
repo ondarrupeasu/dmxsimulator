@@ -82,8 +82,8 @@
   font-size: 12px; font-weight: 800; letter-spacing: 1px; color: #aeb3c0; text-align: center;
   background: #12131a; border: 1px solid #2c2f3a; border-radius: 6px; padding: 5px 8px; flex: none;
 }
-/* The three racks are IDENTICAL in size. */
-.pw-rack { width: 252px; }
+/* The three racks are IDENTICAL in size — wide enough for the connectors (no overflow). */
+.pw-rack { width: 284px; }
 .pw-board { width: 430px; }
 
 /* powerCON connector — drawn as SVG (connectors.tsx): a square flange (white or blue) with two
