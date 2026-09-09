@@ -126,17 +126,30 @@ export function PowerPatchView() {
   const close = () => useShowStore.getState().setPowerOpen(false)
   const [showHelp, setShowHelp] = useState(false)
 
-  // Uniform scale-to-fit: the racks keep their fixed size and never squash — the whole board
-  // scales down (or up a touch) to fit the viewport, like the Quartz desk.
+  // Two scenes in a cover-flow: the breaker board (seen first), then the three patch racks (they
+  // travel together — you patch them together). Each scene scales to fit the stage on its own so
+  // the active one is as big as possible; the other peeks at the side, turned like an album cover.
+  const [scene, setScene] = useState<0 | 1>(0)
   const stageRef = useRef<HTMLDivElement>(null)
-  const contentRef = useRef<HTMLDivElement>(null)
-  const [scale, setScale] = useState(1)
+  const boardRef = useRef<HTMLDivElement>(null)
+  const racksRef = useRef<HTMLDivElement>(null)
+  const [kBoard, setKBoard] = useState(1)
+  const [kRacks, setKRacks] = useState(1)
   useEffect(() => {
     const fit = () => {
-      const st = stageRef.current, ct = contentRef.current
-      if (!st || !ct) return
-      const k = Math.min((st.clientWidth - 28) / ct.offsetWidth, (st.clientHeight - 28) / ct.offsetHeight, 1.5)
-      if (k > 0 && isFinite(k)) setScale(k)
+      const st = stageRef.current
+      if (!st) return
+      const availW = st.clientWidth - 120 // leave room for the side arrows / peek
+      const availH = st.clientHeight - 36
+      const bd = boardRef.current, rk = racksRef.current
+      if (bd) {
+        const k = Math.min(availW / bd.offsetWidth, availH / bd.offsetHeight, 2)
+        if (k > 0 && isFinite(k)) setKBoard(k)
+      }
+      if (rk) {
+        const k = Math.min(availW / rk.offsetWidth, availH / rk.offsetHeight, 1.6)
+        if (k > 0 && isFinite(k)) setKRacks(k)
+      }
     }
     fit()
     const ro = new ResizeObserver(fit)
@@ -174,69 +187,86 @@ export function PowerPatchView() {
         </>
       )}
 
-      <div className="pw-stage" ref={stageRef}>
-        <div className="pw-content" ref={contentRef} style={{ transform: `scale(${scale})` }}>
-          {/* 1 — Cuadro eléctrico (breaker board) */}
-          <section className="pw-panel pw-board">
-            <header>{t('power.board')}</header>
-            <div className="pw-board-rows">
-              {BREAKER_ROWS.map((row, i) => (
-                <div className="pw-board-row" key={i}>
-                  <div className="pw-row-label">{row.label}</div>
-                  <div className="pw-row-breakers">
-                    {row.mods.map((m, j) => {
-                      const tip = m.kind === 'main' ? 'general' : m.kind === 'rcd' ? 'diff' : 'mcb'
-                      return <Module key={j} m={m} title={t(`power.tip.${tip}`)} />
-                    })}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </section>
-
-          {/* 2 — Dimmer racks + DIRECTOS */}
-          <section className="pw-panel pw-rack pw-dimmers">
-            <header>{t('power.dimmers')}</header>
-            {[0, 1, 2].map((u) => (
-              <div className="pw-dimmer-slot" key={u}>
-                <div className="pw-dimmer-unit">
-                  <div className="pw-dimmer-face">
-                    {/* LCD is OFF (dark, blank) until the rack is powered (interaction phase). */}
-                    <div className="pw-dimmer-screen" title={t('power.tip.dimmerScreen')}>
-                      <div className="pw-dimmer-btns"><i /><i /><i /><i /></div>
+      <div className={`pw-stage pw-flow scene-${scene}`} ref={stageRef}>
+        {/* Scene 0 — Cuadro eléctrico (breaker board): the first thing you see */}
+        <section className="pw-slide pw-slide-board" onClick={scene !== 0 ? () => setScene(0) : undefined} aria-hidden={scene !== 0}>
+          <div className="pw-slide-inner" ref={boardRef} style={{ transform: `scale(${kBoard})` }}>
+            <section className="pw-panel pw-board">
+              <header>{t('power.board')}</header>
+              <div className="pw-board-rows">
+                {BREAKER_ROWS.map((row, i) => (
+                  <div className="pw-board-row" key={i}>
+                    <div className="pw-row-label">{row.label}</div>
+                    <div className="pw-row-breakers">
+                      {row.mods.map((m, j) => {
+                        const tip = m.kind === 'main' ? 'general' : m.kind === 'rcd' ? 'diff' : 'mcb'
+                        return <Module key={j} m={m} title={t(`power.tip.${tip}`)} />
+                      })}
                     </div>
-                    <span className="pw-dimmer-brand">TINHAO&nbsp;·&nbsp;AT2000⁺</span>
                   </div>
-                  <div className="pw-dimmer-chans">
-                    {range(12, u * 12 + 1).map((n) => (
-                      <div className="pw-mcb" key={n} title={`${n} · ${t('power.tip.dimmerChan')}`}><ChannelBreaker /><b>{n}</b></div>
-                    ))}
-                  </div>
-                </div>
-                <div className="pw-vent" aria-hidden />
-              </div>
-            ))}
-            <div className="pw-directos" title={t('power.tip.directos')}>
-              <div className="pw-directos-label">DIRECTOS</div>
-              <div className="pw-directos-bars">
-                <span style={{ background: PINK }} />
-                <span style={{ background: ORANGE }} />
-                <span style={{ background: YELLOW }} />
-              </div>
-              <div className="pw-directos-row">
-                {range(12).map((n) => (
-                  <span key={n} title={`Directo ${n} — ${t('power.tip.directos')}`}><Pcon color="white" /></span>
                 ))}
               </div>
-            </div>
-          </section>
+            </section>
+          </div>
+        </section>
 
-          {/* 3 — CANALES DE DIMMERS (white connectors, 1-36) */}
-          <Bay title="CANALES DE DIMMERS" tip={t('power.tip.canales')} color="white" rows={CANALES_ROWS} perNumber={2} />
+        {/* Scene 1 — the three patch racks, side by side (they belong together) */}
+        <section className="pw-slide pw-slide-racks" onClick={scene !== 1 ? () => setScene(1) : undefined} aria-hidden={scene !== 1}>
+          <div className="pw-slide-inner pw-racks-row" ref={racksRef} style={{ transform: `scale(${kRacks})` }}>
+            {/* Dimmer racks + DIRECTOS */}
+            <section className="pw-panel pw-rack pw-dimmers">
+              <header>{t('power.dimmers')}</header>
+              {[0, 1, 2].map((u) => (
+                <div className="pw-dimmer-slot" key={u}>
+                  <div className="pw-dimmer-unit">
+                    <div className="pw-dimmer-face">
+                      {/* LCD is OFF (dark, blank) until the rack is powered (interaction phase). */}
+                      <div className="pw-dimmer-screen" title={t('power.tip.dimmerScreen')}>
+                        <div className="pw-dimmer-btns"><i /><i /><i /><i /></div>
+                      </div>
+                      <span className="pw-dimmer-brand">TINHAO&nbsp;·&nbsp;AT2000⁺</span>
+                    </div>
+                    <div className="pw-dimmer-chans">
+                      {range(12, u * 12 + 1).map((n) => (
+                        <div className="pw-mcb" key={n} title={`${n} · ${t('power.tip.dimmerChan')}`}><ChannelBreaker /><b>{n}</b></div>
+                      ))}
+                    </div>
+                  </div>
+                  {u < 2 && <div className="pw-vent" aria-hidden />}
+                </div>
+              ))}
+              <div className="pw-directos" title={t('power.tip.directos')}>
+                <div className="pw-directos-label">DIRECTOS</div>
+                <div className="pw-directos-bars">
+                  <span style={{ background: PINK }} />
+                  <span style={{ background: ORANGE }} />
+                  <span style={{ background: YELLOW }} />
+                </div>
+                <div className="pw-directos-row">
+                  {range(12).map((n) => (
+                    <span key={n} title={`Directo ${n} — ${t('power.tip.directos')}`}><Pcon color="white" /></span>
+                  ))}
+                </div>
+              </div>
+            </section>
 
-          {/* 4 — CIRCUITOS (blue connectors, pairs + capped gaps, 1-48) */}
-          <Bay title="CIRCUITOS" tip={t('power.tip.circuitos')} color="blue" rows={CIRCUITOS_ROWS} />
-        </div>
+            {/* CANALES DE DIMMERS (white connectors, 1-36) */}
+            <Bay title="CANALES DE DIMMERS" tip={t('power.tip.canales')} color="white" rows={CANALES_ROWS} perNumber={2} />
+
+            {/* CIRCUITOS (blue connectors, pairs + capped gaps, 1-48) */}
+            <Bay title="CIRCUITOS" tip={t('power.tip.circuitos')} color="blue" rows={CIRCUITOS_ROWS} />
+          </div>
+        </section>
+
+        {/* Cover-flow navigation */}
+        <button className="pw-nav pw-nav-next" onClick={() => setScene(1)} hidden={scene === 1} title={t('power.toRacks')}>
+          <span className="pw-nav-chev">❯</span>
+          <span className="pw-nav-label">{t('power.toRacks')}</span>
+        </button>
+        <button className="pw-nav pw-nav-prev" onClick={() => setScene(0)} hidden={scene === 0} title={t('power.toBoard')}>
+          <span className="pw-nav-chev">❮</span>
+          <span className="pw-nav-label">{t('power.toBoard')}</span>
+        </button>
       </div>
 
       <div className="pw-legend">

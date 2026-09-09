@@ -309,7 +309,9 @@
         "t": "⭐ Regla de oro: LED vs analógica",
         "b": "Analógica → SIEMPRE al dimmer (su dirección DMX es el canal del dimmer). LED/DMX → SIEMPRE a directos, y la dirección DMX se pone en el propio foco."
       }
-    }
+    },
+    "toRacks": "Racks de patch",
+    "toBoard": "Cuadro eléctrico"
   },
   "run": {
     "title": "Ejecutar",

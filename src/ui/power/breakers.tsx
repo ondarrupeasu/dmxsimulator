@@ -1,109 +1,133 @@
 /**
- * SVG electrical breakers drawn from the Tartanga board detail photos: standard DIN devices —
- * magnetothermics (MCB), residual-current differentials (RCD) and the main isolator. Vector so
- * they stay crisp at any scale and can be animated when the interaction phase lands (levers rise
- * when ON, drop when OFF).
+ * SVG electrical breakers, traced from the Tartanga board detail photos (rcd-close / row-dimmers).
+ * Standard DIN devices — magnetothermics (MCB), residual-current differentials (RCD) and the main
+ * isolator. Vector so they stay crisp at any scale and animate when the interaction phase lands
+ * (toggles rise when ON, drop when OFF).
  *
- * Signature detail from the photos: each lever is a small pale square with a dark round hole in
- * its centre; multi-pole devices join their levers under one common tie-bar (blue on the MCBs).
+ * Details taken straight from the photos:
+ *  - MCB: a thin BLUE bar along the very top edge across every pole; each pole's toggle is a pale
+ *    cap with a dark rounded-SQUARE window in its centre, sitting in a dark recessed slot.
+ *  - RCD: a wide two-module white box; the blue TEST button is a half-disc with its FLAT edge UP
+ *    and the curve hanging DOWN, on the left module; the handle is a big smooth navy block (no
+ *    hole) on the right module.
  */
 
-const PW = 18 // pole width (viewBox units)
-const PH = 76 // module height
+const PW = 20 // pole width (viewBox units)
+const PH = 78 // module height
 
-/** One pole face: body, branding seam, label window and a holed lever. */
-function Pole({ x, on, dark, blueLever }: { x: number; on: boolean; dark?: boolean; blueLever?: boolean }) {
-  const bodyFill = dark ? '#33353d' : '#eceef1'
-  const bodyEdge = dark ? '#15161b' : '#b7bbc2'
-  const leverFill = blueLever ? '#3f5cc8' : dark ? '#c9ccd3' : '#f6f7f9'
-  const leverEdge = blueLever ? '#233a94' : dark ? '#6a6d75' : '#9297a1'
-  const leverY = on ? 12 : 26 // up = ON
+/** A pale rocker toggle sitting in a dark slot, with a dark rounded-square window. up = ON. */
+function Toggle({ cx, on, dark }: { cx: number; on: boolean; dark?: boolean }) {
+  const capY = on ? 26 : 35
+  const capFill = dark ? '#d7dade' : '#f4f5f7'
+  return (
+    <g>
+      {/* recessed slot */}
+      <rect x={cx - 6} y="24" width="12" height="22" rx="2" fill={dark ? '#141519' : '#2c2e34'} />
+      {/* pale cap */}
+      <rect x={cx - 5.5} y={capY} width="11" height="11" rx="1.6" fill={capFill} stroke={dark ? '#8b8e96' : '#a9adb6'} strokeWidth="0.6" />
+      {/* dark rounded-square window in the cap */}
+      <rect x={cx - 3.4} y={capY + 3} width="6.8" height="5" rx="1.4" fill="#1a1b20" />
+    </g>
+  )
+}
+
+/** One pole face: body, faint branding, and the label holder at the bottom. */
+function PoleBody({ x, dark }: { x: number; dark?: boolean }) {
   return (
     <g transform={`translate(${x},0)`}>
-      <rect x="0.6" y="0.6" width={PW - 1.2} height={PH - 1.2} rx="2.5" fill={bodyFill} stroke={bodyEdge} strokeWidth="1" />
-      {/* window recess the lever travels in */}
-      <rect x={PW / 2 - 4.5} y="9" width="9" height="24" rx="2" fill={dark ? '#1b1c21' : '#3a3d44'} />
-      {/* branding seam + label holder */}
-      <rect x="2" y="40" width={PW - 4} height="1.4" rx="0.7" fill={dark ? '#15161b' : '#c9ccd3'} />
-      <rect x="2.5" y="52" width={PW - 5} height="13" rx="1.5" fill={dark ? '#1c1d22' : '#fbfcfd'} stroke={dark ? '#0e0f12' : '#c4c8cf'} strokeWidth="0.6" />
-      {/* holed lever */}
-      <rect x={PW / 2 - 4} y={leverY} width="8" height="9" rx="1.4" fill={leverFill} stroke={leverEdge} strokeWidth="0.7" />
-      <circle cx={PW / 2} cy={leverY + 4.5} r="1.6" fill={dark ? '#0e0f12' : '#2b2d33'} />
+      <rect x="0.5" y="0.5" width={PW - 1} height={PH - 1} rx="2" fill={dark ? '#34363e' : '#eceef1'} stroke={dark ? '#17181d' : '#b7bbc2'} strokeWidth="0.9" />
+      {/* faint branding lines */}
+      <rect x="3" y="14" width={PW - 8} height="1.1" rx="0.5" fill={dark ? '#4a4c54' : '#c8cbd2'} />
+      <rect x="3" y="17.5" width={PW - 11} height="1.1" rx="0.5" fill={dark ? '#4a4c54' : '#c8cbd2'} />
+      {/* label holder */}
+      <rect x="2.5" y="56" width={PW - 5} height="16" rx="1.5" fill={dark ? '#1e1f25' : '#fbfcfd'} stroke={dark ? '#0e0f12' : '#c4c8cf'} strokeWidth="0.6" />
     </g>
   )
 }
 
 type MCBProps = { poles?: number; on?: boolean; dark?: boolean }
 
-/** Magnetothermic breaker (MCB), 1-4 poles joined under a common blue tie-bar. */
+/** Magnetothermic breaker (MCB), 1-4 poles under a common thin blue top bar. */
 export function MCB({ poles = 1, on = true, dark }: MCBProps) {
   const totalW = poles * PW
-  const leverY = on ? 12 : 26
   return (
     <svg viewBox={`0 0 ${totalW} ${PH}`} width={totalW} height={PH} className="pw-svg">
       {Array.from({ length: poles }).map((_, i) => (
-        <Pole key={i} x={i * PW} on={on} dark={dark} />
+        <PoleBody key={i} x={i * PW} dark={dark} />
       ))}
-      {poles > 1 && (
-        <rect x="2.5" y={leverY - 3.5} width={totalW - 5} height="4.5" rx="2.2" fill="#3f5cc8" stroke="#233a94" strokeWidth="0.6" />
-      )}
+      {Array.from({ length: poles }).map((_, i) => (
+        <Toggle key={i} cx={i * PW + PW / 2} on={on} dark={dark} />
+      ))}
+      {/* thin blue bar along the very top edge, across every pole */}
+      <rect x="1.5" y="2" width={totalW - 3} height="3.6" rx="1.4" fill="#2f52d8" stroke="#1c34a0" strokeWidth="0.4" />
     </svg>
   )
 }
 
 /**
- * Residual-current device (differential): a wide two-module white box with the blue half-dome
- * TEST button on top, printed text on the left, and a blue holed handle on the right pole.
+ * Residual-current device (differential): a wide two-module white box. Blue TEST half-disc (flat
+ * edge up, curve down) on the left module; a big smooth navy handle on the right module.
  */
 export function RCD({ on = true }: { on?: boolean }) {
   const totalW = 2 * PW
-  const leverY = on ? 12 : 26
+  const handleY = on ? 25 : 34
+  const domeCx = PW / 2
+  const r = 5.6
   return (
     <svg viewBox={`0 0 ${totalW} ${PH}`} width={totalW} height={PH} className="pw-svg">
       {/* box */}
-      <rect x="0.6" y="0.6" width={totalW - 1.2} height={PH - 1.2} rx="2.5" fill="#f2f3f5" stroke="#b7bbc2" strokeWidth="1" />
-      <line x1="0.6" y1="41" x2={totalW - 0.6} y2="41" stroke="#c9ccd3" strokeWidth="0.8" />
-      {/* blue half-dome TEST button on top */}
-      <path d={`M ${PW - 5.5} 8 a 5.5 5.5 0 0 1 11 0 z`} fill="#2f52d8" stroke="#1b34a0" strokeWidth="0.7" />
-      <ellipse cx={PW} cy="7.8" rx="3.4" ry="1.4" fill="#5f7ce6" opacity="0.6" />
-      {/* printed text hint on the left module */}
+      <rect x="0.5" y="0.5" width={totalW - 1} height={PH - 1} rx="2" fill="#f2f3f5" stroke="#b7bbc2" strokeWidth="0.9" />
+      {/* brand seam */}
+      <line x1="0.5" y1="13" x2={totalW - 0.5} y2="13" stroke="#c9ccd3" strokeWidth="0.8" />
+      <circle cx={PW + 4} cy="10" r="1.4" fill="#6f7783" />
+      {/* blue TEST half-disc — FLAT edge up, curve hanging down */}
+      <path d={`M ${domeCx - r} 8 A ${r} ${r} 0 0 0 ${domeCx + r} 8 Z`} fill="#2f52d8" stroke="#1b34a0" strokeWidth="0.7" />
+      <path d={`M ${domeCx - r + 1} 8 A ${r - 1} ${r - 1} 0 0 0 ${domeCx + r - 1} 8`} fill="none" stroke="#7a92ef" strokeWidth="0.8" opacity="0.7" />
+      {/* faint printed text on the left module */}
       {[0, 1, 2, 3].map((k) => (
-        <rect key={k} x="3.5" y={22 + k * 4} width={PW - 8} height="1.5" rx="0.7" fill="#c3c7cf" />
+        <rect key={k} x="3.5" y={24 + k * 4} width={PW - 8} height="1.4" rx="0.6" fill="#c6cad1" />
       ))}
-      {/* right module: window + blue holed handle */}
-      <rect x={PW + PW / 2 - 4.5} y="9" width="9" height="24" rx="2" fill="#3a3d44" />
-      <rect x={PW + PW / 2 - 4} y={leverY} width="8" height="9" rx="1.4" fill="#3f5cc8" stroke="#233a94" strokeWidth="0.7" />
-      <circle cx={PW + PW / 2} cy={leverY + 4.5} r="1.6" fill="#12142a" />
-      {/* label holder bottom-right */}
-      <rect x={PW + 2.5} y="52" width={PW - 5} height="13" rx="1.5" fill="#fbfcfd" stroke="#c4c8cf" strokeWidth="0.6" />
+      {/* N logo hint bottom-left */}
+      <rect x={domeCx - 3} y="64" width="6" height="7" rx="1" fill="none" stroke="#3a3d44" strokeWidth="1" />
+      {/* right module: dark slot + big smooth navy handle (no hole) */}
+      <rect x={PW + PW / 2 - 7} y="22" width="14" height="26" rx="2.5" fill="#2c2e34" />
+      <rect x={PW + PW / 2 - 6} y={handleY} width="12" height="15" rx="2" fill="#26326f" stroke="#12142a" strokeWidth="0.7" />
+      <rect x={PW + PW / 2 - 4.5} y={handleY + 1.5} width="3" height="12" rx="1.2" fill="#3d4d97" opacity="0.8" />
+      {/* small indicator window below the handle */}
+      <rect x={PW + PW / 2 - 3} y="50" width="6" height="2.4" rx="0.8" fill="#1a1b20" />
+      {/* label holder */}
+      <rect x={PW + 2.5} y="56" width={PW - 5} height="16" rx="1.5" fill="#fbfcfd" stroke="#c4c8cf" strokeWidth="0.6" />
     </svg>
   )
 }
 
 /** Compact single-pole channel breaker for the dimmer units (a small toggle, up = ON). */
 export function ChannelBreaker({ on = true }: { on?: boolean }) {
-  const leverY = on ? 9 : 21
+  const capY = on ? 8 : 18
   return (
     <svg viewBox="0 0 14 40" className="pw-svg">
       <rect x="0.5" y="0.5" width="13" height="39" rx="2" fill="#eceef1" stroke="#b7bbc2" strokeWidth="0.8" />
-      <rect x="3" y="6" width="8" height="19" rx="1.6" fill="#3a3d44" />
-      <rect x="3.3" y={leverY} width="7.4" height="8" rx="1.2" fill="#f6f7f9" stroke="#9297a1" strokeWidth="0.6" />
-      <circle cx="7" cy={leverY + 4} r="1.4" fill="#2b2d33" />
+      <rect x="2" y="2" width="10" height="2.4" rx="1" fill="#2f52d8" />
+      <rect x="3" y="7" width="8" height="20" rx="1.6" fill="#2c2e34" />
+      <rect x="3.4" y={capY} width="7.2" height="8" rx="1.2" fill="#f4f5f7" stroke="#a9adb6" strokeWidth="0.5" />
+      <rect x="5" y={capY + 2.4} width="4" height="3.4" rx="0.9" fill="#1a1b20" />
     </svg>
   )
 }
 
-/** Main isolator (GENERAL): a black-bezel 4-pole switch with a common handle. */
+/** Main isolator (GENERAL): a black-bezel 4-pole switch with a common grey top bar. */
 export function MainSwitch({ on = true }: { on?: boolean }) {
   const poles = 4
   const totalW = poles * PW
-  const leverY = on ? 12 : 26
   return (
     <svg viewBox={`0 0 ${totalW} ${PH}`} width={totalW} height={PH} className="pw-svg">
       {Array.from({ length: poles }).map((_, i) => (
-        <Pole key={i} x={i * PW} on={on} dark />
+        <PoleBody key={i} x={i * PW} dark />
       ))}
-      <rect x="2.5" y={leverY - 3.5} width={totalW - 5} height="4.5" rx="2.2" fill="#6a6d75" stroke="#2a2c33" strokeWidth="0.6" />
+      {Array.from({ length: poles }).map((_, i) => (
+        <Toggle key={i} cx={i * PW + PW / 2} on={on} dark />
+      ))}
+      <rect x="1.5" y="2" width={totalW - 3} height="3.6" rx="1.4" fill="#6a6d75" stroke="#2a2c33" strokeWidth="0.4" />
     </svg>
   )
 }

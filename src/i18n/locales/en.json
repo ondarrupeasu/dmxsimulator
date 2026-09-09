@@ -309,7 +309,9 @@
         "t": "⭐ Golden rule: LED vs analog",
         "b": "Analog → ALWAYS to a dimmer (its DMX address is the dimmer channel). LED / DMX → ALWAYS to directos, and the DMX address is set on the fixture itself."
       }
-    }
+    },
+    "toRacks": "Patch racks",
+    "toBoard": "Breaker board"
   },
   "run": {
     "title": "Run",

@@ -27,16 +27,46 @@
 }
 .pw-close:hover { background: #2e3140; }
 
-/* Stage centres the fixed-size board and clips overflow; the board scales to fit. */
+/* Stage = the cover-flow viewport. Two scenes (board / racks) sit stacked; the active one is
+   centred and full-size, the other peeks at the side turned like an album cover. */
 .pw-stage {
-  flex: 1; min-height: 0;
-  display: flex; align-items: center; justify-content: center;
+  flex: 1; min-height: 0; position: relative;
   overflow: hidden; padding: 14px;
+  perspective: 1800px;
 }
-.pw-content {
-  display: flex; gap: 16px; align-items: stretch; /* all panels share the tallest one's height */
-  transform-origin: center center; will-change: transform;
+.pw-slide {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  transform-origin: center center;
+  transition: transform 0.6s cubic-bezier(0.66, 0, 0.2, 1), opacity 0.55s ease, filter 0.55s ease;
+  pointer-events: none; /* re-enabled only on the peeking (inactive) slide, below */
 }
+.pw-slide-inner { transform-origin: center center; will-change: transform; }
+.pw-racks-row { display: flex; gap: 16px; align-items: flex-start; }
+
+/* Active vs peeking states */
+.pw-flow.scene-0 .pw-slide-board,
+.pw-flow.scene-1 .pw-slide-racks { transform: translateX(0) rotateY(0) scale(1); opacity: 1; filter: none; z-index: 2; }
+.pw-flow.scene-0 .pw-slide-racks { transform: translateX(66%) rotateY(-30deg) scale(0.72); opacity: 0.4; filter: brightness(0.7); z-index: 1; cursor: pointer; pointer-events: auto; }
+.pw-flow.scene-1 .pw-slide-board { transform: translateX(-66%) rotateY(30deg) scale(0.72); opacity: 0.4; filter: brightness(0.7); z-index: 1; cursor: pointer; pointer-events: auto; }
+.pw-flow .pw-slide:hover { opacity: 0.6; }
+.pw-flow.scene-0 .pw-slide-board:hover,
+.pw-flow.scene-1 .pw-slide-racks:hover { opacity: 1; }
+
+/* Cover-flow arrows */
+.pw-nav {
+  position: absolute; top: 50%; transform: translateY(-50%); z-index: 5;
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  background: rgba(24, 26, 33, 0.82); color: #e6e7ea;
+  border: 1px solid #3a3e4b; border-radius: 12px; padding: 12px 10px; cursor: pointer;
+  backdrop-filter: blur(3px); transition: background 0.2s, transform 0.2s;
+}
+.pw-nav[hidden] { display: none; }
+.pw-nav:hover { background: #2b2f3c; }
+.pw-nav-next { right: 14px; }
+.pw-nav-prev { left: 14px; }
+.pw-nav-chev { font-size: 26px; line-height: 1; color: #ff8a3d; }
+.pw-nav-label { font-size: 10px; font-weight: 700; max-width: 66px; text-align: center; color: #aeb3c0; }
 
 /* A rack panel — FIXED width (solid object); all panels stretch to the same height. */
 .pw-panel {
@@ -44,8 +74,10 @@
   border: 1px solid #2c2f3a; border-radius: 10px;
   padding: 12px; display: flex; flex-direction: column; gap: 10px;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
-  min-height: 540px; box-sizing: border-box; flex: none;
+  box-sizing: border-box; flex: none;
 }
+/* the three patch racks match each other's height; the board sizes to its content */
+.pw-rack { min-height: 468px; }
 .pw-panel > header {
   font-size: 12px; font-weight: 800; letter-spacing: 1px; color: #aeb3c0; text-align: center;
   background: #12131a; border: 1px solid #2c2f3a; border-radius: 6px; padding: 5px 8px; flex: none;
@@ -84,7 +116,7 @@
 
 /* ---- Dimmer rack ---- : thin blue AT2000+ devices separated by black ventilated blank panels
    that fill the rack (copying the real rack), DIRECTOS fixed at the bottom. */
-.pw-dimmer-slot { flex: 1 1 0; display: flex; flex-direction: column; min-height: 0; }
+.pw-dimmer-slot { flex: none; display: flex; flex-direction: column; }
 .pw-dimmer-unit { background: linear-gradient(#223458, #182640); border: 1px solid #2c3d61; border-radius: 5px; padding: 6px 8px; flex: none; }
 .pw-dimmer-face { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
 .pw-dimmer-brand { font-size: 9px; font-weight: 800; color: #9fbdf0; letter-spacing: 0.4px; margin-left: auto; }
@@ -102,11 +134,11 @@
 .pw-mcb { display: flex; flex-direction: column; align-items: center; }
 .pw-mcb .pw-svg { display: block; height: 30px; width: auto; }
 .pw-mcb > b { font-size: 7px; color: #9aa0ad; font-weight: 500; margin-top: 2px; }
-/* Black ventilated blank panel that fills the space between/after the thin dimmer devices. */
+/* Black ventilated louver strip between rows/devices — thin, like the real racks. */
 .pw-vent {
-  flex: 1; min-height: 8px; margin: 5px 0; border-radius: 4px;
+  flex: none; height: 8px; margin: 3px 0; border-radius: 3px;
   background: #0b0c10; border: 1px solid #1b1d25;
-  background-image: repeating-linear-gradient(#0b0c10 0 4px, #1c1f28 4px 6px);
+  background-image: repeating-linear-gradient(#0b0c10 0 2.5px, #23262f 2.5px 4px);
 }
 
 /* ---- Legend footer (always visible, tooltips on hover) ---- */

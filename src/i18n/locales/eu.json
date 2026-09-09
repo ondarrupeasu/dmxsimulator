@@ -309,7 +309,9 @@
         "t": "⭐ Urrezko araua: LED vs analogikoa",
         "b": "Analogikoa → BETI dimmerrera (bere DMX helbidea dimmer kanala da). LED / DMX → BETI directos-era, eta DMX helbidea fokoan bertan jartzen da."
       }
-    }
+    },
+    "toRacks": "Patch rack-ak",
+    "toBoard": "Koadro elektrikoa"
   },
   "run": {
     "title": "Exekutatu",
