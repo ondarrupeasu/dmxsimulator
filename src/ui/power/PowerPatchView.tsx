@@ -3,7 +3,7 @@ import type { CSSProperties } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useShowStore } from '../../store/showStore'
 import { MCB, RCD, RCDHager, MainSwitch, ChannelBreaker } from './breakers'
-import { PowerCon } from './connectors'
+import { PowerCon, Schuko } from './connectors'
 import { S4Splitter } from './splitter'
 import './power.css'
 
@@ -88,6 +88,17 @@ function CablePlug() {
   )
 }
 
+/** A European Schuko cable plug seen head-on, seated in a regleta outlet. */
+function SchukoPlug() {
+  return (
+    <g className="pw-plug">
+      <rect x="-10" y="-8.5" width="20" height="17" rx="7" fill="#26272c" stroke="#0e0f12" strokeWidth="1.2" />
+      <circle r="4.6" fill="#3a3c42" stroke="#17181b" strokeWidth="0.7" />
+      <circle cx="-1.5" cy="-1.5" r="1.1" fill="#55585f" opacity="0.7" />
+    </g>
+  )
+}
+
 type Pt = { x: number; y: number; px: number; py: number }
 const ROPE_N = 18
 
@@ -159,15 +170,15 @@ function simulateCables(row: HTMLElement, patches: { from: string; to: string }[
   for (const key of [...ropes.keys()]) if (!alive.has(key)) ropes.delete(key)
 }
 
-/** A clickable, patchable powerCON connector. */
-function Conn({ id, color, sel, patched, onConn, title }: {
-  id: string; color: 'white' | 'blue'; sel: string | null; patched: Set<string>; onConn: (id: string) => void; title?: string
+/** A clickable, patchable connector — a powerCON socket, or a Schuko outlet for the regletas. */
+function Conn({ id, color, sel, patched, onConn, title, schuko }: {
+  id: string; color: 'white' | 'blue'; sel: string | null; patched: Set<string>; onConn: (id: string) => void; title?: string; schuko?: boolean
 }) {
   return (
     <button type="button" data-connid={id} title={title}
       className={`pw-conn${sel === id ? ' sel' : ''}${patched.has(id) ? ' patched' : ''}`}
       onClick={(e) => { e.stopPropagation(); onConn(id) }}>
-      <Pcon color={color} />
+      {schuko ? <Schuko /> : <Pcon color={color} />}
     </button>
   )
 }
@@ -244,6 +255,10 @@ export function PowerPatchView() {
   const isOn = (id: string) => breakerOn[id] ?? true
   const toggle = (id: string) => setBreakerOn((s) => ({ ...s, [id]: !(s[id] ?? true) }))
   const trip = (id: string) => setBreakerOn((s) => ({ ...s, [id]: false })) // TEST button: only ever OFF
+  // A dimmer rack (0/1/2 → DIMMER-1/2/3) is powered only if GENERAL and its DIMMER group (the
+  // differential + its magnetothermic in the board's DIMMERS row) are all ON. This is how the rack
+  // actually gets fed at Tartanga — the channel breakers on the rack are downstream of these.
+  const rackPowered = (u: number) => isOn('b-0-0') && isOn(`b-1-${u * 2}`) && isOn(`b-1-${u * 2 + 1}`)
 
   const [sel, setSel] = useState<string | null>(null) // a connector waiting to be patched
   const [patches, setPatches] = useState<{ from: string; to: string }[]>([])
@@ -407,8 +422,15 @@ export function PowerPatchView() {
                   <div className="pw-dimmer-unit">
                     <span className="pw-dimmer-brand">AT2000⁺</span>
                     <div className="pw-dimmer-lcdcol">
-                      {/* LCD is OFF (dark, blank) until the rack is powered (interaction phase). */}
-                      <div className="pw-dimmer-screen" title={t('power.tip.dimmerScreen')} />
+                      {/* LCD lights up only when the rack is fed from the board (GENERAL + DIMMER-u). */}
+                      <div className={`pw-dimmer-screen${rackPowered(u) ? ' on' : ''}`} title={t('power.tip.dimmerScreen')}>
+                        {rackPowered(u) && (
+                          <>
+                            <span className="pw-lcd-line">DMX {String(u * 12 + 1).padStart(3, '0')}</span>
+                            <span className="pw-lcd-line pw-lcd-dim">CH {u * 12 + 1}–{u * 12 + 12}</span>
+                          </>
+                        )}
+                      </div>
                       {/* 5 menu control buttons under the screen */}
                       <div className="pw-dimmer-menu">{[0, 1, 2, 3, 4].map((b) => <i key={b} />)}</div>
                     </div>
@@ -458,7 +480,7 @@ export function PowerPatchView() {
                   {range(10).map((n) => (
                     <span className="pw-cell" key={n}>
                       <b className="pw-cell-num">R{n}</b>
-                      <Conn id={`regleta-${n}-0`} color="white" sel={sel} patched={patched} onConn={clickConn} title={`Regleta ${n}`} />
+                      <Conn id={`regleta-${n}-0`} color="white" sel={sel} patched={patched} onConn={clickConn} title={`Regleta ${n}`} schuko />
                     </span>
                   ))}
                 </div>
@@ -470,11 +492,12 @@ export function PowerPatchView() {
               <svg className="pw-cables" width={rowSize.w} height={rowSize.h} style={{ width: rowSize.w, height: rowSize.h }} aria-hidden>
                 {patches.map((p) => {
                   const key = `${p.from}>${p.to}`
+                  // regleta cables use a Schuko plug at the regleta end, powerCON everywhere else
                   return (
                     <g key={key}>
                       <path data-cablekey={key} className="pw-cable-line" />
-                      <g data-cablekey={key} data-end="a"><CablePlug /></g>
-                      <g data-cablekey={key} data-end="b"><CablePlug /></g>
+                      <g data-cablekey={key} data-end="a">{p.from.startsWith('regleta') ? <SchukoPlug /> : <CablePlug />}</g>
+                      <g data-cablekey={key} data-end="b">{p.to.startsWith('regleta') ? <SchukoPlug /> : <CablePlug />}</g>
                     </g>
                   )
                 })}

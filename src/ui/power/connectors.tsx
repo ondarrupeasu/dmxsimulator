@@ -5,6 +5,23 @@
  * capped/blanked variant for the unused positions.
  */
 
+/** A European Schuko (Type F) wall outlet, for the power strips (regletas). */
+export function Schuko() {
+  return (
+    <svg viewBox="0 0 24 24" width="24" height="24" className="pw-svg pw-pcon-svg">
+      <rect x="1.5" y="1.5" width="21" height="21" rx="3.5" fill="#e6e1d3" stroke="#b3ad9b" strokeWidth="1" />
+      <circle cx="12" cy="12" r="9" fill="#d8d3c4" stroke="#a8a291" strokeWidth="0.8" />
+      <circle cx="12" cy="12" r="6.6" fill="#33343a" stroke="#1c1d21" strokeWidth="0.8" />
+      {/* two round pin holes (horizontal) */}
+      <circle cx="8.4" cy="12" r="1.7" fill="#0e0f12" />
+      <circle cx="15.6" cy="12" r="1.7" fill="#0e0f12" />
+      {/* earth clips top & bottom */}
+      <rect x="10.4" y="5.8" width="3.2" height="1.5" rx="0.7" fill="#9a958a" />
+      <rect x="10.4" y="16.7" width="3.2" height="1.5" rx="0.7" fill="#9a958a" />
+    </svg>
+  )
+}
+
 type PconProps = { color?: 'white' | 'blue'; capped?: boolean }
 
 export function PowerCon({ color = 'white', capped = false }: PconProps) {
