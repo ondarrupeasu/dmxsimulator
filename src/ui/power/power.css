@@ -84,7 +84,7 @@
 }
 /* The three racks are IDENTICAL in size — wide enough for the connectors (no overflow). */
 .pw-rack { width: 284px; }
-.pw-board { width: 486px; }
+.pw-board { width: 506px; }
 
 /* powerCON connector — drawn as SVG (connectors.tsx): a square flange (white or blue) with two
    diagonal screws and a round keyed boss. Same size in EVERY rack. */

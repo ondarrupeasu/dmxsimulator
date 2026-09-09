@@ -28,7 +28,8 @@ function PoleBody({ x, dark }: { x: number; dark?: boolean }) {
   )
 }
 
-/** The united handle: one dark slot band + one pale bar spanning all poles + a dark window per pole. */
+/** The united handle: one dark slot band + one pale bar spanning all poles + a dark window per pole.
+ *  When ON, a small red flag shows in each window (the real "encendido" indicator). */
 function Handle({ poles, on, dark }: { poles: number; on: boolean; dark?: boolean }) {
   const totalW = poles * PW
   const capY = on ? 25 : 36
@@ -38,7 +39,10 @@ function Handle({ poles, on, dark }: { poles: number; on: boolean; dark?: boolea
       <rect x="3" y="23" width={totalW - 6} height="23" rx="3" fill={dark ? '#141519' : '#2b2d33'} />
       <rect x="4.5" y={capY} width={totalW - 9} height="12.5" rx="2.2" fill={capFill} stroke={dark ? '#8b8e96' : '#a5a9b2'} strokeWidth="0.7" />
       {Array.from({ length: poles }).map((_, i) => (
-        <rect key={i} x={i * PW + PW / 2 - 5} y={capY + 3.6} width="10" height="5.4" rx="1.4" fill="#191a1f" />
+        <g key={i}>
+          <rect x={i * PW + PW / 2 - 5} y={capY + 3.6} width="10" height="5.4" rx="1.4" fill="#191a1f" />
+          {on && <rect x={i * PW + PW / 2 - 4} y={capY + 6} width="8" height="2.2" rx="0.8" fill="#e5372a" />}
+        </g>
       ))}
     </g>
   )
@@ -103,9 +107,43 @@ export function RCD({ on = true }: { on?: boolean }) {
       <rect x={rx - 10} y="22" width="20" height="26" rx="3" fill="#2b2d33" />
       <rect x={rx - 9} y={handleY} width="18" height="15" rx="2.4" fill="#26326f" stroke="#12142a" strokeWidth="0.8" />
       <rect x={rx - 7} y={handleY + 1.6} width="4" height="12" rx="1.4" fill="#3d4d97" opacity="0.8" />
-      {/* small indicator window below the handle */}
-      <rect x={rx - 4} y="50" width="8" height="2.6" rx="0.9" fill="#191a1f" />
+      {/* on-indicator window below the handle (red when energised) */}
+      <rect x={rx - 4} y="50" width="8" height="2.8" rx="0.9" fill={on ? '#e5372a' : '#191a1f'} />
       {/* label holder */}
+      <rect x={PW + 3.5} y="56" width={PW - 7} height="16" rx="1.5" fill="#fbfcfd" stroke="#c4c8cf" strokeWidth="0.6" />
+    </svg>
+  )
+}
+
+/**
+ * The OTHER differential (Hager, used in FUERZA and EMERGENCIA rows): the toggle lever is on the
+ * LEFT, the TEST button is a thin blue rectangle, and the on-indicator is a red window ABOVE the
+ * lever. Distinct from the half-dome RCD above.
+ */
+export function RCDHager({ on = true }: { on?: boolean }) {
+  const totalW = 2 * PW
+  const leverY = on ? 24 : 35
+  return (
+    <svg viewBox={`0 0 ${totalW} ${PH}`} width={totalW} height={PH} className="pw-svg">
+      <rect x="0.5" y="0.5" width={totalW - 1} height={PH - 1} rx="2.5" fill="#eef0f2" stroke="#b7bbc2" strokeWidth="0.9" />
+      {/* Hager top brand bar */}
+      <rect x="1.5" y="2" width={totalW - 3} height="4.5" rx="1.6" fill="#3b73c4" stroke="#255196" strokeWidth="0.4" />
+      {/* left module: red on-indicator ABOVE the lever */}
+      <rect x="5" y="12.5" width="10" height="4.2" rx="1" fill={on ? '#e5372a' : '#3a2422'} stroke="#1c1512" strokeWidth="0.4" />
+      {on && <rect x="6" y="13.2" width="4" height="1.4" rx="0.7" fill="#ffb0a6" opacity="0.8" />}
+      {/* left module: dark slot + grey lever on the LEFT */}
+      <rect x="4" y="22" width="11" height="24" rx="2.5" fill="#2b2d33" />
+      <rect x="4.8" y={leverY} width="9.4" height="12" rx="1.8" fill="#e7e9ec" stroke="#9297a1" strokeWidth="0.7" />
+      <rect x="6.4" y={leverY + 3} width="6" height="6" rx="1.2" fill="#20222a" />
+      {/* thin blue rectangular TEST button, upper-middle */}
+      <rect x="17.5" y="16.5" width="14" height="7.5" rx="1.8" fill="#2f52d8" stroke="#1b34a0" strokeWidth="0.6" />
+      <rect x="19" y="18" width="7" height="1.6" rx="0.7" fill="#7f97e8" opacity="0.7" />
+      {/* faint printed text on the right module */}
+      {[0, 1, 2].map((k) => (
+        <rect key={k} x={PW + 5} y={22 + k * 4} width={PW - 12} height="1.5" rx="0.6" fill="#c6cad1" />
+      ))}
+      {/* label holders */}
+      <rect x="3.5" y="56" width={PW - 7} height="16" rx="1.5" fill="#fbfcfd" stroke="#c4c8cf" strokeWidth="0.6" />
       <rect x={PW + 3.5} y="56" width={PW - 7} height="16" rx="1.5" fill="#fbfcfd" stroke="#c4c8cf" strokeWidth="0.6" />
     </svg>
   )

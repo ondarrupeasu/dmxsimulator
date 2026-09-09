@@ -1,7 +1,7 @@
 import { Fragment, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useShowStore } from '../../store/showStore'
-import { MCB, RCD, MainSwitch, ChannelBreaker } from './breakers'
+import { MCB, RCD, RCDHager, MainSwitch, ChannelBreaker } from './breakers'
 import { PowerCon } from './connectors'
 import './power.css'
 
@@ -23,7 +23,8 @@ const PINK = '#ff2e88'
 
 // A single DIN module: the black main switch, a differential (RCD, with a blue test button and a
 // 2-pole lever), or a magnetothermic (MCB, 1-4 poles). Read off the real panel (IMG_7399).
-type Mod = { kind: 'main' | 'rcd' | 'mcb'; name?: string; tab?: string; poles?: number }
+// kinds: main isolator, half-dome RCD (DIMMERS/SOINUA), Hager RCD (FUERZA/EMERG), or an MCB.
+type Mod = { kind: 'main' | 'rcd' | 'rcdh' | 'mcb'; name?: string; tab?: string; poles?: number }
 const BREAKER_ROWS: { label: string; mods: Mod[] }[] = [
   { label: 'GENERAL', mods: [{ kind: 'main', name: 'GENERAL' }] },
   {
@@ -42,17 +43,21 @@ const BREAKER_ROWS: { label: string; mods: Mod[] }[] = [
     ],
   },
   {
+    // Hager differentials (lever-left, thin blue button); the pink/orange/yellow markers sit on the
+    // RACK breakers, which are 2-pole (like CALEFACTOR / RESERVA / ALMACÉN).
     label: 'FUERZA / DIRECTOS',
     mods: [
-      { kind: 'rcd', tab: PINK, name: 'DIF. FUERZA-1' }, { kind: 'mcb', name: 'RACK 1-4', poles: 4 }, { kind: 'mcb', name: 'CALEFACTOR' },
-      { kind: 'rcd', tab: ORANGE, name: 'DIF. FUERZA-2' }, { kind: 'mcb', name: 'RACK 5-8', poles: 4 }, { kind: 'mcb', name: 'RESERVA' },
-      { kind: 'rcd', tab: YELLOW, name: 'DIF. FUERZA-3' }, { kind: 'mcb', name: 'RACK 9-12', poles: 4 }, { kind: 'mcb', name: 'ALMACÉN' },
+      { kind: 'rcdh', name: 'DIF. FUERZA-1' }, { kind: 'mcb', tab: PINK, name: 'RACK 1-4', poles: 2 }, { kind: 'mcb', name: 'CALEFACTOR', poles: 2 },
+      { kind: 'rcdh', name: 'DIF. FUERZA-2' }, { kind: 'mcb', tab: ORANGE, name: 'RACK 5-8', poles: 2 }, { kind: 'mcb', name: 'RESERVA', poles: 2 },
+      { kind: 'rcdh', name: 'DIF. FUERZA-3' }, { kind: 'mcb', tab: YELLOW, name: 'RACK 9-12', poles: 2 }, { kind: 'mcb', name: 'ALMACÉN', poles: 2 },
     ],
   },
   {
     label: 'EMERGENCIA',
     mods: [
-      { kind: 'rcd' }, { kind: 'mcb', name: 'Emerg 1' }, { kind: 'rcd' }, { kind: 'mcb', name: 'Emerg 2' }, { kind: 'rcd' }, { kind: 'mcb', name: 'Emerg 3' },
+      { kind: 'rcdh', name: 'DIF. ALUMB-1' }, { kind: 'mcb', name: 'Emerg 1', poles: 2 },
+      { kind: 'rcdh', name: 'DIF. ALUMB-2' }, { kind: 'mcb', name: 'Emerg 2', poles: 2 },
+      { kind: 'rcdh', name: 'DIF. ALUMB-3' }, { kind: 'mcb', name: 'Emerg 3', poles: 2 },
     ],
   },
 ]
@@ -113,7 +118,7 @@ function Module({ m, title }: { m: Mod; title: string }) {
   return (
     <div className={`pw-mod pw-${m.kind}`} title={m.name ? `${m.name} — ${title}` : title}>
       {m.tab && <span className="pw-mod-tab" style={{ background: m.tab }} />}
-      {m.kind === 'main' ? <MainSwitch /> : m.kind === 'rcd' ? <RCD /> : <MCB poles={m.poles ?? 1} />}
+      {m.kind === 'main' ? <MainSwitch /> : m.kind === 'rcd' ? <RCD /> : m.kind === 'rcdh' ? <RCDHager /> : <MCB poles={m.poles ?? 1} />}
       {m.name && <span className="pw-mod-name">{m.name}</span>}
     </div>
   )
@@ -206,7 +211,7 @@ export function PowerPatchView() {
                     <div className="pw-row-label">{row.label}</div>
                     <div className="pw-row-breakers">
                       {row.mods.map((m, j) => {
-                        const tip = m.kind === 'main' ? 'general' : m.kind === 'rcd' ? 'diff' : 'mcb'
+                        const tip = m.kind === 'main' ? 'general' : m.kind === 'rcd' || m.kind === 'rcdh' ? 'diff' : 'mcb'
                         return <Module key={j} m={m} title={t(`power.tip.${tip}`)} />
                       })}
                     </div>
