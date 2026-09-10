@@ -23,6 +23,10 @@ const YELLOW = '#e9e94a'
 const ORANGE = '#ff7a1a'
 const PINK = '#ff2e88'
 
+// The 3 real Tartanga power strips (regletas), by outlet count (left → right). Each strip feeds one
+// zone/group of lights, so switching it off kills exactly that zone.
+const REGLETA_OUTLETS = [6, 10, 6]
+
 // A single DIN module: the black main switch, a differential (RCD, with a blue test button and a
 // 2-pole lever), or a magnetothermic (MCB, 1-4 poles). Read off the real panel (IMG_7399).
 // kinds: main isolator, half-dome RCD (DIMMERS/SOINUA), Hager RCD (FUERZA/EMERG), or an MCB.
@@ -512,20 +516,20 @@ export function PowerPatchView() {
               <section className="pw-panel pw-regletas-panel">
                 <header title={t('power.tip.regletas')}>{t('power.regletas')}</header>
                 <div className="pw-regletas-row">
-                  {[0, 1, 2].map((ri) => {
+                  {REGLETA_OUTLETS.map((count, ri) => {
                     const swId = `rsw-${ri}`
                     const fed = patches.some((p) => p.to === `regleta-${ri}-0` && sourcePowered(p.from))
                     const lit = fed && isOn(swId)
                     return (
-                      <div className="pw-regleta" key={ri}>
+                      <div className="pw-regleta" key={ri} title={t('power.regletaTip', { n: ri + 1, count })}>
                         <div className="pw-reg-inlet">
                           <Conn id={`regleta-${ri}-0`} color="white" sel={sel} patched={patched} energized={energized} linked={linked} onConn={clickConn} title={t('power.regleta', { n: ri + 1 })} schuko />
                         </div>
                         <button type="button" className={`pw-reg-switch${isOn(swId) ? ' on' : ''}`} title="I / 0"
                           onClick={(e) => { e.stopPropagation(); toggle(swId) }}>{isOn(swId) ? 'I' : '0'}</button>
                         <span className={`pw-reg-pilot${lit ? ' lit' : ''}`} aria-hidden />
-                        <div className="pw-reg-outlets" aria-hidden>{[0, 1, 2].map((o) => <Schuko key={o} />)}</div>
-                        <b className="pw-reg-label">{t('power.regleta', { n: ri + 1 })}</b>
+                        <div className="pw-reg-outlets" aria-hidden>{range(count).map((o) => <Schuko key={o} />)}</div>
+                        <b className="pw-reg-label">{t('power.regleta', { n: ri + 1 })} · {count}</b>
                       </div>
                     )
                   })}

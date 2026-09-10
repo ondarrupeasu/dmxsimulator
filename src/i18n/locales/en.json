@@ -326,7 +326,8 @@
       "directoReg": "Power strip {{m}} ← Directo {{n}} · stage power outlet",
       "hoverHint": "Hover a cable to trace it and see its DMX patch"
     },
-    "regleta": "Power strip {{n}}"
+    "regleta": "Power strip {{n}}",
+    "regletaTip": "Power strip {{n}} · {{count}} outlets — feeds one zone/group of lights"
   },
   "run": {
     "title": "Run",

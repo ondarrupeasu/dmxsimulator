@@ -326,7 +326,8 @@
       "directoReg": "Regleta {{m}} ← Directo {{n}} · toma de fuerza",
       "hoverHint": "Pasa el ratón por un cable para seguirlo y ver su patch DMX"
     },
-    "regleta": "Regleta {{n}}"
+    "regleta": "Regleta {{n}}",
+    "regletaTip": "Regleta {{n}} · {{count}} tomas — alimenta una zona/grupo de luces"
   },
   "run": {
     "title": "Ejecutar",
