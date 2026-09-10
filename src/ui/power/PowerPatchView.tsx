@@ -79,6 +79,11 @@ function Pcon({ color = 'blue', capped = false }: { color?: 'white' | 'blue'; ca
   return <PowerCon color={color} capped={capped} />
 }
 
+/** Whether a connector uses a Schuko cable end (regleta inlet + its outlets) vs powerCON. */
+function schukoEnd(id: string) {
+  return id.startsWith('regleta') || id.startsWith('regout')
+}
+
 /** A powerCON cable plug seen head-on, seated in its socket (frontal — no dangling barrel). The
  *  cable itself droops away behind it. */
 function CablePlug() {
@@ -284,15 +289,22 @@ export function PowerPatchView() {
   const linked = hover ? new Set<string>(hover.split('>')) : undefined // the two ends of the hovered cable
   // Does a source actually deliver power? A dimmer channel = its rack is fed AND its channel breaker
   // is up; a directo = the GENERAL is up (constant power). Energy then flows down its cable.
-  const sourcePowered = (id: string) => {
+  const sourcePowered = (id: string): boolean => {
     if (id.startsWith('canal')) { const n = Number(id.split('-')[1]); return rackPowered(Math.floor((n - 1) / 12)) && isOn(`ch-${n}`) }
     if (id.startsWith('directo')) return isOn('b-0-0')
+    // a regleta outlet is live if the regleta is fed by a live directo AND its I/0 switch is up
+    if (id.startsWith('regout')) {
+      const ri = Number(id.split('-')[1])
+      const fed = patches.some((p) => p.to === `regleta-${ri}-0` && sourcePowered(p.from))
+      return fed && isOn(`rsw-${ri}`)
+    }
     return false
   }
   const energized = new Set<string>() // patched connectors that actually have power (both ends of a live cable)
   for (const p of patches) if (sourcePowered(p.from)) { energized.add(p.from); energized.add(p.to) }
-  // sources feed power out (dimmer channels, directos); sinks receive it (stage circuits, regletas).
-  const roleOf = (id: string) => (id.startsWith('canal') || id.startsWith('directo') ? 'src' : 'sink')
+  // sources feed power out (dimmer channels, directos, regleta outlets); sinks receive it (stage
+  // circuits, and the regleta's own inlet which is fed by a directo).
+  const roleOf = (id: string) => (id.startsWith('canal') || id.startsWith('directo') || id.startsWith('regout') ? 'src' : 'sink')
   const clickConn = (id: string) => {
     const existing = patches.find((p) => p.from === id || p.to === id)
     if (existing) { setPatches((ps) => ps.filter((p) => p !== existing)); setSel(null); return } // un-patch
@@ -389,7 +401,8 @@ export function PowerPatchView() {
     const [from, to] = key.split('>')
     const num = (id: string) => Number(id.split('-')[1])
     if (from.startsWith('canal')) return t('power.eq.dimmer', { m: num(to), n: num(from), dmx: String(num(from)).padStart(3, '0') })
-    if (to.startsWith('regleta')) return t('power.eq.directoReg', { m: num(to), n: num(from) })
+    if (from.startsWith('regout')) return t('power.eq.regletaCirc', { m: num(to), n: num(from) + 1 })
+    if (to.startsWith('regleta')) return t('power.eq.directoReg', { m: num(to) + 1, n: num(from) })
     return t('power.eq.directoCirc', { m: num(to), n: num(from) })
   }
 
@@ -528,7 +541,12 @@ export function PowerPatchView() {
                         <button type="button" className={`pw-reg-switch${isOn(swId) ? ' on' : ''}`} title="I / 0"
                           onClick={(e) => { e.stopPropagation(); toggle(swId) }}>{isOn(swId) ? 'I' : '0'}</button>
                         <span className={`pw-reg-pilot${lit ? ' lit' : ''}`} aria-hidden />
-                        <div className="pw-reg-outlets" aria-hidden>{range(count).map((o) => <Schuko key={o} />)}</div>
+                        {/* outlets — each is a patchable constant-power point (schuko-macho→powerCON to a circuito) */}
+                        <div className="pw-reg-outlets">
+                          {range(count).map((o) => (
+                            <Conn key={o} id={`regout-${ri}-${o}`} color="white" sel={sel} patched={patched} energized={energized} linked={linked} onConn={clickConn} title={t('power.regOutlet', { n: ri + 1, o })} schuko />
+                          ))}
+                        </div>
                         <b className="pw-reg-label">{t('power.regleta', { n: ri + 1 })} · {count}</b>
                       </div>
                     )
@@ -546,8 +564,8 @@ export function PowerPatchView() {
                   return (
                     <g key={key} onMouseEnter={() => setHover(key)} onMouseLeave={() => setHover((h) => (h === key ? null : h))}>
                       <path data-cablekey={key} className={`pw-cable-line${hover === key ? ' hovered' : ''}${sourcePowered(p.from) ? '' : ' dead'}`} />
-                      <g data-cablekey={key} data-end="a">{p.from.startsWith('regleta') ? <SchukoPlug /> : <CablePlug />}</g>
-                      <g data-cablekey={key} data-end="b">{p.to.startsWith('regleta') ? <SchukoPlug /> : <CablePlug />}</g>
+                      <g data-cablekey={key} data-end="a">{schukoEnd(p.from) ? <SchukoPlug /> : <CablePlug />}</g>
+                      <g data-cablekey={key} data-end="b">{schukoEnd(p.to) ? <SchukoPlug /> : <CablePlug />}</g>
                     </g>
                   )
                 })}

@@ -324,10 +324,12 @@
       "dimmer": "Circuit {{m}} ← Channel {{n}} · Dimmer {{n}} = DMX {{dmx}}",
       "directoCirc": "Circuit {{m}} ← Directo {{n}} · constant power (no dimmer) — set DMX on the fixture",
       "directoReg": "Power strip {{m}} ← Directo {{n}} · stage power outlet",
-      "hoverHint": "Hover a cable to trace it and see its DMX patch"
+      "hoverHint": "Hover a cable to trace it and see its DMX patch",
+      "regletaCirc": "Circuit {{m}} ← Power strip {{n}} · constant power (extends the directos)"
     },
     "regleta": "Power strip {{n}}",
-    "regletaTip": "Power strip {{n}} · {{count}} outlets — feeds one zone/group of lights"
+    "regletaTip": "Power strip {{n}} · {{count}} outlets — feeds one zone/group of lights",
+    "regOutlet": "Power strip {{n}} · outlet {{o}} (constant power)"
   },
   "run": {
     "title": "Run",

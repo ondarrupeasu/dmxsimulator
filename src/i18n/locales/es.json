@@ -324,10 +324,12 @@
       "dimmer": "Circuito {{m}} ← Canal {{n}} · Dimmer {{n}} = DMX {{dmx}}",
       "directoCirc": "Circuito {{m}} ← Directo {{n}} · corriente constante (sin dimmer) — DMX en el propio foco",
       "directoReg": "Regleta {{m}} ← Directo {{n}} · toma de fuerza",
-      "hoverHint": "Pasa el ratón por un cable para seguirlo y ver su patch DMX"
+      "hoverHint": "Pasa el ratón por un cable para seguirlo y ver su patch DMX",
+      "regletaCirc": "Circuito {{m}} ← Regleta {{n}} · corriente constante (amplía los directos)"
     },
     "regleta": "Regleta {{n}}",
-    "regletaTip": "Regleta {{n}} · {{count}} tomas — alimenta una zona/grupo de luces"
+    "regletaTip": "Regleta {{n}} · {{count}} tomas — alimenta una zona/grupo de luces",
+    "regOutlet": "Regleta {{n}} · toma {{o}} (corriente constante)"
   },
   "run": {
     "title": "Ejecutar",
