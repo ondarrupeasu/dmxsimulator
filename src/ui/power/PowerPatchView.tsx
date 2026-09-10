@@ -414,7 +414,7 @@ export function PowerPatchView() {
     return 'powerCON – powerCON'
   }
   const exportPlan = () => {
-    const connections = patches.map((p, i) => [String(i + 1), labelOf(p.from), labelOf(p.to), cableType(p.from, p.to), cableInfo(`${p.from}>${p.to}`)])
+    const connections = patches.map((p) => ({ from: p.from, to: p.to, origen: labelOf(p.from), destino: labelOf(p.to), cable: cableType(p.from, p.to), nota: cableInfo(`${p.from}>${p.to}`) }))
     const breakersOff: string[] = []
     BREAKER_ROWS.forEach((row, i) => row.mods.forEach((m, j) => { if (!isOn(`b-${i}-${j}`)) breakersOff.push(`${row.label} · ${m.name ?? m.kind.toUpperCase()}`) }))
     for (let n = 1; n <= 36; n++) if (!isOn(`ch-${n}`)) breakersOff.push(`Canal de dimmer ${n}`)
