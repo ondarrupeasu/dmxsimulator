@@ -379,6 +379,15 @@ export function PowerPatchView() {
   const nextLabel = scene === 0 ? t('power.toRacks') : t('power.toData')
   const prevLabel = scene === 1 ? t('power.toBoard') : t('power.toRacks')
 
+  // Pedagogical readout for a hovered cable (Miren's rule: circuit ← channel/dimmer = DMX N).
+  const cableInfo = (key: string) => {
+    const [from, to] = key.split('>')
+    const num = (id: string) => Number(id.split('-')[1])
+    if (from.startsWith('canal')) return t('power.eq.dimmer', { m: num(to), n: num(from), dmx: String(num(from)).padStart(3, '0') })
+    if (to.startsWith('regleta')) return t('power.eq.directoReg', { m: num(to), n: num(from) })
+    return t('power.eq.directoCirc', { m: num(to), n: num(from) })
+  }
+
   return (
     <div className="pw-overlay" role="dialog" aria-label={t('power.title')}>
       <div className="pw-topbar">
@@ -556,6 +565,11 @@ export function PowerPatchView() {
           <span className="pw-nav-chev">❮</span>
           <span className="pw-nav-label">{prevLabel}</span>
         </button>
+
+        {/* pedagogical readout for the hovered cable */}
+        {scene === 1 && (
+          <div className={`pw-cable-info${hover ? ' show' : ''}`}>{hover ? cableInfo(hover) : t('power.eq.hoverHint')}</div>
+        )}
       </div>
 
       <div className="pw-legend">

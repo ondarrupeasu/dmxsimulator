@@ -319,7 +319,13 @@
     "dataNote": "The DATA side: the Quartz desk sends one DMX line to the S4 splitter, which fans it out to 4 outputs — one per lighting bar. A fixture needs BOTH power (the board/dimmers) and this DMX signal. The S4 lives behind the patch racks.",
     "regletas": "POWER STRIPS",
     "reset": "Reset",
-    "resetTip": "Clear all cables and set every breaker back ON"
+    "resetTip": "Clear all cables and set every breaker back ON",
+    "eq": {
+      "dimmer": "Circuit {{m}} ← Channel {{n}} · Dimmer {{n}} = DMX {{dmx}}",
+      "directoCirc": "Circuit {{m}} ← Directo {{n}} · constant power (no dimmer) — set DMX on the fixture",
+      "directoReg": "Power strip {{m}} ← Directo {{n}} · stage power outlet",
+      "hoverHint": "Hover a cable to trace it and see its DMX patch"
+    }
   },
   "run": {
     "title": "Run",

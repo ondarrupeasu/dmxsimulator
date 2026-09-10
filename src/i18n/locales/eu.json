@@ -319,7 +319,13 @@
     "dataNote": "DATUEN aldea: Quartz mahaiak DMX linea bat bidaltzen dio S4 splitterrari, eta honek 4 irteeratan banatzen du — barra bakoitzeko bat. Foku batek korrontea (koadroa/dimmerrak) ETA DMX seinale hau behar ditu. S4a patch rack-en atzean dago.",
     "regletas": "INDAR-ERREGELETAK",
     "reset": "Berrezarri",
-    "resetTip": "Kendu kable guztiak eta etengailu guztiak igota utzi"
+    "resetTip": "Kendu kable guztiak eta etengailu guztiak igota utzi",
+    "eq": {
+      "dimmer": "{{m}} zirkuitua ← {{n}} kanala · {{n}} dimmerra = DMX {{dmx}}",
+      "directoCirc": "{{m}} zirkuitua ← {{n}} zuzenekoa · etengabeko korrontea (dimmerrik gabe) — DMX fokuan bertan",
+      "directoReg": "{{m}} erregeleta ← {{n}} zuzenekoa · indar-hartunea",
+      "hoverHint": "Pasatu sagua kable batetik gainetik jarraitzeko eta bere DMX patcha ikusteko"
+    }
   },
   "run": {
     "title": "Exekutatu",
