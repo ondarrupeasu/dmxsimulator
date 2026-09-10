@@ -5,6 +5,7 @@ import { useShowStore } from '../../store/showStore'
 import { MCB, RCD, RCDHager, MainSwitch, ChannelBreaker } from './breakers'
 import { PowerCon, Schuko } from './connectors'
 import { S4Splitter } from './splitter'
+import { openPowerReport } from './powerReport'
 import './power.css'
 
 /**
@@ -396,6 +397,36 @@ export function PowerPatchView() {
   const nextLabel = scene === 0 ? t('power.toRacks') : t('power.toData')
   const prevLabel = scene === 1 ? t('power.toBoard') : t('power.toRacks')
 
+  // Build + download the cable-schedule PDF ("esquema de conexionado") for the current patch.
+  const labelOf = (id: string) => {
+    const [kind, a, b] = id.split('-')
+    const n = Number(a)
+    if (kind === 'canal') return `Canal ${n} (dimmer)`
+    if (kind === 'circ') return `Circuito ${n}`
+    if (kind === 'directo') return `Directo ${n}`
+    if (kind === 'regleta') return `Regleta ${n + 1} (entrada)`
+    if (kind === 'regout') return `Regleta ${n + 1} · toma ${b}`
+    return id
+  }
+  const cableType = (from: string, to: string) => {
+    if (from.startsWith('regout')) return 'schuko M – powerCON'
+    if (to.startsWith('regleta')) return 'powerCON – schuko H'
+    return 'powerCON – powerCON'
+  }
+  const exportPlan = () => {
+    const connections = patches.map((p, i) => [String(i + 1), labelOf(p.from), labelOf(p.to), cableType(p.from, p.to), cableInfo(`${p.from}>${p.to}`)])
+    const breakersOff: string[] = []
+    BREAKER_ROWS.forEach((row, i) => row.mods.forEach((m, j) => { if (!isOn(`b-${i}-${j}`)) breakersOff.push(`${row.label} · ${m.name ?? m.kind.toUpperCase()}`) }))
+    for (let n = 1; n <= 36; n++) if (!isOn(`ch-${n}`)) breakersOff.push(`Canal de dimmer ${n}`)
+    REGLETA_OUTLETS.forEach((_, ri) => { if (!isOn(`rsw-${ri}`)) breakersOff.push(`Regleta ${ri + 1} (I/0)`) })
+    const regletas = REGLETA_OUTLETS.map((count, ri) => {
+      const fed = patches.find((p) => p.to === `regleta-${ri}-0`)
+      return [`Regleta ${ri + 1}`, fed ? labelOf(fed.from) : '— (sin alimentar)', isOn(`rsw-${ri}`) ? 'I (ON)' : '0 (OFF)', `${count} tomas`]
+    })
+    const s4 = [['OUT 1', 'Libre / reserva'], ['OUT 2', 'Vara 1 · FOH'], ['OUT 3', 'Splitter escenario (3 varas)'], ['OUT 4', 'Dimmers']]
+    void openPowerReport({ connections, breakersOff, regletas, s4 })
+  }
+
   // Pedagogical readout for a hovered cable (Miren's rule: circuit ← channel/dimmer = DMX N).
   const cableInfo = (key: string) => {
     const [from, to] = key.split('>')
@@ -413,6 +444,7 @@ export function PowerPatchView() {
         <span className="pw-tag" title={t('common.pwaTag')}>PWA</span>
         <div className="pw-spacer" />
         <div className="pw-hint">{t('power.hint')}</div>
+        <button className="pw-help-btn" onClick={exportPlan} title={t('power.planTip')}>⭳ {t('power.plan')}</button>
         <button className="pw-help-btn" onClick={resetAll} title={t('power.resetTip')}>↺ {t('power.reset')}</button>
         <button className="pw-help-btn" onClick={() => setShowHelp((v) => !v)}>❔ {t('power.help.title')}</button>
         <button className="pw-close" onClick={close} title={t('power.close')}>✕</button>

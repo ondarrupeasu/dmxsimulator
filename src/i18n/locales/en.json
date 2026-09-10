@@ -329,7 +329,9 @@
     },
     "regleta": "Power strip {{n}}",
     "regletaTip": "Power strip {{n}} · {{count}} outlets — feeds one zone/group of lights",
-    "regOutlet": "Power strip {{n}} · outlet {{o}} (constant power)"
+    "regOutlet": "Power strip {{n}} · outlet {{o}} (constant power)",
+    "plan": "Plan (PDF)",
+    "planTip": "Download the wiring schedule to replicate this patch"
   },
   "run": {
     "title": "Run",

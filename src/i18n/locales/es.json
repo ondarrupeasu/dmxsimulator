@@ -329,7 +329,9 @@
     },
     "regleta": "Regleta {{n}}",
     "regletaTip": "Regleta {{n}} · {{count}} tomas — alimenta una zona/grupo de luces",
-    "regOutlet": "Regleta {{n}} · toma {{o}} (corriente constante)"
+    "regOutlet": "Regleta {{n}} · toma {{o}} (corriente constante)",
+    "plan": "Plano (PDF)",
+    "planTip": "Descarga el esquema de conexionado para replicar este patch"
   },
   "run": {
     "title": "Ejecutar",
