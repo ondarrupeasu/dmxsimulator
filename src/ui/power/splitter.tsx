@@ -54,11 +54,15 @@ const RED = '#ff3b3b'
 
 /** The full S4 splitter panel. */
 export function S4Splitter() {
-  const outs = [1, 2, 3, 4]
+  // Real Tartanga wiring (from the labels): OUT1 free, OUT2 → the FOH truss ("1 VARA"), OUT3 → a
+  // second S4 splitter on stage (feeds the 3 stage trusses), OUT4 → the dimmers.
+  const outs: { n: number; dest?: string }[] = [
+    { n: 1 }, { n: 2, dest: '1 VARA' }, { n: 3, dest: 'SPLITTER ESC.' }, { n: 4, dest: 'DIMMERS' },
+  ]
   return (
-    <svg viewBox="0 0 360 300" width="360" height="300" className="pw-s4">
+    <svg viewBox="0 0 360 316" width="360" height="316" className="pw-s4">
       {/* panel */}
-      <rect x="2" y="2" width="356" height="296" rx="8" fill="#101114" stroke="#2b2d33" strokeWidth="2" />
+      <rect x="2" y="2" width="356" height="312" rx="8" fill="#101114" stroke="#2b2d33" strokeWidth="2" />
       <rect x="2" y="2" width="356" height="30" rx="8" fill="#16171b" />
       {/* brand */}
       <text x="24" y="40" fill="#f2f3f5" fontSize="26" fontWeight="800" fontFamily="system-ui" letterSpacing="1.5">TINHAO</text>
@@ -76,16 +80,17 @@ export function S4Splitter() {
       <Led x={306} y={96} color={RED} />
       <text x="306" y="114" fill="#dfe1e4" fontSize="13" fontWeight="700" fontFamily="system-ui" textAnchor="middle" letterSpacing="0.5">POWER</text>
 
-      {/* DMX OUT 1-4 — #1 free, #2/#3/#4 patched */}
-      {outs.map((n, i) => {
+      {/* DMX OUT 1-4 — #1 free, #2/#3/#4 patched, each labelled with its real destination */}
+      {outs.map(({ n, dest }, i) => {
         const x = 66 + i * 76
         return (
           <g key={n}>
             <text x={x} y="206" fill="#dfe1e4" fontSize="11" fontWeight="700" fontFamily="system-ui" textAnchor="middle" letterSpacing="0.5">DMX OUT</text>
             <text x={x} y="218" fill="#dfe1e4" fontSize="11" fontWeight="700" fontFamily="system-ui" textAnchor="middle">{n}</text>
-            <Led x={x} y={232} color={GREEN} />
+            <Led x={x} y={232} color={GREEN} on={n !== 1} />
             <Xlr x={x} y={262} />
             {n !== 1 && <XlrPlug x={x} y={262} />}
+            {dest && <text x={x} y="296" fill="#7fa9e6" fontSize="8.5" fontWeight="700" fontFamily="system-ui" textAnchor="middle">{dest}</text>}
           </g>
         )
       })}

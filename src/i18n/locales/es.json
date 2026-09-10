@@ -315,8 +315,8 @@
     "toBoard": "Cuadro eléctrico",
     "toData": "DMX / Datos",
     "data": "SPLITTER DMX · TINHAO S4",
-    "dataBars": "Varas 1-4",
-    "dataNote": "El lado de DATOS: la mesa Quartz manda una línea DMX al splitter S4, que la reparte en 4 salidas — una por vara. Un foco necesita corriente (cuadro/dimmers) Y esta señal DMX. El S4 está detrás de los racks de patch.",
+    "dataBars": "Varas + dimmers",
+    "dataNote": "El lado de DATOS: la mesa Quartz manda una línea DMX al splitter S4. En Tartanga: OUT1 libre, OUT2 → la vara del truss FOH, OUT3 → un segundo S4 en el escenario (que alimenta las 3 varas del escenario), OUT4 → los dimmers. Un foco necesita corriente (cuadro/dimmers) Y esta señal DMX. El S4 está detrás de los racks.",
     "regletas": "REGLETAS DE FUERZA",
     "reset": "Reiniciar",
     "resetTip": "Quita todos los cables y deja los interruptores subidos",
@@ -325,7 +325,8 @@
       "directoCirc": "Circuito {{m}} ← Directo {{n}} · corriente constante (sin dimmer) — DMX en el propio foco",
       "directoReg": "Regleta {{m}} ← Directo {{n}} · toma de fuerza",
       "hoverHint": "Pasa el ratón por un cable para seguirlo y ver su patch DMX"
-    }
+    },
+    "regleta": "Regleta {{n}}"
   },
   "run": {
     "title": "Ejecutar",

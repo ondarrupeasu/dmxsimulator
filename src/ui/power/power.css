@@ -45,10 +45,27 @@
 .pw-slide-inner { transform-origin: center center; will-change: transform; pointer-events: auto; }
 .pw-racks-wrap { display: flex; flex-direction: column; gap: 12px; align-items: center; position: relative; }
 .pw-racks-row { display: flex; gap: 16px; align-items: flex-start; }
-/* Regletas de fuerza — a strip under the racks (uses the trimmed rack space) */
+/* Regletas de fuerza — 3 white power strips under the racks (uses the trimmed rack space) */
 .pw-regletas { width: 100%; display: flex; justify-content: center; }
 .pw-regletas-panel { width: fit-content; min-width: 420px; padding: 10px 14px; gap: 8px; }
-.pw-regletas-row { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
+.pw-regletas-row { display: flex; gap: 22px; justify-content: center; flex-wrap: wrap; }
+.pw-regleta {
+  display: flex; align-items: center; gap: 7px;
+  background: linear-gradient(#f5f3ed, #e2ded1); border: 1px solid #c7c1af; border-radius: 6px;
+  padding: 6px 9px; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+}
+.pw-reg-inlet { display: flex; } /* the strip's power inlet (patch target) */
+.pw-reg-switch {
+  width: 20px; height: 26px; border-radius: 3px; border: 1px solid #7d1b16; cursor: pointer;
+  background: linear-gradient(#e34a3a, #b02a1f); color: #fff; font: 800 12px/1 system-ui;
+  display: flex; align-items: center; justify-content: center;
+}
+.pw-reg-switch.on { background: linear-gradient(#c93526, #8f1d13); box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.4); }
+.pw-reg-pilot { width: 7px; height: 7px; border-radius: 50%; background: #571713; box-shadow: inset 0 0 2px #200; flex: none; }
+.pw-reg-pilot.lit { background: #ff3b2e; box-shadow: 0 0 8px rgba(255, 59, 46, 0.9); }
+.pw-reg-outlets { display: flex; gap: 3px; }
+.pw-reg-outlets .pw-pcon-svg { width: 17px; height: 17px; }
+.pw-reg-label { font-size: 7px; color: #555; font-weight: 700; white-space: nowrap; }
 
 /* breaker levers slide up (ON) / down (OFF) with a little spring */
 .pw-svg rect { transition: y 0.17s cubic-bezier(0.34, 1.4, 0.5, 1); }
@@ -98,7 +115,7 @@
 /* ---- DMX splitter (data) scene ---- */
 .pw-data { width: fit-content; align-items: center; }
 .pw-data-flow { display: flex; align-items: center; gap: 14px; }
-.pw-s4 { display: block; height: 300px; width: auto; }
+.pw-s4 { display: block; height: 316px; width: auto; }
 .pw-data-src, .pw-data-bars {
   font-size: 13px; font-weight: 700; color: #cfd3db;
   background: #171922; border: 1px solid #2c2f3a; border-radius: 8px; padding: 12px 14px; text-align: center;

@@ -88,13 +88,14 @@ function CablePlug() {
   )
 }
 
-/** A European Schuko cable plug seen head-on, seated in a regleta outlet. */
+/** The Schuko FEMALE end of a directo adapter cable (powerCON→Schuko-hembra), seen head-on. */
 function SchukoPlug() {
   return (
     <g className="pw-plug">
-      <rect x="-10" y="-8.5" width="20" height="17" rx="7" fill="#26272c" stroke="#0e0f12" strokeWidth="1.2" />
-      <circle r="4.6" fill="#3a3c42" stroke="#17181b" strokeWidth="0.7" />
-      <circle cx="-1.5" cy="-1.5" r="1.1" fill="#55585f" opacity="0.7" />
+      <rect x="-10.5" y="-9" width="21" height="18" rx="7" fill="#e6e1d3" stroke="#a49e8c" strokeWidth="1.2" />
+      <circle r="6" fill="#33343a" stroke="#1c1d21" strokeWidth="0.8" />
+      <circle cx="-2.7" cy="0" r="1.4" fill="#0e0f12" />
+      <circle cx="2.7" cy="0" r="1.4" fill="#0e0f12" />
     </g>
   )
 }
@@ -505,17 +506,29 @@ export function PowerPatchView() {
             <Bay title="CIRCUITOS" tip={t('power.tip.circuitos')} color="blue" rows={CIRCUITOS_ROWS} kind="circ" sel={sel} patched={patched} energized={energized} linked={linked} onConn={clickConn} />
             </div>
 
-            {/* Regletas de fuerza — constant-power strips; DIRECTOS (or CIRCUITOS) plug in here */}
+            {/* Regletas de fuerza — 3 white power strips (I/0 switch + red pilot). A DIRECTO feeds
+                each via a powerCON→Schuko-female adapter cable, into the strip's inlet. */}
             <div className="pw-regletas">
               <section className="pw-panel pw-regletas-panel">
                 <header title={t('power.tip.regletas')}>{t('power.regletas')}</header>
                 <div className="pw-regletas-row">
-                  {range(10).map((n) => (
-                    <span className="pw-cell" key={n}>
-                      <b className="pw-cell-num">R{n}</b>
-                      <Conn id={`regleta-${n}-0`} color="white" sel={sel} patched={patched} energized={energized} linked={linked} onConn={clickConn} title={`Regleta ${n}`} schuko />
-                    </span>
-                  ))}
+                  {[0, 1, 2].map((ri) => {
+                    const swId = `rsw-${ri}`
+                    const fed = patches.some((p) => p.to === `regleta-${ri}-0` && sourcePowered(p.from))
+                    const lit = fed && isOn(swId)
+                    return (
+                      <div className="pw-regleta" key={ri}>
+                        <div className="pw-reg-inlet">
+                          <Conn id={`regleta-${ri}-0`} color="white" sel={sel} patched={patched} energized={energized} linked={linked} onConn={clickConn} title={t('power.regleta', { n: ri + 1 })} schuko />
+                        </div>
+                        <button type="button" className={`pw-reg-switch${isOn(swId) ? ' on' : ''}`} title="I / 0"
+                          onClick={(e) => { e.stopPropagation(); toggle(swId) }}>{isOn(swId) ? 'I' : '0'}</button>
+                        <span className={`pw-reg-pilot${lit ? ' lit' : ''}`} aria-hidden />
+                        <div className="pw-reg-outlets" aria-hidden>{[0, 1, 2].map((o) => <Schuko key={o} />)}</div>
+                        <b className="pw-reg-label">{t('power.regleta', { n: ri + 1 })}</b>
+                      </div>
+                    )
+                  })}
                 </div>
               </section>
             </div>
