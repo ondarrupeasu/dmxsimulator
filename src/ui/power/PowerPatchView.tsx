@@ -1,7 +1,6 @@
 import { Fragment, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import type { CSSProperties } from 'react'
 import { useTranslation } from 'react-i18next'
-import { useShowStore } from '../../store/showStore'
 import { MCB, RCD, RCDHager, MainSwitch, ChannelBreaker } from './breakers'
 import { PowerCon, Schuko } from './connectors'
 import { S4Splitter } from './splitter'
@@ -43,10 +42,12 @@ const BREAKER_ROWS: { label: string; mods: Mod[] }[] = [
     ],
   },
   {
+    // SOINUA (sound) · 32A: two THREE-PHASE 32-amp CETAC/CEE outlets (4-pole each). Left =
+    // "CETAC 32 atzekaldea" (back of house — sound + realización), right = on-stage for the speakers.
     label: 'SOINUA · 32A',
     mods: [
-      { kind: 'rcd' }, { kind: 'mcb', name: 'BASE 32A-1', poles: 2 },
-      { kind: 'rcd' }, { kind: 'mcb', name: 'BASE 32A-2', poles: 2 },
+      { kind: 'rcd' }, { kind: 'mcb', name: 'CETAC 32 ATZEK.', poles: 4 },
+      { kind: 'rcd' }, { kind: 'mcb', name: 'CETAC 32 AGERT.', poles: 4 },
     ],
   },
   {
@@ -266,7 +267,6 @@ function loadPower(): PowerState {
 
 export function PowerPatchView() {
   const { t } = useTranslation()
-  const close = () => useShowStore.getState().setPowerOpen(false)
   const [showHelp, setShowHelp] = useState(false)
 
   // --- Interaction: breakers toggle on/off, and powerCON cables patch CANALES <-> CIRCUITOS ---
@@ -443,11 +443,10 @@ export function PowerPatchView() {
         <div className="pw-title">⚡ {t('power.title')}</div>
         <span className="pw-tag" title={t('common.pwaTag')}>PWA</span>
         <div className="pw-spacer" />
-        <div className="pw-hint">{t('power.hint')}</div>
+        {/* the Power⟷Escenario toggle is the global fixed button at top-centre (see AppShell) */}
         <button className="pw-help-btn" onClick={exportPlan} title={t('power.planTip')}>⭳ {t('power.plan')}</button>
         <button className="pw-help-btn" onClick={resetAll} title={t('power.resetTip')}>↺ {t('power.reset')}</button>
         <button className="pw-help-btn" onClick={() => setShowHelp((v) => !v)}>❔ {t('power.help.title')}</button>
-        <button className="pw-stage-btn" onClick={close} title={t('power.toStage')}>🎭 {t('power.stage')}</button>
       </div>
 
       {showHelp && (

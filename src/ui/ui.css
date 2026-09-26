@@ -73,14 +73,16 @@
   cursor: pointer; white-space: nowrap;
 }
 .tour-launch:hover { background: var(--coral); color: #16131a; }
-/* Prominent, centred toggle into the electrical world (pairs with the "Escenario" return). */
-.power-launch {
+/* The two-worlds toggle (Power ⟷ Escenario) — ONE button, always fixed at top-centre above
+   everything, so it never moves and is instantly findable. Label swaps by view (see AppShell). */
+.world-toggle {
+  position: fixed; top: 8px; left: 50%; transform: translateX(-50%); z-index: 5000;
   border: 1px solid var(--coral); background: var(--coral); color: #14060a;
-  padding: 6px 18px; border-radius: var(--radius-sm); font-weight: 700; font-size: 13px;
+  padding: 7px 20px; border-radius: var(--radius-sm); font-weight: 700; font-size: 13px;
   cursor: pointer; white-space: nowrap; display: inline-flex; align-items: center; gap: 6px;
-  transition: background 0.14s, border-color 0.14s;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.4); transition: background 0.14s, border-color 0.14s;
 }
-.power-launch:hover { background: var(--coral-bright); border-color: var(--coral-bright); }
+.world-toggle:hover { background: var(--coral-bright); border-color: var(--coral-bright); }
 
 /* ---- Body: left panel + right column ---- */
 .body {

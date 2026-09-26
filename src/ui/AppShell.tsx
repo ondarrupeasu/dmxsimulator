@@ -200,12 +200,6 @@ export function AppShell() {
           </div>
         )}
 
-        {/* The two worlds: Power (electrical) ⟷ Escenario (desk + 3D). Centred, prominent, and
-           kept apart from the Tutorial control. The "Escenario" return lives in the power view. */}
-        <button className="power-launch" data-tour="power" onClick={() => useShowStore.getState().setPowerOpen(true)} title={t('power.open')}>
-          ⚡ {t('power.short')}
-        </button>
-
         <div className="spacer" />
 
         {quartzDocked && (
@@ -314,6 +308,13 @@ export function AppShell() {
       </div>
       <TourOverlay />
       {powerOpen && <PowerPatchView />}
+      {/* The two worlds toggle — ONE important button, always in the exact same place (fixed,
+         top-centre, above everything), just relabelled Power ⟷ Escenario. */}
+      <button className="world-toggle" data-tour="power"
+        onClick={() => useShowStore.getState().setPowerOpen(!powerOpen)}
+        title={powerOpen ? t('power.toStage') : t('power.open')}>
+        {powerOpen ? `🎭 ${t('power.stage')}` : `⚡ ${t('power.short')}`}
+      </button>
     </div>
   )
 }
