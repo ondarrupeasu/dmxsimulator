@@ -447,7 +447,7 @@ export function PowerPatchView() {
         <button className="pw-help-btn" onClick={exportPlan} title={t('power.planTip')}>⭳ {t('power.plan')}</button>
         <button className="pw-help-btn" onClick={resetAll} title={t('power.resetTip')}>↺ {t('power.reset')}</button>
         <button className="pw-help-btn" onClick={() => setShowHelp((v) => !v)}>❔ {t('power.help.title')}</button>
-        <button className="pw-close" onClick={close} title={t('power.close')}>✕</button>
+        <button className="pw-stage-btn" onClick={close} title={t('power.toStage')}>🎭 {t('power.stage')}</button>
       </div>
 
       {showHelp && (

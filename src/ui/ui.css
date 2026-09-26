@@ -73,12 +73,14 @@
   cursor: pointer; white-space: nowrap;
 }
 .tour-launch:hover { background: var(--coral); color: #16131a; }
+/* Prominent, centred toggle into the electrical world (pairs with the "Escenario" return). */
 .power-launch {
-  border: 1px solid #f0b000; background: transparent; color: #f0b000;
-  padding: 4px 12px; border-radius: var(--radius-sm); font-weight: 600; font-size: 12px;
-  cursor: pointer; white-space: nowrap;
+  border: 1px solid var(--coral); background: var(--coral); color: #14060a;
+  padding: 6px 18px; border-radius: var(--radius-sm); font-weight: 700; font-size: 13px;
+  cursor: pointer; white-space: nowrap; display: inline-flex; align-items: center; gap: 6px;
+  transition: background 0.14s, border-color 0.14s;
 }
-.power-launch:hover { background: #f0b000; color: #1a1710; }
+.power-launch:hover { background: var(--coral-bright); border-color: var(--coral-bright); }
 
 /* ---- Body: left panel + right column ---- */
 .body {

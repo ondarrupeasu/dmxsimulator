@@ -200,6 +200,12 @@ export function AppShell() {
           </div>
         )}
 
+        {/* The two worlds: Power (electrical) ⟷ Escenario (desk + 3D). Centred, prominent, and
+           kept apart from the Tutorial control. The "Escenario" return lives in the power view. */}
+        <button className="power-launch" data-tour="power" onClick={() => useShowStore.getState().setPowerOpen(true)} title={t('power.open')}>
+          ⚡ {t('power.short')}
+        </button>
+
         <div className="spacer" />
 
         {quartzDocked && (
@@ -222,10 +228,6 @@ export function AppShell() {
             )}
           </div>
         )}
-
-        <button className="power-launch" onClick={() => useShowStore.getState().setPowerOpen(true)} title={t('power.open')}>
-          ⚡ {t('power.short')}
-        </button>
 
         <select
           value={i18n.language}

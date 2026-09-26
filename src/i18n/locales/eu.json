@@ -331,7 +331,9 @@
     "regletaTip": "{{n}}. erregeleta · {{count}} hartune — argi-zona/talde bat elikatzen du",
     "regOutlet": "{{n}}. erregeleta · {{o}}. hartunea (etengabeko korrontea)",
     "plan": "Planoa (PDF)",
-    "planTip": "Deskargatu konexio-eskema patch hau errepikatzeko"
+    "planTip": "Deskargatu konexio-eskema patch hau errepikatzeko",
+    "stage": "Eszenatokia",
+    "toStage": "Itzuli mahaira eta 3D eszenatokira"
   },
   "run": {
     "title": "Exekutatu",

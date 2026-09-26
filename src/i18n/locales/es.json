@@ -331,7 +331,9 @@
     "regletaTip": "Regleta {{n}} · {{count}} tomas — alimenta una zona/grupo de luces",
     "regOutlet": "Regleta {{n}} · toma {{o}} (corriente constante)",
     "plan": "Plano (PDF)",
-    "planTip": "Descarga el esquema de conexionado para replicar este patch"
+    "planTip": "Descarga el esquema de conexionado para replicar este patch",
+    "stage": "Escenario",
+    "toStage": "Volver a la mesa y el escenario 3D"
   },
   "run": {
     "title": "Ejecutar",
