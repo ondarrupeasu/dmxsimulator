@@ -1143,10 +1143,10 @@
 
 /* PWA-only marker: a control that does NOT exist on the real Quartz (or works differently
    there). Coral dashed outline + a small "PWA" tag so students know it's a simulator extra. */
-.pwa-only { position: relative; border: 1px dashed #ff8a6a !important; }
+.pwa-only { position: relative; border: 1px dashed var(--coral) !important; }
 .pwa-tag {
   display: inline-block; margin-left: 6px; padding: 0 4px; border-radius: 3px;
-  background: #ff8a6a; color: #1a1a1f; font-size: 8px; font-weight: 800;
+  background: var(--coral); color: #1a1a1f; font-size: 8px; font-weight: 800;
   letter-spacing: 0.5px; vertical-align: middle; cursor: help;
 }
 /* Sibling marker: physical-Quartz-only (real on the desk, inert in a browser). */
@@ -1163,10 +1163,10 @@
   width: 150px; min-height: 52px; display: flex; flex-direction: column; gap: 6px;
   padding: 6px 8px; border-radius: 6px; background: #1b1c21; border: 1px solid #2c2d32;
 }
-.pb-card.connected { border-color: #ff8a6a; box-shadow: 0 0 0 1px #ff8a6a inset; }
+.pb-card.connected { border-color: var(--coral); box-shadow: 0 0 0 1px var(--coral) inset; }
 .pb-card.empty { opacity: 0.35; align-items: center; justify-content: center; min-height: 40px; }
 .pb-card.rec {
-  align-items: center; justify-content: center; color: #ff8a6a; font-weight: 700; cursor: pointer;
+  align-items: center; justify-content: center; color: var(--coral); font-weight: 700; cursor: pointer;
   border-style: dashed; background: transparent;
 }
 .pb-card.rec:disabled { opacity: 0.4; cursor: default; }
@@ -1179,13 +1179,13 @@
 .pb-slot.dim { background: #3a3b42; color: #8a8b92; }
 .pb-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; }
 .pb-ico { flex: 0 0 auto; background: transparent; border: 0; color: #9aa0a8; cursor: pointer; font-size: 12px; padding: 2px 3px; }
-.pb-ico:hover { color: #ff8a6a; }
+.pb-ico:hover { color: var(--coral); }
 .pb-ico.sm { font-size: 10px; }
 .pb-meta { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
 .pb-badge { font-size: 9px; color: #9aa0a8; background: #24252b; border-radius: 3px; padding: 1px 5px; }
 .pb-seg { display: inline-flex; border: 1px solid #34353c; border-radius: 4px; overflow: hidden; }
 .pb-seg button { background: #24252b; border: 0; color: #9aa0a8; font-size: 9px; padding: 1px 6px; cursor: pointer; }
-.pb-seg button.on { background: #ff8a6a; color: #1a1a1f; font-weight: 700; }
+.pb-seg button.on { background: var(--coral); color: #1a1a1f; font-weight: 700; }
 .pb-bpm { font-size: 9px; color: #9aa0a8; display: inline-flex; align-items: center; gap: 3px; }
 .pb-bpm input { width: 44px; background: #17181c; border: 1px solid #34353c; color: #e6e6ea; border-radius: 3px; font-size: 10px; padding: 1px 3px; }
 .pb-tap { font-size: 9px; font-weight: 700; color: #cfe; background: #24313f; border: 1px solid #3a5570; border-radius: 3px; padding: 2px 7px; cursor: pointer; margin-left: 4px; }

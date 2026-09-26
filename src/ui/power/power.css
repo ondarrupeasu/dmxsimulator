@@ -16,7 +16,7 @@
 }
 .pw-title { font-size: 16px; font-weight: 700; letter-spacing: 0.3px; }
 .pw-tag {
-  font-size: 10px; font-weight: 700; color: #ff8a3d;
+  font-size: 10px; font-weight: 700; color: var(--coral);
   border: 1px solid rgba(255, 138, 61, 0.5); border-radius: 10px; padding: 2px 7px;
 }
 .pw-spacer { flex: 1; }
@@ -109,7 +109,7 @@
 .pw-nav:hover { background: #2b2f3c; }
 .pw-nav-next { right: 14px; }
 .pw-nav-prev { left: 12px; }
-.pw-nav-chev { font-size: 19px; line-height: 1; color: #ff8a3d; }
+.pw-nav-chev { font-size: 19px; line-height: 1; color: var(--coral); }
 .pw-nav-label { font-size: 8.5px; font-weight: 700; max-width: 48px; text-align: center; color: #aeb3c0; line-height: 1.1; }
 
 /* ---- DMX splitter (data) scene ---- */
@@ -120,7 +120,7 @@
   font-size: 13px; font-weight: 700; color: #cfd3db;
   background: #171922; border: 1px solid #2c2f3a; border-radius: 8px; padding: 12px 14px; text-align: center;
 }
-.pw-data-arrow { font-size: 22px; color: #ff8a3d; }
+.pw-data-arrow { font-size: 22px; color: var(--coral); }
 .pw-data-note { max-width: 520px; font-size: 12px; line-height: 1.5; color: #9aa0aa; text-align: center; margin: 4px auto 0; }
 
 /* A rack panel — FIXED width (solid object); all panels stretch to the same height. */
