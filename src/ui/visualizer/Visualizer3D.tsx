@@ -713,17 +713,22 @@ export function Visualizer3D({ ext = false }: { ext?: boolean } = {}) {
     const trussMap = new Map<number, THREE.Mesh>()
     const down = new THREE.Vector3()
 
+    // Resize is driven from INSIDE the render loop (see animate) so the canvas is resized and
+    // repainted in the SAME frame — no grey flash between an off-cadence ResizeObserver callback
+    // and the next paint, and no framebuffer reallocation when the size hasn't actually changed.
+    let lastW = 0
+    let lastH = 0
     const resize = () => {
       const w = mount.clientWidth
       const h = mount.clientHeight
-      if (w === 0 || h === 0) return
+      if (w === 0 || h === 0 || (w === lastW && h === lastH)) return
+      lastW = w
+      lastH = h
       renderer.setSize(w, h, false)
       camera.aspect = w / h
       camera.updateProjectionMatrix()
     }
     resize()
-    const ro = new ResizeObserver(resize)
-    ro.observe(mount)
 
     // Click a fixture to select it (a drag rotates the view, so only a click that
     // barely moved counts as a pick). Shift-click adds/removes from the selection.
@@ -838,6 +843,7 @@ export function Visualizer3D({ ext = false }: { ext?: boolean } = {}) {
     let clock = 0
     const animate = () => {
       raf = requestAnimationFrame(animate)
+      resize() // keep the drawing buffer in sync with the pane, atomically with this frame's paint
       const state = useShowStore.getState()
       const { show, definitions, programmer, playbacks, playbackLevels, firedLevels, fades, flashIds, swopId, effects, selection } = state
       const cues = liveCues(playbacks, state.now)
@@ -1264,7 +1270,6 @@ export function Visualizer3D({ ext = false }: { ext?: boolean } = {}) {
 
     return () => {
       cancelAnimationFrame(raf)
-      ro.disconnect()
       renderer.domElement.removeEventListener('pointerdown', onDown)
       renderer.domElement.removeEventListener('pointermove', onMoveDrag)
       renderer.domElement.removeEventListener('pointerup', onUp)
